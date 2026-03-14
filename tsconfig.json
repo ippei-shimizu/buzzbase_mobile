@@ -21,6 +21,9 @@
       ],
       "@utils/*": [
         "utils/*"
+      ],
+      "@stores/*": [
+        "stores/*"
       ]
     }
   },
