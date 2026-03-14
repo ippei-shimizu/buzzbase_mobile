@@ -4,6 +4,13 @@ export interface SignInData {
   password: string;
 }
 
+/** サインアップリクエストのデータ */
+export interface SignUpData {
+  email: string;
+  password: string;
+  passwordConfirmation: string;
+}
+
 /** ユーザー情報 */
 export interface User {
   id: number;

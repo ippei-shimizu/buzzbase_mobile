@@ -1,7 +1,13 @@
 import { useEffect } from "react";
 import { useAuthStore } from "@stores/authStore";
-import { signIn, signOut, validateToken } from "@services/authService";
-import type { SignInData } from "../types/auth";
+import {
+  signIn,
+  signOut,
+  signUp as signUpService,
+  resendConfirmation as resendConfirmationService,
+  validateToken,
+} from "@services/authService";
+import type { SignInData, SignUpData } from "../types/auth";
 
 /**
  * 認証カスタムフック
@@ -44,5 +50,13 @@ export const useAuth = () => {
     setIsLoggedIn(false);
   };
 
-  return { isLoggedIn, isLoading, login, logout };
+  const signUp = async (data: SignUpData) => {
+    await signUpService(data);
+  };
+
+  const resendConfirmation = async (email: string) => {
+    await resendConfirmationService(email);
+  };
+
+  return { isLoggedIn, isLoading, login, logout, signUp, resendConfirmation };
 };

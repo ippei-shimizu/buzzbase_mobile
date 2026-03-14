@@ -6,7 +6,7 @@
  * Web版 front/app/services/authService.tsx に対応。
  */
 import * as SecureStore from "expo-secure-store";
-import type { AuthResponse, SignInData } from "../types/auth";
+import type { AuthResponse, SignInData, SignUpData } from "../types/auth";
 import axiosInstance from "@utils/axiosInstance";
 
 /** レスポンスヘッダーから認証トークンをSecureStoreに保存 */
@@ -41,4 +41,26 @@ export const signOut = async (): Promise<void> => {
 export const validateToken = async (): Promise<AuthResponse> => {
   const response = await axiosInstance.get("/auth/validate_token");
   return response.data;
+};
+
+/** メールアドレスとパスワードでサインアップ（トークンは保存しない。メール確認が先） */
+export const signUp = async (data: SignUpData): Promise<void> => {
+  await axiosInstance.post("/auth", {
+    email: data.email,
+    password: data.password,
+    password_confirmation: data.passwordConfirmation,
+    confirm_success_url:
+      process.env.EXPO_PUBLIC_CONFIRM_SUCCESS_URL ||
+      "http://localhost:8100/signin",
+  });
+};
+
+/** 確認メールを再送信 */
+export const resendConfirmation = async (email: string): Promise<void> => {
+  await axiosInstance.post("/auth/confirmation", {
+    email,
+    redirect_url:
+      process.env.EXPO_PUBLIC_CONFIRM_SUCCESS_URL ||
+      "http://localhost:8100/signin",
+  });
 };
