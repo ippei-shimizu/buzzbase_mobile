@@ -3627,6 +3627,18 @@ expo-glass-effect@^55.0.8:
   resolved "https://registry.yarnpkg.com/expo-glass-effect/-/expo-glass-effect-55.0.8.tgz#ace0e662d7c8fc2935c9d1260e8303eb2fde0bc3"
   integrity sha512-IvUjHb/4t6r2H/LXDjcQ4uDoHrmO2cLOvEb9leLavQ4HX5+P4LRtQrMDMlkWAn5Wo5DkLcG8+1CrQU2nqgogTA==
 
+expo-image-loader@~55.0.0:
+  version "55.0.0"
+  resolved "https://registry.yarnpkg.com/expo-image-loader/-/expo-image-loader-55.0.0.tgz#56ae6631a0f43191432296a1f7f1e9737e653cfe"
+  integrity sha512-NOjp56wDrfuA5aiNAybBIjqIn1IxKeGJ8CECWZncQ/GzjZfyTYAHTCyeApYkdKkMBLHINzI4BbTGSlbCa0fXXQ==
+
+expo-image-picker@^55.0.12:
+  version "55.0.12"
+  resolved "https://registry.yarnpkg.com/expo-image-picker/-/expo-image-picker-55.0.12.tgz#9c12ca16fe79ee7da15e55d8039f33b2281b5b20"
+  integrity sha512-ky8nzXTd5eLUDct5daAHng0xrWYRJyXfLCRmEdE9v/IUywYCnFU7aCnQ7PTQJvzGSzhePJJmP/POvTkVP//+qQ==
+  dependencies:
+    expo-image-loader "~55.0.0"
+
 expo-image@^55.0.6:
   version "55.0.6"
   resolved "https://registry.yarnpkg.com/expo-image/-/expo-image-55.0.6.tgz#0aece1e86b2c861acdba0156ad2f3d5ac9c305a0"
