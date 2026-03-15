@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { Link } from "expo-router";
 import { Button } from "@components/ui/Button";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
@@ -19,18 +19,40 @@ export function ConfirmationPendingView({
   onResend,
 }: Props) {
   return (
-    <View className="flex-1 justify-center px-6">
-      <View className="mb-8">
-        <Text className="text-center text-3xl font-bold text-primary">
+    <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 24 }}>
+      <View style={{ marginBottom: 32 }}>
+        <Text
+          style={{
+            textAlign: "center",
+            fontSize: 28,
+            fontWeight: "bold",
+            color: "#d08000",
+          }}
+        >
           BUZZ BASE
         </Text>
       </View>
 
-      <View className="mb-6 rounded-lg bg-sub p-6">
-        <Text className="mb-2 text-center text-lg font-bold text-white">
+      <View
+        style={{
+          marginBottom: 24,
+          borderRadius: 8,
+          backgroundColor: "#424242",
+          padding: 24,
+        }}
+      >
+        <Text
+          style={{
+            marginBottom: 8,
+            textAlign: "center",
+            fontSize: 18,
+            fontWeight: "bold",
+            color: "#F4F4F4",
+          }}
+        >
           確認メールを送信しました
         </Text>
-        <Text className="text-center text-sm text-zic-300">
+        <Text style={{ textAlign: "center", fontSize: 14, color: "#D4D4D8" }}>
           {email} に確認メールを送信しました。{"\n"}
           メール内のリンクをクリックしてアカウントを有効化してください。
         </Text>
@@ -39,8 +61,15 @@ export function ConfirmationPendingView({
       <ErrorMessage errors={errors} />
 
       {resent && (
-        <View className="mb-4 rounded-lg bg-green-900 p-3">
-          <Text className="text-center text-sm text-green-300">
+        <View
+          style={{
+            marginBottom: 16,
+            borderRadius: 8,
+            backgroundColor: "#052814",
+            padding: 12,
+          }}
+        >
+          <Text style={{ textAlign: "center", fontSize: 14, color: "#74DFA2" }}>
             確認メールを再送信しました
           </Text>
         </View>
@@ -52,9 +81,13 @@ export function ConfirmationPendingView({
         loading={isResending}
       />
 
-      <View className="mt-6 items-center">
-        <Link href="/(auth)/sign-in" className="text-sm text-primary">
-          ログイン画面に戻る
+      <View style={{ marginTop: 24, alignItems: "center" }}>
+        <Link href="/(auth)/sign-in" asChild>
+          <TouchableOpacity>
+            <Text style={{ fontSize: 14, color: "#d08000" }}>
+              ログイン画面に戻る
+            </Text>
+          </TouchableOpacity>
         </Link>
       </View>
     </View>

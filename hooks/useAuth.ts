@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import * as SecureStore from "expo-secure-store";
 import { useAuthStore } from "@stores/authStore";
 import {
   signIn,
@@ -28,6 +29,11 @@ export const useAuth = () => {
     const checkAuth = async () => {
       setIsLoading(true);
       try {
+        const accessToken = await SecureStore.getItemAsync("access-token");
+        if (!accessToken) {
+          setIsLoggedIn(false);
+          return;
+        }
         await validateToken();
         setIsLoggedIn(true);
       } catch {

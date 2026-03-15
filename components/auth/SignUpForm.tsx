@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { Link } from "expo-router";
 import { TextInput } from "@components/ui/TextInput";
 import { Button } from "@components/ui/Button";
@@ -34,11 +34,18 @@ export function SignUpForm({
   onSubmit,
 }: Props) {
   return (
-    <View className="flex-1 justify-center px-6">
-      <View className="mb-8">
-        <Link href="/" className="text-center text-3xl font-bold text-primary">
+    <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 24 }}>
+      <View style={{ marginBottom: 32 }}>
+        <Text
+          style={{
+            textAlign: "center",
+            fontSize: 28,
+            fontWeight: "bold",
+            color: "#d08000",
+          }}
+        >
           BUZZ BASE
-        </Link>
+        </Text>
       </View>
 
       <ErrorMessage errors={errors} />
@@ -79,9 +86,13 @@ export function SignUpForm({
         loading={isSubmitting}
       />
 
-      <View className="mt-6 items-center">
-        <Link href="/(auth)/sign-in" className="text-sm text-primary">
-          すでにアカウントをお持ちの方はこちら
+      <View style={{ marginTop: 24, alignItems: "center" }}>
+        <Link href="/(auth)/sign-in" asChild>
+          <TouchableOpacity>
+            <Text style={{ fontSize: 14, color: "#d08000" }}>
+              すでにアカウントをお持ちの方はこちら
+            </Text>
+          </TouchableOpacity>
         </Link>
       </View>
     </View>

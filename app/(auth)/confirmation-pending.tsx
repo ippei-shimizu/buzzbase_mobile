@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
 import { AxiosError } from "axios";
 import { useAuth } from "@hooks/useAuth";
@@ -34,17 +35,19 @@ export default function ConfirmationPendingScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-main"
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ConfirmationPendingView
-        email={email || ""}
-        errors={errors}
-        isResending={isResending}
-        resent={resent}
-        onResend={handleResend}
-      />
-    </KeyboardAvoidingView>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ConfirmationPendingView
+          email={email || ""}
+          errors={errors}
+          isResending={isResending}
+          resent={resent}
+          onResend={handleResend}
+        />
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

@@ -8,9 +8,16 @@ export function ErrorMessage({ errors }: Props) {
   if (errors.length === 0) return null;
 
   return (
-    <View className="mb-4 rounded-lg bg-red-900 p-3">
+    <View
+      style={{
+        marginBottom: 16,
+        borderRadius: 8,
+        backgroundColor: "#310413",
+        padding: 12,
+      }}
+    >
       {errors.map((error) => (
-        <Text key={error} className="text-sm text-red-300">
+        <Text key={error} style={{ fontSize: 14, color: "#F871A0" }}>
           {error}
         </Text>
       ))}
