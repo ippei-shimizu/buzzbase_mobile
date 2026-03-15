@@ -22,8 +22,7 @@ export const useFormValidation = () => {
 
   const getPasswordError = (password: string): string | undefined => {
     if (password === "") return undefined;
-    if (!validatePassword(password))
-      return "6文字以上で半角英数字のみ有効です";
+    if (!validatePassword(password)) return "6文字以上で半角英数字のみ有効です";
     return undefined;
   };
 

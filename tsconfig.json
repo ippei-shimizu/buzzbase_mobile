@@ -4,32 +4,14 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@components/*": [
-        "components/*"
-      ],
-      "@services/*": [
-        "services/*"
-      ],
-      "@hooks/*": [
-        "hooks/*"
-      ],
-      "@types/*": [
-        "types/*"
-      ],
-      "@constants/*": [
-        "constants/*"
-      ],
-      "@utils/*": [
-        "utils/*"
-      ],
-      "@stores/*": [
-        "stores/*"
-      ]
+      "@components/*": ["components/*"],
+      "@services/*": ["services/*"],
+      "@hooks/*": ["hooks/*"],
+      "@types/*": ["types/*"],
+      "@constants/*": ["constants/*"],
+      "@utils/*": ["utils/*"],
+      "@stores/*": ["stores/*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "nativewind-env.d.ts"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts"]
 }

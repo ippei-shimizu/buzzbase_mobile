@@ -22,8 +22,7 @@ import type { SignInData, SignUpData } from "../types/auth";
  * @returns logout - ログアウト関数
  */
 export const useAuth = () => {
-  const { isLoggedIn, isLoading, setIsLoggedIn, setIsLoading } =
-    useAuthStore();
+  const { isLoggedIn, isLoading, setIsLoggedIn, setIsLoading } = useAuthStore();
 
   useEffect(() => {
     const checkAuth = async () => {
