@@ -1,12 +1,30 @@
 import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
-import type { UserProfile } from "../../types/profile";
+import type { UserProfile, FollowStatus } from "../../types/profile";
+import { FollowCounts } from "./FollowCounts";
+import { FollowButton } from "./FollowButton";
 
 interface ProfileHeaderProps {
   profile: UserProfile;
+  followingCount?: number;
+  followersCount?: number;
+  followStatus?: FollowStatus;
+  onFollowPress?: () => void;
+  onFollowingCountPress?: () => void;
+  onFollowersCountPress?: () => void;
+  isFollowLoading?: boolean;
 }
 
-export const ProfileHeader = ({ profile }: ProfileHeaderProps) => {
+export const ProfileHeader = ({
+  profile,
+  followingCount,
+  followersCount,
+  followStatus,
+  onFollowPress,
+  onFollowingCountPress,
+  onFollowersCountPress,
+  isFollowLoading,
+}: ProfileHeaderProps) => {
   return (
     <View style={styles.container}>
       {profile.image?.url ? (
@@ -22,6 +40,23 @@ export const ProfileHeader = ({ profile }: ProfileHeaderProps) => {
       {profile.user_id && <Text style={styles.userId}>@{profile.user_id}</Text>}
       {profile.introduction && (
         <Text style={styles.introduction}>{profile.introduction}</Text>
+      )}
+      {followingCount != null && followersCount != null && (
+        <FollowCounts
+          followingCount={followingCount}
+          followersCount={followersCount}
+          onFollowingPress={onFollowingCountPress ?? (() => {})}
+          onFollowersPress={onFollowersCountPress ?? (() => {})}
+        />
+      )}
+      {followStatus && followStatus !== "self" && onFollowPress && (
+        <View style={styles.followButtonContainer}>
+          <FollowButton
+            followStatus={followStatus}
+            onPress={onFollowPress}
+            isLoading={isFollowLoading ?? false}
+          />
+        </View>
       )}
     </View>
   );
@@ -65,5 +100,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: "center",
     lineHeight: 20,
+  },
+  followButtonContainer: {
+    marginTop: 12,
   },
 });
