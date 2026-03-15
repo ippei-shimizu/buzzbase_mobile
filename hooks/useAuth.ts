@@ -1,7 +1,14 @@
 import { useEffect } from "react";
+import * as SecureStore from "expo-secure-store";
 import { useAuthStore } from "@stores/authStore";
-import { signIn, signOut, validateToken } from "@services/authService";
-import type { SignInData } from "../types/auth";
+import {
+  signIn,
+  signOut,
+  signUp as signUpService,
+  resendConfirmation as resendConfirmationService,
+  validateToken,
+} from "@services/authService";
+import type { SignInData, SignUpData } from "../types/auth";
 
 /**
  * 認証カスタムフック
@@ -15,13 +22,17 @@ import type { SignInData } from "../types/auth";
  * @returns logout - ログアウト関数
  */
 export const useAuth = () => {
-  const { isLoggedIn, isLoading, setIsLoggedIn, setIsLoading } =
-    useAuthStore();
+  const { isLoggedIn, isLoading, setIsLoggedIn, setIsLoading } = useAuthStore();
 
   useEffect(() => {
     const checkAuth = async () => {
       setIsLoading(true);
       try {
+        const accessToken = await SecureStore.getItemAsync("access-token");
+        if (!accessToken) {
+          setIsLoggedIn(false);
+          return;
+        }
         await validateToken();
         setIsLoggedIn(true);
       } catch {
@@ -44,5 +55,13 @@ export const useAuth = () => {
     setIsLoggedIn(false);
   };
 
-  return { isLoggedIn, isLoading, login, logout };
+  const signUp = async (data: SignUpData) => {
+    await signUpService(data);
+  };
+
+  const resendConfirmation = async (email: string) => {
+    await resendConfirmationService(email);
+  };
+
+  return { isLoggedIn, isLoading, login, logout, signUp, resendConfirmation };
 };

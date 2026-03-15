@@ -4,7 +4,6 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { queryClient } from "@utils/queryClient";
 
-/** アプリのルートレイアウト。QueryClientProviderでTanStack Queryを全画面に提供。 */
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -15,7 +14,10 @@ export default function RootLayout() {
           headerTintColor: "#F4F4F4",
           contentStyle: { backgroundColor: "#2E2E2E" },
         }}
-      />
+      >
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      </Stack>
     </QueryClientProvider>
   );
 }
