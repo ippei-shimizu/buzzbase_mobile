@@ -53,9 +53,16 @@ export default function ProfileScreen() {
       <Stack.Screen
         options={{
           headerRight: () => (
-            <TouchableOpacity onPress={() => router.push("/(profile)/edit")}>
-              <Ionicons name="settings-outline" size={22} color="#F4F4F4" />
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", gap: 16 }}>
+              <TouchableOpacity
+                onPress={() => router.push("/(profile)/search")}
+              >
+                <Ionicons name="search-outline" size={22} color="#F4F4F4" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push("/(profile)/edit")}>
+                <Ionicons name="settings-outline" size={22} color="#F4F4F4" />
+              </TouchableOpacity>
+            </View>
           ),
         }}
       />
