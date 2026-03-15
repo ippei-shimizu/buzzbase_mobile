@@ -1,4 +1,8 @@
-import type { BattingStats, PitchingStats, RadarAxis } from "../types/dashboard";
+import type {
+  BattingStats,
+  PitchingStats,
+  RadarAxis,
+} from "../types/dashboard";
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -106,16 +110,14 @@ export function normalizePitchingStats(pitching: PitchingStats): RadarAxis[] {
       metric: "防御率",
       value: normalizeInverse(era, 9),
       rawValue: era.toFixed(2),
-      description:
-        "9イニングあたりの自責点。低いほど良い。基準: 9.00〜0.00",
+      description: "9イニングあたりの自責点。低いほど良い。基準: 9.00〜0.00",
     },
     {
       label: "被打抑止",
       metric: "WHIP",
       value: normalizeInverse(whip, 2.5),
       rawValue: whip.toFixed(2),
-      description:
-        "(被安打 + 四球) ÷ 投球回。低いほど良い。基準: 2.50〜0.00",
+      description: "(被安打 + 四球) ÷ 投球回。低いほど良い。基準: 2.50〜0.00",
     },
     {
       label: "勝負強さ",

@@ -61,10 +61,7 @@ const PitchingSection = ({ stats }: { stats: PitchingStats }) => {
       )}
       <View style={styles.statsGrid}>
         <StatItem label="防御率" value={calculated.era.toFixed(2)} />
-        <StatItem
-          label="勝敗"
-          value={`${aggregate.win}-${aggregate.loss}`}
-        />
+        <StatItem label="勝敗" value={`${aggregate.win}-${aggregate.loss}`} />
         <StatItem label="奪三振" value={String(aggregate.strikeouts)} />
         <StatItem label="WHIP" value={calculated.whip.toFixed(2)} />
         <StatItem label="投球回" value={String(aggregate.innings_pitched)} />

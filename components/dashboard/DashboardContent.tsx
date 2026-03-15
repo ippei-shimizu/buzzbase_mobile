@@ -43,10 +43,7 @@ export const DashboardContent = ({
         results={data.recent_game_results}
         style={styles.section}
       />
-      <GroupRankings
-        rankings={data.group_rankings}
-        style={styles.section}
-      />
+      <GroupRankings rankings={data.group_rankings} style={styles.section} />
     </ScrollView>
   );
 };
