@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { AxiosError } from "axios";
 import { useAuth } from "@hooks/useAuth";
-import { ConfirmationPendingView } from "./_components/ConfirmationPendingView";
+import { ConfirmationPendingView } from "@components/auth/ConfirmationPendingView";
 
 export default function ConfirmationPendingScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();

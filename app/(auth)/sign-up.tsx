@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { AxiosError } from "axios";
 import { useAuth } from "@hooks/useAuth";
 import { useFormValidation } from "@hooks/useFormValidation";
-import { SignUpForm } from "./_components/SignUpForm";
+import { SignUpForm } from "@components/auth/SignUpForm";
 
 export default function SignUpScreen() {
   const router = useRouter();
