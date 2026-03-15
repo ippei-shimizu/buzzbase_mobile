@@ -1,6 +1,10 @@
 import axiosInstance from "@utils/axiosInstance";
 import { API_BASE_URL } from "@constants/api";
-import type { UserProfile, StatsFilters } from "../types/profile";
+import type {
+  UserProfile,
+  UserProfileDetail,
+  StatsFilters,
+} from "../types/profile";
 import type { BattingStats, PitchingStats } from "../types/dashboard";
 
 export const getCurrentUserProfile = async (): Promise<UserProfile> => {
@@ -24,6 +28,15 @@ export const getProfileBattingStats = async (
 
   const response = await axiosInstance.get<BattingStats>(
     `${API_BASE_URL}/api/v2/dashboard/batting_stats?${params.toString()}`,
+  );
+  return response.data;
+};
+
+export const getUserProfileDetail = async (
+  userId: string,
+): Promise<UserProfileDetail> => {
+  const response = await axiosInstance.get<UserProfileDetail>(
+    `/users/show_user_id_data?user_id=${userId}`,
   );
   return response.data;
 };

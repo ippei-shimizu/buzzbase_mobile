@@ -12,6 +12,7 @@ import { useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useProfile } from "@hooks/useProfile";
 import { useProfileStats } from "@hooks/useProfileStats";
+import { useUserProfileDetail } from "@hooks/useRelationship";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
 import { ProfileGamesTab } from "@components/profile/ProfileGamesTab";
@@ -23,6 +24,9 @@ export default function ProfileScreen() {
   const [filters] = useState<StatsFilters>({});
 
   const { profile, isLoading, refetch, isRefreshing } = useProfile();
+  const { data: profileDetail } = useUserProfileDetail(
+    profile?.user_id ?? undefined,
+  );
   const {
     battingStats,
     pitchingStats,
@@ -57,7 +61,35 @@ export default function ProfileScreen() {
       />
 
       <View style={styles.container}>
-        {profile && <ProfileHeader profile={profile} />}
+        {profile && (
+          <ProfileHeader
+            profile={profile}
+            followingCount={profileDetail?.following_count ?? undefined}
+            followersCount={profileDetail?.followers_count ?? undefined}
+            onFollowingCountPress={() => {
+              if (profileDetail) {
+                router.push({
+                  pathname: "/(profile)/follows",
+                  params: {
+                    id: String(profileDetail.user.id),
+                    tab: "following",
+                  },
+                });
+              }
+            }}
+            onFollowersCountPress={() => {
+              if (profileDetail) {
+                router.push({
+                  pathname: "/(profile)/follows",
+                  params: {
+                    id: String(profileDetail.user.id),
+                    tab: "followers",
+                  },
+                });
+              }
+            }}
+          />
+        )}
 
         <View style={styles.tabBar}>
           <TouchableOpacity

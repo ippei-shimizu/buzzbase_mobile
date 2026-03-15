@@ -12,6 +12,8 @@ export default function ProfileLayout() {
     >
       <Stack.Screen name="index" options={{ title: "プロフィール" }} />
       <Stack.Screen name="edit" options={{ title: "プロフィール編集" }} />
+      <Stack.Screen name="[userId]" options={{ title: "プロフィール" }} />
+      <Stack.Screen name="follows" options={{ title: "フォロー" }} />
     </Stack>
   );
 }
