@@ -4,6 +4,8 @@ import {
   getManagementNotice,
   getNotificationCount,
   markManagementNoticesRead,
+  getNotifications,
+  markNotificationRead,
 } from "../services/notificationService";
 
 export const useManagementNotices = () => {
@@ -58,6 +60,35 @@ export const useMarkNoticesRead = () => {
   return useMutation({
     mutationFn: markManagementNoticesRead,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
+    },
+  });
+};
+
+export const useNotifications = (userId: string | undefined) => {
+  const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
+    queryKey: ["notifications", userId],
+    queryFn: () => getNotifications(userId!),
+    enabled: !!userId,
+  });
+
+  return {
+    notifications: data ?? [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefreshing: isRefetching,
+  };
+};
+
+export const useMarkNotificationRead = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: markNotificationRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
     },
   });

@@ -8,16 +8,25 @@ import {
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import {
-  useManagementNotices,
+  useNotifications,
   useMarkNoticesRead,
+  useMarkNotificationRead,
 } from "@hooks/useNotifications";
-import { NoticeCard } from "@components/notifications/NoticeCard";
+import { useProfile } from "@hooks/useProfile";
+import { NotificationItemComponent } from "@components/notifications/NotificationItem";
+import type {
+  NotificationItem,
+  UserNotification,
+  ManagementNotification,
+} from "../../../types/notification";
 
 export default function NotificationsScreen() {
   const router = useRouter();
-  const { notices, isLoading, isError, refetch, isRefreshing } =
-    useManagementNotices();
+  const { profile } = useProfile();
+  const { notifications, isLoading, isError, refetch, isRefreshing } =
+    useNotifications(profile?.user_id ?? undefined);
   const { mutate: markRead } = useMarkNoticesRead();
+  const { mutate: markNotificationRead } = useMarkNotificationRead();
 
   useFocusEffect(
     useCallback(() => {
@@ -25,8 +34,17 @@ export default function NotificationsScreen() {
     }, [markRead]),
   );
 
-  const handlePress = (id: number) => {
-    router.push(`/(notifications)/${id}`);
+  const handlePress = (notification: NotificationItem) => {
+    if (notification.event_type === "management_notice") {
+      const mn = notification as ManagementNotification;
+      router.push(`/(notifications)/${mn.management_notice_id}`);
+    } else {
+      const un = notification as UserNotification;
+      if (un.read_at === null) {
+        markNotificationRead(un.id);
+      }
+      router.push(`/(profile)/${un.actor_user_id}`);
+    }
   };
 
   if (isLoading) {
@@ -50,17 +68,17 @@ export default function NotificationsScreen() {
 
   return (
     <FlatList
-      data={notices}
-      keyExtractor={(item) => item.id.toString()}
+      data={notifications}
+      keyExtractor={(item) => String(item.id)}
       renderItem={({ item }) => (
-        <NoticeCard notice={item} onPress={handlePress} />
+        <NotificationItemComponent notification={item} onPress={handlePress} />
       )}
       contentContainerStyle={styles.list}
       refreshing={isRefreshing}
       onRefresh={refetch}
       ListEmptyComponent={
         <View style={styles.centered}>
-          <Text style={styles.emptyText}>お知らせはありません</Text>
+          <Text style={styles.emptyText}>通知はありません</Text>
         </View>
       }
     />
@@ -75,8 +93,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#2E2E2E",
   },
   list: {
-    padding: 16,
     flexGrow: 1,
+    backgroundColor: "#2E2E2E",
   },
   errorText: {
     color: "#A1A1AA",
