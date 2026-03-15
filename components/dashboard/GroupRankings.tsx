@@ -62,10 +62,7 @@ const RankingRow = ({ entry }: { entry: RankingEntry }) => {
 };
 
 const GroupCard = ({ group }: { group: GroupRanking }) => {
-  const allRankings = [
-    ...group.batting_rankings,
-    ...group.pitching_rankings,
-  ];
+  const allRankings = [...group.batting_rankings, ...group.pitching_rankings];
 
   if (allRankings.length === 0) return null;
 

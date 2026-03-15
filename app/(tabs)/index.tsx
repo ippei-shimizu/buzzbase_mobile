@@ -4,12 +4,15 @@ import {
   Text,
   ActivityIndicator,
   StyleSheet,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { useDashboard } from "@hooks/useDashboard";
 import { DashboardContent } from "@components/dashboard/DashboardContent";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { data, isLoading, isError, refetch, isRefreshing } = useDashboard();
 
   if (isLoading) {
@@ -42,6 +45,12 @@ export default function HomeScreen() {
         isRefreshing={isRefreshing}
         onRefresh={refetch}
       />
+      <TouchableOpacity
+        style={styles.recordButton}
+        onPress={() => router.push("/(game-record)/step1-game-info")}
+      >
+        <Text style={styles.recordButtonText}>試合結果を記録</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -65,5 +74,25 @@ const styles = StyleSheet.create({
     color: "#d08000",
     fontSize: 14,
     fontWeight: "600",
+  },
+  recordButton: {
+    position: "absolute",
+    bottom: 24,
+    left: 20,
+    right: 20,
+    backgroundColor: "#d08000",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  recordButtonText: {
+    color: "#F4F4F4",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });

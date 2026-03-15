@@ -1,11 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, type ViewStyle } from "react-native";
-import Svg, {
-  Polygon,
-  Line,
-  Circle,
-  Text as SvgText,
-} from "react-native-svg";
+import Svg, { Polygon, Line, Circle, Text as SvgText } from "react-native-svg";
 import type { RadarAxis } from "../../types/dashboard";
 
 interface StatsRadarChartProps {
