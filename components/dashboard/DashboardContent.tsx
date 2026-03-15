@@ -5,6 +5,7 @@ import {
   StyleSheet,
   type ViewStyle,
 } from "react-native";
+import { useRouter } from "expo-router";
 import type { DashboardData } from "../../types/dashboard";
 import { StatsOverview } from "./StatsOverview";
 import { RecentGameResults } from "./RecentGameResults";
@@ -23,6 +24,20 @@ export const DashboardContent = ({
   onRefresh,
   style,
 }: DashboardContentProps) => {
+  const router = useRouter();
+
+  const handleGroupPress = (groupId: number) => {
+    router.push(`/(groups)/${groupId}`);
+  };
+
+  const handleShowAll = () => {
+    router.push("/(groups)");
+  };
+
+  const handleCreateGroup = () => {
+    router.push("/(groups)/create");
+  };
+
   return (
     <ScrollView
       style={[styles.container, style]}
@@ -43,7 +58,13 @@ export const DashboardContent = ({
         results={data.recent_game_results}
         style={styles.section}
       />
-      <GroupRankings rankings={data.group_rankings} style={styles.section} />
+      <GroupRankings
+        rankings={data.group_rankings}
+        style={styles.section}
+        onGroupPress={handleGroupPress}
+        onShowAll={handleShowAll}
+        onCreateGroup={handleCreateGroup}
+      />
     </ScrollView>
   );
 };

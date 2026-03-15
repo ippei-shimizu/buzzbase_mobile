@@ -1,11 +1,20 @@
 import React from "react";
-import { View, Text, StyleSheet, type ViewStyle } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  type ViewStyle,
+} from "react-native";
 import type { GroupRanking, RankingEntry } from "../../types/dashboard";
 import { EmptyState } from "./EmptyState";
 
 interface GroupRankingsProps {
   rankings: GroupRanking[];
   style?: ViewStyle;
+  onGroupPress?: (groupId: number) => void;
+  onShowAll?: () => void;
+  onCreateGroup?: () => void;
 }
 
 const getRankBadgeStyle = (rank: number | null) => {
@@ -61,12 +70,18 @@ const RankingRow = ({ entry }: { entry: RankingEntry }) => {
   );
 };
 
-const GroupCard = ({ group }: { group: GroupRanking }) => {
+const GroupCard = ({
+  group,
+  onPress,
+}: {
+  group: GroupRanking;
+  onPress?: (groupId: number) => void;
+}) => {
   const allRankings = [...group.batting_rankings, ...group.pitching_rankings];
 
   if (allRankings.length === 0) return null;
 
-  return (
+  const content = (
     <View style={styles.groupCard}>
       <View style={styles.groupHeader}>
         <Text style={styles.groupName}>{group.group_name}</Text>
@@ -92,17 +107,57 @@ const GroupCard = ({ group }: { group: GroupRanking }) => {
       )}
     </View>
   );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => onPress(group.group_id)}
+      >
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return content;
 };
 
-export const GroupRankings = ({ rankings, style }: GroupRankingsProps) => {
+export const GroupRankings = ({
+  rankings,
+  style,
+  onGroupPress,
+  onShowAll,
+  onCreateGroup,
+}: GroupRankingsProps) => {
   return (
     <View style={style}>
-      <Text style={styles.sectionTitle}>グループランキング</Text>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>グループランキング</Text>
+        {rankings.length > 0 && onShowAll && (
+          <TouchableOpacity onPress={onShowAll}>
+            <Text style={styles.showAllLink}>すべて表示</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       {rankings.length === 0 ? (
-        <EmptyState title="グループに所属していません" />
+        <View>
+          <EmptyState title="グループに所属していません" />
+          {onCreateGroup && (
+            <TouchableOpacity
+              style={styles.createButton}
+              onPress={onCreateGroup}
+            >
+              <Text style={styles.createButtonText}>グループを作成</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       ) : (
         rankings.map((group) => (
-          <GroupCard key={group.group_id} group={group} />
+          <GroupCard
+            key={group.group_id}
+            group={group}
+            onPress={onGroupPress}
+          />
         ))
       )}
     </View>
@@ -110,11 +165,21 @@ export const GroupRankings = ({ rankings, style }: GroupRankingsProps) => {
 };
 
 const styles = StyleSheet.create({
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
   sectionTitle: {
     color: "#F4F4F4",
     fontSize: 18,
     fontWeight: "700",
-    marginBottom: 12,
+  },
+  showAllLink: {
+    color: "#d08000",
+    fontSize: 14,
+    fontWeight: "500",
   },
   groupCard: {
     backgroundColor: "#3A3A3A",
@@ -189,5 +254,18 @@ const styles = StyleSheet.create({
   },
   changeDown: {
     color: "#EF4444",
+  },
+  createButton: {
+    backgroundColor: "#d08000",
+    borderRadius: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    alignSelf: "center",
+    marginTop: 12,
+  },
+  createButtonText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "600",
   },
 });
