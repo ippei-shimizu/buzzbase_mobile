@@ -48,6 +48,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="(game-results)"
+        options={{
+          title: "試合結果",
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="baseball" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: "プロフィール",
