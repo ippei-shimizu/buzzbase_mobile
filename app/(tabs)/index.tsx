@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -8,12 +8,28 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 import { useDashboard } from "@hooks/useDashboard";
+import { useNotificationCount } from "@hooks/useNotifications";
 import { DashboardContent } from "@components/dashboard/DashboardContent";
+import { NotificationBell } from "@components/dashboard/NotificationBell";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { data, isLoading, isError, refetch, isRefreshing } = useDashboard();
+  const { count } = useNotificationCount();
+  const navigation = useNavigation();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <NotificationBell
+          count={count}
+          onPress={() => router.push("/(notifications)")}
+        />
+      ),
+    });
+  }, [navigation, count, router]);
 
   if (isLoading) {
     return (
