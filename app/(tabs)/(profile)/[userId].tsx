@@ -14,6 +14,12 @@ import {
   useFollowUser,
   useUnfollowUser,
 } from "@hooks/useRelationship";
+import {
+  useTeams,
+  usePrefectures,
+  useBaseballCategories,
+} from "@hooks/useMasterData";
+import { useUserAwards } from "@hooks/useAwards";
 
 export default function UserProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
@@ -23,6 +29,19 @@ export default function UserProfileScreen() {
     useUserProfileDetail(userId);
   const { followUser, isFollowing } = useFollowUser();
   const { unfollowUser, isUnfollowing } = useUnfollowUser();
+
+  const { data: teams } = useTeams();
+  const { data: prefectures } = usePrefectures();
+  const { data: categories } = useBaseballCategories();
+  const { data: awards } = useUserAwards(data?.user.id);
+
+  const team = teams?.find((t) => t.id === data?.user.team_id);
+  const categoryName = categories?.find(
+    (c) => c.id === team?.category_id,
+  )?.name;
+  const prefectureName = prefectures?.find(
+    (p) => p.id === team?.prefecture_id,
+  )?.name;
 
   const handleFollowPress = async () => {
     if (!data) return;
@@ -95,6 +114,11 @@ export default function UserProfileScreen() {
         onFollowingCountPress={handleFollowingCountPress}
         onFollowersCountPress={handleFollowersCountPress}
         isFollowLoading={isFollowing || isUnfollowing}
+        positions={data.user.positions}
+        teamName={team?.name}
+        categoryName={categoryName}
+        prefectureName={prefectureName}
+        awards={awards}
       />
 
       {isPrivateAndNotFollowing && (

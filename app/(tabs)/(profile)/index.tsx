@@ -12,10 +12,17 @@ import {
 } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { Share } from "react-native";
 import { useProfile } from "@hooks/useProfile";
 import { useProfileStats } from "@hooks/useProfileStats";
 import { useUserProfileDetail } from "@hooks/useRelationship";
 import { useMySeasons } from "@hooks/useSeasons";
+import {
+  useTeams,
+  usePrefectures,
+  useBaseballCategories,
+} from "@hooks/useMasterData";
+import { useUserAwards } from "@hooks/useAwards";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
 import { ProfileGamesTab } from "@components/profile/ProfileGamesTab";
@@ -72,6 +79,27 @@ export default function ProfileScreen() {
     isRefreshing: isStatsRefreshing,
   } = useProfileStats(filters);
 
+  // マスターデータ・受賞歴
+  const { data: teams } = useTeams();
+  const { data: prefectures } = usePrefectures();
+  const { data: categories } = useBaseballCategories();
+  const { data: awards } = useUserAwards(profile?.id);
+
+  const team = teams?.find((t) => t.id === profile?.team_id);
+  const categoryName = categories?.find(
+    (c) => c.id === team?.category_id,
+  )?.name;
+  const prefectureName = prefectures?.find(
+    (p) => p.id === team?.prefecture_id,
+  )?.name;
+
+  const handleSharePress = async () => {
+    if (!profile?.user_id) return;
+    await Share.share({
+      message: `BUZZ BASEで${profile.name ?? ""}のプロフィールをチェック！\nhttps://buzzbase.jp/${profile.user_id}`,
+    });
+  };
+
   const handleRefresh = () => {
     refetch();
     refetchStats();
@@ -110,6 +138,14 @@ export default function ProfileScreen() {
             profile={profile}
             followingCount={profileDetail?.following_count ?? undefined}
             followersCount={profileDetail?.followers_count ?? undefined}
+            positions={profile.positions}
+            teamName={team?.name}
+            categoryName={categoryName}
+            prefectureName={prefectureName}
+            awards={awards}
+            showEditButton
+            onEditPress={() => router.push("/(profile)/edit")}
+            onSharePress={handleSharePress}
             onFollowingCountPress={() => {
               if (profileDetail) {
                 router.push({
