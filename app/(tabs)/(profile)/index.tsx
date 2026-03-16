@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useProfile } from "@hooks/useProfile";
 import { useProfileStats } from "@hooks/useProfileStats";
 import { useUserProfileDetail } from "@hooks/useRelationship";
+import { useMySeasons } from "@hooks/useSeasons";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
 import { ProfileGamesTab } from "@components/profile/ProfileGamesTab";
@@ -23,7 +24,12 @@ import type { StatsFilters } from "../../../types/profile";
 export default function ProfileScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(0);
-  const [filters] = useState<StatsFilters>({});
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(
+    undefined,
+  );
+  const filters: StatsFilters = {
+    ...(selectedSeasonId ? { seasonId: selectedSeasonId } : {}),
+  };
   const [menuVisible, setMenuVisible] = useState(false);
   const menuOpacity = useRef(new Animated.Value(0)).current;
 
@@ -54,6 +60,7 @@ export default function ProfileScreen() {
   }, [closeMenu]);
 
   const { profile, isLoading, refetch, isRefreshing } = useProfile();
+  const { seasons } = useMySeasons();
   const { data: profileDetail } = useUserProfileDetail(
     profile?.user_id ?? undefined,
   );
@@ -163,6 +170,52 @@ export default function ProfileScreen() {
               />
             }
           >
+            {seasons.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.seasonFilterContainer}
+                contentContainerStyle={styles.seasonFilterContent}
+              >
+                <TouchableOpacity
+                  style={[
+                    styles.seasonChip,
+                    !selectedSeasonId && styles.seasonChipActive,
+                  ]}
+                  onPress={() => setSelectedSeasonId(undefined)}
+                >
+                  <Text
+                    style={[
+                      styles.seasonChipText,
+                      !selectedSeasonId && styles.seasonChipTextActive,
+                    ]}
+                  >
+                    すべて
+                  </Text>
+                </TouchableOpacity>
+                {seasons.map((season) => (
+                  <TouchableOpacity
+                    key={season.id}
+                    style={[
+                      styles.seasonChip,
+                      selectedSeasonId === String(season.id) &&
+                        styles.seasonChipActive,
+                    ]}
+                    onPress={() => setSelectedSeasonId(String(season.id))}
+                  >
+                    <Text
+                      style={[
+                        styles.seasonChipText,
+                        selectedSeasonId === String(season.id) &&
+                          styles.seasonChipTextActive,
+                      ]}
+                    >
+                      {season.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
             {isStatsLoading ? (
               <ActivityIndicator color="#d08000" style={{ marginTop: 20 }} />
             ) : (
@@ -193,6 +246,16 @@ export default function ProfileScreen() {
               >
                 <Ionicons name="book-outline" size={20} color="#F4F4F4" />
                 <Text style={styles.menuItemText}>野球ノート</Text>
+              </TouchableOpacity>
+              <View style={styles.menuDivider} />
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() =>
+                  handleMenuItem(() => router.push("/(profile)/seasons"))
+                }
+              >
+                <Ionicons name="calendar-outline" size={20} color="#F4F4F4" />
+                <Text style={styles.menuItemText}>シーズン管理</Text>
               </TouchableOpacity>
               <View style={styles.menuDivider} />
               <TouchableOpacity
@@ -289,5 +352,30 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#4A4A4A",
     marginHorizontal: 12,
+  },
+  seasonFilterContainer: {
+    marginBottom: 12,
+    marginHorizontal: -16,
+  },
+  seasonFilterContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  seasonChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: "#424242",
+  },
+  seasonChipActive: {
+    backgroundColor: "#d08000",
+  },
+  seasonChipText: {
+    color: "#A1A1AA",
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  seasonChipTextActive: {
+    color: "#FFFFFF",
   },
 });
