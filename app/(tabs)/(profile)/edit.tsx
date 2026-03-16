@@ -10,14 +10,14 @@ import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useProfile } from "@hooks/useProfile";
 import { useProfileEdit } from "@hooks/useProfileEdit";
-import { useAuth } from "@hooks/useAuth";
+import { useAuthStore } from "@stores/authStore";
 import { ProfileEditForm } from "@components/profile/ProfileEditForm";
 
 export default function ProfileEditScreen() {
   const router = useRouter();
   const { profile, isLoading } = useProfile();
   const { updateProfile, isUpdating } = useProfileEdit();
-  const { logout } = useAuth();
+  const logout = useAuthStore((s) => s.logout);
 
   const [name, setName] = useState("");
   const [userId, setUserId] = useState("");
