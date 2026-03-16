@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
   ScrollView,
   RefreshControl,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   ActivityIndicator,
   StyleSheet,
+  Animated,
 } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,6 +24,34 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(0);
   const [filters] = useState<StatsFilters>({});
+  const [menuVisible, setMenuVisible] = useState(false);
+  const menuOpacity = useRef(new Animated.Value(0)).current;
+
+  const openMenu = () => {
+    setMenuVisible(true);
+    Animated.timing(menuOpacity, {
+      toValue: 1,
+      duration: 150,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeMenu = useCallback(() => {
+    Animated.timing(menuOpacity, {
+      toValue: 0,
+      duration: 120,
+      useNativeDriver: true,
+    }).start(() => setMenuVisible(false));
+  }, [menuOpacity]);
+
+  const handleMenuItem = (action: () => void) => {
+    closeMenu();
+    action();
+  };
+
+  useEffect(() => {
+    return () => closeMenu();
+  }, [closeMenu]);
 
   const { profile, isLoading, refetch, isRefreshing } = useProfile();
   const { data: profileDetail } = useUserProfileDetail(
@@ -59,8 +89,8 @@ export default function ProfileScreen() {
               >
                 <Ionicons name="search-outline" size={22} color="#F4F4F4" />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push("/(profile)/edit")}>
-                <Ionicons name="settings-outline" size={22} color="#F4F4F4" />
+              <TouchableOpacity onPress={openMenu}>
+                <Ionicons name="menu" size={24} color="#F4F4F4" />
               </TouchableOpacity>
             </View>
           ),
@@ -148,6 +178,36 @@ export default function ProfileScreen() {
           </View>
         )}
       </View>
+
+      {menuVisible && (
+        <TouchableWithoutFeedback onPress={closeMenu}>
+          <View style={styles.menuOverlay}>
+            <Animated.View
+              style={[styles.menuContainer, { opacity: menuOpacity }]}
+            >
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() =>
+                  handleMenuItem(() => router.push("/(profile)/notes"))
+                }
+              >
+                <Ionicons name="book-outline" size={20} color="#F4F4F4" />
+                <Text style={styles.menuItemText}>野球ノート</Text>
+              </TouchableOpacity>
+              <View style={styles.menuDivider} />
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() =>
+                  handleMenuItem(() => router.push("/(profile)/edit"))
+                }
+              >
+                <Ionicons name="settings-outline" size={20} color="#F4F4F4" />
+                <Text style={styles.menuItemText}>設定</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+        </TouchableWithoutFeedback>
+      )}
     </>
   );
 }
@@ -191,5 +251,43 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 16,
     paddingBottom: 32,
+  },
+  menuOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  menuContainer: {
+    position: "absolute",
+    top: 4,
+    right: 16,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 10,
+    paddingVertical: 4,
+    minWidth: 160,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  menuItemText: {
+    color: "#F4F4F4",
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: "#4A4A4A",
+    marginHorizontal: 12,
   },
 });
