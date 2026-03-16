@@ -13,6 +13,7 @@ import { SelectPicker } from "@components/ui/SelectPicker";
 import { NumberInput } from "@components/ui/NumberInput";
 import { Button } from "@components/ui/Button";
 import type { Team, Position } from "../../types/gameRecord";
+import type { Season } from "../../types/season";
 
 interface Props {
   date: string;
@@ -26,6 +27,8 @@ interface Props {
   battingOrder: string;
   defensivePosition: string;
   memo: string;
+  seasonId: number | null;
+  seasons: Season[];
   teams: Team[];
   positions: Position[];
   isSubmitting: boolean;
@@ -52,6 +55,8 @@ export function GameInfoForm({
   battingOrder,
   defensivePosition,
   memo,
+  seasonId,
+  seasons,
   teams,
   positions,
   isSubmitting,
@@ -89,6 +94,14 @@ export function GameInfoForm({
     label: p.name,
     value: p.name,
   }));
+
+  const seasonItems = [
+    { label: "なし", value: "" },
+    ...seasons.map((s) => ({
+      label: s.name,
+      value: String(s.id),
+    })),
+  ];
 
   const renderTeamSuggestions = (
     filteredTeams: Team[],
@@ -293,6 +306,16 @@ export function GameInfoForm({
           placeholderTextColor="#71717A"
         />
       </View>
+
+      {/* シーズン */}
+      {seasons.length > 0 && (
+        <SelectPicker
+          label="シーズン（任意）"
+          items={seasonItems}
+          selectedValue={seasonId ? String(seasonId) : ""}
+          onSelect={(v) => onFieldChange("seasonId", v ? Number(v) : null)}
+        />
+      )}
 
       <Button
         title="次へ：打撃成績"

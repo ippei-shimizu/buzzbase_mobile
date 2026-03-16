@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useGameRecord } from "@hooks/useGameRecord";
+import { useMySeasons } from "@hooks/useSeasons";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 import { StepIndicator } from "@components/game-record/StepIndicator";
 import { GameInfoForm } from "@components/game-record/GameInfoForm";
@@ -11,6 +12,7 @@ export default function Step1GameInfoScreen() {
   const { createGameResultMutation, submitStep1, teamsQuery, positionsQuery } =
     useGameRecord();
   const store = useGameRecordStore();
+  const { seasons } = useMySeasons();
   const [errors, setErrors] = useState<string[]>([]);
   const [isInitializing, setIsInitializing] = useState(false);
   const hasInitialized = useRef(false);
@@ -93,6 +95,8 @@ export default function Step1GameInfoScreen() {
         battingOrder={store.battingOrder}
         defensivePosition={store.defensivePosition}
         memo={store.memo}
+        seasonId={store.seasonId}
+        seasons={seasons}
         teams={teamsQuery.data ?? []}
         positions={positionsQuery.data ?? []}
         isSubmitting={submitStep1.isPending}

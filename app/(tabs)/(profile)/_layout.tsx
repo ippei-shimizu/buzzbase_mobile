@@ -16,6 +16,7 @@ export default function ProfileLayout() {
       <Stack.Screen name="follows" options={{ title: "フォロー" }} />
       <Stack.Screen name="search" options={{ title: "ユーザー検索" }} />
       <Stack.Screen name="notes" options={{ headerShown: false }} />
+      <Stack.Screen name="seasons" options={{ headerShown: false }} />
     </Stack>
   );
 }

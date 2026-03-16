@@ -81,6 +81,7 @@ export const useGameRecord = () => {
 
       await updateGameResult(store.gameResultId!, {
         match_result_id: matchResult.id,
+        season_id: store.seasonId,
       });
     },
   });
