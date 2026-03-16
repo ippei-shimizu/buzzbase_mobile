@@ -64,7 +64,8 @@ export interface PitchingResultPayload {
 }
 
 export interface GameResultUpdatePayload {
-  match_result_id: number;
+  match_result_id?: number;
+  season_id?: number | null;
 }
 
 export interface UpdateBattingAverageIdPayload {

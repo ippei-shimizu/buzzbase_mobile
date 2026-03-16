@@ -9,6 +9,7 @@ interface GameRecordState {
   pitchingResultId: number | null;
 
   // Step1: 試合情報
+  seasonId: number | null;
   date: string;
   matchType: string;
   myTeamName: string;
@@ -75,6 +76,7 @@ const initialState = {
   battingAverageId: null,
   pitchingResultId: null,
 
+  seasonId: null,
   date: new Date().toISOString().split("T")[0],
   matchType: "練習試合",
   myTeamName: "",
