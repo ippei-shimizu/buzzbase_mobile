@@ -1,17 +1,31 @@
 import React from "react";
-import { TouchableOpacity, StyleSheet } from "react-native";
-import { useLocalSearchParams, Stack } from "expo-router";
+import { TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import { GameResultDetail } from "@components/game-results/GameResultDetail";
+import { deleteGameResult } from "@services/gameResultService";
 import { shareGameResult } from "@utils/shareGameResult";
 import type { GameResult } from "../../../types/gameResult";
 
 export default function GameResultDetailScreen() {
   const { game: gameJson } = useLocalSearchParams<{ game: string }>();
   const game: GameResult = JSON.parse(gameJson);
+  const router = useRouter();
+  const queryClient = useQueryClient();
 
   const handleShare = () => {
     shareGameResult(game);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteGameResult(game.game_result_id);
+      queryClient.invalidateQueries({ queryKey: ["gameResults"] });
+      router.back();
+    } catch {
+      Alert.alert("エラー", "試合結果の削除に失敗しました");
+    }
   };
 
   return (
@@ -25,7 +39,7 @@ export default function GameResultDetailScreen() {
           ),
         }}
       />
-      <GameResultDetail game={game} />
+      <GameResultDetail game={game} onDelete={handleDelete} />
     </>
   );
 }

@@ -1,11 +1,164 @@
-import React from "react";
-import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import React, { useState, useMemo } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useGameResults } from "@hooks/useGameResults";
-import { GameResultList } from "@components/game-results/GameResultList";
+import { useMySeasons } from "@hooks/useSeasons";
+import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import type { GameResult } from "../../../types/gameResult";
 
+const MATCH_TYPE_OPTIONS = [
+  { key: "regular", label: "公式戦" },
+  { key: "open", label: "オープン戦" },
+];
+
+function FilterDropdown({
+  label,
+  value,
+  options,
+  onSelect,
+  isOpen,
+  onToggle,
+}: {
+  label: string;
+  value: string | undefined;
+  options: { key: string; label: string }[];
+  onSelect: (key: string | undefined) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  const selectedLabel = options.find((o) => o.key === value)?.label ?? "全て";
+
+  return (
+    <View style={{ zIndex: isOpen ? 100 : 0 }}>
+      <TouchableOpacity style={filterStyles.button} onPress={onToggle}>
+        <Text style={filterStyles.buttonText}>
+          {label}: {selectedLabel}
+        </Text>
+        <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+      </TouchableOpacity>
+
+      {isOpen && (
+        <>
+          <TouchableWithoutFeedback onPress={onToggle}>
+            <View style={filterStyles.overlayBg} />
+          </TouchableWithoutFeedback>
+          <View style={filterStyles.dropdown}>
+            <TouchableOpacity
+              style={[
+                filterStyles.dropdownItem,
+                !value && filterStyles.dropdownItemActive,
+              ]}
+              onPress={() => {
+                onSelect(undefined);
+                onToggle();
+              }}
+            >
+              <Text
+                style={[
+                  filterStyles.dropdownText,
+                  !value && filterStyles.dropdownTextActive,
+                ]}
+              >
+                全て
+              </Text>
+            </TouchableOpacity>
+            {options.map((opt) => (
+              <TouchableOpacity
+                key={opt.key}
+                style={[
+                  filterStyles.dropdownItem,
+                  value === opt.key && filterStyles.dropdownItemActive,
+                ]}
+                onPress={() => {
+                  onSelect(opt.key);
+                  onToggle();
+                }}
+              >
+                <Text
+                  style={[
+                    filterStyles.dropdownText,
+                    value === opt.key && filterStyles.dropdownTextActive,
+                  ]}
+                >
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </>
+      )}
+    </View>
+  );
+}
+
+const filterStyles = StyleSheet.create({
+  button: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderWidth: 1,
+    borderColor: "#71717b",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  buttonText: {
+    color: "#F4F4F4",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  overlayBg: {
+    position: "absolute" as const,
+    top: -500,
+    left: -500,
+    right: -500,
+    bottom: -500,
+    zIndex: 99,
+  },
+  dropdown: {
+    position: "absolute",
+    top: 36,
+    left: 0,
+    zIndex: 100,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 10,
+    paddingVertical: 4,
+    minWidth: 160,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  dropdownItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  dropdownItemActive: {
+    backgroundColor: "#4A4A4A",
+  },
+  dropdownText: {
+    color: "#F4F4F4",
+    fontSize: 14,
+  },
+  dropdownTextActive: {
+    color: "#d08000",
+  },
+});
+
 export default function GameResultsScreen() {
+  const router = useRouter();
   const {
     gameResults,
     isLoading,
@@ -16,7 +169,53 @@ export default function GameResultsScreen() {
     hasNextPage,
     isFetchingNextPage,
   } = useGameResults();
-  const router = useRouter();
+  const { seasons } = useMySeasons();
+
+  const [selectedYear, setSelectedYear] = useState<string | undefined>(
+    undefined,
+  );
+  const [selectedMatchType, setSelectedMatchType] = useState<
+    string | undefined
+  >(undefined);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(
+    undefined,
+  );
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const toggleFilter = (id: string) =>
+    setActiveFilter((prev) => (prev === id ? null : id));
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortDesc, setSortDesc] = useState(true);
+
+  const filteredResults = useMemo(() => {
+    let filtered = gameResults.filter((g) => {
+      if (selectedYear && selectedYear !== "all") {
+        const year = new Date(g.match_result.date_and_time).getFullYear();
+        if (String(year) !== selectedYear) return false;
+      }
+      if (selectedMatchType && g.match_result.match_type !== selectedMatchType)
+        return false;
+      if (selectedSeasonId && String(g.season_id) !== selectedSeasonId)
+        return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        if (!g.match_result.opponent_team_name?.toLowerCase().includes(q))
+          return false;
+      }
+      return true;
+    });
+    return filtered.sort((a, b) => {
+      const da = new Date(a.match_result.date_and_time).getTime();
+      const db = new Date(b.match_result.date_and_time).getTime();
+      return sortDesc ? db - da : da - db;
+    });
+  }, [
+    gameResults,
+    selectedYear,
+    selectedMatchType,
+    selectedSeasonId,
+    searchQuery,
+    sortDesc,
+  ]);
 
   const handlePressItem = (game: GameResult) => {
     router.push({
@@ -50,14 +249,116 @@ export default function GameResultsScreen() {
     );
   }
 
+  const headerComponent = (
+    <View style={styles.filterSection}>
+      {/* 試合記録ボタン */}
+      <TouchableOpacity
+        style={styles.recordButton}
+        onPress={() => router.push("/(game-record)/step1-game-info")}
+      >
+        <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
+        <Text style={styles.recordButtonText}>試合結果を記録する</Text>
+      </TouchableOpacity>
+      {/* フィルター */}
+      <View
+        style={{
+          flexDirection: "row",
+          gap: 8,
+          flexWrap: "wrap",
+          marginBottom: 12,
+        }}
+      >
+        <FilterDropdown
+          label="年度"
+          value={selectedYear}
+          options={[
+            { key: "all", label: "通算" },
+            ...Array.from({ length: 5 }, (_, i) => {
+              const y = String(new Date().getFullYear() - i);
+              return { key: y, label: y };
+            }),
+          ]}
+          onSelect={(v) => setSelectedYear(v === "all" ? undefined : v)}
+          isOpen={activeFilter === "year"}
+          onToggle={() => toggleFilter("year")}
+        />
+        <FilterDropdown
+          label="種別"
+          value={selectedMatchType}
+          options={MATCH_TYPE_OPTIONS}
+          onSelect={setSelectedMatchType}
+          isOpen={activeFilter === "matchType"}
+          onToggle={() => toggleFilter("matchType")}
+        />
+        <FilterDropdown
+          label="シーズン"
+          value={selectedSeasonId}
+          options={seasons.map((s) => ({
+            key: String(s.id),
+            label: s.name,
+          }))}
+          onSelect={setSelectedSeasonId}
+          isOpen={activeFilter === "season"}
+          onToggle={() => toggleFilter("season")}
+        />
+      </View>
+
+      {/* 検索 + ソート */}
+      <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+        <View style={styles.searchBox}>
+          <Ionicons name="search" size={16} color="#71717A" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="対戦相手を検索"
+            placeholderTextColor="#71717A"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+        <TouchableOpacity
+          style={filterStyles.button}
+          onPress={() => setSortDesc((p) => !p)}
+        >
+          <Text style={filterStyles.buttonText}>
+            日付（{sortDesc ? "新しい順" : "古い順"}）
+          </Text>
+          <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
-    <GameResultList
-      data={gameResults}
-      isRefreshing={isRefreshing}
-      onRefresh={refetch}
+    <FlatList
+      data={filteredResults}
+      keyExtractor={(item) => String(item.game_result_id)}
+      renderItem={({ item }) => (
+        <View style={styles.cardContainer}>
+          <GameResultListItem game={item} onPress={handlePressItem} />
+        </View>
+      )}
+      ListHeaderComponent={headerComponent}
+      contentContainerStyle={styles.content}
       onEndReached={handleEndReached}
-      isFetchingNextPage={isFetchingNextPage}
-      onPressItem={handlePressItem}
+      onEndReachedThreshold={0.5}
+      keyboardShouldPersistTaps="handled"
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={refetch}
+          tintColor="#d08000"
+        />
+      }
+      ListFooterComponent={
+        isFetchingNextPage ? (
+          <View style={styles.footer}>
+            <ActivityIndicator color="#d08000" />
+          </View>
+        ) : null
+      }
+      ListEmptyComponent={
+        <Text style={styles.emptyText}>試合結果がありません</Text>
+      }
     />
   );
 }
@@ -67,9 +368,61 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#2E2E2E",
   },
   errorText: {
     color: "#A1A1AA",
     fontSize: 16,
+  },
+  content: {
+    padding: 16,
+    paddingBottom: 32,
+    flexGrow: 1,
+  },
+  recordButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#d08000",
+    borderRadius: 8,
+    paddingVertical: 12,
+    marginBottom: 16,
+  },
+  recordButtonText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  filterSection: {
+    marginBottom: 12,
+  },
+  searchBox: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "#71717b",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: "#F4F4F4",
+    fontSize: 13,
+    padding: 0,
+  },
+  cardContainer: {},
+  footer: {
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  emptyText: {
+    color: "#A1A1AA",
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 40,
   },
 });
