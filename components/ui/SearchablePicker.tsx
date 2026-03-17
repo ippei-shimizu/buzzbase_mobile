@@ -6,7 +6,9 @@ import {
   Modal,
   FlatList,
   TextInput,
+  StyleSheet,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 interface PickerItem {
   label: string;
@@ -57,77 +59,41 @@ export function SearchablePicker({
     setVisible(false);
   };
 
+  const handleClear = () => {
+    onCustomInput("");
+  };
+
   return (
-    <View style={{ marginBottom: 16 }}>
-      <Text style={{ marginBottom: 4, fontSize: 14, color: "#D4D4D8" }}>
-        {label}
-      </Text>
-      <TouchableOpacity
-        style={{
-          borderRadius: 8,
-          borderWidth: 1,
-          borderColor: "#52525B",
-          backgroundColor: "#424242",
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-        onPress={handleOpen}
-      >
+    <View style={styles.wrapper}>
+      <Text style={styles.label}>{label}</Text>
+      <TouchableOpacity style={styles.trigger} onPress={handleOpen}>
         <Text
-          style={{
-            fontSize: 16,
-            color: value ? "#F4F4F4" : "#71717A",
-          }}
+          style={[styles.triggerText, !value && styles.triggerPlaceholder]}
+          numberOfLines={1}
         >
           {value || placeholder}
         </Text>
-        <Text style={{ color: "#A1A1AA" }}>▼</Text>
+        <View style={styles.triggerActions}>
+          {value ? (
+            <TouchableOpacity onPress={handleClear} hitSlop={8}>
+              <Ionicons name="close-circle" size={18} color="#71717A" />
+            </TouchableOpacity>
+          ) : null}
+          <Ionicons name="chevron-down" size={18} color="#A1A1AA" />
+        </View>
       </TouchableOpacity>
 
       <Modal visible={visible} transparent animationType="slide">
         <TouchableOpacity
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
+          style={styles.overlay}
           activeOpacity={1}
           onPress={() => setVisible(false)}
         >
-          <View
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              maxHeight: "70%",
-              backgroundColor: "#2E2E2E",
-              borderTopLeftRadius: 16,
-              borderTopRightRadius: 16,
-              paddingTop: 16,
-              paddingBottom: 32,
-            }}
-            onStartShouldSetResponder={() => true}
-          >
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: "600",
-                color: "#F4F4F4",
-                textAlign: "center",
-                marginBottom: 12,
-              }}
-            >
-              {label}
-            </Text>
-            <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+          <View style={styles.sheet} onStartShouldSetResponder={() => true}>
+            <Text style={styles.sheetTitle}>{label}</Text>
+            <View style={styles.searchContainer}>
               <TextInput
-                style={{
-                  backgroundColor: "#424242",
-                  borderRadius: 8,
-                  padding: 12,
-                  color: "#F4F4F4",
-                  fontSize: 16,
-                }}
+                style={styles.searchInput}
                 value={searchText}
                 onChangeText={setSearchText}
                 placeholder="チーム名を入力"
@@ -141,21 +107,16 @@ export function SearchablePicker({
               keyboardShouldPersistTaps="handled"
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={{
-                    paddingVertical: 14,
-                    paddingHorizontal: 20,
-                  }}
+                  style={styles.listItem}
                   onPress={() => handleSelect(item)}
                 >
-                  <Text style={{ fontSize: 16, color: "#F4F4F4" }}>
-                    {item.label}
-                  </Text>
+                  <Text style={styles.listItemText}>{item.label}</Text>
                 </TouchableOpacity>
               )}
               ListEmptyComponent={
                 searchText.trim() ? (
-                  <View style={{ paddingHorizontal: 20, paddingVertical: 8 }}>
-                    <Text style={{ color: "#A1A1AA", fontSize: 14 }}>
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>
                       該当するチームがありません
                     </Text>
                   </View>
@@ -164,19 +125,10 @@ export function SearchablePicker({
             />
             {searchText.trim() && (
               <TouchableOpacity
-                style={{
-                  marginHorizontal: 16,
-                  marginTop: 8,
-                  backgroundColor: "#d08000",
-                  borderRadius: 8,
-                  padding: 14,
-                  alignItems: "center",
-                }}
+                style={styles.confirmButton}
                 onPress={handleConfirmCustom}
               >
-                <Text
-                  style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "600" }}
-                >
+                <Text style={styles.confirmButtonText}>
                   「{searchText.trim()}」で決定
                 </Text>
               </TouchableOpacity>
@@ -187,3 +139,102 @@ export function SearchablePicker({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrapper: {
+    marginBottom: 16,
+  },
+  label: {
+    marginBottom: 4,
+    fontSize: 14,
+    color: "#D4D4D8",
+  },
+  trigger: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#52525B",
+    backgroundColor: "#424242",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  triggerText: {
+    fontSize: 16,
+    color: "#F4F4F4",
+    flex: 1,
+  },
+  triggerPlaceholder: {
+    color: "#71717A",
+  },
+  triggerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginLeft: 8,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  sheet: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    maxHeight: "70%",
+    backgroundColor: "#2E2E2E",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingTop: 16,
+    paddingBottom: 32,
+  },
+  sheetTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#F4F4F4",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  searchInput: {
+    backgroundColor: "#424242",
+    borderRadius: 8,
+    padding: 12,
+    color: "#F4F4F4",
+    fontSize: 16,
+  },
+  listItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+  },
+  listItemText: {
+    fontSize: 16,
+    color: "#F4F4F4",
+  },
+  emptyContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+  },
+  emptyText: {
+    color: "#A1A1AA",
+    fontSize: 14,
+  },
+  confirmButton: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: "#d08000",
+    borderRadius: 8,
+    padding: 14,
+    alignItems: "center",
+  },
+  confirmButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});
