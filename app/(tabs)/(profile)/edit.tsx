@@ -195,9 +195,7 @@ export default function ProfileEditScreen() {
 
       // 3. 受賞歴の差分更新
       const existingIds = new Set(existingAwards?.map((a) => a.id) ?? []);
-      const currentIds = new Set(
-        awards.filter((a) => a.id).map((a) => a.id!),
-      );
+      const currentIds = new Set(awards.filter((a) => a.id).map((a) => a.id!));
 
       // 削除
       for (const existing of existingAwards ?? []) {

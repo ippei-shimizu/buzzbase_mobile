@@ -41,13 +41,8 @@ export const useAwardMutations = () => {
   });
 
   const remove = useMutation({
-    mutationFn: ({
-      userId,
-      awardId,
-    }: {
-      userId: number;
-      awardId: number;
-    }) => deleteAward(userId, awardId),
+    mutationFn: ({ userId, awardId }: { userId: number; awardId: number }) =>
+      deleteAward(userId, awardId),
     onSuccess: invalidateAwards,
   });
 

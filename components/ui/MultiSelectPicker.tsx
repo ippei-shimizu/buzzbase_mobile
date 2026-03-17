@@ -36,9 +36,7 @@ export function MultiSelectPicker({
 
   const handleToggle = (value: number) => {
     setTempSelected((prev) =>
-      prev.includes(value)
-        ? prev.filter((v) => v !== value)
-        : [...prev, value],
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
     );
   };
 
@@ -139,9 +137,7 @@ export function MultiSelectPicker({
                       flexDirection: "row",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      backgroundColor: isSelected
-                        ? "#3a3a3a"
-                        : "transparent",
+                      backgroundColor: isSelected ? "#3a3a3a" : "transparent",
                     }}
                     onPress={() => handleToggle(item.value)}
                   >

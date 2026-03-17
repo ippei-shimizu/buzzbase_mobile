@@ -102,24 +102,6 @@ export const ProfileEditForm = ({
 
   return (
     <View style={styles.container}>
-      {/* 非公開設定 */}
-      <View style={styles.switchRow}>
-        <View>
-          <Text style={styles.switchLabel}>非公開アカウント</Text>
-          <Text style={styles.switchDescription}>
-            承認したフォロワーのみが成績やプロフィールを閲覧できます
-          </Text>
-        </View>
-        <Switch
-          value={isPrivate}
-          onValueChange={onChangeIsPrivate}
-          trackColor={{ false: "#525252", true: "#d08000" }}
-          thumbColor="#F4F4F4"
-        />
-      </View>
-
-      <View style={styles.divider} />
-
       {/* プロフィール画像 */}
       <TouchableOpacity style={styles.avatarContainer} onPress={onPickImage}>
         {imageSource ? (
@@ -129,6 +111,23 @@ export const ProfileEditForm = ({
         )}
         <Text style={styles.changePhotoText}>画像を編集</Text>
       </TouchableOpacity>
+
+      {/* 非公開設定 */}
+      <View style={styles.switchRow}>
+        <View style={styles.switchTextContainer}>
+          <Text style={styles.switchLabel}>非公開アカウント</Text>
+          <Text style={styles.switchDescription}>
+            承認したフォロワーのみが成績やプロフィールを閲覧できます
+          </Text>
+        </View>
+        <Switch
+          style={styles.switchSmall}
+          value={isPrivate}
+          onValueChange={onChangeIsPrivate}
+          trackColor={{ false: "#525252", true: "#d08000" }}
+          thumbColor="#F4F4F4"
+        />
+      </View>
 
       {/* 名前 */}
       <View style={styles.field}>
@@ -158,16 +157,12 @@ export const ProfileEditForm = ({
         />
       </View>
 
-      <View style={styles.divider} />
-
       {/* ポジション */}
       <PositionSection
         selectedPositionIds={selectedPositionIds}
         positions={positionItems}
         onSelect={onSelectPositions}
       />
-
-      <View style={styles.divider} />
 
       {/* チーム設定 */}
       <TeamSection
@@ -184,8 +179,6 @@ export const ProfileEditForm = ({
         onSelectPrefecture={onSelectPrefecture}
       />
 
-      <View style={styles.divider} />
-
       {/* 受賞歴 */}
       <AwardSection
         awards={awards}
@@ -193,8 +186,6 @@ export const ProfileEditForm = ({
         onRemoveAward={onRemoveAward}
         onAddAward={onAddAward}
       />
-
-      <View style={styles.divider} />
 
       {/* 保存ボタン */}
       <TouchableOpacity
@@ -220,12 +211,19 @@ export const ProfileEditForm = ({
 const styles = StyleSheet.create({
   container: {
     padding: 20,
+    gap: 24,
   },
   switchRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+  },
+  switchTextContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
+  switchSmall: {
+    transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }],
   },
   switchLabel: {
     color: "#F4F4F4",
@@ -238,14 +236,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
     maxWidth: 260,
   },
-  divider: {
-    height: 1,
-    backgroundColor: "#3A3A3A",
-    marginVertical: 20,
-  },
   avatarContainer: {
     alignItems: "center",
-    marginBottom: 24,
   },
   avatar: {
     width: 80,
@@ -257,9 +249,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 8,
   },
-  field: {
-    marginBottom: 20,
-  },
+  field: {},
   label: {
     color: "#F4F4F4",
     fontSize: 14,
@@ -286,7 +276,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 14,
     alignItems: "center",
-    marginBottom: 16,
   },
   saveButtonDisabled: {
     opacity: 0.6,
@@ -302,7 +291,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 14,
     alignItems: "center",
-    marginBottom: 40,
   },
   logoutButtonText: {
     color: "#EF4444",

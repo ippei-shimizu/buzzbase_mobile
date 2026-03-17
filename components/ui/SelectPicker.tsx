@@ -37,10 +37,7 @@ export function SelectPicker({
   return (
     <View style={styles.wrapper}>
       <Text style={styles.label}>{label}</Text>
-      <TouchableOpacity
-        style={styles.trigger}
-        onPress={() => setVisible(true)}
-      >
+      <TouchableOpacity style={styles.trigger} onPress={() => setVisible(true)}>
         <Text
           style={[
             styles.triggerText,
@@ -51,10 +48,7 @@ export function SelectPicker({
         </Text>
         <View style={styles.triggerActions}>
           {showClear && selectedValue ? (
-            <TouchableOpacity
-              onPress={() => onSelect(0)}
-              hitSlop={8}
-            >
+            <TouchableOpacity onPress={() => onSelect(0)} hitSlop={8}>
               <Ionicons name="close-circle" size={18} color="#71717A" />
             </TouchableOpacity>
           ) : null}

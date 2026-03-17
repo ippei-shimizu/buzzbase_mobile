@@ -159,7 +159,8 @@ export const ProfileHeader = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
     paddingHorizontal: 16,
   },
   topRow: {
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     color: "#F4F4F4",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "600",
   },
   shareButton: {
@@ -242,7 +243,7 @@ const styles = StyleSheet.create({
   },
   shareButtonText: {
     color: "#F4F4F4",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "600",
   },
   followButtonContainer: {
