@@ -32,6 +32,38 @@ export const getProfileBattingStats = async (
   return response.data;
 };
 
+export const getUserBattingStats = async (
+  userId: number,
+  filters: StatsFilters,
+): Promise<BattingStats> => {
+  const params = new URLSearchParams();
+  params.append("user_id", String(userId));
+  if (filters.year) params.append("year", filters.year);
+  if (filters.matchType) params.append("match_type", filters.matchType);
+  if (filters.seasonId) params.append("season_id", filters.seasonId);
+
+  const response = await axiosInstance.get<BattingStats>(
+    `${API_BASE_URL}/api/v2/dashboard/batting_stats?${params.toString()}`,
+  );
+  return response.data;
+};
+
+export const getUserPitchingStats = async (
+  userId: number,
+  filters: StatsFilters,
+): Promise<PitchingStats> => {
+  const params = new URLSearchParams();
+  params.append("user_id", String(userId));
+  if (filters.year) params.append("year", filters.year);
+  if (filters.matchType) params.append("match_type", filters.matchType);
+  if (filters.seasonId) params.append("season_id", filters.seasonId);
+
+  const response = await axiosInstance.get<PitchingStats>(
+    `${API_BASE_URL}/api/v2/dashboard/pitching_stats?${params.toString()}`,
+  );
+  return response.data;
+};
+
 export const getUserProfileDetail = async (
   userId: string,
 ): Promise<UserProfileDetail> => {

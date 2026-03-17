@@ -1,5 +1,28 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { getGameResults } from "../services/gameResultService";
+import {
+  getGameResults,
+  getUserGameResults,
+} from "../services/gameResultService";
+
+export const useUserGameResults = (userId: number | undefined) => {
+  const { data, isLoading, isRefetching, refetch } = useInfiniteQuery({
+    queryKey: ["userGameResults", userId],
+    queryFn: ({ pageParam }) => getUserGameResults(userId!, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { current_page, total_pages } = lastPage.pagination;
+      return current_page < total_pages ? current_page + 1 : undefined;
+    },
+    enabled: !!userId,
+  });
+
+  return {
+    gameResults: data?.pages.flatMap((page) => page.data) ?? [],
+    isLoading,
+    isRefreshing: isRefetching,
+    refetch,
+  };
+};
 
 export const useGameResults = () => {
   const {
