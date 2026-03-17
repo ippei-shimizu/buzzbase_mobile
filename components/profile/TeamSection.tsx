@@ -46,7 +46,7 @@ export const TeamSection = ({
 
       <View style={!hasTeamName ? styles.disabled : undefined}>
         <SelectPicker
-          label="カテゴリ"
+          label="所属カテゴリー（年代 / リーグ / 連盟）"
           items={categories}
           selectedValue={selectedCategoryId}
           onSelect={onSelectCategory}
@@ -54,7 +54,7 @@ export const TeamSection = ({
         />
 
         <SelectPicker
-          label="都道府県"
+          label="所属地域（都道府県）"
           items={prefectures}
           selectedValue={selectedPrefectureId}
           onSelect={onSelectPrefecture}
@@ -67,13 +67,13 @@ export const TeamSection = ({
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 8,
+    marginBottom: 0,
   },
   sectionTitle: {
     color: "#F4F4F4",
     fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 12,
+    fontWeight: "700",
+    marginBottom: 16,
   },
   disabled: {
     opacity: 0.4,

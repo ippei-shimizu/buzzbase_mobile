@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { MultiSelectPicker } from "@components/ui/MultiSelectPicker";
 
 interface Props {
@@ -15,9 +15,8 @@ export const PositionSection = ({
 }: Props) => {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>ポジション</Text>
       <MultiSelectPicker
-        label="守備位置"
+        label="ポジション（複数選択可）"
         items={positions}
         selectedValues={selectedPositionIds}
         onSelect={onSelect}
@@ -29,12 +28,6 @@ export const PositionSection = ({
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    color: "#F4F4F4",
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 12,
+    marginBottom: 0,
   },
 });

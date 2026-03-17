@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 interface AwardItem {
   id?: number;
@@ -28,6 +29,9 @@ export const AwardSection = ({
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>受賞歴</Text>
+      <Text style={styles.sectionSubtitle}>
+        受賞（チーム成績・個人タイトル）
+      </Text>
 
       {awards.map((award, index) => (
         <View key={award.id ?? `new-${index}`} style={styles.awardRow}>
@@ -42,13 +46,13 @@ export const AwardSection = ({
             style={styles.removeButton}
             onPress={() => onRemoveAward(index)}
           >
-            <Text style={styles.removeButtonText}>✕</Text>
+            <Ionicons name="close-circle" size={22} color="#71717A" />
           </TouchableOpacity>
         </View>
       ))}
 
       <TouchableOpacity style={styles.addButton} onPress={onAddAward}>
-        <Text style={styles.addButtonText}>＋ 受賞歴を追加</Text>
+        <Ionicons name="add-circle" size={28} color="#d08000" />
       </TouchableOpacity>
     </View>
   );
@@ -56,52 +60,39 @@ export const AwardSection = ({
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 8,
+    marginBottom: 0,
   },
   sectionTitle: {
     color: "#F4F4F4",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    color: "#A1A1AA",
+    fontSize: 13,
     marginBottom: 12,
   },
   awardRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   awardInput: {
     flex: 1,
     backgroundColor: "#424242",
     borderRadius: 8,
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     color: "#F4F4F4",
-    fontSize: 16,
+    fontSize: 14,
   },
   removeButton: {
-    marginLeft: 8,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#3a3a3a",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  removeButtonText: {
-    color: "#EF4444",
-    fontSize: 14,
-    fontWeight: "600",
+    marginLeft: 10,
+    padding: 2,
   },
   addButton: {
-    borderWidth: 1,
-    borderColor: "#52525B",
-    borderStyle: "dashed",
-    borderRadius: 8,
-    padding: 12,
-    alignItems: "center",
-  },
-  addButtonText: {
-    color: "#d08000",
-    fontSize: 14,
-    fontWeight: "600",
+    alignItems: "flex-end",
+    marginTop: 4,
   },
 });
