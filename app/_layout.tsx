@@ -5,11 +5,11 @@ import { StatusBar } from "expo-status-bar";
 import { queryClient } from "@utils/queryClient";
 import { usePushNotifications } from "@hooks/usePushNotifications";
 
-export default function RootLayout() {
+function RootLayoutInner() {
   usePushNotifications();
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
@@ -22,6 +22,14 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(game-record)" options={{ headerShown: false }} />
       </Stack>
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RootLayoutInner />
     </QueryClientProvider>
   );
 }

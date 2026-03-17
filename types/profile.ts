@@ -1,3 +1,25 @@
+export interface Prefecture {
+  id: number;
+  name: string;
+}
+
+export interface BaseballCategory {
+  id: number;
+  name: string;
+}
+
+export interface Award {
+  id: number;
+  title: string;
+}
+
+export interface TeamDetail {
+  id: number;
+  name: string;
+  category_id: number | null;
+  prefecture_id: number | null;
+}
+
 export interface UserProfile {
   id: number;
   email: string;
@@ -7,6 +29,7 @@ export interface UserProfile {
   introduction: string | null;
   team_id: number | null;
   is_private: boolean;
+  positions: { id: number; name: string }[];
 }
 
 export type FollowStatus = "self" | "none" | "pending" | "following";

@@ -25,6 +25,9 @@ export const useAuth = () => {
   const { isLoggedIn, isLoading, setIsLoggedIn, setIsLoading } = useAuthStore();
 
   useEffect(() => {
+    // 既に認証状態が確定している場合はスキップ
+    if (isLoggedIn !== undefined) return;
+
     const checkAuth = async () => {
       setIsLoading(true);
       try {
@@ -42,11 +45,12 @@ export const useAuth = () => {
       }
     };
     checkAuth();
-  }, [setIsLoggedIn, setIsLoading]);
+  }, [isLoggedIn, setIsLoggedIn, setIsLoading]);
 
   const login = async (data: SignInData) => {
     const response = await signIn(data);
     setIsLoggedIn(true);
+    setIsLoading(false);
     return response;
   };
 

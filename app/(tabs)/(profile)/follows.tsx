@@ -9,13 +9,21 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFollowingUsers } from "@hooks/useGroups";
-import { useFollowersUsers } from "@hooks/useRelationship";
+import {
+  useFollowersUsers,
+  useFollowUser,
+  useUnfollowUser,
+} from "@hooks/useRelationship";
+import { useProfile } from "@hooks/useProfile";
 import { UserRow } from "@components/profile/UserRow";
 
 export default function FollowsScreen() {
   const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
   const router = useRouter();
   const numericId = id ? Number(id) : undefined;
+  const { profile } = useProfile();
+  const { followUser } = useFollowUser();
+  const { unfollowUser } = useUnfollowUser();
 
   const [activeTab, setActiveTab] = useState<"following" | "followers">(
     tab === "followers" ? "followers" : "following",
@@ -41,6 +49,16 @@ export default function FollowsScreen() {
 
   const handleUserPress = (userId: string) => {
     router.push(`/(profile)/${userId}`);
+  };
+
+  const handleFollowPress = async (userId: number) => {
+    const user = users.find((u) => u.id === userId);
+    if (!user) return;
+    if (user.isFollowing) {
+      await unfollowUser(userId);
+    } else {
+      await followUser(userId);
+    }
   };
 
   return (
@@ -87,7 +105,13 @@ export default function FollowsScreen() {
           data={users}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
-            <UserRow user={item} onPress={handleUserPress} />
+            <UserRow
+              user={item}
+              onPress={handleUserPress}
+              showFollowButton
+              isSelf={item.id === profile?.id}
+              onFollowPress={handleFollowPress}
+            />
           )}
           ListEmptyComponent={
             <View style={styles.centerContainer}>

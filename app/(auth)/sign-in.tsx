@@ -30,6 +30,8 @@ export default function SignInScreen() {
 
     try {
       await login({ email, password });
+      router.replace("/(tabs)");
+      return;
     } catch (error) {
       if (error instanceof AxiosError) {
         const status = error.response?.status;

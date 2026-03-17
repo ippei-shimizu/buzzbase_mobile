@@ -1,27 +1,46 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
+import { API_BASE_URL } from "@constants/api";
 import type { FollowingUser } from "../../types/group";
 
 interface UserRowProps {
   user: FollowingUser;
   onPress: (userId: string) => void;
+  onFollowPress?: (userId: number) => void;
+  showFollowButton?: boolean;
+  isSelf?: boolean;
 }
 
-export const UserRow = ({ user, onPress }: UserRowProps) => {
+export const UserRow = ({
+  user,
+  onPress,
+  onFollowPress,
+  showFollowButton = false,
+  isSelf = false,
+}: UserRowProps) => {
+  const hasValidImage =
+    user.image?.url &&
+    !user.image.url.endsWith(".svg") &&
+    user.image.url.length > 0;
+  const imageSource = hasValidImage
+    ? {
+        uri: user.image!.url!.startsWith("http")
+          ? user.image!.url!
+          : `${API_BASE_URL}${user.image!.url}`,
+      }
+    : null;
+
   return (
     <TouchableOpacity
       style={styles.container}
       onPress={() => onPress(user.user_id)}
       activeOpacity={0.7}
     >
-      {user.image?.url ? (
-        <Image source={{ uri: user.image.url }} style={styles.avatar} />
+      {imageSource ? (
+        <Image source={imageSource} style={styles.avatar} />
       ) : (
-        <View style={[styles.avatar, styles.placeholder]}>
-          <Text style={styles.placeholderText}>
-            {user.name?.charAt(0) ?? "?"}
-          </Text>
-        </View>
+        <DefaultUserIcon size={40} />
       )}
       <View style={styles.info}>
         <Text style={styles.name} numberOfLines={1}>
@@ -31,6 +50,28 @@ export const UserRow = ({ user, onPress }: UserRowProps) => {
           @{user.user_id}
         </Text>
       </View>
+      {showFollowButton && !isSelf && (
+        <TouchableOpacity
+          style={[
+            styles.followButton,
+            user.isFollowing
+              ? styles.followingButton
+              : styles.notFollowingButton,
+          ]}
+          onPress={() => onFollowPress?.(user.id)}
+        >
+          <Text
+            style={[
+              styles.followButtonText,
+              user.isFollowing
+                ? styles.followingButtonText
+                : styles.notFollowingButtonText,
+            ]}
+          >
+            {user.isFollowing ? "フォロー中" : "フォロー"}
+          </Text>
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 };
@@ -43,19 +84,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-  },
-  placeholder: {
-    backgroundColor: "#424242",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  placeholderText: {
-    color: "#d08000",
-    fontSize: 18,
-    fontWeight: "700",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   info: {
     marginLeft: 12,
@@ -70,5 +101,29 @@ const styles = StyleSheet.create({
     color: "#A1A1AA",
     fontSize: 13,
     marginTop: 2,
+  },
+  followButton: {
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    marginLeft: 8,
+  },
+  followingButton: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "#71717b",
+  },
+  notFollowingButton: {
+    backgroundColor: "#d08000",
+  },
+  followButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  followingButtonText: {
+    color: "#F4F4F4",
+  },
+  notFollowingButtonText: {
+    color: "#FFFFFF",
   },
 });

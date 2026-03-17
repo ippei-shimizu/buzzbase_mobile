@@ -6,30 +6,7 @@ import { EmptyState } from "../dashboard/EmptyState";
 interface ProfileStatsTabProps {
   battingStats?: BattingStats;
   pitchingStats?: PitchingStats;
-}
-
-function Card({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>{title}</Text>
-      {children}
-    </View>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string | number }) {
-  return (
-    <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={styles.rowValue}>{value}</Text>
-    </View>
-  );
+  seasonFilter?: React.ReactNode;
 }
 
 function formatStat(value: number | undefined | null, decimals = 3): string {
@@ -37,168 +14,296 @@ function formatStat(value: number | undefined | null, decimals = 3): string {
   return value.toFixed(decimals);
 }
 
+function StatsTable({
+  rows,
+}: {
+  rows: [string, string | number, string, string | number][];
+}) {
+  return (
+    <View style={styles.table}>
+      {rows.map((row, i) => (
+        <View
+          key={i}
+          style={[styles.tableRow, i % 2 === 0 && styles.tableRowEven]}
+        >
+          <Text style={styles.cellLabel}>{row[0]}</Text>
+          <Text style={styles.cellValue}>{row[1]}</Text>
+          <Text style={styles.cellLabel}>{row[2]}</Text>
+          <Text style={styles.cellValue}>{row[3]}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export const ProfileStatsTab = ({
   battingStats,
   pitchingStats,
+  seasonFilter,
 }: ProfileStatsTabProps) => {
   const hasBatting = battingStats?.aggregate || battingStats?.calculated;
   const hasPitching = pitchingStats?.aggregate || pitchingStats?.calculated;
 
-  if (!hasBatting && !hasPitching) {
-    return (
-      <EmptyState
-        title="成績データがありません"
-        subtitle="試合結果を記録すると、ここに成績が表示されます"
-        style={{ marginTop: 16 }}
-      />
-    );
-  }
+  const agg = battingStats?.aggregate;
+  const calc = battingStats?.calculated;
+  const pAgg = pitchingStats?.aggregate;
+  const pCalc = pitchingStats?.calculated;
 
   return (
     <View>
+      {seasonFilter && (
+        <View style={styles.filterContainer}>{seasonFilter}</View>
+      )}
+
+      {!hasBatting && !hasPitching && (
+        <EmptyState
+          title="成績データがありません"
+          subtitle="試合結果を記録すると、ここに成績が表示されます"
+          style={{ marginTop: 16 }}
+        />
+      )}
+
       {hasBatting && (
-        <Card title="打撃成績">
-          {battingStats?.calculated && (
-            <>
-              <Row
-                label="打率"
-                value={formatStat(battingStats.calculated.batting_average)}
-              />
-              <Row
-                label="OPS"
-                value={formatStat(battingStats.calculated.ops)}
-              />
-              <Row
-                label="出塁率"
-                value={formatStat(battingStats.calculated.on_base_percentage)}
-              />
-              <Row
-                label="長打率"
-                value={formatStat(battingStats.calculated.slugging_percentage)}
-              />
-              <Row
-                label="ISO"
-                value={formatStat(battingStats.calculated.iso)}
-              />
-              <Row
-                label="BB/K"
-                value={formatStat(battingStats.calculated.bb_per_k, 2)}
-              />
-            </>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>打撃成績</Text>
+
+          {calc && agg && (
+            <View style={styles.headline}>
+              <Text style={styles.headlineRow}>
+                <Text style={styles.headlineLabel}>打率 </Text>
+                <Text style={styles.headlineValue}>
+                  {formatStat(calc.batting_average)}
+                </Text>
+                <Text style={styles.headlineSub}>
+                  {"  "}
+                  {agg.number_of_matches}試合
+                </Text>
+              </Text>
+              <Text style={styles.headlineSummary}>
+                {agg.times_at_bat}打席 {agg.at_bats}打数 {agg.hit}安打 /{" "}
+                {agg.runs_batted_in}打点 {agg.home_run}本塁打
+              </Text>
+            </View>
           )}
-          {battingStats?.aggregate && (
-            <>
-              <View style={styles.divider} />
-              <Row
-                label="試合数"
-                value={battingStats.aggregate.number_of_matches}
-              />
-              <Row label="打数" value={battingStats.aggregate.at_bats} />
-              <Row label="安打" value={battingStats.aggregate.hit} />
-              <Row label="二塁打" value={battingStats.aggregate.two_base_hit} />
-              <Row
-                label="三塁打"
-                value={battingStats.aggregate.three_base_hit}
-              />
-              <Row label="本塁打" value={battingStats.aggregate.home_run} />
-              <Row label="打点" value={battingStats.aggregate.runs_batted_in} />
-              <Row label="得点" value={battingStats.aggregate.run} />
-              <Row label="盗塁" value={battingStats.aggregate.stealing_base} />
-              <Row label="四球" value={battingStats.aggregate.base_on_balls} />
-              <Row label="三振" value={battingStats.aggregate.strike_out} />
-            </>
-          )}
-        </Card>
+
+          <StatsTable
+            rows={[
+              [
+                "打率",
+                formatStat(calc?.batting_average),
+                "試合",
+                agg?.number_of_matches ?? "-",
+              ],
+              ["打席", agg?.times_at_bat ?? "-", "打数", agg?.at_bats ?? "-"],
+              ["安打", agg?.hit ?? "-", "二塁打", agg?.two_base_hit ?? "-"],
+              [
+                "三塁打",
+                agg?.three_base_hit ?? "-",
+                "本塁打",
+                agg?.home_run ?? "-",
+              ],
+              [
+                "塁打",
+                agg?.total_bases ?? "-",
+                "打点",
+                agg?.runs_batted_in ?? "-",
+              ],
+              ["得点", agg?.run ?? "-", "三振", agg?.strike_out ?? "-"],
+              [
+                "四球",
+                agg?.base_on_balls ?? "-",
+                "死球",
+                agg?.hit_by_pitch ?? "-",
+              ],
+              [
+                "犠打",
+                agg?.sacrifice_hit ?? "-",
+                "犠飛",
+                agg?.sacrifice_fly ?? "-",
+              ],
+              [
+                "盗塁",
+                agg?.stealing_base ?? "-",
+                "盗塁死",
+                agg?.caught_stealing ?? "-",
+              ],
+              [
+                "出塁率",
+                formatStat(calc?.on_base_percentage),
+                "長打率",
+                formatStat(calc?.slugging_percentage),
+              ],
+              ["OPS", formatStat(calc?.ops), "ISO", formatStat(calc?.iso)],
+              [
+                "ISOD",
+                formatStat(calc?.isod),
+                "BB/K",
+                formatStat(calc?.bb_per_k),
+              ],
+            ]}
+          />
+        </View>
       )}
 
       {hasPitching && (
-        <Card title="投手成績">
-          {pitchingStats?.calculated && (
-            <>
-              <Row
-                label="防御率"
-                value={formatStat(pitchingStats.calculated.era, 2)}
-              />
-              <Row
-                label="WHIP"
-                value={formatStat(pitchingStats.calculated.whip, 2)}
-              />
-              <Row
-                label="K/9"
-                value={formatStat(pitchingStats.calculated.k_per_nine, 2)}
-              />
-              <Row
-                label="BB/9"
-                value={formatStat(pitchingStats.calculated.bb_per_nine, 2)}
-              />
-              <Row
-                label="K/BB"
-                value={formatStat(pitchingStats.calculated.k_bb, 2)}
-              />
-              <Row
-                label="勝率"
-                value={formatStat(pitchingStats.calculated.win_percentage)}
-              />
-            </>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>投手成績</Text>
+
+          {pCalc && pAgg && (
+            <View style={styles.headline}>
+              <Text style={styles.headlineRow}>
+                <Text style={styles.headlineLabel}>防御率 </Text>
+                <Text style={styles.headlineValue}>
+                  {formatStat(pCalc.era, 2)}
+                </Text>
+                <Text style={styles.headlineSub}>
+                  {"  "}
+                  {pAgg.number_of_appearances}登板
+                </Text>
+              </Text>
+              <Text style={styles.headlineSummary}>
+                {pAgg.win}勝 {pAgg.loss}敗 / {pAgg.innings_pitched}回{" "}
+                {pAgg.strikeouts}奪三振
+              </Text>
+            </View>
           )}
-          {pitchingStats?.aggregate && (
-            <>
-              <View style={styles.divider} />
-              <Row
-                label="登板"
-                value={pitchingStats.aggregate.number_of_appearances}
-              />
-              <Row label="勝" value={pitchingStats.aggregate.win} />
-              <Row label="敗" value={pitchingStats.aggregate.loss} />
-              <Row
-                label="投球回"
-                value={pitchingStats.aggregate.innings_pitched}
-              />
-              <Row label="奪三振" value={pitchingStats.aggregate.strikeouts} />
-              <Row
-                label="与四球"
-                value={pitchingStats.aggregate.base_on_balls}
-              />
-              <Row label="自責点" value={pitchingStats.aggregate.earned_run} />
-              <Row label="セーブ" value={pitchingStats.aggregate.saves} />
-              <Row label="ホールド" value={pitchingStats.aggregate.hold} />
-            </>
-          )}
-        </Card>
+
+          <StatsTable
+            rows={[
+              [
+                "防御率",
+                formatStat(pCalc?.era, 2),
+                "登板",
+                pAgg?.number_of_appearances ?? "-",
+              ],
+              ["勝", pAgg?.win ?? "-", "敗", pAgg?.loss ?? "-"],
+              [
+                "投球回",
+                pAgg?.innings_pitched ?? "-",
+                "完投",
+                pAgg?.complete_games ?? "-",
+              ],
+              ["完封", pAgg?.shutouts ?? "-", "セーブ", pAgg?.saves ?? "-"],
+              [
+                "ホールド",
+                pAgg?.hold ?? "-",
+                "奪三振",
+                pAgg?.strikeouts ?? "-",
+              ],
+              [
+                "与四球",
+                pAgg?.base_on_balls ?? "-",
+                "与死球",
+                pAgg?.hit_by_pitch ?? "-",
+              ],
+              [
+                "被安打",
+                pAgg?.hits_allowed ?? "-",
+                "被本塁打",
+                pAgg?.home_runs_hit ?? "-",
+              ],
+              [
+                "失点",
+                pAgg?.run_allowed ?? "-",
+                "自責点",
+                pAgg?.earned_run ?? "-",
+              ],
+              [
+                "勝率",
+                formatStat(pCalc?.win_percentage),
+                "WHIP",
+                formatStat(pCalc?.whip, 2),
+              ],
+              [
+                "K/9",
+                formatStat(pCalc?.k_per_nine, 2),
+                "BB/9",
+                formatStat(pCalc?.bb_per_nine, 2),
+              ],
+              ["K/BB", formatStat(pCalc?.k_bb, 2), "", ""],
+            ]}
+          />
+        </View>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#424242",
+  section: {
+    backgroundColor: "#27272a",
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
   },
-  cardTitle: {
+  filterContainer: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#d08000",
     marginBottom: 12,
   },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 4,
+  headline: {
+    marginBottom: 16,
   },
-  rowLabel: {
+  headlineRow: {
+    marginBottom: 4,
+  },
+  headlineLabel: {
+    color: "#F4F4F4",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  headlineValue: {
+    color: "#F4F4F4",
+    fontSize: 20,
+    fontWeight: "700",
+  },
+  headlineSub: {
     color: "#A1A1AA",
     fontSize: 14,
   },
-  rowValue: {
-    color: "#F4F4F4",
-    fontSize: 14,
+  headlineSummary: {
+    color: "#A1A1AA",
+    fontSize: 13,
+    marginTop: 2,
   },
-  divider: {
-    height: 1,
-    backgroundColor: "#525252",
-    marginVertical: 8,
+  table: {
+    borderWidth: 1,
+    borderColor: "#71717b",
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  tableRow: {
+    flexDirection: "row",
+  },
+  tableRowEven: {},
+  cellLabel: {
+    flex: 1,
+    color: "#A1A1AA",
+    fontSize: 13,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: "#27272a",
+    borderBottomWidth: 1,
+    borderBottomColor: "#71717b",
+    borderRightWidth: 1,
+    borderRightColor: "#71717b",
+  },
+  cellValue: {
+    flex: 1,
+    color: "#F4F4F4",
+    fontSize: 13,
+    fontWeight: "600",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    textAlign: "center",
+    backgroundColor: "#424242",
+    borderBottomWidth: 1,
+    borderBottomColor: "#71717b",
+    borderRightWidth: 1,
+    borderRightColor: "#71717b",
   },
 });
