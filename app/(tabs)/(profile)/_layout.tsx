@@ -17,6 +17,21 @@ export default function ProfileLayout() {
       <Stack.Screen name="search" options={{ title: "ユーザー検索" }} />
       <Stack.Screen name="notes" options={{ headerShown: false }} />
       <Stack.Screen name="seasons" options={{ headerShown: false }} />
+      <Stack.Screen name="settings" options={{ title: "設定" }} />
+      <Stack.Screen
+        name="privacy-policy"
+        options={{ title: "プライバシーポリシー" }}
+      />
+      <Stack.Screen name="terms-of-service" options={{ title: "利用規約" }} />
+      <Stack.Screen name="contact" options={{ title: "お問い合わせ" }} />
+      <Stack.Screen
+        name="account-deletion"
+        options={{ title: "アカウント削除" }}
+      />
+      <Stack.Screen
+        name="calculation-of-grades"
+        options={{ title: "成績の算出方法" }}
+      />
     </Stack>
   );
 }

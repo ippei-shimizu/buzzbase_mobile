@@ -14,6 +14,10 @@ import {
 } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { MenuIcon } from "@components/icon/MenuIcon";
+import { NoteIcon } from "@components/icon/NoteIcon";
+import { CalendarIcon } from "@components/icon/CalendarIcon";
+import { MailIcon } from "@components/icon/MailIcon";
 import { useProfile } from "@hooks/useProfile";
 import { useProfileStats } from "@hooks/useProfileStats";
 import { useUserProfileDetail } from "@hooks/useRelationship";
@@ -392,7 +396,7 @@ export default function ProfileScreen() {
                   <Ionicons name="search-outline" size={22} color="#F4F4F4" />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={openMenu}>
-                  <Ionicons name="menu" size={24} color="#F4F4F4" />
+                  <MenuIcon size={24} color="#F4F4F4" />
                 </TouchableOpacity>
               </View>
             ),
@@ -477,7 +481,7 @@ export default function ProfileScreen() {
                     handleMenuItem(() => router.push("/(profile)/notes"))
                   }
                 >
-                  <Ionicons name="book-outline" size={20} color="#F4F4F4" />
+                  <NoteIcon size={20} color="#F4F4F4" />
                   <Text style={styles.menuItemText}>野球ノート</Text>
                 </TouchableOpacity>
                 <View style={styles.menuDivider} />
@@ -487,14 +491,40 @@ export default function ProfileScreen() {
                     handleMenuItem(() => router.push("/(profile)/seasons"))
                   }
                 >
-                  <Ionicons name="calendar-outline" size={20} color="#F4F4F4" />
+                  <CalendarIcon size={20} color="#F4F4F4" />
                   <Text style={styles.menuItemText}>シーズン管理</Text>
                 </TouchableOpacity>
                 <View style={styles.menuDivider} />
                 <TouchableOpacity
                   style={styles.menuItem}
                   onPress={() =>
-                    handleMenuItem(() => router.push("/(profile)/edit"))
+                    handleMenuItem(() =>
+                      router.push("/(profile)/calculation-of-grades"),
+                    )
+                  }
+                >
+                  <Ionicons
+                    name="calculator-outline"
+                    size={20}
+                    color="#F4F4F4"
+                  />
+                  <Text style={styles.menuItemText}>成績の算出方法</Text>
+                </TouchableOpacity>
+                <View style={styles.menuDivider} />
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() =>
+                    handleMenuItem(() => router.push("/(profile)/contact"))
+                  }
+                >
+                  <MailIcon size={20} color="#F4F4F4" />
+                  <Text style={styles.menuItemText}>お問い合わせ</Text>
+                </TouchableOpacity>
+                <View style={styles.menuDivider} />
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() =>
+                    handleMenuItem(() => router.push("/(profile)/settings"))
                   }
                 >
                   <Ionicons name="settings-outline" size={20} color="#F4F4F4" />
@@ -683,7 +713,7 @@ export default function ProfileScreen() {
                   handleMenuItem(() => router.push("/(profile)/notes"))
                 }
               >
-                <Ionicons name="book-outline" size={20} color="#F4F4F4" />
+                <NoteIcon size={20} color="#F4F4F4" />
                 <Text style={styles.menuItemText}>野球ノート</Text>
               </TouchableOpacity>
               <View style={styles.menuDivider} />
@@ -693,14 +723,36 @@ export default function ProfileScreen() {
                   handleMenuItem(() => router.push("/(profile)/seasons"))
                 }
               >
-                <Ionicons name="calendar-outline" size={20} color="#F4F4F4" />
+                <CalendarIcon size={20} color="#F4F4F4" />
                 <Text style={styles.menuItemText}>シーズン管理</Text>
               </TouchableOpacity>
               <View style={styles.menuDivider} />
               <TouchableOpacity
                 style={styles.menuItem}
                 onPress={() =>
-                  handleMenuItem(() => router.push("/(profile)/edit"))
+                  handleMenuItem(() =>
+                    router.push("/(profile)/calculation-of-grades"),
+                  )
+                }
+              >
+                <Ionicons name="calculator-outline" size={20} color="#F4F4F4" />
+                <Text style={styles.menuItemText}>成績の算出方法</Text>
+              </TouchableOpacity>
+              <View style={styles.menuDivider} />
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() =>
+                  handleMenuItem(() => router.push("/(profile)/contact"))
+                }
+              >
+                <MailIcon size={20} color="#F4F4F4" />
+                <Text style={styles.menuItemText}>お問い合わせ</Text>
+              </TouchableOpacity>
+              <View style={styles.menuDivider} />
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() =>
+                  handleMenuItem(() => router.push("/(profile)/settings"))
                 }
               >
                 <Ionicons name="settings-outline" size={20} color="#F4F4F4" />
