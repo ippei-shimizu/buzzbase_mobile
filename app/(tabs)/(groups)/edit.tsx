@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import {
   ScrollView,
   View,
+  Text,
   Alert,
   ActivityIndicator,
   StyleSheet,
+  TouchableOpacity,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useGroupDetail } from "@hooks/useGroups";
 import { useUpdateGroupInfo } from "@hooks/useGroupMutations";
@@ -29,6 +31,8 @@ export default function GroupEditScreen() {
       setIconUri(data.group.icon?.url ?? null);
     }
   }, [data]);
+
+  const canSave = name.trim().length > 0 && !isUpdating;
 
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -78,16 +82,36 @@ export default function GroupEditScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <GroupForm
-        name={name}
-        iconUri={iconUri}
-        isSaving={isUpdating}
-        onChangeName={setName}
-        onPickImage={handlePickImage}
-        onSave={handleSave}
+    <>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <TouchableOpacity
+              style={[
+                styles.headerSaveButton,
+                !canSave && styles.headerSaveButtonDisabled,
+              ]}
+              onPress={handleSave}
+              disabled={!canSave}
+            >
+              {isUpdating ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.headerSaveButtonText}>保存</Text>
+              )}
+            </TouchableOpacity>
+          ),
+        }}
       />
-    </ScrollView>
+      <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+        <GroupForm
+          name={name}
+          iconUri={iconUri}
+          onChangeName={setName}
+          onPickImage={handlePickImage}
+        />
+      </ScrollView>
+    </>
   );
 }
 
@@ -101,5 +125,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#2E2E2E",
+  },
+  headerSaveButton: {
+    backgroundColor: "#d08000",
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  headerSaveButtonDisabled: {
+    opacity: 0.5,
+  },
+  headerSaveButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
   },
 });
