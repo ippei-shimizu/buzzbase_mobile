@@ -10,9 +10,14 @@ import type { GameResult } from "../../../types/gameResult";
 
 export default function GameResultDetailScreen() {
   const { game: gameJson } = useLocalSearchParams<{ game: string }>();
-  const game: GameResult = JSON.parse(gameJson);
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  if (!gameJson) {
+    return null;
+  }
+
+  const game: GameResult = JSON.parse(gameJson);
 
   const handleShare = () => {
     shareGameResult(game);
