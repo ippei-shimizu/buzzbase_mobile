@@ -10,7 +10,6 @@ import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useProfile } from "@hooks/useProfile";
 import { useProfileEdit } from "@hooks/useProfileEdit";
-import { useAuthStore } from "@stores/authStore";
 import {
   useTeams,
   usePrefectures,
@@ -30,8 +29,6 @@ export default function ProfileEditScreen() {
   const router = useRouter();
   const { profile, isLoading } = useProfile();
   const { updateProfile, isUpdating } = useProfileEdit();
-  const logout = useAuthStore((s) => s.logout);
-
   // マスターデータ
   const { data: allTeams } = useTeams();
   const { data: prefectures } = usePrefectures();
@@ -233,19 +230,6 @@ export default function ProfileEditScreen() {
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert("ログアウト", "ログアウトしますか？", [
-      { text: "キャンセル", style: "cancel" },
-      {
-        text: "ログアウト",
-        style: "destructive",
-        onPress: async () => {
-          await logout();
-        },
-      },
-    ]);
-  };
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -279,7 +263,6 @@ export default function ProfileEditScreen() {
         onChangeIsPrivate={setIsPrivate}
         onPickImage={handlePickImage}
         onSave={handleSave}
-        onLogout={handleLogout}
         // ポジション
         selectedPositionIds={selectedPositionIds}
         positionItems={positionItems}

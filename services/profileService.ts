@@ -73,6 +73,10 @@ export const getUserProfileDetail = async (
   return response.data;
 };
 
+export const deleteAccount = async (): Promise<void> => {
+  await axiosInstance.delete("/user");
+};
+
 export const getProfilePitchingStats = async (
   filters: StatsFilters,
 ): Promise<PitchingStats> => {

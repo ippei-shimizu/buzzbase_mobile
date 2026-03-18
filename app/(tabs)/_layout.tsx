@@ -1,7 +1,10 @@
 import { ActivityIndicator, View } from "react-native";
 import { Redirect, Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@hooks/useAuth";
+import { HomeIcon } from "@components/icon/HomeIcon";
+import { BallIcon } from "@components/icon/BallIcon";
+import { GroupIcon } from "@components/icon/GroupIcon";
+import { UserIcon } from "@components/icon/UserIcon";
 
 export default function TabLayout() {
   const { isLoggedIn, isLoading } = useAuth();
@@ -41,9 +44,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "ホーム",
+          title: "ダッシュボード",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+            <HomeIcon size={size} color={color} />
           ),
         }}
       />
@@ -53,7 +56,7 @@ export default function TabLayout() {
           title: "試合結果",
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="baseball" size={size} color={color} />
+            <BallIcon size={size} color={color} />
           ),
         }}
       />
@@ -63,7 +66,7 @@ export default function TabLayout() {
           title: "グループ",
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={size} color={color} />
+            <GroupIcon size={size} color={color} />
           ),
         }}
       />
@@ -80,7 +83,7 @@ export default function TabLayout() {
           title: "マイページ",
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+            <UserIcon size={size} color={color} />
           ),
         }}
       />

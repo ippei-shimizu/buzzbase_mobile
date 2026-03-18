@@ -33,7 +33,6 @@ interface ProfileEditFormProps {
   onChangeIsPrivate: (value: boolean) => void;
   onPickImage: () => void;
   onSave: () => void;
-  onLogout: () => void;
   // ポジション
   selectedPositionIds: number[];
   positionItems: { label: string; value: number }[];
@@ -70,7 +69,6 @@ export const ProfileEditForm = ({
   onChangeIsPrivate,
   onPickImage,
   onSave,
-  onLogout,
   selectedPositionIds,
   positionItems,
   onSelectPositions,
@@ -199,11 +197,6 @@ export const ProfileEditForm = ({
           <Text style={styles.saveButtonText}>保存</Text>
         )}
       </TouchableOpacity>
-
-      {/* ログアウトボタン */}
-      <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-        <Text style={styles.logoutButtonText}>ログアウト</Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -282,18 +275,6 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  logoutButton: {
-    borderWidth: 1,
-    borderColor: "#EF4444",
-    borderRadius: 8,
-    padding: 14,
-    alignItems: "center",
-  },
-  logoutButtonText: {
-    color: "#EF4444",
     fontSize: 16,
     fontWeight: "600",
   },
