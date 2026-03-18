@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexWrap: "wrap",
     gap: 8,
-    marginTop: 16,
+    marginTop: 4,
     marginBottom: 12,
   },
   sectionTitle: {
