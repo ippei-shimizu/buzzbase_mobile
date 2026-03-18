@@ -77,6 +77,39 @@ export const createPitchingResult = async (
   return response.data;
 };
 
+/** PUT /match_results/:id */
+export const updateMatchResult = async (
+  id: number,
+  data: MatchResultPayload,
+): Promise<{ id: number }> => {
+  const response = await axiosInstance.put(`/match_results/${id}`, {
+    match_result: data,
+  });
+  return response.data;
+};
+
+/** PUT /batting_averages/:id */
+export const updateBattingAverage = async (
+  id: number,
+  data: BattingAveragePayload,
+): Promise<{ id: number }> => {
+  const response = await axiosInstance.put(`/batting_averages/${id}`, {
+    batting_average: data,
+  });
+  return response.data;
+};
+
+/** PUT /pitching_results/:id */
+export const updatePitchingResult = async (
+  id: number,
+  data: PitchingResultPayload,
+): Promise<{ id: number }> => {
+  const response = await axiosInstance.put(`/pitching_results/${id}`, {
+    pitching_result: data,
+  });
+  return response.data;
+};
+
 /** GET /teams — チーム一覧取得 */
 export const getTeams = async (): Promise<Team[]> => {
   const response = await axiosInstance.get("/teams");
