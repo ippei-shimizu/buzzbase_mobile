@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { NotificationIcon } from "@components/icon/NotificationIcon";
 
 interface NotificationBellProps {
   count: number;
@@ -10,7 +10,7 @@ interface NotificationBellProps {
 export const NotificationBell = ({ count, onPress }: NotificationBellProps) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.container}>
-      <Ionicons name="notifications-outline" size={24} color="#F4F4F4" />
+      <NotificationIcon size={24} color="#F4F4F4" />
       {count > 0 && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{count > 99 ? "99+" : count}</Text>
