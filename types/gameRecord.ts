@@ -19,6 +19,7 @@ export interface MatchResultPayload {
   batting_order: string;
   defensive_position: string;
   memo: string;
+  tournament_id?: number;
 }
 
 export interface BattingAveragePayload {
@@ -74,4 +75,11 @@ export interface UpdateBattingAverageIdPayload {
 
 export interface UpdatePitchingResultIdPayload {
   pitching_result_id: number;
+}
+
+export interface BattingBox {
+  id: number;
+  position: number;
+  result: number;
+  text: string;
 }
