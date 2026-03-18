@@ -1,119 +1,241 @@
-import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
+import { API_BASE_URL } from "@constants/api";
 import type { GroupDetail, GroupUser } from "../../types/group";
 
 interface GroupDetailStatsProps {
   detail: GroupDetail;
 }
 
-const StatCard = ({
-  user,
-  battingAvg,
-  battingStat,
-  pitchingAgg,
-  pitchingStat,
-}: {
+interface Category {
+  key: string;
+  label: string;
+  source: string;
+  decimals: number;
+  inverse?: boolean;
+}
+
+const BATTING_CATEGORIES: Category[] = [
+  { key: "batting_average", label: "打率", source: "stat", decimals: 3 },
+  { key: "home_run", label: "本塁打", source: "avg", decimals: 0 },
+  { key: "runs_batted_in", label: "打点", source: "avg", decimals: 0 },
+  { key: "hit", label: "安打", source: "avg", decimals: 0 },
+  { key: "stealing_base", label: "盗塁", source: "avg", decimals: 0 },
+  { key: "on_base_percentage", label: "出塁率", source: "stat", decimals: 3 },
+];
+
+const PITCHING_CATEGORIES: Category[] = [
+  { key: "era", label: "防御率", source: "stat", decimals: 2, inverse: true },
+  { key: "win", label: "勝利", source: "agg", decimals: 0 },
+  { key: "saves", label: "セーブ", source: "agg", decimals: 0 },
+  { key: "hold", label: "HP", source: "agg", decimals: 0 },
+  { key: "strikeouts", label: "奪三振", source: "agg", decimals: 0 },
+  { key: "win_percentage", label: "勝率", source: "stat", decimals: 3 },
+];
+
+interface RankedUser {
   user: GroupUser;
-  battingAvg: Record<string, number | null> | undefined;
-  battingStat: Record<string, number | null> | undefined;
-  pitchingAgg: Record<string, number | null> | undefined;
-  pitchingStat: Record<string, number | null> | undefined;
+  value: number | null;
+}
+
+function findUserData(
+  dataArrays: Record<string, number | string | null>[],
+  userId: string | number,
+): Record<string, number | string | null> | undefined {
+  return dataArrays.find(
+    (d) =>
+      d &&
+      (String(d.user_id) === String(userId) || String(d.id) === String(userId)),
+  );
+}
+
+function buildRanking(
+  users: GroupUser[],
+  dataArrays: Record<string, number | string | null>[],
+  key: string,
+): RankedUser[] {
+  const ranked = users.map((user) => {
+    const data = findUserData(dataArrays, user.id);
+    const raw = data?.[key];
+    return {
+      user,
+      value: typeof raw === "number" ? raw : null,
+    };
+  });
+  return ranked
+    .filter((r) => r.value !== null)
+    .sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
+}
+
+function buildInverseRanking(
+  users: GroupUser[],
+  dataArrays: Record<string, number | string | null>[],
+  key: string,
+): RankedUser[] {
+  const ranked = users.map((user) => {
+    const data = findUserData(dataArrays, user.id);
+    const raw = data?.[key];
+    return {
+      user,
+      value: typeof raw === "number" ? raw : null,
+    };
+  });
+  return ranked
+    .filter((r) => r.value !== null)
+    .sort((a, b) => (a.value ?? 0) - (b.value ?? 0));
+}
+
+function formatValue(value: number | null, decimals: number): string {
+  if (value === null) return "-";
+  return decimals > 0 ? value.toFixed(decimals) : String(value);
+}
+
+const RankingRow = ({
+  rank,
+  user,
+  value,
+  decimals,
+}: {
+  rank: number;
+  user: GroupUser;
+  value: number | null;
+  decimals: number;
 }) => {
-  const hasBatting = battingAvg || battingStat;
-  const hasPitching = pitchingAgg || pitchingStat;
+  const hasValidImage =
+    user.image?.url &&
+    !user.image.url.endsWith(".svg") &&
+    user.image.url.length > 0;
 
   return (
-    <View style={styles.statCard}>
-      <View style={styles.userHeader}>
-        {user.image?.url ? (
-          <Image source={{ uri: user.image.url }} style={styles.avatar} />
-        ) : (
-          <View style={[styles.avatar, styles.avatarPlaceholder]}>
-            <Text style={styles.avatarText}>{user.name.charAt(0)}</Text>
-          </View>
-        )}
-        <Text style={styles.userName} numberOfLines={1}>
+    <View style={styles.rankingRow}>
+      <Text style={styles.rankNumber}>{rank}</Text>
+      {hasValidImage ? (
+        <Image
+          source={{
+            uri: user.image!.url!.startsWith("http")
+              ? user.image!.url!
+              : `${API_BASE_URL}${user.image!.url!}`,
+          }}
+          style={styles.avatar}
+        />
+      ) : (
+        <DefaultUserIcon size={40} />
+      )}
+      <View style={styles.rankingInfo}>
+        <Text style={styles.rankingName} numberOfLines={1}>
           {user.name}
         </Text>
+        <Text style={styles.rankingUserId}>{user.user_id}</Text>
       </View>
-
-      {hasBatting && (
-        <View style={styles.statSection}>
-          <Text style={styles.statCategory}>打撃</Text>
-          <View style={styles.statGrid}>
-            {battingAvg?.batting_average != null && (
-              <StatItem
-                label="打率"
-                value={battingAvg.batting_average.toFixed(3)}
-              />
-            )}
-            {battingStat?.home_run != null && (
-              <StatItem label="本塁打" value={String(battingStat.home_run)} />
-            )}
-            {battingStat?.runs_batted_in != null && (
-              <StatItem
-                label="打点"
-                value={String(battingStat.runs_batted_in)}
-              />
-            )}
-            {battingStat?.hit != null && (
-              <StatItem label="安打" value={String(battingStat.hit)} />
-            )}
-          </View>
-        </View>
-      )}
-
-      {hasPitching && (
-        <View style={styles.statSection}>
-          <Text style={styles.statCategory}>投手</Text>
-          <View style={styles.statGrid}>
-            {pitchingStat?.era != null && (
-              <StatItem label="防御率" value={pitchingStat.era.toFixed(2)} />
-            )}
-            {pitchingAgg?.win != null && (
-              <StatItem label="勝" value={String(pitchingAgg.win)} />
-            )}
-            {pitchingAgg?.strikeouts != null && (
-              <StatItem label="奪三振" value={String(pitchingAgg.strikeouts)} />
-            )}
-            {pitchingAgg?.innings_pitched != null && (
-              <StatItem
-                label="投球回"
-                value={String(pitchingAgg.innings_pitched)}
-              />
-            )}
-          </View>
-        </View>
-      )}
-
-      {!hasBatting && !hasPitching && (
-        <Text style={styles.noStats}>成績データなし</Text>
-      )}
+      <Text style={styles.rankingValue}>{formatValue(value, decimals)}</Text>
     </View>
   );
 };
 
-const StatItem = ({ label, value }: { label: string; value: string }) => (
-  <View style={styles.statItem}>
-    <Text style={styles.statLabel}>{label}</Text>
-    <Text style={styles.statValue}>{value}</Text>
-  </View>
-);
-
 export const GroupDetailStats = ({ detail }: GroupDetailStatsProps) => {
+  const [activeTab, setActiveTab] = useState<"batting" | "pitching">("batting");
+  const [selectedCategory, setSelectedCategory] = useState(0);
+
+  const categories =
+    activeTab === "batting" ? BATTING_CATEGORIES : PITCHING_CATEGORIES;
+  const category = categories[selectedCategory];
+
+  const getDataSource = (): Record<string, number | string | null>[] => {
+    if (activeTab === "batting") {
+      const src =
+        category.source === "avg"
+          ? detail.batting_averages
+          : detail.batting_stats;
+      return (Array.isArray(src) ? src : []).flat().filter(Boolean);
+    }
+    const src =
+      category.source === "agg"
+        ? detail.pitching_aggregate
+        : detail.pitching_stats;
+    return (Array.isArray(src) ? src : []).flat().filter(Boolean);
+  };
+
+  const ranking = category.inverse
+    ? buildInverseRanking(detail.accepted_users, getDataSource(), category.key)
+    : buildRanking(detail.accepted_users, getDataSource(), category.key);
+
+  const handleTabChange = (tab: "batting" | "pitching") => {
+    setActiveTab(tab);
+    setSelectedCategory(0);
+  };
+
   return (
     <View>
-      <Text style={styles.sectionTitle}>メンバー成績</Text>
-      {detail.accepted_users.map((user, index) => (
-        <StatCard
-          key={user.id}
-          user={user}
-          battingAvg={detail.batting_averages[index]}
-          battingStat={detail.batting_stats[index]}
-          pitchingAgg={detail.pitching_aggregate[index]}
-          pitchingStat={detail.pitching_stats[index]}
-        />
-      ))}
+      <Text style={styles.sectionTitle}>個人成績ランキング</Text>
+
+      {/* Tabs */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "batting" && styles.tabActive]}
+          onPress={() => handleTabChange("batting")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "batting" && styles.tabTextActive,
+            ]}
+          >
+            打撃成績
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "pitching" && styles.tabActive]}
+          onPress={() => handleTabChange("pitching")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "pitching" && styles.tabTextActive,
+            ]}
+          >
+            投手成績
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Category pills */}
+      <View style={styles.pillContainer}>
+        {categories.map((cat, i) => (
+          <TouchableOpacity
+            key={cat.key}
+            style={[styles.pill, selectedCategory === i && styles.pillActive]}
+            onPress={() => setSelectedCategory(i)}
+          >
+            <Text
+              style={[
+                styles.pillText,
+                selectedCategory === i && styles.pillTextActive,
+              ]}
+            >
+              {cat.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Ranking list */}
+      <View style={styles.rankingCard}>
+        <Text style={styles.rankingHeader}>{category.label}</Text>
+        {ranking.length === 0 ? (
+          <Text style={styles.emptyText}>データがありません</Text>
+        ) : (
+          ranking.map((item, i) => (
+            <RankingRow
+              key={item.user.id}
+              rank={i + 1}
+              user={item.user}
+              value={item.value}
+              decimals={category.decimals}
+            />
+          ))
+        )}
+      </View>
     </View>
   );
 };
@@ -123,72 +245,116 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 18,
     fontWeight: "700",
-    marginBottom: 12,
-    marginTop: 16,
+    marginBottom: 16,
   },
-  statCard: {
-    backgroundColor: "#3A3A3A",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-  },
-  userHeader: {
+  tabContainer: {
     flexDirection: "row",
+    backgroundColor: "#27272a",
+    borderRadius: 8,
+    padding: 4,
+    marginBottom: 12,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
     alignItems: "center",
-    marginBottom: 10,
+    borderRadius: 6,
   },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: 10,
+  tabActive: {
+    backgroundColor: "#d08000",
   },
-  avatarPlaceholder: {
-    backgroundColor: "#4A4A4A",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    color: "#F4F4F4",
+  tabText: {
+    color: "#A1A1AA",
     fontSize: 14,
     fontWeight: "600",
   },
-  userName: {
-    color: "#F4F4F4",
-    fontSize: 15,
-    fontWeight: "600",
+  tabTextActive: {
+    color: "#FFFFFF",
+  },
+  pillContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 16,
+  },
+  pill: {
     flex: 1,
+    minWidth: "30%",
+    borderWidth: 1,
+    borderColor: "#d08000",
+    borderRadius: 8,
+    paddingVertical: 8,
+    alignItems: "center",
   },
-  statSection: {
-    marginTop: 4,
+  pillActive: {
+    backgroundColor: "rgba(208, 128, 0, 0.2)",
   },
-  statCategory: {
+  pillText: {
     color: "#d08000",
     fontSize: 13,
     fontWeight: "600",
-    marginBottom: 6,
   },
-  statGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  pillTextActive: {
+    color: "#d08000",
   },
-  statItem: {
-    width: "25%",
-    marginBottom: 8,
+  rankingCard: {
+    backgroundColor: "#27272a",
+    borderRadius: 12,
+    overflow: "hidden",
   },
-  statLabel: {
-    color: "#A1A1AA",
-    fontSize: 11,
-  },
-  statValue: {
+  rankingHeader: {
     color: "#F4F4F4",
     fontSize: 15,
+    fontWeight: "700",
+    textAlign: "center",
+    paddingVertical: 12,
+    backgroundColor: "#3A3A3A",
+  },
+  rankingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#3f3f46",
+    gap: 12,
+  },
+  rankNumber: {
+    color: "#A1A1AA",
+    fontSize: 16,
+    fontWeight: "700",
+    width: 20,
+    textAlign: "center",
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  rankingInfo: {
+    flex: 1,
+  },
+  rankingName: {
+    color: "#F4F4F4",
+    fontSize: 14,
     fontWeight: "600",
   },
-  noStats: {
+  rankingUserId: {
+    color: "#A1A1AA",
+    fontSize: 12,
+    marginTop: 1,
+  },
+  rankingValue: {
+    color: "#F4F4F4",
+    fontSize: 16,
+    fontWeight: "700",
+    minWidth: 50,
+    textAlign: "right",
+  },
+  emptyText: {
     color: "#71717A",
     fontSize: 14,
     textAlign: "center",
-    paddingVertical: 8,
+    paddingVertical: 24,
   },
 });

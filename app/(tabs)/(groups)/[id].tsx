@@ -10,7 +10,9 @@ import {
   StyleSheet,
 } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useGroupDetail } from "@hooks/useGroups";
+import { GroupDefaultIcon } from "@components/icon/GroupDefaultIcon";
 import { GroupDetailStats } from "@components/groups/GroupDetailStats";
 
 export default function GroupDetailScreen() {
@@ -28,17 +30,22 @@ export default function GroupDetailScreen() {
   }
 
   const { group, accepted_users } = data;
+  const hasValidIcon =
+    group.icon?.url &&
+    !group.icon.url.endsWith(".svg") &&
+    group.icon.url.length > 0;
 
   return (
     <>
       <Stack.Screen
         options={{
-          title: group.name,
+          title: "",
+          headerTitle: () => null,
           headerRight: () => (
             <TouchableOpacity
               onPress={() => router.push(`/(groups)/members?id=${group.id}`)}
             >
-              <Text style={styles.headerButton}>👥</Text>
+              <Ionicons name="menu-outline" size={24} color="#F4F4F4" />
             </TouchableOpacity>
           ),
         }}
@@ -54,20 +61,20 @@ export default function GroupDetailScreen() {
           />
         }
       >
-        <View style={styles.header}>
-          {group.icon?.url ? (
-            <Image source={{ uri: group.icon.url }} style={styles.icon} />
+        <View style={styles.groupNameRow}>
+          {hasValidIcon ? (
+            <Image
+              source={{ uri: group.icon!.url! }}
+              style={styles.groupNameIcon}
+            />
           ) : (
-            <View style={[styles.icon, styles.iconPlaceholder]}>
-              <Text style={styles.iconText}>{group.name.charAt(0)}</Text>
-            </View>
+            <GroupDefaultIcon size={40} />
           )}
-          <Text style={styles.groupName}>{group.name}</Text>
-          <Text style={styles.memberCount}>
-            {accepted_users.length}人のメンバー
-          </Text>
+          <View>
+            <Text style={styles.groupName}>{group.name}</Text>
+            <Text style={styles.memberCount}>{accepted_users.length}人</Text>
+          </View>
         </View>
-
         <GroupDetailStats detail={data} />
       </ScrollView>
     </>
@@ -81,7 +88,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 16,
   },
   loadingContainer: {
     flex: 1,
@@ -89,38 +96,41 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#2E2E2E",
   },
-  headerButton: {
-    fontSize: 20,
-    paddingRight: 8,
-  },
-  header: {
+  headerTitleContainer: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
+    gap: 8,
   },
-  icon: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    marginBottom: 12,
+  headerIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
   },
-  iconPlaceholder: {
-    backgroundColor: "#4A4A4A",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconText: {
+  headerTitle: {
     color: "#F4F4F4",
-    fontSize: 28,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "600",
+    maxWidth: 200,
+  },
+  groupNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 20,
+  },
+  groupNameIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   groupName: {
     color: "#F4F4F4",
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
   },
   memberCount: {
     color: "#A1A1AA",
-    fontSize: 14,
-    marginTop: 4,
+    fontSize: 13,
+    marginTop: 2,
   },
 });
