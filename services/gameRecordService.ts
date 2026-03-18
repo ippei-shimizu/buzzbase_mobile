@@ -94,3 +94,21 @@ export const getPositions = async (): Promise<Position[]> => {
   const response = await axiosInstance.get("/positions");
   return response.data;
 };
+
+/** GET /tournaments — 大会名一覧取得 */
+export const getTournaments = async (): Promise<
+  { id: number; name: string }[]
+> => {
+  const response = await axiosInstance.get("/tournaments");
+  return response.data;
+};
+
+/** POST /tournaments — 大会名新規作成 */
+export const createTournament = async (
+  name: string,
+): Promise<{ id: number; name: string }> => {
+  const response = await axiosInstance.post("/tournaments", {
+    tournament: { name },
+  });
+  return response.data;
+};

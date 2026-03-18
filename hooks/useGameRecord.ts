@@ -11,7 +11,15 @@ import {
   getTeams,
   getPositions,
   createTeam,
+  getTournaments,
+  createTournament,
 } from "../services/gameRecordService";
+import {
+  createPlateAppearance,
+  checkExistingPlateAppearance,
+  updatePlateAppearance,
+} from "../services/plateAppearanceService";
+import { computeBattingStats } from "@constants/battingData";
 
 export const useGameRecord = () => {
   const store = useGameRecordStore();
@@ -25,6 +33,11 @@ export const useGameRecord = () => {
   const positionsQuery = useQuery({
     queryKey: ["positions"],
     queryFn: getPositions,
+  });
+
+  const tournamentsQuery = useQuery({
+    queryKey: ["tournaments"],
+    queryFn: getTournaments,
   });
 
   const createGameResultMutation = useMutation({
@@ -64,6 +77,14 @@ export const useGameRecord = () => {
         throw new Error("チームを選択してください");
       }
 
+      // 大会名の処理
+      let tournamentId = store.tournamentId;
+      if (!tournamentId && store.tournamentName.trim()) {
+        const tournament = await createTournament(store.tournamentName.trim());
+        tournamentId = tournament.id;
+        store.setField("tournamentId", tournament.id);
+      }
+
       const matchResult = await createMatchResult({
         game_result_id: store.gameResultId!,
         date_and_time: `${store.date}T00:00:00`,
@@ -75,6 +96,7 @@ export const useGameRecord = () => {
         batting_order: store.battingOrder,
         defensive_position: store.defensivePosition,
         memo: store.memo,
+        ...(tournamentId ? { tournament_id: tournamentId } : {}),
       });
 
       store.setField("matchResultId", matchResult.id);
@@ -86,32 +108,63 @@ export const useGameRecord = () => {
     },
   });
 
-  /** Step2送信: battingAverage作成 → gameResultに紐付け */
+  /** Step2送信: 打席結果を個別送信 → 打撃成績を自動計算して作成 → gameResultに紐付け */
   const submitStep2 = useMutation({
     mutationFn: async () => {
-      store.computeTotalBases();
       const s = useGameRecordStore.getState();
+      const stats = computeBattingStats(s.battingBoxes);
 
+      // 打席ごとにplate_appearanceを送信
+      const filteredBoxes = s.battingBoxes.filter((box) => box.result !== 0);
+      for (let i = 0; i < filteredBoxes.length; i++) {
+        const box = filteredBoxes[i];
+        const resultText = box.text.replace("-", "");
+        if (!resultText) continue;
+
+        const plateAppearanceData = {
+          plate_appearance: {
+            game_result_id: s.gameResultId!,
+            user_id: s.userId!,
+            batter_box_number: i + 1,
+            batting_result: resultText,
+            batting_position_id: box.position,
+            plate_result_id: box.result,
+          },
+        };
+
+        const existing = await checkExistingPlateAppearance(
+          s.gameResultId!,
+          s.userId!,
+          i + 1,
+        );
+        if (existing) {
+          await updatePlateAppearance(existing.id, plateAppearanceData);
+        } else {
+          await createPlateAppearance(plateAppearanceData);
+        }
+      }
+
+      // 打撃成績を作成
       const battingAverage = await createBattingAverage({
         game_result_id: s.gameResultId!,
         user_id: s.userId!,
-        plate_appearances: s.plateAppearances,
-        times_at_bat: s.timesAtBat,
-        hit: s.hit,
-        two_base_hit: s.twoBaseHit,
-        three_base_hit: s.threeBaseHit,
-        home_run: s.homeRun,
-        total_bases: s.totalBases,
+        plate_appearances: stats.plateAppearances,
+        times_at_bat: stats.timesAtBat,
+        hit: stats.hit,
+        two_base_hit: stats.twoBaseHit,
+        three_base_hit: stats.threeBaseHit,
+        home_run: stats.homeRun,
+        total_bases: stats.totalBases,
         runs_batted_in: s.runsBattedIn,
         run: s.run,
-        strike_out: s.strikeOut,
-        base_on_balls: s.baseOnBalls,
-        hit_by_pitch: s.hitByPitch,
-        sacrifice_hit: s.sacrificeHit,
-        sacrifice_fly: s.sacrificeFly,
+        strike_out: stats.strikeOuts,
+        base_on_balls: stats.baseOnBalls,
+        hit_by_pitch: stats.hitByPitch,
+        sacrifice_hit: stats.sacrificeHit,
+        sacrifice_fly: stats.sacrificeFly,
         stealing_base: s.stealingBase,
         caught_stealing: s.caughtStealing,
-        at_bats: s.atBats,
+        at_bats: stats.atBats,
         error: s.battingError,
       });
 
@@ -166,6 +219,7 @@ export const useGameRecord = () => {
     store,
     teamsQuery,
     positionsQuery,
+    tournamentsQuery,
     createGameResultMutation,
     createTeamMutation,
     submitStep1,

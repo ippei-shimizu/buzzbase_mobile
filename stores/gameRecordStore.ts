@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import type { BattingBox } from "../types/gameRecord";
+import { getResultText } from "@constants/battingData";
 
 interface GameRecordState {
   // IDs
@@ -10,6 +12,8 @@ interface GameRecordState {
 
   // Step1: 試合情報
   seasonId: number | null;
+  tournamentId: number | null;
+  tournamentName: string;
   date: string;
   matchType: string;
   myTeamName: string;
@@ -22,24 +26,12 @@ interface GameRecordState {
   defensivePosition: string;
   memo: string;
 
-  // Step2: 打撃成績（全デフォルト0）
-  plateAppearances: number;
-  timesAtBat: number;
-  hit: number;
-  twoBaseHit: number;
-  threeBaseHit: number;
-  homeRun: number;
-  totalBases: number;
+  // Step2: 打撃成績
+  battingBoxes: BattingBox[];
   runsBattedIn: number;
   run: number;
-  strikeOut: number;
-  baseOnBalls: number;
-  hitByPitch: number;
-  sacrificeHit: number;
-  sacrificeFly: number;
   stealingBase: number;
   caughtStealing: number;
-  atBats: number;
   battingError: number;
 
   // Step3: 投手成績
@@ -64,7 +56,11 @@ interface GameRecordState {
     key: K,
     value: GameRecordState[K],
   ) => void;
-  computeTotalBases: () => void;
+  setBattingBoxes: (boxes: BattingBox[]) => void;
+  addBattingBox: () => void;
+  removeBattingBox: (index: number) => void;
+  updateBattingBoxPosition: (index: number, positionId: number) => void;
+  updateBattingBoxResult: (index: number, resultId: number) => void;
   computeInningsPitched: () => number;
   reset: () => void;
 }
@@ -77,6 +73,8 @@ const initialState = {
   pitchingResultId: null,
 
   seasonId: null,
+  tournamentId: null,
+  tournamentName: "",
   date: new Date().toISOString().split("T")[0],
   matchType: "練習試合",
   myTeamName: "",
@@ -89,23 +87,11 @@ const initialState = {
   defensivePosition: "",
   memo: "",
 
-  plateAppearances: 0,
-  timesAtBat: 0,
-  hit: 0,
-  twoBaseHit: 0,
-  threeBaseHit: 0,
-  homeRun: 0,
-  totalBases: 0,
+  battingBoxes: [{ id: 0, position: 0, result: 0, text: "--" }],
   runsBattedIn: 0,
   run: 0,
-  strikeOut: 0,
-  baseOnBalls: 0,
-  hitByPitch: 0,
-  sacrificeHit: 0,
-  sacrificeFly: 0,
   stealingBase: 0,
   caughtStealing: 0,
-  atBats: 0,
   battingError: 0,
 
   win: 0,
@@ -130,15 +116,42 @@ export const useGameRecordStore = create<GameRecordState>((set, get) => ({
 
   setField: (key, value) => set({ [key]: value }),
 
-  computeTotalBases: () => {
-    const s = get();
-    const singles = s.hit - s.twoBaseHit - s.threeBaseHit - s.homeRun;
-    const total =
-      Math.max(0, singles) +
-      s.twoBaseHit * 2 +
-      s.threeBaseHit * 3 +
-      s.homeRun * 4;
-    set({ totalBases: total });
+  setBattingBoxes: (boxes) => set({ battingBoxes: boxes }),
+
+  addBattingBox: () => {
+    const boxes = get().battingBoxes;
+    set({
+      battingBoxes: [...boxes, { id: 0, position: 0, result: 0, text: "--" }],
+    });
+  },
+
+  removeBattingBox: (index) => {
+    const boxes = get().battingBoxes.filter((_, i) => i !== index);
+    set({ battingBoxes: boxes.length > 0 ? boxes : [{ id: 0, position: 0, result: 0, text: "--" }] });
+  },
+
+  updateBattingBoxPosition: (index, positionId) => {
+    const boxes = get().battingBoxes.map((box, i) => {
+      if (i !== index) return box;
+      return {
+        ...box,
+        position: positionId,
+        text: getResultText(positionId, box.result),
+      };
+    });
+    set({ battingBoxes: boxes });
+  },
+
+  updateBattingBoxResult: (index, resultId) => {
+    const boxes = get().battingBoxes.map((box, i) => {
+      if (i !== index) return box;
+      return {
+        ...box,
+        result: resultId,
+        text: getResultText(box.position, resultId),
+      };
+    });
+    set({ battingBoxes: boxes });
   },
 
   computeInningsPitched: () => {
