@@ -1,5 +1,7 @@
 import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
+import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
+import { API_BASE_URL } from "@constants/api";
 import type { GroupUser } from "../../types/group";
 
 interface MemberRowProps {
@@ -10,11 +12,20 @@ interface MemberRowProps {
 export const MemberRow = ({ user, isCreator }: MemberRowProps) => {
   return (
     <View style={styles.row}>
-      {user.image?.url ? (
-        <Image source={{ uri: user.image.url }} style={styles.avatar} />
+      {user.image?.url &&
+      !user.image.url.endsWith(".svg") &&
+      user.image.url.length > 0 ? (
+        <Image
+          source={{
+            uri: user.image.url.startsWith("http")
+              ? user.image.url
+              : `${API_BASE_URL}${user.image.url}`,
+          }}
+          style={styles.avatar}
+        />
       ) : (
-        <View style={[styles.avatar, styles.avatarPlaceholder]}>
-          <Text style={styles.avatarText}>{user.name.charAt(0)}</Text>
+        <View style={styles.avatarWrapper}>
+          <DefaultUserIcon size={40} />
         </View>
       )}
       <View style={styles.info}>
@@ -48,15 +59,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 12,
   },
-  avatarPlaceholder: {
-    backgroundColor: "#4A4A4A",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    color: "#F4F4F4",
-    fontSize: 16,
-    fontWeight: "600",
+  avatarWrapper: {
+    marginRight: 12,
   },
   info: {
     flex: 1,
