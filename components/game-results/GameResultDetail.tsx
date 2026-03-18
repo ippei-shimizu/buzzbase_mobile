@@ -176,7 +176,7 @@ export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
                 {plate_appearances
                   .sort((a, b) => a.batter_box_number - b.batter_box_number)
                   .map((pa, i) => (
-                    <Text key={pa.id ?? i}>
+                    <Text key={`${pa.id}-${i}`}>
                       {i > 0 && <Text style={{ color: "#A1A1AA" }}> </Text>}
                       <Text
                         style={{

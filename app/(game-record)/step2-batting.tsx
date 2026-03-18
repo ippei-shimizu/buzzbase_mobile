@@ -59,9 +59,7 @@ export default function Step2BattingScreen() {
         onPositionChange={(index, id) =>
           store.updateBattingBoxPosition(index, id)
         }
-        onResultChange={(index, id) =>
-          store.updateBattingBoxResult(index, id)
-        }
+        onResultChange={(index, id) => store.updateBattingBoxResult(index, id)}
         onAddBox={() => store.addBattingBox()}
         onDeleteBox={(index) => store.removeBattingBox(index)}
         onFieldChange={handleFieldChange}

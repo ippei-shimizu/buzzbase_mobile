@@ -1,13 +1,15 @@
 import { ActivityIndicator, View } from "react-native";
-import { Redirect, Tabs } from "expo-router";
+import { Redirect, Tabs, useRouter } from "expo-router";
 import { useAuth } from "@hooks/useAuth";
 import { HomeIcon } from "@components/icon/HomeIcon";
 import { BallIcon } from "@components/icon/BallIcon";
+import { RecordIcon } from "@components/icon/RecordIcon";
 import { GroupIcon } from "@components/icon/GroupIcon";
 import { UserIcon } from "@components/icon/UserIcon";
 
 export default function TabLayout() {
   const { isLoggedIn, isLoading } = useAuth();
+  const router = useRouter();
 
   if (isLoading || isLoggedIn === undefined) {
     return (
@@ -58,6 +60,21 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <BallIcon size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="record"
+        options={{
+          title: "記録",
+          tabBarIcon: ({ color, size }) => (
+            <RecordIcon size={size} color={color} />
+          ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            router.push("/(game-record)/step1-game-info");
+          },
         }}
       />
       <Tabs.Screen

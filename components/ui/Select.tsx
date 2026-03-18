@@ -49,7 +49,8 @@ export function Select({
       >
         <Text
           style={{
-            color: selectedId !== null && selectedId !== 0 ? "#F4F4F4" : "#71717A",
+            color:
+              selectedId !== null && selectedId !== 0 ? "#F4F4F4" : "#71717A",
             fontSize: 14,
           }}
         >
@@ -103,9 +104,7 @@ export function Select({
                 </TouchableOpacity>
               )}
               ItemSeparatorComponent={() => (
-                <View
-                  style={{ height: 1, backgroundColor: "#52525B" }}
-                />
+                <View style={{ height: 1, backgroundColor: "#52525B" }} />
               )}
             />
           </View>

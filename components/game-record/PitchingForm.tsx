@@ -45,7 +45,9 @@ const fractionOptions = [
 
 function Divider() {
   return (
-    <View style={{ height: 1, backgroundColor: "#52525B", marginVertical: 16 }} />
+    <View
+      style={{ height: 1, backgroundColor: "#52525B", marginVertical: 16 }}
+    />
   );
 }
 

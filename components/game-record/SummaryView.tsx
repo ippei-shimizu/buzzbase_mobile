@@ -59,12 +59,7 @@ const BATTING_ORDER_LABELS: Record<string, string> = {
 
 const FRACTION_LABELS = ["", "1/3", "2/3"];
 
-const HITS = new Set([
-  "安",
-  "二",
-  "三",
-  "本",
-]);
+const HITS = new Set(["安", "二", "三", "本"]);
 
 function isHitResult(text: string): boolean {
   if (text.length < 2) return false;
@@ -115,8 +110,7 @@ export function SummaryView(props: Props) {
     ? new Date(props.date).toLocaleDateString("ja-JP")
     : "";
 
-  const matchTypeLabel =
-    MATCH_TYPE_LABELS[props.matchType] ?? props.matchType;
+  const matchTypeLabel = MATCH_TYPE_LABELS[props.matchType] ?? props.matchType;
 
   const scoreIcon =
     props.myTeamScore > props.opponentTeamScore
@@ -170,9 +164,7 @@ export function SummaryView(props: Props) {
             backgroundColor: "#d08000",
           }}
         >
-          <Text
-            style={{ color: "#F4F4F4", fontSize: 15, fontWeight: "bold" }}
-          >
+          <Text style={{ color: "#F4F4F4", fontSize: 15, fontWeight: "bold" }}>
             成績をシェア
           </Text>
         </TouchableOpacity>
@@ -390,9 +382,7 @@ export function SummaryView(props: Props) {
               padding: 12,
             }}
           >
-            <Text style={{ fontSize: 14, color: "#D4D4D8" }}>
-              {props.memo}
-            </Text>
+            <Text style={{ fontSize: 14, color: "#D4D4D8" }}>{props.memo}</Text>
           </View>
         </View>
       ) : null}
@@ -410,7 +400,7 @@ export function SummaryView(props: Props) {
             borderBottomColor: "#d08000",
           }}
         >
-          マイページへ
+          試合一覧へ
         </Text>
       </TouchableOpacity>
     </ScrollView>

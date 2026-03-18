@@ -32,6 +32,7 @@ const GameResultCard = ({ game }: { game: RecentGameResult }) => {
         id: game.id,
         game: JSON.stringify({
           game_result_id: game.id,
+          user_id: 0,
           season_id: null,
           season_name: null,
           match_result: {
@@ -46,12 +47,14 @@ const GameResultCard = ({ game }: { game: RecentGameResult }) => {
             defensive_position: "",
             tournament_id: null,
             memo: null,
+            my_team_name: "",
             opponent_team_name: game.opponent_team_name || "不明",
             tournament_name: null,
           },
           plate_appearances: [],
           batting_average: game.batting_average
             ? {
+                id: 0,
                 plate_appearances: 0,
                 times_at_bat: 0,
                 hit: game.batting_average.hit,
@@ -74,6 +77,7 @@ const GameResultCard = ({ game }: { game: RecentGameResult }) => {
             : null,
           pitching_result: game.pitching_result
             ? {
+                id: 0,
                 win: 0,
                 loss: 0,
                 hold: 0,
@@ -184,7 +188,11 @@ export const RecentGameResults = ({
       {results.length === 0 ? (
         <EmptyState title="試合結果がありません" />
       ) : (
-        results.map((game) => <GameResultCard key={game.id} game={game} />)
+        results
+          .filter(
+            (game, i, arr) => arr.findIndex((g) => g.id === game.id) === i,
+          )
+          .map((game) => <GameResultCard key={game.id} game={game} />)
       )}
     </View>
   );

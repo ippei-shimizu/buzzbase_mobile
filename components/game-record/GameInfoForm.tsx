@@ -5,7 +5,6 @@ import {
   ScrollView,
   TextInput as RNTextInput,
   TouchableOpacity,
-  FlatList,
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -145,28 +144,21 @@ export function GameInfoForm({
     if (!show || filteredTeams.length === 0) return null;
     return (
       <View style={styles.suggestions}>
-        <FlatList
-          data={filteredTeams.slice(0, 5)}
-          keyExtractor={(item) => String(item.id)}
-          keyboardShouldPersistTaps="handled"
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.suggestionItem}
-              onPress={() => onSelect(item)}
-            >
-              <Text style={styles.suggestionText}>{item.name}</Text>
-            </TouchableOpacity>
-          )}
-        />
+        {filteredTeams.slice(0, 5).map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={styles.suggestionItem}
+            onPress={() => onSelect(item)}
+          >
+            <Text style={styles.suggestionText}>{item.name}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
     );
   };
 
   return (
-    <ScrollView
-      style={styles.scrollView}
-      keyboardShouldPersistTaps="handled"
-    >
+    <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="handled">
       <Text style={styles.heading}>試合結果を入力しよう！</Text>
 
       {errors.length > 0 && (
@@ -236,23 +228,19 @@ export function GameInfoForm({
         </FormRow>
         {showTournamentSuggestions && filteredTournaments.length > 0 && (
           <View style={styles.suggestions}>
-            <FlatList
-              data={filteredTournaments.slice(0, 5)}
-              keyExtractor={(item) => String(item.id)}
-              keyboardShouldPersistTaps="handled"
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.suggestionItem}
-                  onPress={() => {
-                    onFieldChange("tournamentName", item.name);
-                    onFieldChange("tournamentId", item.id);
-                    setShowTournamentSuggestions(false);
-                  }}
-                >
-                  <Text style={styles.suggestionText}>{item.name}</Text>
-                </TouchableOpacity>
-              )}
-            />
+            {filteredTournaments.slice(0, 5).map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.suggestionItem}
+                onPress={() => {
+                  onFieldChange("tournamentName", item.name);
+                  onFieldChange("tournamentId", item.id);
+                  setShowTournamentSuggestions(false);
+                }}
+              >
+                <Text style={styles.suggestionText}>{item.name}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         )}
 
