@@ -16,6 +16,7 @@ interface DashboardContentProps {
   isRefreshing: boolean;
   onRefresh: () => void;
   style?: ViewStyle;
+  headerComponent?: React.ReactNode;
 }
 
 export const DashboardContent = ({
@@ -23,6 +24,7 @@ export const DashboardContent = ({
   isRefreshing,
   onRefresh,
   style,
+  headerComponent,
 }: DashboardContentProps) => {
   const router = useRouter();
 
@@ -50,6 +52,7 @@ export const DashboardContent = ({
         />
       }
     >
+      {headerComponent}
       <StatsOverview
         battingStats={data.batting_stats}
         pitchingStats={data.pitching_stats}
@@ -75,9 +78,9 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 0,
   },
   section: {
-    marginTop: 8,
+    marginTop: 24,
   },
 });

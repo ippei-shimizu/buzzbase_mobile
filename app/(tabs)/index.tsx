@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useDashboard } from "@hooks/useDashboard";
 import { useNotificationCount } from "@hooks/useNotifications";
@@ -55,18 +56,21 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["bottom"]}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <DashboardContent
         data={data}
         isRefreshing={isRefreshing}
         onRefresh={refetch}
+        headerComponent={
+          <TouchableOpacity
+            style={styles.recordButton}
+            onPress={() => router.push("/(game-record)/step1-game-info")}
+          >
+            <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.recordButtonText}>試合結果を記録する</Text>
+          </TouchableOpacity>
+        }
       />
-      <TouchableOpacity
-        style={styles.recordButton}
-        onPress={() => router.push("/(game-record)/step1-game-info")}
-      >
-        <Text style={styles.recordButtonText}>試合結果を記録</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -92,23 +96,18 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   recordButton: {
-    position: "absolute",
-    bottom: 24,
-    left: 20,
-    right: 20,
-    backgroundColor: "#d08000",
-    borderRadius: 12,
-    paddingVertical: 14,
+    flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#d08000",
+    borderRadius: 8,
+    paddingVertical: 12,
+    marginBottom: 12,
   },
   recordButtonText: {
-    color: "#F4F4F4",
-    fontSize: 16,
-    fontWeight: "bold",
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
   },
 });

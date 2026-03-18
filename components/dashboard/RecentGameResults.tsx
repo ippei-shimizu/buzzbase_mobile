@@ -103,7 +103,13 @@ const GameResultCard = ({ game }: { game: RecentGameResult }) => {
     >
       <View style={styles.cardHeader}>
         <Text style={styles.date}>{formatDate(game.date)}</Text>
-        <Text style={styles.matchType}>{game.match_type}</Text>
+        <Text style={styles.matchType}>
+          {game.match_type === "regular"
+            ? "公式戦"
+            : game.match_type === "open"
+              ? "オープン戦"
+              : game.match_type}
+        </Text>
       </View>
 
       <View style={styles.scoreRow}>
