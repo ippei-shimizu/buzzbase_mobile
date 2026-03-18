@@ -9,6 +9,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { API_BASE_URL } from "@constants/api";
 import { Image } from "react-native";
+import { GroupDefaultIcon } from "@components/icon/GroupDefaultIcon";
 import type { GroupRanking, RankingEntry } from "../../types/dashboard";
 import { EmptyState } from "./EmptyState";
 
@@ -99,9 +100,7 @@ const GroupCard = ({
           {iconUri ? (
             <Image source={{ uri: iconUri }} style={styles.groupIcon} />
           ) : (
-            <View style={styles.groupIconPlaceholder}>
-              <Ionicons name="people" size={18} color="#A1A1AA" />
-            </View>
+            <GroupDefaultIcon size={36} />
           )}
           <View>
             <Text style={styles.groupName}>{group.group_name}</Text>
@@ -220,14 +219,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-  },
-  groupIconPlaceholder: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#525252",
-    alignItems: "center",
-    justifyContent: "center",
   },
   groupName: {
     color: "#F4F4F4",

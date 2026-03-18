@@ -9,9 +9,9 @@ import {
   StyleSheet,
 } from "react-native";
 import { useRouter, Stack } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useGroups } from "@hooks/useGroups";
 import { GroupListCard } from "@components/groups/GroupListCard";
-import { EmptyState } from "@components/dashboard/EmptyState";
 
 export default function GroupsTabScreen() {
   const router = useRouter();
@@ -33,41 +33,40 @@ export default function GroupsTabScreen() {
     );
   }
 
+  const banner = (
+    <View style={styles.banner}>
+      <Text style={styles.bannerTitle}>友達とグループを作成しよう！</Text>
+      <Text style={styles.bannerDescription}>
+        グループ機能は、フォローしているユーザーを招待して成績をランキング形式で共有することができます。
+      </Text>
+      <TouchableOpacity style={styles.createButton} onPress={handleCreate}>
+        <Text style={styles.createButtonText}>グループ作成</Text>
+        <Ionicons name="add-circle" size={18} color="#FFFFFF" />
+      </TouchableOpacity>
+    </View>
+  );
+
+  const groupListHeader =
+    groups.length > 0 ? (
+      <Text style={styles.sectionTitle}>グループ</Text>
+    ) : null;
+
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerRight: () => (
-            <TouchableOpacity onPress={handleCreate}>
-              <Text style={styles.headerButton}>+</Text>
-            </TouchableOpacity>
-          ),
-        }}
-      />
+      <Stack.Screen options={{ headerRight: () => null }} />
       <FlatList
         style={styles.container}
-        contentContainerStyle={[
-          styles.content,
-          groups.length === 0 && styles.emptyContent,
-        ]}
+        contentContainerStyle={styles.content}
         data={groups}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
           <GroupListCard group={item} onPress={handleGroupPress} />
         )}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <EmptyState
-              title="グループに所属していません"
-              subtitle="グループを作成して仲間と成績を共有しましょう"
-            />
-            <TouchableOpacity
-              style={styles.createButton}
-              onPress={handleCreate}
-            >
-              <Text style={styles.createButtonText}>グループを作成</Text>
-            </TouchableOpacity>
-          </View>
+        ListHeaderComponent={
+          <>
+            {banner}
+            {groupListHeader}
+          </>
         }
         refreshControl={
           <RefreshControl
@@ -88,11 +87,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 32,
-  },
-  emptyContent: {
-    flex: 1,
-    justifyContent: "center",
+    paddingBottom: 16,
   },
   loadingContainer: {
     flex: 1,
@@ -100,25 +95,44 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#2E2E2E",
   },
-  headerButton: {
-    color: "#d08000",
-    fontSize: 28,
-    fontWeight: "600",
-    paddingRight: 8,
-  },
-  emptyContainer: {
+  banner: {
+    backgroundColor: "#27272a",
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 24,
     alignItems: "center",
   },
+  bannerTitle: {
+    color: "#d08000",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  bannerDescription: {
+    color: "#A1A1AA",
+    fontSize: 13,
+    lineHeight: 20,
+    textAlign: "center",
+    marginBottom: 16,
+  },
   createButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     backgroundColor: "#d08000",
-    borderRadius: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    marginTop: 16,
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
   },
   createButtonText: {
     color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  sectionTitle: {
+    color: "#F4F4F4",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 12,
   },
 });

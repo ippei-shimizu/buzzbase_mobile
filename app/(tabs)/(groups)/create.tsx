@@ -6,8 +6,9 @@ import {
   Alert,
   StyleSheet,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, Stack } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useProfile } from "@hooks/useProfile";
 import { useFollowingUsers } from "@hooks/useGroups";
@@ -25,6 +26,9 @@ export default function GroupCreateScreen() {
   const [name, setName] = useState("");
   const [iconUri, setIconUri] = useState<string | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+
+  const isSaving = isCreating || isInviting;
+  const canSave = name.trim().length > 0 && !isSaving;
 
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -69,44 +73,66 @@ export default function GroupCreateScreen() {
         await inviteMembers({ id: group.id, userIds: selectedUserIds });
       }
 
-      router.back();
+      router.replace(`/(groups)/${group.id}`);
     } catch {
       Alert.alert("エラー", "グループの作成に失敗しました");
     }
   };
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <GroupForm
-        name={name}
-        iconUri={iconUri}
-        isSaving={isCreating || isInviting}
-        onChangeName={setName}
-        onPickImage={handlePickImage}
-        onSave={handleSave}
-        saveLabel="作成"
+    <>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <TouchableOpacity
+              style={[
+                styles.headerSaveButton,
+                !canSave && styles.headerSaveButtonDisabled,
+              ]}
+              onPress={handleSave}
+              disabled={!canSave}
+            >
+              {isSaving ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.headerSaveButtonText}>作成</Text>
+              )}
+            </TouchableOpacity>
+          ),
+        }}
       />
+      <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+        <GroupForm
+          name={name}
+          iconUri={iconUri}
+          onChangeName={setName}
+          onPickImage={handlePickImage}
+        />
 
-      <View style={styles.inviteSection}>
-        <Text style={styles.inviteTitle}>メンバーを招待（任意）</Text>
-        {isLoadingUsers ? (
-          <ActivityIndicator
-            size="small"
-            color="#d08000"
-            style={styles.loader}
-          />
-        ) : (
-          users.map((user) => (
-            <SelectableUserRow
-              key={user.id}
-              user={user}
-              selected={selectedUserIds.includes(user.id)}
-              onToggle={handleToggleUser}
+        <View style={styles.inviteSection}>
+          <Text style={styles.inviteTitle}>メンバーを選択</Text>
+          <Text style={styles.inviteDescription}>
+            フォローしているユーザーのみ招待可能
+          </Text>
+          {isLoadingUsers ? (
+            <ActivityIndicator
+              size="small"
+              color="#d08000"
+              style={styles.loader}
             />
-          ))
-        )}
-      </View>
-    </ScrollView>
+          ) : (
+            users.map((user) => (
+              <SelectableUserRow
+                key={user.id}
+                user={user}
+                selected={selectedUserIds.includes(user.id)}
+                onToggle={handleToggleUser}
+              />
+            ))
+          )}
+        </View>
+      </ScrollView>
+    </>
   );
 }
 
@@ -115,14 +141,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#2E2E2E",
   },
+  headerSaveButton: {
+    backgroundColor: "#d08000",
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  headerSaveButtonDisabled: {
+    opacity: 0.5,
+  },
+  headerSaveButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+  },
   inviteSection: {
     paddingHorizontal: 16,
     paddingBottom: 32,
   },
   inviteTitle: {
     color: "#F4F4F4",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  inviteDescription: {
+    color: "#A1A1AA",
+    fontSize: 13,
     marginBottom: 12,
   },
   loader: {
