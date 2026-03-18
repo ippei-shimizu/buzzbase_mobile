@@ -1,6 +1,19 @@
-import React from "react";
-import { View, Text, StyleSheet, type ViewStyle } from "react-native";
-import Svg, { Polygon, Line, Circle, Text as SvgText } from "react-native-svg";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  type ViewStyle,
+} from "react-native";
+import Svg, {
+  Polygon,
+  Line,
+  Circle,
+  Text as SvgText,
+  G,
+} from "react-native-svg";
 import type { RadarAxis } from "../../types/dashboard";
 
 interface StatsRadarChartProps {
@@ -10,11 +23,11 @@ interface StatsRadarChartProps {
   style?: ViewStyle;
 }
 
-const SIZE = 240;
+const SIZE = 280;
 const CENTER = SIZE / 2;
 const RADIUS = 80;
 const LEVELS = 5;
-const LABEL_MARGIN = 40;
+const LABEL_MARGIN = 30;
 
 const getPoint = (
   index: number,
@@ -34,6 +47,8 @@ export const StatsRadarChart = ({
   title,
   style,
 }: StatsRadarChartProps) => {
+  const [tooltipIndex, setTooltipIndex] = useState<number | null>(null);
+
   if (data.length === 0) return null;
 
   const total = data.length;
@@ -60,10 +75,18 @@ export const StatsRadarChart = ({
 
   const labelPositions = data.map((axis, i) => {
     const p = getPoint(i, total, RADIUS + LABEL_MARGIN);
-    return { ...p, label: axis.label, rawValue: axis.rawValue };
+    return { ...p, label: axis.label, metric: axis.metric };
   });
 
-  return (
+  const handleLabelPress = (index: number) => {
+    setTooltipIndex((prev) => (prev === index ? null : index));
+  };
+
+  const dismissTooltip = () => {
+    if (tooltipIndex !== null) setTooltipIndex(null);
+  };
+
+  const chartContent = (
     <View style={[styles.container, style]}>
       <Text style={styles.title}>{title}</Text>
       <View style={styles.chartWrapper}>
@@ -73,8 +96,8 @@ export const StatsRadarChart = ({
               key={`grid-${i}`}
               points={points}
               fill="none"
-              stroke="#424242"
-              strokeWidth={0.5}
+              stroke="#71717A"
+              strokeWidth={0.8}
             />
           ))}
           {axisLines.map((p, i) => (
@@ -84,8 +107,8 @@ export const StatsRadarChart = ({
               y1={CENTER}
               x2={p.x}
               y2={p.y}
-              stroke="#424242"
-              strokeWidth={0.5}
+              stroke="#71717A"
+              strokeWidth={0.8}
             />
           ))}
           <Polygon
@@ -102,33 +125,93 @@ export const StatsRadarChart = ({
               <Circle key={`dot-${i}`} cx={p.x} cy={p.y} r={3} fill={color} />
             );
           })}
-          {labelPositions.map((p, i) => (
-            <React.Fragment key={`label-${i}`}>
-              <SvgText
-                x={p.x}
-                y={p.y - 6}
-                fill="#F4F4F4"
-                fontSize={11}
-                fontWeight="600"
-                textAnchor="middle"
-              >
-                {p.label}
-              </SvgText>
-              <SvgText
-                x={p.x}
-                y={p.y + 8}
-                fill="#A1A1AA"
-                fontSize={10}
-                textAnchor="middle"
-              >
-                {p.rawValue}
-              </SvgText>
-            </React.Fragment>
-          ))}
+          {labelPositions.map((p, i) => {
+            const labelWidth = data[i].label.length * 12;
+            return (
+              <G key={`label-${i}`} onPress={() => handleLabelPress(i)}>
+                <SvgText
+                  x={p.x}
+                  y={p.y - 6}
+                  fill="#F4F4F4"
+                  fontSize={12}
+                  fontWeight="700"
+                  textAnchor="middle"
+                >
+                  {p.label}
+                </SvgText>
+                <Line
+                  x1={p.x - labelWidth / 2}
+                  y1={p.y - 4}
+                  x2={p.x + labelWidth / 2}
+                  y2={p.y - 4}
+                  stroke="#A1A1AA"
+                  strokeWidth={0.8}
+                />
+                <SvgText
+                  x={p.x}
+                  y={p.y + 8}
+                  fill="#A1A1AA"
+                  fontSize={10}
+                  textAnchor="middle"
+                >
+                  {p.metric}
+                </SvgText>
+              </G>
+            );
+          })}
         </Svg>
+
+        {labelPositions.map((p, i) => {
+          const isTop = p.y < CENTER;
+          const isLeft = p.x < CENTER - 20;
+          const isRight = p.x > CENTER + 20;
+
+          const tooltipPos: ViewStyle = {
+            position: "absolute" as const,
+            top: isTop ? p.y - 70 : p.y + 18,
+            ...(isLeft
+              ? { left: 0 }
+              : isRight
+                ? { right: 0 }
+                : { left: p.x - 100 }),
+            width: 200,
+          };
+
+          return (
+            <React.Fragment key={`touch-${i}`}>
+              <TouchableOpacity
+                style={[
+                  styles.labelTouchArea,
+                  { left: p.x - 36, top: p.y - 16 },
+                ]}
+                onPress={() => handleLabelPress(i)}
+                activeOpacity={0.7}
+              />
+              {tooltipIndex === i && data[i] && (
+                <View style={[styles.tooltip, tooltipPos]}>
+                  <Text style={styles.tooltipLabel}>
+                    {data[i].label}（{data[i].metric}）
+                  </Text>
+                  <Text style={styles.tooltipValue}>{data[i].rawValue}</Text>
+                  <Text style={styles.tooltipDesc}>{data[i].description}</Text>
+                </View>
+              )}
+            </React.Fragment>
+          );
+        })}
       </View>
     </View>
   );
+
+  if (tooltipIndex !== null) {
+    return (
+      <TouchableWithoutFeedback onPress={dismissTooltip}>
+        <View>{chartContent}</View>
+      </TouchableWithoutFeedback>
+    );
+  }
+
+  return chartContent;
 };
 
 const styles = StyleSheet.create({
@@ -139,10 +222,48 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 16,
     fontWeight: "700",
-    marginBottom: 8,
+    marginBottom: 4,
   },
   chartWrapper: {
     alignItems: "center",
     justifyContent: "center",
+    position: "relative",
+    width: SIZE,
+    height: SIZE,
+  },
+  labelTouchArea: {
+    position: "absolute",
+    width: 72,
+    height: 32,
+  },
+  tooltip: {
+    backgroundColor: "#3A3A3A",
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#525252",
+    zIndex: 10,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+  },
+  tooltipLabel: {
+    color: "#F4F4F4",
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 2,
+  },
+  tooltipValue: {
+    color: "#d08000",
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  tooltipDesc: {
+    color: "#A1A1AA",
+    fontSize: 11,
+    lineHeight: 16,
   },
 });
