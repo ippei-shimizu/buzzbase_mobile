@@ -10,6 +10,7 @@ export interface GameResultMatchResult {
   defensive_position: string;
   tournament_id: number | null;
   memo: string | null;
+  my_team_name: string;
   opponent_team_name: string;
   tournament_name: string | null;
 }
@@ -19,9 +20,12 @@ export interface PlateAppearance {
   batter_box_number: number;
   batting_result: string;
   game_result_id: number;
+  batting_position_id: number;
+  plate_result_id: number;
 }
 
 export interface GameResultBattingAverage {
+  id: number;
   plate_appearances: number;
   times_at_bat: number;
   hit: number;
@@ -43,6 +47,7 @@ export interface GameResultBattingAverage {
 }
 
 export interface GameResultPitchingResult {
+  id: number;
   win: number;
   loss: number;
   hold: number;
@@ -61,6 +66,7 @@ export interface GameResultPitchingResult {
 
 export interface GameResult {
   game_result_id: number;
+  user_id: number;
   season_id: number | null;
   season_name: string | null;
   match_result: GameResultMatchResult;

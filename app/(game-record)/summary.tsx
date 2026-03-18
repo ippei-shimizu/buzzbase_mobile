@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 import { SummaryView } from "@components/game-record/SummaryView";
+import { BottomTabBar } from "@components/ui/BottomTabBar";
 
 export default function SummaryScreen() {
   const router = useRouter();
@@ -10,8 +11,9 @@ export default function SummaryScreen() {
   const store = useGameRecordStore();
 
   const handleComplete = () => {
+    const wasEditMode = store.isEditMode;
     resetFlow();
-    router.replace("/(tabs)");
+    router.replace("/(tabs)/(game-results)");
   };
 
   return (
@@ -19,6 +21,7 @@ export default function SummaryScreen() {
       <SummaryView
         date={store.date}
         matchType={store.matchType}
+        tournamentName={store.tournamentName}
         myTeamName={store.myTeamName}
         opponentTeamName={store.opponentTeamName}
         myTeamScore={store.myTeamScore}
@@ -26,20 +29,9 @@ export default function SummaryScreen() {
         battingOrder={store.battingOrder}
         defensivePosition={store.defensivePosition}
         memo={store.memo}
-        plateAppearances={store.plateAppearances}
-        timesAtBat={store.timesAtBat}
-        hit={store.hit}
-        twoBaseHit={store.twoBaseHit}
-        threeBaseHit={store.threeBaseHit}
-        homeRun={store.homeRun}
-        totalBases={store.totalBases}
+        battingBoxes={store.battingBoxes}
         runsBattedIn={store.runsBattedIn}
         run={store.run}
-        strikeOut={store.strikeOut}
-        baseOnBalls={store.baseOnBalls}
-        hitByPitch={store.hitByPitch}
-        sacrificeHit={store.sacrificeHit}
-        sacrificeFly={store.sacrificeFly}
         stealingBase={store.stealingBase}
         caughtStealing={store.caughtStealing}
         battingError={store.battingError}
@@ -51,7 +43,6 @@ export default function SummaryScreen() {
         inningsPitchedWhole={store.inningsPitchedWhole}
         inningsPitchedFraction={store.inningsPitchedFraction}
         numberOfPitches={store.numberOfPitches}
-        gotToTheDistance={store.gotToTheDistance}
         runAllowed={store.runAllowed}
         earnedRun={store.earnedRun}
         hitsAllowed={store.hitsAllowed}
@@ -61,6 +52,7 @@ export default function SummaryScreen() {
         pitchingHitByPitch={store.pitchingHitByPitch}
         onComplete={handleComplete}
       />
+      <BottomTabBar />
     </View>
   );
 }

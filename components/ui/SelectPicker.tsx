@@ -15,12 +15,13 @@ interface PickerItem {
 }
 
 interface Props {
-  label: string;
+  label?: string;
   items: PickerItem[];
   selectedValue: string | number | null;
   onSelect: (value: string | number) => void;
   placeholder?: string;
   showClear?: boolean;
+  compact?: boolean;
 }
 
 export function SelectPicker({
@@ -30,14 +31,18 @@ export function SelectPicker({
   onSelect,
   placeholder = "選択してください",
   showClear = false,
+  compact = false,
 }: Props) {
   const [visible, setVisible] = useState(false);
   const selectedLabel = items.find((i) => i.value === selectedValue)?.label;
 
   return (
-    <View style={styles.wrapper}>
-      <Text style={styles.label}>{label}</Text>
-      <TouchableOpacity style={styles.trigger} onPress={() => setVisible(true)}>
+    <View style={[styles.wrapper, compact && { marginBottom: 0 }]}>
+      {!compact && label && <Text style={styles.label}>{label}</Text>}
+      <TouchableOpacity
+        style={[styles.trigger, compact && styles.triggerCompact]}
+        onPress={() => setVisible(true)}
+      >
         <Text
           style={[
             styles.triggerText,
@@ -63,7 +68,7 @@ export function SelectPicker({
           onPress={() => setVisible(false)}
         >
           <View style={styles.sheet}>
-            <Text style={styles.sheetTitle}>{label}</Text>
+            <Text style={styles.sheetTitle}>{label || "選択"}</Text>
             <FlatList
               data={items}
               keyExtractor={(item) => String(item.value)}
@@ -123,6 +128,12 @@ const styles = StyleSheet.create({
   },
   triggerPlaceholder: {
     color: "#71717A",
+  },
+  triggerCompact: {
+    backgroundColor: "#3A3A3A",
+    borderColor: "#3A3A3A",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
   },
   triggerActions: {
     flexDirection: "row",

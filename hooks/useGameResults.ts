@@ -3,6 +3,17 @@ import {
   getGameResults,
   getUserGameResults,
 } from "../services/gameResultService";
+import type { GameResult } from "../types/gameResult";
+
+/** ページネーションキャッシュ混在時の重複排除 */
+const dedupGameResults = (results: GameResult[]): GameResult[] => {
+  const seen = new Set<number>();
+  return results.filter((r) => {
+    if (seen.has(r.game_result_id)) return false;
+    seen.add(r.game_result_id);
+    return true;
+  });
+};
 
 export const useUserGameResults = (userId: number | undefined) => {
   const { data, isLoading, isRefetching, refetch } = useInfiniteQuery({
@@ -16,8 +27,12 @@ export const useUserGameResults = (userId: number | undefined) => {
     enabled: !!userId,
   });
 
+  const gameResults = dedupGameResults(
+    data?.pages.flatMap((page) => page.data) ?? [],
+  );
+
   return {
-    gameResults: data?.pages.flatMap((page) => page.data) ?? [],
+    gameResults,
     isLoading,
     isRefreshing: isRefetching,
     refetch,
@@ -45,7 +60,9 @@ export const useGameResults = () => {
     },
   });
 
-  const gameResults = data?.pages.flatMap((page) => page.data) ?? [];
+  const gameResults = dedupGameResults(
+    data?.pages.flatMap((page) => page.data) ?? [],
+  );
 
   return {
     gameResults,

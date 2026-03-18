@@ -14,10 +14,6 @@ export default function Step2BattingScreen() {
 
   const handleFieldChange = (field: string, value: number) => {
     store.setField(field as keyof typeof store, value as never);
-    // 安打関連が変わったらtotalBasesを再計算
-    if (["hit", "twoBaseHit", "threeBaseHit", "homeRun"].includes(field)) {
-      setTimeout(() => store.computeTotalBases(), 0);
-    }
   };
 
   const handleSubmit = () => {
@@ -52,26 +48,20 @@ export default function Step2BattingScreen() {
     <View style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
       <StepIndicator currentStep={2} />
       <BattingForm
-        plateAppearances={store.plateAppearances}
-        timesAtBat={store.timesAtBat}
-        atBats={store.atBats}
-        hit={store.hit}
-        twoBaseHit={store.twoBaseHit}
-        threeBaseHit={store.threeBaseHit}
-        homeRun={store.homeRun}
-        totalBases={store.totalBases}
+        battingBoxes={store.battingBoxes}
         runsBattedIn={store.runsBattedIn}
         run={store.run}
-        strikeOut={store.strikeOut}
-        baseOnBalls={store.baseOnBalls}
-        hitByPitch={store.hitByPitch}
-        sacrificeHit={store.sacrificeHit}
-        sacrificeFly={store.sacrificeFly}
+        battingError={store.battingError}
         stealingBase={store.stealingBase}
         caughtStealing={store.caughtStealing}
-        battingError={store.battingError}
         isSubmitting={submitStep2.isPending}
         errors={errors}
+        onPositionChange={(index, id) =>
+          store.updateBattingBoxPosition(index, id)
+        }
+        onResultChange={(index, id) => store.updateBattingBoxResult(index, id)}
+        onAddBox={() => store.addBattingBox()}
+        onDeleteBox={(index) => store.removeBattingBox(index)}
         onFieldChange={handleFieldChange}
         onSubmit={handleSubmit}
         onSkipPitching={handleSkipPitching}

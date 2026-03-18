@@ -77,6 +77,39 @@ export const createPitchingResult = async (
   return response.data;
 };
 
+/** PUT /match_results/:id */
+export const updateMatchResult = async (
+  id: number,
+  data: MatchResultPayload,
+): Promise<{ id: number }> => {
+  const response = await axiosInstance.put(`/match_results/${id}`, {
+    match_result: data,
+  });
+  return response.data;
+};
+
+/** PUT /batting_averages/:id */
+export const updateBattingAverage = async (
+  id: number,
+  data: BattingAveragePayload,
+): Promise<{ id: number }> => {
+  const response = await axiosInstance.put(`/batting_averages/${id}`, {
+    batting_average: data,
+  });
+  return response.data;
+};
+
+/** PUT /pitching_results/:id */
+export const updatePitchingResult = async (
+  id: number,
+  data: PitchingResultPayload,
+): Promise<{ id: number }> => {
+  const response = await axiosInstance.put(`/pitching_results/${id}`, {
+    pitching_result: data,
+  });
+  return response.data;
+};
+
 /** GET /teams — チーム一覧取得 */
 export const getTeams = async (): Promise<Team[]> => {
   const response = await axiosInstance.get("/teams");
@@ -92,5 +125,23 @@ export const createTeam = async (name: string): Promise<Team> => {
 /** GET /positions — 守備位置一覧取得 */
 export const getPositions = async (): Promise<Position[]> => {
   const response = await axiosInstance.get("/positions");
+  return response.data;
+};
+
+/** GET /tournaments — 大会名一覧取得 */
+export const getTournaments = async (): Promise<
+  { id: number; name: string }[]
+> => {
+  const response = await axiosInstance.get("/tournaments");
+  return response.data;
+};
+
+/** POST /tournaments — 大会名新規作成 */
+export const createTournament = async (
+  name: string,
+): Promise<{ id: number; name: string }> => {
+  const response = await axiosInstance.post("/tournaments", {
+    tournament: { name },
+  });
   return response.data;
 };

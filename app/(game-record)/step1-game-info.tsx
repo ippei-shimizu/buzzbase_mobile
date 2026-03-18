@@ -9,8 +9,13 @@ import { GameInfoForm } from "@components/game-record/GameInfoForm";
 
 export default function Step1GameInfoScreen() {
   const router = useRouter();
-  const { createGameResultMutation, submitStep1, teamsQuery, positionsQuery } =
-    useGameRecord();
+  const {
+    createGameResultMutation,
+    submitStep1,
+    teamsQuery,
+    positionsQuery,
+    tournamentsQuery,
+  } = useGameRecord();
   const store = useGameRecordStore();
   const { seasons } = useMySeasons();
   const [errors, setErrors] = useState<string[]>([]);
@@ -18,8 +23,8 @@ export default function Step1GameInfoScreen() {
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    const gameResultId = useGameRecordStore.getState().gameResultId;
-    if (!gameResultId && !hasInitialized.current) {
+    const state = useGameRecordStore.getState();
+    if (!state.gameResultId && !state.isEditMode && !hasInitialized.current) {
       hasInitialized.current = true;
       setIsInitializing(true);
       createGameResultMutation.mutate(undefined, {
@@ -95,6 +100,9 @@ export default function Step1GameInfoScreen() {
         battingOrder={store.battingOrder}
         defensivePosition={store.defensivePosition}
         memo={store.memo}
+        tournamentName={store.tournamentName}
+        tournamentId={store.tournamentId}
+        tournaments={tournamentsQuery.data ?? []}
         seasonId={store.seasonId}
         seasons={seasons}
         teams={teamsQuery.data ?? []}

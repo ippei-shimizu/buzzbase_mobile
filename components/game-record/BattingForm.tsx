@@ -1,71 +1,44 @@
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { NumberInputRow } from "./NumberInputRow";
 import { Button } from "@components/ui/Button";
+import { Select } from "@components/ui/Select";
+import {
+  battingResultsPositions,
+  battingResultsList,
+} from "@constants/battingData";
+import type { BattingBox } from "../../types/gameRecord";
 
 interface Props {
-  plateAppearances: number;
-  timesAtBat: number;
-  atBats: number;
-  hit: number;
-  twoBaseHit: number;
-  threeBaseHit: number;
-  homeRun: number;
-  totalBases: number;
+  battingBoxes: BattingBox[];
   runsBattedIn: number;
   run: number;
-  strikeOut: number;
-  baseOnBalls: number;
-  hitByPitch: number;
-  sacrificeHit: number;
-  sacrificeFly: number;
+  battingError: number;
   stealingBase: number;
   caughtStealing: number;
-  battingError: number;
   isSubmitting: boolean;
   errors: string[];
+  onPositionChange: (index: number, positionId: number) => void;
+  onResultChange: (index: number, resultId: number) => void;
+  onAddBox: () => void;
+  onDeleteBox: (index: number) => void;
   onFieldChange: (field: string, value: number) => void;
   onSubmit: () => void;
   onSkipPitching: () => void;
 }
 
-function SectionTitle({ title }: { title: string }) {
-  return (
-    <Text
-      style={{
-        fontSize: 14,
-        fontWeight: "600",
-        color: "#d08000",
-        marginTop: 16,
-        marginBottom: 4,
-        paddingHorizontal: 4,
-      }}
-    >
-      {title}
-    </Text>
-  );
-}
-
 export function BattingForm({
-  plateAppearances,
-  timesAtBat,
-  atBats,
-  hit,
-  twoBaseHit,
-  threeBaseHit,
-  homeRun,
-  totalBases,
+  battingBoxes,
   runsBattedIn,
   run,
-  strikeOut,
-  baseOnBalls,
-  hitByPitch,
-  sacrificeHit,
-  sacrificeFly,
+  battingError,
   stealingBase,
   caughtStealing,
-  battingError,
   isSubmitting,
   errors,
+  onPositionChange,
+  onResultChange,
+  onAddBox,
+  onDeleteBox,
   onFieldChange,
   onSubmit,
   onSkipPitching,
@@ -92,128 +65,196 @@ export function BattingForm({
         </View>
       )}
 
-      <SectionTitle title="打席・打数" />
-      <NumberInputRow
-        label="打席数"
-        value={plateAppearances}
-        onChangeValue={(v) => onFieldChange("plateAppearances", v)}
-      />
-      <NumberInputRow
-        label="打数"
-        value={timesAtBat}
-        onChangeValue={(v) => onFieldChange("timesAtBat", v)}
-      />
-      <NumberInputRow
-        label="打数（at_bats）"
-        value={atBats}
-        onChangeValue={(v) => onFieldChange("atBats", v)}
-      />
-
-      <SectionTitle title="安打" />
-      <NumberInputRow
-        label="安打"
-        value={hit}
-        onChangeValue={(v) => onFieldChange("hit", v)}
-      />
-      <NumberInputRow
-        label="二塁打"
-        value={twoBaseHit}
-        onChangeValue={(v) => onFieldChange("twoBaseHit", v)}
-      />
-      <NumberInputRow
-        label="三塁打"
-        value={threeBaseHit}
-        onChangeValue={(v) => onFieldChange("threeBaseHit", v)}
-      />
-      <NumberInputRow
-        label="本塁打"
-        value={homeRun}
-        onChangeValue={(v) => onFieldChange("homeRun", v)}
-      />
-
-      {/* 塁打数（自動計算） */}
+      {/* 打席カード */}
       <View
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingVertical: 10,
-          paddingHorizontal: 4,
-          borderBottomWidth: 1,
-          borderBottomColor: "#3a3a3a",
+          backgroundColor: "#3a3a3a",
+          borderRadius: 12,
+          padding: 16,
         }}
       >
-        <Text style={{ fontSize: 15, color: "#A1A1AA" }}>
-          塁打数（自動計算）
-        </Text>
-        <Text style={{ fontSize: 16, color: "#d08000", fontWeight: "600" }}>
-          {totalBases}
-        </Text>
+        <View style={{ gap: 12 }}>
+          {battingBoxes.map((box, index) => (
+            <View
+              key={index}
+              style={{
+                backgroundColor: "#2E2E2E",
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: "#52525B",
+                padding: 12,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "bold",
+                  color: "#F4F4F4",
+                  marginBottom: 8,
+                }}
+              >
+                第{index + 1}打席
+              </Text>
+
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <Select
+                  options={battingResultsPositions}
+                  selectedId={box.position}
+                  onSelect={(id) => onPositionChange(index, id)}
+                  placeholder="方向"
+                  style={{ flex: 1 }}
+                />
+                <Select
+                  options={battingResultsList}
+                  selectedId={box.result}
+                  onSelect={(id) => onResultChange(index, id)}
+                  placeholder="打球結果"
+                  style={{ flex: 3 }}
+                />
+              </View>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "flex-end",
+                  justifyContent: "flex-end",
+                  marginTop: 8,
+                }}
+              >
+                <View
+                  style={{
+                    borderBottomWidth: 2,
+                    borderBottomColor: "#d08000",
+                    paddingBottom: 2,
+                    marginRight: 16,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      color: "#F4F4F4",
+                      fontSize: 14,
+                    }}
+                  >
+                    {box.text}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => onDeleteBox(index)}
+                  hitSlop={8}
+                >
+                  <View
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 12,
+                      backgroundColor: "#52525B",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#F4F4F4",
+                        fontSize: 14,
+                        fontWeight: "bold",
+                        lineHeight: 16,
+                      }}
+                    >
+                      ✕
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* 追加ボタン */}
+        <View style={{ alignItems: "flex-end", marginTop: 12 }}>
+          <TouchableOpacity
+            onPress={onAddBox}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: "#d08000",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text
+              style={{
+                color: "#F4F4F4",
+                fontSize: 22,
+                fontWeight: "bold",
+                lineHeight: 24,
+              }}
+            >
+              +
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 区切り線 */}
+        <View
+          style={{
+            height: 1,
+            backgroundColor: "#52525B",
+            marginVertical: 20,
+          }}
+        />
+
+        {/* その他成績 */}
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <View style={{ width: "47%" }}>
+            <NumberInputRow
+              label="打点"
+              value={runsBattedIn}
+              onChangeValue={(v) => onFieldChange("runsBattedIn", v)}
+            />
+          </View>
+          <View style={{ width: "47%" }}>
+            <NumberInputRow
+              label="得点"
+              value={run}
+              onChangeValue={(v) => onFieldChange("run", v)}
+            />
+          </View>
+          <View style={{ width: "47%" }}>
+            <NumberInputRow
+              label="失策"
+              value={battingError}
+              onChangeValue={(v) => onFieldChange("battingError", v)}
+            />
+          </View>
+          <View style={{ width: "47%" }}>
+            <NumberInputRow
+              label="盗塁"
+              value={stealingBase}
+              onChangeValue={(v) => onFieldChange("stealingBase", v)}
+            />
+          </View>
+          <View style={{ width: "47%" }}>
+            <NumberInputRow
+              label="盗塁死"
+              value={caughtStealing}
+              onChangeValue={(v) => onFieldChange("caughtStealing", v)}
+            />
+          </View>
+        </View>
       </View>
 
-      <SectionTitle title="打点・得点" />
-      <NumberInputRow
-        label="打点"
-        value={runsBattedIn}
-        onChangeValue={(v) => onFieldChange("runsBattedIn", v)}
-      />
-      <NumberInputRow
-        label="得点"
-        value={run}
-        onChangeValue={(v) => onFieldChange("run", v)}
-      />
-
-      <SectionTitle title="三振・四死球" />
-      <NumberInputRow
-        label="三振"
-        value={strikeOut}
-        onChangeValue={(v) => onFieldChange("strikeOut", v)}
-      />
-      <NumberInputRow
-        label="四球"
-        value={baseOnBalls}
-        onChangeValue={(v) => onFieldChange("baseOnBalls", v)}
-      />
-      <NumberInputRow
-        label="死球"
-        value={hitByPitch}
-        onChangeValue={(v) => onFieldChange("hitByPitch", v)}
-      />
-
-      <SectionTitle title="犠打・犠飛" />
-      <NumberInputRow
-        label="犠打"
-        value={sacrificeHit}
-        onChangeValue={(v) => onFieldChange("sacrificeHit", v)}
-      />
-      <NumberInputRow
-        label="犠飛"
-        value={sacrificeFly}
-        onChangeValue={(v) => onFieldChange("sacrificeFly", v)}
-      />
-
-      <SectionTitle title="走塁" />
-      <NumberInputRow
-        label="盗塁"
-        value={stealingBase}
-        onChangeValue={(v) => onFieldChange("stealingBase", v)}
-      />
-      <NumberInputRow
-        label="盗塁死"
-        value={caughtStealing}
-        onChangeValue={(v) => onFieldChange("caughtStealing", v)}
-      />
-
-      <SectionTitle title="失策" />
-      <NumberInputRow
-        label="失策"
-        value={battingError}
-        onChangeValue={(v) => onFieldChange("battingError", v)}
-      />
-
+      {/* ボタン */}
       <View style={{ marginTop: 24, gap: 12, marginBottom: 40 }}>
         <Button
-          title="次へ：投手成績"
+          title="投手結果入力へ"
           onPress={onSubmit}
           loading={isSubmitting}
           disabled={isSubmitting}
