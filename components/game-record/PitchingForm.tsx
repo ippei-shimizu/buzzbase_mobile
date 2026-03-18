@@ -1,7 +1,7 @@
-import { View, Text, ScrollView, Switch } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { NumberInputRow } from "./NumberInputRow";
-import { SegmentedControl } from "@components/ui/SegmentedControl";
 import { NumberInput } from "@components/ui/NumberInput";
+import { Select } from "@components/ui/Select";
 import { Button } from "@components/ui/Button";
 
 interface Props {
@@ -26,8 +26,28 @@ interface Props {
   onSubmit: () => void;
 }
 
-const WIN_LOSS_OPTIONS = ["なし", "勝", "負"];
-const FRACTION_OPTIONS = ["0/3", "1/3", "2/3"];
+const winOrLossOptions = [
+  { id: -1, label: "-" },
+  { id: 0, label: "勝利投手" },
+  { id: 1, label: "敗戦投手" },
+];
+
+const inningsOptions = Array.from({ length: 13 }, (_, i) => ({
+  id: i,
+  label: String(i),
+}));
+
+const fractionOptions = [
+  { id: 0, label: "0/3" },
+  { id: 1, label: "1/3" },
+  { id: 2, label: "2/3" },
+];
+
+function Divider() {
+  return (
+    <View style={{ height: 1, backgroundColor: "#52525B", marginVertical: 16 }} />
+  );
+}
 
 export function PitchingForm({
   win,
@@ -50,11 +70,11 @@ export function PitchingForm({
   onFieldChange,
   onSubmit,
 }: Props) {
-  const winLossIndex = win > 0 ? 1 : loss > 0 ? 2 : 0;
+  const winLossSelectedId = win > 0 ? 0 : loss > 0 ? 1 : -1;
 
-  const handleWinLossChange = (index: number) => {
-    onFieldChange("win", index === 1 ? 1 : 0);
-    onFieldChange("loss", index === 2 ? 1 : 0);
+  const handleWinLossChange = (id: number) => {
+    onFieldChange("win", id === 0 ? 1 : 0);
+    onFieldChange("loss", id === 1 ? 1 : 0);
   };
 
   return (
@@ -79,122 +99,206 @@ export function PitchingForm({
         </View>
       )}
 
-      {/* 勝敗 */}
-      <View style={{ marginBottom: 16 }}>
-        <Text style={{ marginBottom: 8, fontSize: 14, color: "#D4D4D8" }}>
-          勝敗
-        </Text>
-        <SegmentedControl
-          options={WIN_LOSS_OPTIONS}
-          selectedIndex={winLossIndex}
-          onSelect={handleWinLossChange}
-        />
-      </View>
-
-      {/* ホールド・セーブ */}
-      <NumberInputRow
-        label="ホールド"
-        value={hold}
-        onChangeValue={(v) => onFieldChange("hold", v)}
-      />
-      <NumberInputRow
-        label="セーブ"
-        value={saves}
-        onChangeValue={(v) => onFieldChange("saves", v)}
-      />
-
-      {/* 投球回 */}
-      <View style={{ marginBottom: 16, marginTop: 16 }}>
-        <Text style={{ marginBottom: 8, fontSize: 14, color: "#D4D4D8" }}>
-          投球回
-        </Text>
+      <View
+        style={{
+          backgroundColor: "#3a3a3a",
+          borderRadius: 12,
+          padding: 16,
+        }}
+      >
+        {/* 勝敗 */}
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            gap: 8,
+            justifyContent: "space-between",
           }}
         >
+          <Text style={{ fontSize: 16, fontWeight: "bold", color: "#F4F4F4" }}>
+            勝敗
+          </Text>
+          <View style={{ flex: 1, marginLeft: 24 }}>
+            <Select
+              options={winOrLossOptions}
+              selectedId={winLossSelectedId}
+              onSelect={handleWinLossChange}
+              placeholder="-"
+            />
+          </View>
+        </View>
+
+        <Divider />
+
+        {/* 投球回数 */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Text style={{ fontSize: 16, fontWeight: "bold", color: "#F4F4F4" }}>
+            投球回数
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <View style={{ width: 64 }}>
+              <Select
+                options={inningsOptions}
+                selectedId={inningsPitchedWhole}
+                onSelect={(id) => onFieldChange("inningsPitchedWhole", id)}
+                placeholder="0"
+              />
+            </View>
+            <View style={{ width: 64 }}>
+              <Select
+                options={fractionOptions}
+                selectedId={inningsPitchedFraction}
+                onSelect={(id) => onFieldChange("inningsPitchedFraction", id)}
+                placeholder="0/3"
+              />
+            </View>
+          </View>
+        </View>
+
+        <Divider />
+
+        {/* 投球数 */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingVertical: 4,
+          }}
+        >
+          <Text style={{ fontSize: 15, color: "#F4F4F4" }}>投球数</Text>
           <NumberInput
-            value={inningsPitchedWhole}
-            onChangeValue={(v) => onFieldChange("inningsPitchedWhole", v)}
+            value={numberOfPitches}
+            onChangeValue={(v) => onFieldChange("numberOfPitches", v)}
             style={{ width: 72 }}
           />
-          <Text style={{ color: "#F4F4F4", fontSize: 16 }}>回</Text>
-          <View style={{ flex: 1 }}>
-            <SegmentedControl
-              options={FRACTION_OPTIONS}
-              selectedIndex={inningsPitchedFraction}
-              onSelect={(i) => onFieldChange("inningsPitchedFraction", i)}
+        </View>
+
+        <Divider />
+
+        {/* 完投 */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingVertical: 4,
+          }}
+        >
+          <Text style={{ fontSize: 15, color: "#F4F4F4" }}>完投</Text>
+          <TouchableOpacity
+            onPress={() => onFieldChange("gotToTheDistance", !gotToTheDistance)}
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 4,
+              borderWidth: 2,
+              borderColor: gotToTheDistance ? "#d08000" : "#71717A",
+              backgroundColor: gotToTheDistance ? "#d08000" : "transparent",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {gotToTheDistance && (
+              <Text
+                style={{
+                  color: "#F4F4F4",
+                  fontSize: 14,
+                  fontWeight: "bold",
+                  lineHeight: 16,
+                }}
+              >
+                ✓
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <Divider />
+
+        {/* その他成績 (2カラムグリッド) */}
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 12,
+            marginTop: 4,
+          }}
+        >
+          <View style={{ width: "47%" }}>
+            <NumberInputRow
+              label="ホールド"
+              value={hold}
+              onChangeValue={(v) => onFieldChange("hold", v)}
+            />
+          </View>
+          <View style={{ width: "47%" }}>
+            <NumberInputRow
+              label="セーブ"
+              value={saves}
+              onChangeValue={(v) => onFieldChange("saves", v)}
+            />
+          </View>
+          <View style={{ width: "47%" }}>
+            <NumberInputRow
+              label="失点"
+              value={runAllowed}
+              onChangeValue={(v) => onFieldChange("runAllowed", v)}
+            />
+          </View>
+          <View style={{ width: "47%" }}>
+            <NumberInputRow
+              label="自責点"
+              value={earnedRun}
+              onChangeValue={(v) => onFieldChange("earnedRun", v)}
+            />
+          </View>
+          <View style={{ width: "47%" }}>
+            <NumberInputRow
+              label="被安打"
+              value={hitsAllowed}
+              onChangeValue={(v) => onFieldChange("hitsAllowed", v)}
+            />
+          </View>
+          <View style={{ width: "47%" }}>
+            <NumberInputRow
+              label="被本塁打"
+              value={homeRunsHit}
+              onChangeValue={(v) => onFieldChange("homeRunsHit", v)}
+            />
+          </View>
+          <View style={{ width: "47%" }}>
+            <NumberInputRow
+              label="奪三振"
+              value={strikeouts}
+              onChangeValue={(v) => onFieldChange("strikeouts", v)}
+            />
+          </View>
+          <View style={{ width: "47%" }}>
+            <NumberInputRow
+              label="四球"
+              value={pitchingBaseOnBalls}
+              onChangeValue={(v) => onFieldChange("pitchingBaseOnBalls", v)}
+            />
+          </View>
+          <View style={{ width: "47%" }}>
+            <NumberInputRow
+              label="死球"
+              value={pitchingHitByPitch}
+              onChangeValue={(v) => onFieldChange("pitchingHitByPitch", v)}
             />
           </View>
         </View>
       </View>
 
-      {/* 完投 */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingVertical: 10,
-          paddingHorizontal: 4,
-          borderBottomWidth: 1,
-          borderBottomColor: "#3a3a3a",
-        }}
-      >
-        <Text style={{ fontSize: 15, color: "#F4F4F4" }}>完投</Text>
-        <Switch
-          value={gotToTheDistance}
-          onValueChange={(v) => onFieldChange("gotToTheDistance", v)}
-          trackColor={{ false: "#52525B", true: "#d08000" }}
-          thumbColor="#F4F4F4"
-        />
-      </View>
-
-      <NumberInputRow
-        label="投球数"
-        value={numberOfPitches}
-        onChangeValue={(v) => onFieldChange("numberOfPitches", v)}
-      />
-      <NumberInputRow
-        label="失点"
-        value={runAllowed}
-        onChangeValue={(v) => onFieldChange("runAllowed", v)}
-      />
-      <NumberInputRow
-        label="自責点"
-        value={earnedRun}
-        onChangeValue={(v) => onFieldChange("earnedRun", v)}
-      />
-      <NumberInputRow
-        label="被安打"
-        value={hitsAllowed}
-        onChangeValue={(v) => onFieldChange("hitsAllowed", v)}
-      />
-      <NumberInputRow
-        label="被本塁打"
-        value={homeRunsHit}
-        onChangeValue={(v) => onFieldChange("homeRunsHit", v)}
-      />
-      <NumberInputRow
-        label="奪三振"
-        value={strikeouts}
-        onChangeValue={(v) => onFieldChange("strikeouts", v)}
-      />
-      <NumberInputRow
-        label="与四球"
-        value={pitchingBaseOnBalls}
-        onChangeValue={(v) => onFieldChange("pitchingBaseOnBalls", v)}
-      />
-      <NumberInputRow
-        label="与死球"
-        value={pitchingHitByPitch}
-        onChangeValue={(v) => onFieldChange("pitchingHitByPitch", v)}
-      />
-
+      {/* 送信ボタン */}
       <Button
-        title="次へ：サマリー"
+        title="試合結果まとめ"
         onPress={onSubmit}
         loading={isSubmitting}
         disabled={isSubmitting}
