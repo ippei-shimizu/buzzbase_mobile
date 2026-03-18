@@ -23,8 +23,8 @@ export default function Step1GameInfoScreen() {
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    const gameResultId = useGameRecordStore.getState().gameResultId;
-    if (!gameResultId && !hasInitialized.current) {
+    const state = useGameRecordStore.getState();
+    if (!state.gameResultId && !state.isEditMode && !hasInitialized.current) {
       hasInitialized.current = true;
       setIsInitializing(true);
       createGameResultMutation.mutate(undefined, {

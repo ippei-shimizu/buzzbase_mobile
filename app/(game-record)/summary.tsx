@@ -11,8 +11,9 @@ export default function SummaryScreen() {
   const store = useGameRecordStore();
 
   const handleComplete = () => {
+    const wasEditMode = store.isEditMode;
     resetFlow();
-    router.replace("/(tabs)");
+    router.replace("/(tabs)/(game-results)");
   };
 
   return (
