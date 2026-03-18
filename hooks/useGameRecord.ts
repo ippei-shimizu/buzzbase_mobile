@@ -4,9 +4,12 @@ import {
   createGameResult,
   updateGameResult,
   createMatchResult,
+  updateMatchResult,
   createBattingAverage,
+  updateBattingAverage,
   updateBattingAverageId,
   createPitchingResult,
+  updatePitchingResult,
   updatePitchingResultId,
   getTeams,
   getPositions,
@@ -20,10 +23,20 @@ import {
   updatePlateAppearance,
 } from "../services/plateAppearanceService";
 import { computeBattingStats } from "@constants/battingData";
+import { getCurrentUserProfile } from "../services/profileService";
 
 export const useGameRecord = () => {
   const store = useGameRecordStore();
   const queryClient = useQueryClient();
+
+  /** ストアのuserIdを取得。nullならプロファイルAPIから取得してストアにセットする */
+  const resolveUserId = async (): Promise<number> => {
+    const s = useGameRecordStore.getState();
+    if (s.userId) return s.userId;
+    const profile = await getCurrentUserProfile();
+    store.setField("userId", profile.id);
+    return profile.id;
+  };
 
   const teamsQuery = useQuery({
     queryKey: ["teams"],
@@ -55,7 +68,7 @@ export const useGameRecord = () => {
     },
   });
 
-  /** Step1送信: matchResult作成 → gameResult更新 */
+  /** Step1送信: matchResult作成or更新 → gameResult更新 */
   const submitStep1 = useMutation({
     mutationFn: async () => {
       // チームIDを取得または作成
@@ -85,7 +98,7 @@ export const useGameRecord = () => {
         store.setField("tournamentId", tournament.id);
       }
 
-      const matchResult = await createMatchResult({
+      const matchResultPayload = {
         game_result_id: store.gameResultId!,
         date_and_time: `${store.date}T00:00:00`,
         match_type: store.matchType,
@@ -97,21 +110,27 @@ export const useGameRecord = () => {
         defensive_position: store.defensivePosition,
         memo: store.memo,
         ...(tournamentId ? { tournament_id: tournamentId } : {}),
-      });
+      };
 
-      store.setField("matchResultId", matchResult.id);
+      if (store.isEditMode && store.matchResultId) {
+        await updateMatchResult(store.matchResultId, matchResultPayload);
+      } else {
+        const matchResult = await createMatchResult(matchResultPayload);
+        store.setField("matchResultId", matchResult.id);
 
-      await updateGameResult(store.gameResultId!, {
-        match_result_id: matchResult.id,
-        season_id: store.seasonId,
-      });
+        await updateGameResult(store.gameResultId!, {
+          match_result_id: matchResult.id,
+          season_id: store.seasonId,
+        });
+      }
     },
   });
 
-  /** Step2送信: 打席結果を個別送信 → 打撃成績を自動計算して作成 → gameResultに紐付け */
+  /** Step2送信: 打席結果を個別送信 → 打撃成績を自動計算して作成or更新 → gameResultに紐付け */
   const submitStep2 = useMutation({
     mutationFn: async () => {
       const s = useGameRecordStore.getState();
+      const userId = await resolveUserId();
       const stats = computeBattingStats(s.battingBoxes);
 
       // 打席ごとにplate_appearanceを送信
@@ -124,7 +143,7 @@ export const useGameRecord = () => {
         const plateAppearanceData = {
           plate_appearance: {
             game_result_id: s.gameResultId!,
-            user_id: s.userId!,
+            user_id: userId,
             batter_box_number: i + 1,
             batting_result: resultText,
             batting_position_id: box.position,
@@ -134,7 +153,7 @@ export const useGameRecord = () => {
 
         const existing = await checkExistingPlateAppearance(
           s.gameResultId!,
-          s.userId!,
+          userId,
           i + 1,
         );
         if (existing) {
@@ -144,10 +163,9 @@ export const useGameRecord = () => {
         }
       }
 
-      // 打撃成績を作成
-      const battingAverage = await createBattingAverage({
+      const battingAveragePayload = {
         game_result_id: s.gameResultId!,
-        user_id: s.userId!,
+        user_id: userId,
         plate_appearances: stats.plateAppearances,
         times_at_bat: stats.timesAtBat,
         hit: stats.hit,
@@ -166,26 +184,34 @@ export const useGameRecord = () => {
         caught_stealing: s.caughtStealing,
         at_bats: stats.atBats,
         error: s.battingError,
-      });
+      };
 
-      store.setField("battingAverageId", battingAverage.id);
+      if (s.isEditMode && s.battingAverageId) {
+        await updateBattingAverage(s.battingAverageId, battingAveragePayload);
+      } else {
+        const battingAverage = await createBattingAverage(
+          battingAveragePayload,
+        );
+        store.setField("battingAverageId", battingAverage.id);
 
-      await updateBattingAverageId(s.gameResultId!, {
-        batting_average_id: battingAverage.id,
-      });
+        await updateBattingAverageId(s.gameResultId!, {
+          batting_average_id: battingAverage.id,
+        });
+      }
     },
   });
 
-  /** Step3送信: pitchingResult作成 → gameResultに紐付け */
+  /** Step3送信: pitchingResult作成or更新 → gameResultに紐付け */
   const submitStep3 = useMutation({
     mutationFn: async () => {
       const s = useGameRecordStore.getState();
+      const userId = await resolveUserId();
       const inningsPitched =
         s.inningsPitchedWhole + s.inningsPitchedFraction / 3;
 
-      const pitchingResult = await createPitchingResult({
+      const pitchingResultPayload = {
         game_result_id: s.gameResultId!,
-        user_id: s.userId!,
+        user_id: userId,
         win: s.win,
         loss: s.loss,
         hold: s.hold,
@@ -200,19 +226,27 @@ export const useGameRecord = () => {
         strikeouts: s.strikeouts,
         base_on_balls: s.pitchingBaseOnBalls,
         hit_by_pitch: s.pitchingHitByPitch,
-      });
+      };
 
-      store.setField("pitchingResultId", pitchingResult.id);
+      if (s.isEditMode && s.pitchingResultId) {
+        await updatePitchingResult(s.pitchingResultId, pitchingResultPayload);
+      } else {
+        const pitchingResult = await createPitchingResult(
+          pitchingResultPayload,
+        );
+        store.setField("pitchingResultId", pitchingResult.id);
 
-      await updatePitchingResultId(s.gameResultId!, {
-        pitching_result_id: pitchingResult.id,
-      });
+        await updatePitchingResultId(s.gameResultId!, {
+          pitching_result_id: pitchingResult.id,
+        });
+      }
     },
   });
 
   const resetFlow = () => {
     store.reset();
     queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    queryClient.invalidateQueries({ queryKey: ["gameResults"] });
   };
 
   return {
