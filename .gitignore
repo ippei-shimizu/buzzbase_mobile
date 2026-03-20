@@ -46,5 +46,4 @@ yarn-error.*
 .android/
 
 # EAS / Store credentials
-google-services.json
 google-service-account.json

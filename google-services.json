@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "901950968663",
+    "project_id": "buzz-base-ae36d",
+    "storage_bucket": "buzz-base-ae36d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:901950968663:android:9615d2e727d542f9a1a412",
+        "android_client_info": {
+          "package_name": "jp.buzzbase.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEBm-BrDAyuq2C2TqLqCNMzKfTnWwaWJw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
