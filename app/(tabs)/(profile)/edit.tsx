@@ -5,6 +5,8 @@ import {
   StyleSheet,
   ActivityIndicator,
   View,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -249,6 +251,11 @@ export default function ProfileEditScreen() {
     prefectures?.map((p) => ({ label: p.name, value: p.id })) ?? [];
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 96 : 0}
+    >
     <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="handled">
       <ProfileEditForm
         name={name}
@@ -286,6 +293,7 @@ export default function ProfileEditScreen() {
         onAddAward={handleAddAward}
       />
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
