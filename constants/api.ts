@@ -7,8 +7,10 @@ const getDevApiUrl = (): string => {
   return "http://localhost:3100";
 };
 
-export const API_BASE_URL = __DEV__
-  ? getDevApiUrl()
-  : process.env.EXPO_PUBLIC_API_URL || "";
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL
+  ? process.env.EXPO_PUBLIC_API_URL
+  : __DEV__
+    ? getDevApiUrl()
+    : "";
 
 export const API_V1_URL = `${API_BASE_URL}/api/v1`;

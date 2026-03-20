@@ -1,5 +1,6 @@
 import { View } from "react-native";
 import { useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 import { SummaryView } from "@components/game-record/SummaryView";
@@ -7,12 +8,15 @@ import { BottomTabBar } from "@components/ui/BottomTabBar";
 
 export default function SummaryScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { resetFlow } = useGameRecord();
   const store = useGameRecordStore();
 
   const handleComplete = () => {
-    const wasEditMode = store.isEditMode;
     resetFlow();
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    queryClient.invalidateQueries({ queryKey: ["gameResults"] });
+    queryClient.invalidateQueries({ queryKey: ["userGameResults"] });
     router.replace("/(tabs)/(game-results)");
   };
 

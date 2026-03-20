@@ -37,6 +37,12 @@
         {
           "color": "#d08000"
         }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod"
+        }
       ]
     ]
   }

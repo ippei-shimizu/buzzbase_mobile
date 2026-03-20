@@ -92,7 +92,7 @@ export const ProfileEditForm = ({
     imageUri && !imageUri.endsWith(".svg") && imageUri.length > 0;
   const imageSource = hasValidImage
     ? {
-        uri: imageUri.startsWith("http")
+        uri: imageUri.startsWith("http") || imageUri.startsWith("file://")
           ? imageUri
           : `${API_BASE_URL}${imageUri}`,
       }

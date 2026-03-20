@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import * as Notifications from "expo-notifications";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../stores/authStore";
@@ -8,15 +8,19 @@ import {
   registerDeviceToken,
 } from "@services/pushNotificationService";
 
+const isExpoGo = Constants.appOwnership === "expo";
+
 export function usePushNotifications() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
-  const notificationListener = useRef<Notifications.EventSubscription>(null);
-  const responseListener = useRef<Notifications.EventSubscription>(null);
+  const notificationListener = useRef<{ remove: () => void } | null>(null);
+  const responseListener = useRef<{ remove: () => void } | null>(null);
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn || isExpoGo) return;
+
+    const Notifications = require("expo-notifications");
 
     registerForPushNotifications().then((token) => {
       if (token) registerDeviceToken(token);

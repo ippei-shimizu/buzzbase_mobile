@@ -8,6 +8,7 @@ import {
   resendConfirmation as resendConfirmationService,
   validateToken,
 } from "@services/authService";
+import { googleSignIn } from "@services/googleAuthService";
 import type { SignInData, SignUpData } from "../types/auth";
 
 /**
@@ -67,5 +68,12 @@ export const useAuth = () => {
     await resendConfirmationService(email);
   };
 
-  return { isLoggedIn, isLoading, login, logout, signUp, resendConfirmation };
+  const googleLogin = async () => {
+    const response = await googleSignIn();
+    setIsLoggedIn(true);
+    setIsLoading(false);
+    return response;
+  };
+
+  return { isLoggedIn, isLoading, login, logout, signUp, resendConfirmation, googleLogin };
 };

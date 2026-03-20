@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View } from "react-native";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
@@ -31,7 +31,11 @@ export default function Step3PitchingScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#2E2E2E" }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 96 : 0}
+    >
       <StepIndicator currentStep={3} />
       <PitchingForm
         win={store.win}
@@ -54,6 +58,6 @@ export default function Step3PitchingScreen() {
         onFieldChange={handleFieldChange}
         onSubmit={handleSubmit}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }

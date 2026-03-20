@@ -1,6 +1,8 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
+import { API_BASE_URL } from "@constants/api";
 import type {
   NotificationItem as NotificationItemType,
   UserNotification,
@@ -83,17 +85,19 @@ export const NotificationItemComponent = ({
       activeOpacity={0.7}
     >
       {isUserNotification(notification) ? (
-        notification.actor_icon?.url ? (
+        notification.actor_icon?.url &&
+        !notification.actor_icon.url.endsWith(".svg") &&
+        notification.actor_icon.url.length > 0 ? (
           <Image
-            source={{ uri: notification.actor_icon.url }}
+            source={{
+              uri: notification.actor_icon.url.startsWith("http")
+                ? notification.actor_icon.url
+                : `${API_BASE_URL}${notification.actor_icon.url}`,
+            }}
             style={styles.avatar}
           />
         ) : (
-          <View style={[styles.avatar, styles.placeholder]}>
-            <Text style={styles.placeholderText}>
-              {notification.actor_name?.charAt(0) ?? "?"}
-            </Text>
-          </View>
+          <DefaultUserIcon size={44} />
         )
       ) : (
         <View style={[styles.avatar, styles.iconContainer]}>
@@ -144,16 +148,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-  },
-  placeholder: {
-    backgroundColor: "#424242",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  placeholderText: {
-    color: "#d08000",
-    fontSize: 18,
-    fontWeight: "700",
   },
   iconContainer: {
     backgroundColor: "#3A3A3A",
