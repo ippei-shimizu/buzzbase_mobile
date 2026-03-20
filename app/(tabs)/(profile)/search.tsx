@@ -7,6 +7,8 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -65,7 +67,11 @@ export default function UserSearchScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 96 : 0}
+    >
       <View style={styles.searchBarContainer}>
         <Ionicons
           name="search"
@@ -103,7 +109,7 @@ export default function UserSearchScreen() {
         ListEmptyComponent={renderEmpty}
         keyboardShouldPersistTaps="handled"
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

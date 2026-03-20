@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Platform, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { useMySeasons } from "@hooks/useSeasons";
@@ -86,7 +86,11 @@ export default function Step1GameInfoScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#2E2E2E" }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 96 : 0}
+    >
       <StepIndicator currentStep={1} />
       <GameInfoForm
         date={store.date}
@@ -112,6 +116,6 @@ export default function Step1GameInfoScreen() {
         onFieldChange={handleFieldChange}
         onSubmit={handleSubmit}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
