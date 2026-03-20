@@ -4,6 +4,9 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { queryClient } from "@utils/queryClient";
 import { usePushNotifications } from "@hooks/usePushNotifications";
+import { configureGoogleSignIn } from "@services/googleAuthService";
+
+configureGoogleSignIn();
 
 function RootLayoutInner() {
   usePushNotifications();

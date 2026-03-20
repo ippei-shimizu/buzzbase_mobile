@@ -9,7 +9,7 @@ import { SignUpForm } from "@components/auth/SignUpForm";
 
 export default function SignUpScreen() {
   const router = useRouter();
-  const { signUp } = useAuth();
+  const { signUp, googleLogin } = useAuth();
   const { validateEmail, validatePassword, getEmailError, getPasswordError } =
     useFormValidation();
 
@@ -18,6 +18,7 @@ export default function SignUpScreen() {
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const isValid =
     email !== "" &&
@@ -61,6 +62,28 @@ export default function SignUpScreen() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setErrors([]);
+    setIsGoogleLoading(true);
+
+    try {
+      const response = await googleLogin();
+      if (response?.requires_username) {
+        router.replace("/(auth)/username-registration");
+      } else {
+        router.replace("/(tabs)");
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        setErrors(["Googleログインに失敗しました。もう一度お試しください"]);
+      } else {
+        setErrors(["Googleログインに失敗しました"]);
+      }
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
       <KeyboardAvoidingView
@@ -76,10 +99,12 @@ export default function SignUpScreen() {
           errors={errors}
           isSubmitting={isSubmitting}
           isValid={isValid}
+          isGoogleLoading={isGoogleLoading}
           onEmailChange={setEmail}
           onPasswordChange={setPassword}
           onPasswordConfirmationChange={setPasswordConfirmation}
           onSubmit={handleSubmit}
+          onGoogleSignIn={handleGoogleSignIn}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>
