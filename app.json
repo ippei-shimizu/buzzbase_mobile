@@ -14,7 +14,12 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "jp.buzzbase.mobile"
+      "bundleIdentifier": "jp.buzzbase.mobile",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "プロフィール画像の撮影に使用します",
+        "NSPhotoLibraryUsageDescription": "プロフィール画像の選択に使用します"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +28,16 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "jp.buzzbase.mobile"
+      "package": "jp.buzzbase.mobile",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -44,6 +58,19 @@
           "iosUrlScheme": "com.googleusercontent.apps.889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5050600e-3931-4806-b632-43cc204134ae"
+      },
+      "router": {}
+    },
+    "owner": "ippei_shimizu",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5050600e-3931-4806-b632-43cc204134ae"
+    }
   }
 }
