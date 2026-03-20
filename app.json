@@ -18,14 +18,14 @@
       "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "プロフィール画像の撮影に使用します",
-        "NSPhotoLibraryUsageDescription": "プロフィール画像の選択に使用します"
+        "NSPhotoLibraryUsageDescription": "プロフィール画像の選択に使用します",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#2E2E2E",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "jp.buzzbase.mobile",
