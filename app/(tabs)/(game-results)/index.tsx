@@ -9,6 +9,8 @@ import {
   TouchableWithoutFeedback,
   ActivityIndicator,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -329,37 +331,43 @@ export default function GameResultsScreen() {
   );
 
   return (
-    <FlatList
-      data={filteredResults}
-      keyExtractor={(item) => String(item.game_result_id)}
-      renderItem={({ item }) => (
-        <View style={styles.cardContainer}>
-          <GameResultListItem game={item} onPress={handlePressItem} />
-        </View>
-      )}
-      ListHeaderComponent={headerComponent}
-      contentContainerStyle={styles.content}
-      onEndReached={handleEndReached}
-      onEndReachedThreshold={0.5}
-      keyboardShouldPersistTaps="handled"
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={refetch}
-          tintColor="#d08000"
-        />
-      }
-      ListFooterComponent={
-        isFetchingNextPage ? (
-          <View style={styles.footer}>
-            <ActivityIndicator color="#d08000" />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 96 : 0}
+    >
+      <FlatList
+        data={filteredResults}
+        keyExtractor={(item) => String(item.game_result_id)}
+        renderItem={({ item }) => (
+          <View style={styles.cardContainer}>
+            <GameResultListItem game={item} onPress={handlePressItem} />
           </View>
-        ) : null
-      }
-      ListEmptyComponent={
-        <Text style={styles.emptyText}>試合結果がありません</Text>
-      }
-    />
+        )}
+        ListHeaderComponent={headerComponent}
+        contentContainerStyle={styles.content}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={refetch}
+            tintColor="#d08000"
+          />
+        }
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <View style={styles.footer}>
+              <ActivityIndicator color="#d08000" />
+            </View>
+          ) : null
+        }
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>試合結果がありません</Text>
+        }
+      />
+    </KeyboardAvoidingView>
   );
 }
 
