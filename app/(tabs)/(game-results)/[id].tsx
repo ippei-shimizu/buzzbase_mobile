@@ -22,6 +22,7 @@ export default function GameResultDetailScreen() {
   }
 
   const game: GameResult = JSON.parse(gameJson);
+  const isOwner = profile?.id === game.user_id;
 
   const handleShare = () => {
     shareGameResult(game);
@@ -51,12 +52,14 @@ export default function GameResultDetailScreen() {
         options={{
           headerRight: () => (
             <View style={styles.headerRight}>
-              <TouchableOpacity
-                onPress={handleEdit}
-                style={styles.headerButton}
-              >
-                <Ionicons name="create-outline" size={22} color="#F4F4F4" />
-              </TouchableOpacity>
+              {isOwner && (
+                <TouchableOpacity
+                  onPress={handleEdit}
+                  style={styles.headerButton}
+                >
+                  <Ionicons name="create-outline" size={22} color="#F4F4F4" />
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 onPress={handleShare}
                 style={styles.headerButton}
@@ -67,7 +70,7 @@ export default function GameResultDetailScreen() {
           ),
         }}
       />
-      <GameResultDetail game={game} onDelete={handleDelete} />
+      <GameResultDetail game={game} onDelete={isOwner ? handleDelete : undefined} />
     </>
   );
 }
