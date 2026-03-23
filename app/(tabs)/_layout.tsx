@@ -86,6 +86,16 @@ export default function TabLayout() {
             <GroupIcon size={size} color={color} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            const state = navigation.getState();
+            const groupRoute = state.routes.find((r: { name: string }) => r.name === '(groups)');
+            if (groupRoute?.state && groupRoute.state.index > 0) {
+              e.preventDefault();
+              navigation.navigate('(groups)', { screen: 'index' });
+            }
+          },
+        })}
       />
       <Tabs.Screen
         name="(notifications)"
