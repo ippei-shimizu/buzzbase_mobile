@@ -127,6 +127,7 @@ export default function UserProfileScreen() {
   return (
     <ScrollView
       style={styles.container}
+      contentContainerStyle={{ paddingBottom: 40 }}
       stickyHeaderIndices={canViewContent ? [1] : undefined}
       refreshControl={
         <RefreshControl

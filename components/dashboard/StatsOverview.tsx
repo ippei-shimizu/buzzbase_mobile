@@ -151,20 +151,20 @@ const BattingSection = ({
   const radarData = normalizeBattingStats(stats);
   const { aggregate: agg, calculated: calc } = stats;
 
-  if (!agg || !calc) {
-    return <EmptyState title="打撃データがありません" />;
-  }
-
   return (
     <>
+      <View style={styles.sectionTitleRow}>
+        <Text style={styles.sectionTitle}>打撃成績</Text>
+      </View>
+      {filterBar}
+
+      {!agg || !calc ? (
+        <EmptyState title="打撃データがありません" />
+      ) : (
+      <>
       {radarData.length > 0 && (
         <StatsRadarChart data={radarData} color="#d08000" title="打撃" />
       )}
-
-      <View style={styles.sectionTitleRow}>
-        <Text style={styles.sectionTitle}>打撃成績</Text>
-        {filterBar}
-      </View>
 
       <View style={styles.headline}>
         <Text style={styles.headlineRow}>
@@ -215,6 +215,8 @@ const BattingSection = ({
         ]}
       />
     </>
+      )}
+    </>
   );
 };
 
@@ -228,20 +230,20 @@ const PitchingSection = ({
   const radarData = normalizePitchingStats(stats);
   const { aggregate: pAgg, calculated: pCalc } = stats;
 
-  if (!pAgg || !pCalc) {
-    return <EmptyState title="投手データがありません" />;
-  }
-
   return (
     <>
+      <View style={styles.sectionTitleRow}>
+        <Text style={styles.sectionTitle}>投手成績</Text>
+      </View>
+      {filterBar}
+
+      {!pAgg || !pCalc ? (
+        <EmptyState title="投手データがありません" />
+      ) : (
+      <>
       {radarData.length > 0 && (
         <StatsRadarChart data={radarData} color="#338EF7" title="投手" />
       )}
-
-      <View style={styles.sectionTitleRow}>
-        <Text style={styles.sectionTitle}>投手成績</Text>
-        {filterBar}
-      </View>
 
       <View style={styles.headline}>
         <Text style={styles.headlineRow}>
@@ -304,25 +306,17 @@ const PitchingSection = ({
         ]}
       />
     </>
+      )}
+    </>
   );
 };
 
 // --- Main ---
 
-export const StatsOverview = ({
-  battingStats: defaultBatting,
-  pitchingStats: defaultPitching,
-  style,
-}: StatsOverviewProps) => {
-  const [selectedYear, setSelectedYear] = useState<string | undefined>(
-    undefined,
-  );
-  const [selectedMatchType, setSelectedMatchType] = useState<
-    string | undefined
-  >(undefined);
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(
-    undefined,
-  );
+function useStatsFilter(prefix: string) {
+  const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
+  const [selectedMatchType, setSelectedMatchType] = useState<string | undefined>(undefined);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(undefined);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   const toggleFilter = (id: string) =>
@@ -336,21 +330,38 @@ export const StatsOverview = ({
     ...(selectedSeasonId ? { seasonId: selectedSeasonId } : {}),
   };
 
-  const { battingStats: filteredBatting, pitchingStats: filteredPitching } =
-    useProfileStats(filters);
+  return {
+    selectedYear, setSelectedYear,
+    selectedMatchType, setSelectedMatchType,
+    selectedSeasonId, setSelectedSeasonId,
+    activeFilter, toggleFilter,
+    hasFilters, filters, prefix,
+  };
+}
+
+export const StatsOverview = ({
+  battingStats: defaultBatting,
+  pitchingStats: defaultPitching,
+  style,
+}: StatsOverviewProps) => {
+  const batting = useStatsFilter("batting");
+  const pitching = useStatsFilter("pitching");
+
+  const { battingStats: filteredBatting } = useProfileStats(batting.filters);
+  const { pitchingStats: filteredPitching } = useProfileStats(pitching.filters);
 
   const { seasons } = useMySeasons();
 
   const battingStats =
-    hasFilters && filteredBatting ? filteredBatting : defaultBatting;
+    batting.hasFilters && filteredBatting ? filteredBatting : defaultBatting;
   const pitchingStats =
-    hasFilters && filteredPitching ? filteredPitching : defaultPitching;
+    pitching.hasFilters && filteredPitching ? filteredPitching : defaultPitching;
 
-  const filterBar = (
+  const buildFilterBar = (f: ReturnType<typeof useStatsFilter>) => (
     <View style={styles.filterRow}>
       <FilterDropdown
         label="年度"
-        value={selectedYear}
+        value={f.selectedYear}
         options={[
           { key: "all", label: "通算" },
           ...Array.from({ length: 5 }, (_, i) => {
@@ -358,28 +369,28 @@ export const StatsOverview = ({
             return { key: y, label: y };
           }),
         ]}
-        onSelect={(v) => setSelectedYear(v === "all" ? undefined : v)}
-        isOpen={activeFilter === "year"}
-        onToggle={() => toggleFilter("year")}
+        onSelect={(v) => f.setSelectedYear(v === "all" ? undefined : v)}
+        isOpen={f.activeFilter === "year"}
+        onToggle={() => f.toggleFilter("year")}
       />
       <FilterDropdown
         label="種別"
-        value={selectedMatchType}
+        value={f.selectedMatchType}
         options={MATCH_TYPE_OPTIONS}
-        onSelect={setSelectedMatchType}
-        isOpen={activeFilter === "matchType"}
-        onToggle={() => toggleFilter("matchType")}
+        onSelect={f.setSelectedMatchType}
+        isOpen={f.activeFilter === "matchType"}
+        onToggle={() => f.toggleFilter("matchType")}
       />
       <FilterDropdown
         label="シーズン"
-        value={selectedSeasonId}
+        value={f.selectedSeasonId}
         options={seasons.map((s) => ({
           key: String(s.id),
           label: s.name,
         }))}
-        onSelect={setSelectedSeasonId}
-        isOpen={activeFilter === "season"}
-        onToggle={() => toggleFilter("season")}
+        onSelect={f.setSelectedSeasonId}
+        isOpen={f.activeFilter === "season"}
+        onToggle={() => f.toggleFilter("season")}
       />
     </View>
   );
@@ -387,10 +398,10 @@ export const StatsOverview = ({
   return (
     <View style={style}>
       <View style={styles.sectionCard}>
-        <BattingSection stats={battingStats} filterBar={filterBar} />
+        <BattingSection stats={battingStats} filterBar={buildFilterBar(batting)} />
       </View>
       <View style={styles.sectionCard}>
-        <PitchingSection stats={pitchingStats} filterBar={filterBar} />
+        <PitchingSection stats={pitchingStats} filterBar={buildFilterBar(pitching)} />
       </View>
     </View>
   );

@@ -7,6 +7,8 @@ import {
   FlatList,
   TextInput,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -89,6 +91,10 @@ export function SearchablePicker({
           activeOpacity={1}
           onPress={() => setVisible(false)}
         >
+          <KeyboardAvoidingView
+            style={{ flex: 1, justifyContent: "flex-end" }}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+          >
           <View style={styles.sheet} onStartShouldSetResponder={() => true}>
             <Text style={styles.sheetTitle}>{label}</Text>
             <View style={styles.searchContainer}>
@@ -134,6 +140,7 @@ export function SearchablePicker({
               </TouchableOpacity>
             )}
           </View>
+          </KeyboardAvoidingView>
         </TouchableOpacity>
       </Modal>
     </View>
