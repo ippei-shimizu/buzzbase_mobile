@@ -166,14 +166,18 @@ eas build --profile preview --platform ios
 
 ## 開発コマンド
 
-| コマンド | 説明 |
-|---------|------|
-| `yarn start` | Expo開発サーバー起動 |
-| `yarn ios` | iOSシミュレータで起動 |
-| `yarn android` | Androidエミュレータで起動 |
-| `yarn typecheck` | TypeScript型チェック |
-| `yarn lint` | ESLint実行 |
-| `yarn format` | Prettier整形 |
+`make help` で全コマンドを確認可能。
+
+| コマンド           | 説明                                     |
+| ------------------ | ---------------------------------------- |
+| `make start`       | Expo開発サーバー起動                     |
+| `make ios`         | iOSシミュレータで起動                    |
+| `make android`     | Androidエミュレータで起動                |
+| `make typecheck`   | TypeScript型チェック                     |
+| `make lint`        | ESLint実行                               |
+| `make format`      | Prettier整形                             |
+| `make install`     | 依存関係インストール                     |
+| `make prebuild`    | Expoプレビルド（ネイティブプロジェクト生成） |
 
 ## 環境変数
 
