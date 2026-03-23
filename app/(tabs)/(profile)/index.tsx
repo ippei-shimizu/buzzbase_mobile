@@ -265,9 +265,13 @@ export default function ProfileScreen() {
 
   const handleSharePress = async () => {
     if (!profile?.user_id) return;
-    await Share.share({
-      message: `BUZZ BASEで${profile.name ?? ""}のプロフィールをチェック！\nhttps://buzzbase.jp/${profile.user_id}`,
-    });
+    try {
+      await Share.share({
+        message: `BUZZ BASEで${profile.name ?? ""}のプロフィールをチェック！\nhttps://buzzbase.jp/${profile.user_id}`,
+      });
+    } catch {
+      // ユーザーがキャンセルした場合やシェア失敗時は無視
+    }
   };
 
   const handleRefresh = () => {

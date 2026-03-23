@@ -37,5 +37,9 @@ export const shareGameResult = async (game: GameResult): Promise<void> => {
 
   lines.push("#BUZZBASE");
 
-  await Share.share({ message: lines.join("\n") });
+  try {
+    await Share.share({ message: lines.join("\n") });
+  } catch {
+    // ユーザーがキャンセルした場合やシェア失敗時は無視
+  }
 };
