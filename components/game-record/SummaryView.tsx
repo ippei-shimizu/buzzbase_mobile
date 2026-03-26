@@ -37,6 +37,7 @@ interface Props {
   pitchingBaseOnBalls: number;
   pitchingHitByPitch: number;
   onComplete: () => void;
+  onShare?: () => void;
 }
 
 const MATCH_TYPE_LABELS: Record<string, string> = {
@@ -155,6 +156,7 @@ export function SummaryView(props: Props) {
       {/* シェアボタン */}
       <View style={{ alignItems: "center", marginTop: 12 }}>
         <TouchableOpacity
+          onPress={props.onShare}
           style={{
             borderWidth: 1,
             borderColor: "#d08000",
