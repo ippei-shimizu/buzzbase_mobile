@@ -161,60 +161,85 @@ const BattingSection = ({
       {!agg || !calc ? (
         <EmptyState title="打撃データがありません" />
       ) : (
-      <>
-      {radarData.length > 0 && (
-        <StatsRadarChart data={radarData} color="#d08000" title="打撃" />
-      )}
+        <>
+          {radarData.length > 0 && (
+            <StatsRadarChart data={radarData} color="#d08000" title="打撃" />
+          )}
 
-      <View style={styles.headline}>
-        <Text style={styles.headlineRow}>
-          <Text style={styles.headlineLabel}>打率 </Text>
-          <Text style={styles.headlineValue}>
-            {formatStat(calc.batting_average)}
-          </Text>
-          <Text style={styles.headlineSub}>
-            {"  "}
-            {agg.number_of_matches}試合
-          </Text>
-        </Text>
-        <Text style={styles.headlineSummary}>
-          {agg.times_at_bat}打席 {agg.at_bats}打数 {agg.hit}安打 /{" "}
-          {agg.runs_batted_in}打点 {agg.home_run}本塁打
-        </Text>
-      </View>
+          <View style={styles.headline}>
+            <Text style={styles.headlineRow}>
+              <Text style={styles.headlineLabel}>打率 </Text>
+              <Text style={styles.headlineValue}>
+                {formatStat(calc.batting_average)}
+              </Text>
+              <Text style={styles.headlineSub}>
+                {"  "}
+                {agg.number_of_matches}試合
+              </Text>
+            </Text>
+            <Text style={styles.headlineSummary}>
+              {agg.times_at_bat}打席 {agg.at_bats}打数 {agg.hit}安打 /{" "}
+              {agg.runs_batted_in}打点 {agg.home_run}本塁打
+            </Text>
+          </View>
 
-      <StatsTable
-        rows={[
-          [
-            "打率",
-            formatStat(calc.batting_average),
-            "試合",
-            agg.number_of_matches ?? "-",
-          ],
-          ["打席", agg.times_at_bat ?? "-", "打数", agg.at_bats ?? "-"],
-          ["安打", agg.hit ?? "-", "二塁打", agg.two_base_hit ?? "-"],
-          ["三塁打", agg.three_base_hit ?? "-", "本塁打", agg.home_run ?? "-"],
-          ["塁打", agg.total_bases ?? "-", "打点", agg.runs_batted_in ?? "-"],
-          ["得点", agg.run ?? "-", "三振", agg.strike_out ?? "-"],
-          ["四球", agg.base_on_balls ?? "-", "死球", agg.hit_by_pitch ?? "-"],
-          ["犠打", agg.sacrifice_hit ?? "-", "犠飛", agg.sacrifice_fly ?? "-"],
-          [
-            "盗塁",
-            agg.stealing_base ?? "-",
-            "盗塁死",
-            agg.caught_stealing ?? "-",
-          ],
-          [
-            "出塁率",
-            formatStat(calc.on_base_percentage),
-            "長打率",
-            formatStat(calc.slugging_percentage),
-          ],
-          ["OPS", formatStat(calc.ops), "ISO", formatStat(calc.iso)],
-          ["ISOD", formatStat(calc.isod), "BB/K", formatStat(calc.bb_per_k)],
-        ]}
-      />
-    </>
+          <StatsTable
+            rows={[
+              [
+                "打率",
+                formatStat(calc.batting_average),
+                "試合",
+                agg.number_of_matches ?? "-",
+              ],
+              ["打席", agg.times_at_bat ?? "-", "打数", agg.at_bats ?? "-"],
+              ["安打", agg.hit ?? "-", "二塁打", agg.two_base_hit ?? "-"],
+              [
+                "三塁打",
+                agg.three_base_hit ?? "-",
+                "本塁打",
+                agg.home_run ?? "-",
+              ],
+              [
+                "塁打",
+                agg.total_bases ?? "-",
+                "打点",
+                agg.runs_batted_in ?? "-",
+              ],
+              ["得点", agg.run ?? "-", "三振", agg.strike_out ?? "-"],
+              [
+                "四球",
+                agg.base_on_balls ?? "-",
+                "死球",
+                agg.hit_by_pitch ?? "-",
+              ],
+              [
+                "犠打",
+                agg.sacrifice_hit ?? "-",
+                "犠飛",
+                agg.sacrifice_fly ?? "-",
+              ],
+              [
+                "盗塁",
+                agg.stealing_base ?? "-",
+                "盗塁死",
+                agg.caught_stealing ?? "-",
+              ],
+              [
+                "出塁率",
+                formatStat(calc.on_base_percentage),
+                "長打率",
+                formatStat(calc.slugging_percentage),
+              ],
+              ["OPS", formatStat(calc.ops), "ISO", formatStat(calc.iso)],
+              [
+                "ISOD",
+                formatStat(calc.isod),
+                "BB/K",
+                formatStat(calc.bb_per_k),
+              ],
+            ]}
+          />
+        </>
       )}
     </>
   );
@@ -240,72 +265,79 @@ const PitchingSection = ({
       {!pAgg || !pCalc ? (
         <EmptyState title="投手データがありません" />
       ) : (
-      <>
-      {radarData.length > 0 && (
-        <StatsRadarChart data={radarData} color="#338EF7" title="投手" />
-      )}
+        <>
+          {radarData.length > 0 && (
+            <StatsRadarChart data={radarData} color="#338EF7" title="投手" />
+          )}
 
-      <View style={styles.headline}>
-        <Text style={styles.headlineRow}>
-          <Text style={styles.headlineLabel}>防御率 </Text>
-          <Text style={styles.headlineValue}>{formatStat(pCalc.era, 2)}</Text>
-          <Text style={styles.headlineSub}>
-            {"  "}
-            {pAgg.number_of_appearances}登板
-          </Text>
-        </Text>
-        <Text style={styles.headlineSummary}>
-          {pAgg.win}勝 {pAgg.loss}敗 / {pAgg.innings_pitched}回{" "}
-          {pAgg.strikeouts}奪三振
-        </Text>
-      </View>
+          <View style={styles.headline}>
+            <Text style={styles.headlineRow}>
+              <Text style={styles.headlineLabel}>防御率 </Text>
+              <Text style={styles.headlineValue}>
+                {formatStat(pCalc.era, 2)}
+              </Text>
+              <Text style={styles.headlineSub}>
+                {"  "}
+                {pAgg.number_of_appearances}登板
+              </Text>
+            </Text>
+            <Text style={styles.headlineSummary}>
+              {pAgg.win}勝 {pAgg.loss}敗 / {pAgg.innings_pitched}回{" "}
+              {pAgg.strikeouts}奪三振
+            </Text>
+          </View>
 
-      <StatsTable
-        rows={[
-          [
-            "防御率",
-            formatStat(pCalc.era, 2),
-            "登板",
-            pAgg.number_of_appearances ?? "-",
-          ],
-          ["勝", pAgg.win ?? "-", "敗", pAgg.loss ?? "-"],
-          [
-            "投球回",
-            pAgg.innings_pitched ?? "-",
-            "完投",
-            pAgg.complete_games ?? "-",
-          ],
-          ["完封", pAgg.shutouts ?? "-", "セーブ", pAgg.saves ?? "-"],
-          ["ホールド", pAgg.hold ?? "-", "奪三振", pAgg.strikeouts ?? "-"],
-          [
-            "与四球",
-            pAgg.base_on_balls ?? "-",
-            "与死球",
-            pAgg.hit_by_pitch ?? "-",
-          ],
-          [
-            "被安打",
-            pAgg.hits_allowed ?? "-",
-            "被本塁打",
-            pAgg.home_runs_hit ?? "-",
-          ],
-          ["失点", pAgg.run_allowed ?? "-", "自責点", pAgg.earned_run ?? "-"],
-          [
-            "勝率",
-            formatStat(pCalc.win_percentage),
-            "WHIP",
-            formatStat(pCalc.whip, 2),
-          ],
-          [
-            "K/9",
-            formatStat(pCalc.k_per_nine, 2),
-            "BB/9",
-            formatStat(pCalc.bb_per_nine, 2),
-          ],
-          ["K/BB", formatStat(pCalc.k_bb, 2), "", ""],
-        ]}
-      />
-    </>
+          <StatsTable
+            rows={[
+              [
+                "防御率",
+                formatStat(pCalc.era, 2),
+                "登板",
+                pAgg.number_of_appearances ?? "-",
+              ],
+              ["勝", pAgg.win ?? "-", "敗", pAgg.loss ?? "-"],
+              [
+                "投球回",
+                pAgg.innings_pitched ?? "-",
+                "完投",
+                pAgg.complete_games ?? "-",
+              ],
+              ["完封", pAgg.shutouts ?? "-", "セーブ", pAgg.saves ?? "-"],
+              ["ホールド", pAgg.hold ?? "-", "奪三振", pAgg.strikeouts ?? "-"],
+              [
+                "与四球",
+                pAgg.base_on_balls ?? "-",
+                "与死球",
+                pAgg.hit_by_pitch ?? "-",
+              ],
+              [
+                "被安打",
+                pAgg.hits_allowed ?? "-",
+                "被本塁打",
+                pAgg.home_runs_hit ?? "-",
+              ],
+              [
+                "失点",
+                pAgg.run_allowed ?? "-",
+                "自責点",
+                pAgg.earned_run ?? "-",
+              ],
+              [
+                "勝率",
+                formatStat(pCalc.win_percentage),
+                "WHIP",
+                formatStat(pCalc.whip, 2),
+              ],
+              [
+                "K/9",
+                formatStat(pCalc.k_per_nine, 2),
+                "BB/9",
+                formatStat(pCalc.bb_per_nine, 2),
+              ],
+              ["K/BB", formatStat(pCalc.k_bb, 2), "", ""],
+            ]}
+          />
+        </>
       )}
     </>
   );
@@ -314,9 +346,15 @@ const PitchingSection = ({
 // --- Main ---
 
 function useStatsFilter(prefix: string) {
-  const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
-  const [selectedMatchType, setSelectedMatchType] = useState<string | undefined>(undefined);
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(undefined);
+  const [selectedYear, setSelectedYear] = useState<string | undefined>(
+    undefined,
+  );
+  const [selectedMatchType, setSelectedMatchType] = useState<
+    string | undefined
+  >(undefined);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(
+    undefined,
+  );
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   const toggleFilter = (id: string) =>
@@ -331,11 +369,17 @@ function useStatsFilter(prefix: string) {
   };
 
   return {
-    selectedYear, setSelectedYear,
-    selectedMatchType, setSelectedMatchType,
-    selectedSeasonId, setSelectedSeasonId,
-    activeFilter, toggleFilter,
-    hasFilters, filters, prefix,
+    selectedYear,
+    setSelectedYear,
+    selectedMatchType,
+    setSelectedMatchType,
+    selectedSeasonId,
+    setSelectedSeasonId,
+    activeFilter,
+    toggleFilter,
+    hasFilters,
+    filters,
+    prefix,
   };
 }
 
@@ -355,7 +399,9 @@ export const StatsOverview = ({
   const battingStats =
     batting.hasFilters && filteredBatting ? filteredBatting : defaultBatting;
   const pitchingStats =
-    pitching.hasFilters && filteredPitching ? filteredPitching : defaultPitching;
+    pitching.hasFilters && filteredPitching
+      ? filteredPitching
+      : defaultPitching;
 
   const buildFilterBar = (f: ReturnType<typeof useStatsFilter>) => (
     <View style={styles.filterRow}>
@@ -398,10 +444,16 @@ export const StatsOverview = ({
   return (
     <View style={style}>
       <View style={styles.sectionCard}>
-        <BattingSection stats={battingStats} filterBar={buildFilterBar(batting)} />
+        <BattingSection
+          stats={battingStats}
+          filterBar={buildFilterBar(batting)}
+        />
       </View>
       <View style={styles.sectionCard}>
-        <PitchingSection stats={pitchingStats} filterBar={buildFilterBar(pitching)} />
+        <PitchingSection
+          stats={pitchingStats}
+          filterBar={buildFilterBar(pitching)}
+        />
       </View>
     </View>
   );
@@ -488,6 +540,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     flexWrap: "wrap",
+    marginBottom: 12,
   },
   headline: {
     marginBottom: 16,
