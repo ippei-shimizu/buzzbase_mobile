@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useBaseballNote } from "@hooks/useBaseballNotes";
@@ -16,6 +17,7 @@ import { slateMemoToText } from "@utils/slateUtils";
 
 export default function NoteDetailScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const noteId = id ? Number(id) : undefined;
   const { note, isLoading } = useBaseballNote(noteId);
@@ -83,7 +85,10 @@ export default function NoteDetailScreen() {
 
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: 32 + insets.bottom + 60 },
+        ]}
       >
         <Text style={styles.title}>{note.title}</Text>
         <Text style={styles.date}>{note.date}</Text>
