@@ -17,7 +17,10 @@ export const ProfileGamesTab = () => {
   } = useGameResults();
 
   const handlePressItem = (game: GameResult) => {
-    router.push(`/(game-results)/${game.game_result_id}`);
+    router.push({
+      pathname: "/(game-results)/[id]",
+      params: { id: game.game_result_id, game: JSON.stringify(game) },
+    });
   };
 
   if (isLoading) {

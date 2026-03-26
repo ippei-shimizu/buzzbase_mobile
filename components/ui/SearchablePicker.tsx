@@ -95,51 +95,51 @@ export function SearchablePicker({
             style={{ flex: 1, justifyContent: "flex-end" }}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
           >
-          <View style={styles.sheet} onStartShouldSetResponder={() => true}>
-            <Text style={styles.sheetTitle}>{label}</Text>
-            <View style={styles.searchContainer}>
-              <TextInput
-                style={styles.searchInput}
-                value={searchText}
-                onChangeText={setSearchText}
-                placeholder="チーム名を入力"
-                placeholderTextColor="#71717A"
-                autoFocus
+            <View style={styles.sheet} onStartShouldSetResponder={() => true}>
+              <Text style={styles.sheetTitle}>{label}</Text>
+              <View style={styles.searchContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  value={searchText}
+                  onChangeText={setSearchText}
+                  placeholder="チーム名を入力"
+                  placeholderTextColor="#71717A"
+                  autoFocus
+                />
+              </View>
+              <FlatList
+                data={filteredItems}
+                keyExtractor={(item) => String(item.value)}
+                keyboardShouldPersistTaps="handled"
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.listItem}
+                    onPress={() => handleSelect(item)}
+                  >
+                    <Text style={styles.listItemText}>{item.label}</Text>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  searchText.trim() ? (
+                    <View style={styles.emptyContainer}>
+                      <Text style={styles.emptyText}>
+                        該当するチームがありません
+                      </Text>
+                    </View>
+                  ) : null
+                }
               />
-            </View>
-            <FlatList
-              data={filteredItems}
-              keyExtractor={(item) => String(item.value)}
-              keyboardShouldPersistTaps="handled"
-              renderItem={({ item }) => (
+              {searchText.trim() && (
                 <TouchableOpacity
-                  style={styles.listItem}
-                  onPress={() => handleSelect(item)}
+                  style={styles.confirmButton}
+                  onPress={handleConfirmCustom}
                 >
-                  <Text style={styles.listItemText}>{item.label}</Text>
+                  <Text style={styles.confirmButtonText}>
+                    「{searchText.trim()}」で決定
+                  </Text>
                 </TouchableOpacity>
               )}
-              ListEmptyComponent={
-                searchText.trim() ? (
-                  <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>
-                      該当するチームがありません
-                    </Text>
-                  </View>
-                ) : null
-              }
-            />
-            {searchText.trim() && (
-              <TouchableOpacity
-                style={styles.confirmButton}
-                onPress={handleConfirmCustom}
-              >
-                <Text style={styles.confirmButtonText}>
-                  「{searchText.trim()}」で決定
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
+            </View>
           </KeyboardAvoidingView>
         </TouchableOpacity>
       </Modal>
@@ -186,10 +186,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
   },
   sheet: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     maxHeight: "70%",
     backgroundColor: "#2E2E2E",
     borderTopLeftRadius: 16,

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useRef, useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   TouchableWithoutFeedback,
   ActivityIndicator,
   StyleSheet,
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -161,6 +161,7 @@ const filterStyles = StyleSheet.create({
 
 export default function GameResultsScreen() {
   const router = useRouter();
+  const flatListRef = useRef<FlatList>(null);
   const {
     gameResults,
     isLoading,
@@ -172,6 +173,24 @@ export default function GameResultsScreen() {
     isFetchingNextPage,
   } = useGameResults();
   const { seasons } = useMySeasons();
+
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const [selectedYear, setSelectedYear] = useState<string | undefined>(
     undefined,
@@ -315,6 +334,9 @@ export default function GameResultsScreen() {
             placeholderTextColor="#71717A"
             value={searchQuery}
             onChangeText={setSearchQuery}
+            onFocus={() =>
+              flatListRef.current?.scrollToOffset({ offset: 0, animated: true })
+            }
           />
         </View>
         <TouchableOpacity
@@ -331,43 +353,42 @@ export default function GameResultsScreen() {
   );
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 96 : 0}
-    >
-      <FlatList
-        data={filteredResults}
-        keyExtractor={(item) => String(item.game_result_id)}
-        renderItem={({ item }) => (
-          <View style={styles.cardContainer}>
-            <GameResultListItem game={item} onPress={handlePressItem} />
+    <FlatList
+      ref={flatListRef}
+      data={filteredResults}
+      keyExtractor={(item) => String(item.game_result_id)}
+      renderItem={({ item }) => (
+        <View style={styles.cardContainer}>
+          <GameResultListItem game={item} onPress={handlePressItem} />
+        </View>
+      )}
+      ListHeaderComponent={headerComponent}
+      contentContainerStyle={[
+        styles.content,
+        keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
+      ]}
+      onEndReached={handleEndReached}
+      onEndReachedThreshold={0.5}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={refetch}
+          tintColor="#d08000"
+        />
+      }
+      ListFooterComponent={
+        isFetchingNextPage ? (
+          <View style={styles.footer}>
+            <ActivityIndicator color="#d08000" />
           </View>
-        )}
-        ListHeaderComponent={headerComponent}
-        contentContainerStyle={styles.content}
-        onEndReached={handleEndReached}
-        onEndReachedThreshold={0.5}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={refetch}
-            tintColor="#d08000"
-          />
-        }
-        ListFooterComponent={
-          isFetchingNextPage ? (
-            <View style={styles.footer}>
-              <ActivityIndicator color="#d08000" />
-            </View>
-          ) : null
-        }
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>試合結果がありません</Text>
-        }
-      />
-    </KeyboardAvoidingView>
+        ) : null
+      }
+      ListEmptyComponent={
+        <Text style={styles.emptyText}>試合結果がありません</Text>
+      }
+    />
   );
 }
 

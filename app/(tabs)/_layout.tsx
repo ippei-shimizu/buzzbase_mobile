@@ -35,6 +35,7 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: "#d08000",
         tabBarInactiveTintColor: "#A1A1AA",
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: "#2E2E2E",
           borderTopColor: "#424242",
@@ -61,6 +62,18 @@ export default function TabLayout() {
             <BallIcon size={size} color={color} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            const state = navigation.getState();
+            const route = state.routes.find(
+              (r: { name: string }) => r.name === "(game-results)",
+            );
+            if (route?.state && route.state.index > 0) {
+              e.preventDefault();
+              navigation.navigate("(game-results)", { screen: "index" });
+            }
+          },
+        })}
       />
       <Tabs.Screen
         name="record"
@@ -89,10 +102,12 @@ export default function TabLayout() {
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             const state = navigation.getState();
-            const groupRoute = state.routes.find((r: { name: string }) => r.name === '(groups)');
+            const groupRoute = state.routes.find(
+              (r: { name: string }) => r.name === "(groups)",
+            );
             if (groupRoute?.state && groupRoute.state.index > 0) {
               e.preventDefault();
-              navigation.navigate('(groups)', { screen: 'index' });
+              navigation.navigate("(groups)", { screen: "index" });
             }
           },
         })}

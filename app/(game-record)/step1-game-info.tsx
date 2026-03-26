@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, View } from "react-native";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  View,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useGameRecord } from "@hooks/useGameRecord";
+import { useProfile } from "@hooks/useProfile";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 import { StepIndicator } from "@components/game-record/StepIndicator";
@@ -17,10 +23,28 @@ export default function Step1GameInfoScreen() {
     tournamentsQuery,
   } = useGameRecord();
   const store = useGameRecordStore();
+  const { profile } = useProfile();
   const { seasons } = useMySeasons();
   const [errors, setErrors] = useState<string[]>([]);
   const [isInitializing, setIsInitializing] = useState(false);
   const hasInitialized = useRef(false);
+
+  // 新規作成時にプロフィールのチームを自動セット
+  useEffect(() => {
+    const state = useGameRecordStore.getState();
+    if (
+      !state.isEditMode &&
+      !state.myTeamId &&
+      profile?.team_id &&
+      teamsQuery.data
+    ) {
+      const team = teamsQuery.data.find((t) => t.id === profile.team_id);
+      if (team) {
+        useGameRecordStore.getState().setField("myTeamId", team.id);
+        useGameRecordStore.getState().setField("myTeamName", team.name);
+      }
+    }
+  }, [profile, teamsQuery.data]);
 
   useEffect(() => {
     const state = useGameRecordStore.getState();

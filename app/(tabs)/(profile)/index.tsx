@@ -11,6 +11,8 @@ import {
   StyleSheet,
   Animated,
   Share,
+  Keyboard,
+  Platform,
 } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -199,6 +201,24 @@ export default function ProfileScreen() {
   const [gameSearchQuery, setGameSearchQuery] = useState("");
   const [gameSortDesc, setGameSortDesc] = useState(true);
 
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
   const [menuVisible, setMenuVisible] = useState(false);
   const menuOpacity = useRef(new Animated.Value(0)).current;
 
@@ -281,7 +301,10 @@ export default function ProfileScreen() {
   };
 
   const handlePressGame = (game: GameResult) => {
-    router.push(`/(game-results)/${game.game_result_id}`);
+    router.push({
+      pathname: "/(game-results)/[id]",
+      params: { id: game.game_result_id, game: JSON.stringify(game) },
+    });
   };
 
   if (isLoading) {
@@ -409,7 +432,12 @@ export default function ProfileScreen() {
 
         <ScrollView
           style={styles.container}
+          contentContainerStyle={{
+            paddingBottom: keyboardHeight > 0 ? keyboardHeight : 0,
+          }}
           stickyHeaderIndices={[1]}
+          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="handled"
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing || isStatsRefreshing}
@@ -564,7 +592,12 @@ export default function ProfileScreen() {
 
       <ScrollView
         style={styles.container}
+        contentContainerStyle={{
+          paddingBottom: keyboardHeight > 0 ? keyboardHeight : 0,
+        }}
         stickyHeaderIndices={[1]}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing || isGamesRefreshing}

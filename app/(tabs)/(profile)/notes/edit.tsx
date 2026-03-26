@@ -5,6 +5,8 @@ import {
   ActivityIndicator,
   View,
   StyleSheet,
+  Keyboard,
+  Platform,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useBaseballNote } from "@hooks/useBaseballNotes";
@@ -23,6 +25,24 @@ export default function NoteEditScreen() {
   const [date, setDate] = useState("");
   const [memo, setMemo] = useState("");
   const [initialized, setInitialized] = useState(false);
+
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (note && !initialized) {
@@ -58,7 +78,14 @@ export default function NoteEditScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{
+        paddingBottom: keyboardHeight > 0 ? keyboardHeight : 0,
+      }}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
+    >
       <NoteForm
         title={title}
         date={date}

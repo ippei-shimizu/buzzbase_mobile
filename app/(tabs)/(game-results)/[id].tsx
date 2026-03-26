@@ -70,7 +70,10 @@ export default function GameResultDetailScreen() {
           ),
         }}
       />
-      <GameResultDetail game={game} onDelete={isOwner ? handleDelete : undefined} />
+      <GameResultDetail
+        game={game}
+        onDelete={isOwner ? handleDelete : undefined}
+      />
     </>
   );
 }
