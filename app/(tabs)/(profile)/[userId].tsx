@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
@@ -33,8 +32,6 @@ import type { GameResult } from "../../../types/gameResult";
 export default function UserProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-
   const [activeTab, setActiveTab] = useState(0);
 
   const { data, isLoading, refetch, isRefreshing } =
