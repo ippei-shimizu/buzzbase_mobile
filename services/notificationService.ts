@@ -16,9 +16,9 @@ export const getManagementNotices = async (): Promise<ManagementNotice[]> => {
 export const getManagementNotice = async (
   id: number,
 ): Promise<ManagementNotice> => {
-  const response = await axiosInstance.get<{ management_notice: ManagementNotice }>(
-    `/management_notices/${id}`,
-  );
+  const response = await axiosInstance.get<{
+    management_notice: ManagementNotice;
+  }>(`/management_notices/${id}`);
   return response.data.management_notice;
 };
 

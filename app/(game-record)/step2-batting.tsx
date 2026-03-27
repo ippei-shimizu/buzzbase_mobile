@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, View } from "react-native";
+import { KeyboardAvoidingView, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { useGameRecordStore } from "../../stores/gameRecordStore";

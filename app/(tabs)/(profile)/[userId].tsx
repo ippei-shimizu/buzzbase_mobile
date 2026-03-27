@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
@@ -33,8 +32,6 @@ import type { GameResult } from "../../../types/gameResult";
 export default function UserProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-
   const [activeTab, setActiveTab] = useState(0);
 
   const { data, isLoading, refetch, isRefreshing } =
@@ -129,7 +126,7 @@ export default function UserProfileScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: 50, flexGrow: 1 }}
+      contentContainerStyle={{ paddingBottom: 16 }}
       bounces
       refreshControl={
         <RefreshControl
@@ -325,7 +322,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 200,
+    paddingBottom: 16,
   },
   gamesContainer: {
     backgroundColor: "#27272a",
