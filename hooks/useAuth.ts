@@ -75,5 +75,13 @@ export const useAuth = () => {
     return response;
   };
 
-  return { isLoggedIn, isLoading, login, logout, signUp, resendConfirmation, googleLogin };
+  return {
+    isLoggedIn,
+    isLoading,
+    login,
+    logout,
+    signUp,
+    resendConfirmation,
+    googleLogin,
+  };
 };

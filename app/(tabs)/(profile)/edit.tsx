@@ -256,43 +256,43 @@ export default function ProfileEditScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 96 : 0}
     >
-    <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="handled">
-      <ProfileEditForm
-        name={name}
-        userId={userId}
-        introduction={introduction}
-        isPrivate={isPrivate}
-        imageUri={imageUri}
-        isUpdating={isUpdating}
-        onChangeName={setName}
-        onChangeUserId={setUserId}
-        onChangeIntroduction={setIntroduction}
-        onChangeIsPrivate={setIsPrivate}
-        onPickImage={handlePickImage}
-        onSave={handleSave}
-        // ポジション
-        selectedPositionIds={selectedPositionIds}
-        positionItems={positionItems}
-        onSelectPositions={setSelectedPositionIds}
-        // チーム
-        teamName={teamName}
-        selectedTeamId={selectedTeamId}
-        selectedCategoryId={selectedCategoryId}
-        selectedPrefectureId={selectedPrefectureId}
-        teamItems={teamItems}
-        categoryItems={categoryItems}
-        prefectureItems={prefectureItems}
-        onSelectTeam={handleSelectTeam}
-        onCustomTeamInput={handleCustomTeamInput}
-        onSelectCategory={(v) => setSelectedCategoryId(v as number)}
-        onSelectPrefecture={(v) => setSelectedPrefectureId(v as number)}
-        // 受賞歴
-        awards={awards}
-        onChangeAward={handleChangeAward}
-        onRemoveAward={handleRemoveAward}
-        onAddAward={handleAddAward}
-      />
-    </ScrollView>
+      <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="handled">
+        <ProfileEditForm
+          name={name}
+          userId={userId}
+          introduction={introduction}
+          isPrivate={isPrivate}
+          imageUri={imageUri}
+          isUpdating={isUpdating}
+          onChangeName={setName}
+          onChangeUserId={setUserId}
+          onChangeIntroduction={setIntroduction}
+          onChangeIsPrivate={setIsPrivate}
+          onPickImage={handlePickImage}
+          onSave={handleSave}
+          // ポジション
+          selectedPositionIds={selectedPositionIds}
+          positionItems={positionItems}
+          onSelectPositions={setSelectedPositionIds}
+          // チーム
+          teamName={teamName}
+          selectedTeamId={selectedTeamId}
+          selectedCategoryId={selectedCategoryId}
+          selectedPrefectureId={selectedPrefectureId}
+          teamItems={teamItems}
+          categoryItems={categoryItems}
+          prefectureItems={prefectureItems}
+          onSelectTeam={handleSelectTeam}
+          onCustomTeamInput={handleCustomTeamInput}
+          onSelectCategory={(v) => setSelectedCategoryId(v as number)}
+          onSelectPrefecture={(v) => setSelectedPrefectureId(v as number)}
+          // 受賞歴
+          awards={awards}
+          onChangeAward={handleChangeAward}
+          onRemoveAward={handleRemoveAward}
+          onAddAward={handleAddAward}
+        />
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
