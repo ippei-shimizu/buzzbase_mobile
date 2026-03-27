@@ -129,7 +129,7 @@ export default function UserProfileScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: 50, flexGrow: 1 }}
+      contentContainerStyle={{ paddingBottom: 16 }}
       bounces
       refreshControl={
         <RefreshControl
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 200,
+    paddingBottom: 16,
   },
   gamesContainer: {
     backgroundColor: "#27272a",
