@@ -52,11 +52,11 @@ graph TD
 
 ### 状態管理
 
-| ライブラリ | 用途 | 例 |
-|-----------|------|------|
-| React Query | サーバーステート（APIキャッシュ） | `useDashboard`, `useGameResults`, `useProfile` |
-| Zustand | クライアントステート | `authStore`（認証状態）, `gameRecordStore`（試合記録フロー） |
-| SecureStore | トークン永続化 | `access-token`, `client`, `uid` |
+| ライブラリ  | 用途                              | 例                                                           |
+| ----------- | --------------------------------- | ------------------------------------------------------------ |
+| React Query | サーバーステート（APIキャッシュ） | `useDashboard`, `useGameResults`, `useProfile`               |
+| Zustand     | クライアントステート              | `authStore`（認証状態）, `gameRecordStore`（試合記録フロー） |
+| SecureStore | トークン永続化                    | `access-token`, `client`, `uid`                              |
 
 ### ディレクトリ構成
 
@@ -157,43 +157,43 @@ eas build --profile preview --platform ios
 
 ## ビルド・配信（EAS Build）
 
-| プロファイル | 用途 | API接続先 | 配布方法 |
-|------------|------|----------|---------|
-| `development` | シミュレータ開発 | localhost | ローカル |
-| `development-device` | 実機開発 | localhost | Ad Hoc |
-| `preview` | テスト配信 | 本番API | Ad Hoc / TestFlight |
-| `production` | ストア公開 | 本番API | App Store / Google Play |
+| プロファイル         | 用途             | API接続先 | 配布方法                |
+| -------------------- | ---------------- | --------- | ----------------------- |
+| `development`        | シミュレータ開発 | localhost | ローカル                |
+| `development-device` | 実機開発         | localhost | Ad Hoc                  |
+| `preview`            | テスト配信       | 本番API   | Ad Hoc / TestFlight     |
+| `production`         | ストア公開       | 本番API   | App Store / Google Play |
 
 ## 開発コマンド
 
 `make help` で全コマンドを確認可能。
 
-| コマンド           | 説明                                     |
-| ------------------ | ---------------------------------------- |
-| `make start`       | Expo開発サーバー起動                     |
-| `make ios`         | iOSシミュレータで起動                    |
-| `make android`     | Androidエミュレータで起動                |
-| `make typecheck`   | TypeScript型チェック                     |
-| `make lint`        | ESLint実行                               |
-| `make format`      | Prettier整形                             |
-| `make install`     | 依存関係インストール                     |
-| `make prebuild`    | Expoプレビルド（ネイティブプロジェクト生成） |
+| コマンド         | 説明                                         |
+| ---------------- | -------------------------------------------- |
+| `make start`     | Expo開発サーバー起動                         |
+| `make ios`       | iOSシミュレータで起動                        |
+| `make android`   | Androidエミュレータで起動                    |
+| `make typecheck` | TypeScript型チェック                         |
+| `make lint`      | ESLint実行                                   |
+| `make format`    | Prettier整形                                 |
+| `make install`   | 依存関係インストール                         |
+| `make prebuild`  | Expoプレビルド（ネイティブプロジェクト生成） |
 
 ## 環境変数
 
 開発時は `.env` に設定。EAS Buildでは `eas.json` の `env` で各プロファイルごとに設定。
 
-| 変数名 | 説明 |
-|--------|------|
-| `EXPO_PUBLIC_API_URL` | バックエンドAPI URL |
-| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | Google OAuth（Web） |
-| `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | Google OAuth（iOS） |
+| 変数名                                 | 説明                    |
+| -------------------------------------- | ----------------------- |
+| `EXPO_PUBLIC_API_URL`                  | バックエンドAPI URL     |
+| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`     | Google OAuth（Web）     |
+| `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`     | Google OAuth（iOS）     |
 | `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` | Google OAuth（Android） |
 
 ## 関連リポジトリ
 
-| リポジトリ | 説明 |
-|-----------|------|
-| [buzzbase](https://github.com/ippei-shimizu/buzzbase) | ルートリポジトリ（モノレポ） |
-| [buzzbase_front](https://github.com/ippei-shimizu/buzzbase_front) | フロントエンド（Next.js） |
-| [buzzbase_back](https://github.com/ippei-shimizu/buzzbase_back) | バックエンド（Rails API） |
+| リポジトリ                                                        | 説明                         |
+| ----------------------------------------------------------------- | ---------------------------- |
+| [buzzbase](https://github.com/ippei-shimizu/buzzbase)             | ルートリポジトリ（モノレポ） |
+| [buzzbase_front](https://github.com/ippei-shimizu/buzzbase_front) | フロントエンド（Next.js）    |
+| [buzzbase_back](https://github.com/ippei-shimizu/buzzbase_back)   | バックエンド（Rails API）    |
