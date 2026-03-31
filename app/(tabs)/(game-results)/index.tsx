@@ -1,3 +1,6 @@
+import type { GameResult } from "../../../types/gameResult";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useRef, useState, useMemo, useEffect } from "react";
 import {
   View,
@@ -12,12 +15,9 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { useGameResults } from "@hooks/useGameResults";
 import { useMySeasons } from "@hooks/useSeasons";
-import { GameResultListItem } from "@components/game-results/GameResultListItem";
-import type { GameResult } from "../../../types/gameResult";
 
 const MATCH_TYPE_OPTIONS = [
   { key: "regular", label: "公式戦" },

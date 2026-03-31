@@ -1,9 +1,9 @@
-import { View, Text, TouchableOpacity } from "react-native";
 import { useRouter, usePathname } from "expo-router";
+import { View, Text, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { HomeIcon } from "@components/icon/HomeIcon";
 import { BallIcon } from "@components/icon/BallIcon";
 import { GroupIcon } from "@components/icon/GroupIcon";
+import { HomeIcon } from "@components/icon/HomeIcon";
 import { UserIcon } from "@components/icon/UserIcon";
 
 const TABS = [

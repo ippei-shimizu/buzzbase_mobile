@@ -1,11 +1,11 @@
-import { ActivityIndicator, View } from "react-native";
 import { Redirect, Tabs, useRouter } from "expo-router";
-import { useAuth } from "@hooks/useAuth";
-import { HomeIcon } from "@components/icon/HomeIcon";
+import { ActivityIndicator, View } from "react-native";
 import { BallIcon } from "@components/icon/BallIcon";
-import { RecordIcon } from "@components/icon/RecordIcon";
 import { GroupIcon } from "@components/icon/GroupIcon";
+import { HomeIcon } from "@components/icon/HomeIcon";
+import { RecordIcon } from "@components/icon/RecordIcon";
 import { UserIcon } from "@components/icon/UserIcon";
+import { useAuth } from "@hooks/useAuth";
 
 export default function TabLayout() {
   const { isLoggedIn, isLoading } = useAuth();

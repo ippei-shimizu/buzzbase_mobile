@@ -1,3 +1,5 @@
+import * as ImagePicker from "expo-image-picker";
+import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import React, { useState, useEffect } from "react";
 import {
   ScrollView,
@@ -8,11 +10,9 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
-import { useGroupDetail } from "@hooks/useGroups";
-import { useUpdateGroupInfo } from "@hooks/useGroupMutations";
 import { GroupForm } from "@components/groups/GroupForm";
+import { useUpdateGroupInfo } from "@hooks/useGroupMutations";
+import { useGroupDetail } from "@hooks/useGroups";
 
 export default function GroupEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

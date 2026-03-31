@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import {
   ScrollView,
@@ -6,9 +7,8 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { useCreateBaseballNote } from "@hooks/useBaseballNoteMutations";
 import { NoteForm } from "@components/baseball-notes/NoteForm";
+import { useCreateBaseballNote } from "@hooks/useBaseballNoteMutations";
 import { textToSlateMemo } from "@utils/slateUtils";
 
 export default function NoteCreateScreen() {

@@ -1,11 +1,11 @@
+import { AxiosError } from "axios";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { AxiosError } from "axios";
+import { SignUpForm } from "@components/auth/SignUpForm";
 import { useAuth } from "@hooks/useAuth";
 import { useFormValidation } from "@hooks/useFormValidation";
-import { SignUpForm } from "@components/auth/SignUpForm";
 
 export default function SignUpScreen() {
   const router = useRouter();

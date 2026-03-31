@@ -1,6 +1,6 @@
+import type { ManagementNotice } from "../../types/notification";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import type { ManagementNotice } from "../../types/notification";
 
 interface NoticeCardProps {
   notice: ManagementNotice;

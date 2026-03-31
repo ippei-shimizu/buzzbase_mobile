@@ -2,9 +2,9 @@ import "../global.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { queryClient } from "@utils/queryClient";
 import { usePushNotifications } from "@hooks/usePushNotifications";
 import { configureGoogleSignIn } from "@services/googleAuthService";
+import { queryClient } from "@utils/queryClient";
 
 configureGoogleSignIn();
 

@@ -1,12 +1,12 @@
+import type { BattingBox } from "../../types/gameRecord";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { NumberInputRow } from "./NumberInputRow";
 import { Button } from "@components/ui/Button";
 import { Select } from "@components/ui/Select";
 import {
   battingResultsPositions,
   battingResultsList,
 } from "@constants/battingData";
-import type { BattingBox } from "../../types/gameRecord";
+import { NumberInputRow } from "./NumberInputRow";
 
 interface Props {
   battingBoxes: BattingBox[];

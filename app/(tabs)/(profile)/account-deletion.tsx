@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   View,
@@ -8,9 +9,8 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useAuthStore } from "@stores/authStore";
 import { deleteAccount } from "@services/profileService";
+import { useAuthStore } from "@stores/authStore";
 
 export default function AccountDeletionScreen() {
   const [isDeleting, setIsDeleting] = useState(false);

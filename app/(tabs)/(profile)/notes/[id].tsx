@@ -1,3 +1,5 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import React from "react";
 import {
   View,
@@ -9,10 +11,8 @@ import {
   StyleSheet,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams, Stack } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useBaseballNote } from "@hooks/useBaseballNotes";
 import { useDeleteBaseballNote } from "@hooks/useBaseballNoteMutations";
+import { useBaseballNote } from "@hooks/useBaseballNotes";
 import { slateMemoToText } from "@utils/slateUtils";
 
 export default function NoteDetailScreen() {

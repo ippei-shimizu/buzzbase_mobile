@@ -1,8 +1,8 @@
+import type { GroupUser } from "../../types/group";
 import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
 import { API_BASE_URL } from "@constants/api";
-import type { GroupUser } from "../../types/group";
 
 interface MemberRowProps {
   user: GroupUser;

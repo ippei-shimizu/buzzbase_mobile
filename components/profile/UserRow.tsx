@@ -1,8 +1,8 @@
+import type { FollowingUser } from "../../types/group";
 import React from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
 import { API_BASE_URL } from "@constants/api";
-import type { FollowingUser } from "../../types/group";
 
 interface UserRowProps {
   user: FollowingUser;

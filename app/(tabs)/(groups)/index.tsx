@@ -1,3 +1,5 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter, Stack } from "expo-router";
 import React from "react";
 import {
   View,
@@ -8,10 +10,8 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { useRouter, Stack } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useGroups } from "@hooks/useGroups";
 import { GroupListCard } from "@components/groups/GroupListCard";
+import { useGroups } from "@hooks/useGroups";
 
 export default function GroupsTabScreen() {
   const router = useRouter();

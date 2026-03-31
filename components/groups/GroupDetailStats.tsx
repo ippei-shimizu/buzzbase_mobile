@@ -1,8 +1,8 @@
+import type { GroupDetail, GroupUser } from "../../types/group";
 import React, { useState } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
 import { API_BASE_URL } from "@constants/api";
-import type { GroupDetail, GroupUser } from "../../types/group";
 
 interface GroupDetailStatsProps {
   detail: GroupDetail;

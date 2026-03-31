@@ -1,3 +1,9 @@
+import type {
+  NotificationItem,
+  UserNotification,
+  ManagementNotification,
+} from "../../../types/notification";
+import { useRouter, useFocusEffect } from "expo-router";
 import React, { useCallback } from "react";
 import {
   View,
@@ -6,19 +12,13 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { useRouter, useFocusEffect } from "expo-router";
+import { NotificationItemComponent } from "@components/notifications/NotificationItem";
 import {
   useNotifications,
   useMarkNoticesRead,
   useMarkNotificationRead,
 } from "@hooks/useNotifications";
 import { useProfile } from "@hooks/useProfile";
-import { NotificationItemComponent } from "@components/notifications/NotificationItem";
-import type {
-  NotificationItem,
-  UserNotification,
-  ManagementNotification,
-} from "../../../types/notification";
 
 export default function NotificationsScreen() {
   const router = useRouter();

@@ -1,10 +1,10 @@
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
-import { useRouter } from "expo-router";
+import { PitchingForm } from "@components/game-record/PitchingForm";
+import { StepIndicator } from "@components/game-record/StepIndicator";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
-import { StepIndicator } from "@components/game-record/StepIndicator";
-import { PitchingForm } from "@components/game-record/PitchingForm";
 
 export default function Step3PitchingScreen() {
   const router = useRouter();

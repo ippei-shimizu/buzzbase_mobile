@@ -1,7 +1,7 @@
 import { View, Text, Image } from "react-native";
-import { TextInput } from "@components/ui/TextInput";
 import { Button } from "@components/ui/Button";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
+import { TextInput } from "@components/ui/TextInput";
 
 interface Props {
   username: string;

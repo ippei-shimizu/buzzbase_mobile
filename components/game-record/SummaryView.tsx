@@ -1,5 +1,5 @@
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import type { BattingBox } from "../../types/gameRecord";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 
 interface Props {
   // 試合情報

@@ -1,3 +1,5 @@
+import * as ImagePicker from "expo-image-picker";
+import { useRouter, Stack } from "expo-router";
 import React, { useState } from "react";
 import {
   ScrollView,
@@ -8,13 +10,11 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from "react-native";
-import { useRouter, Stack } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
-import { useProfile } from "@hooks/useProfile";
-import { useFollowingUsers } from "@hooks/useGroups";
-import { useCreateGroup, useInviteMembers } from "@hooks/useGroupMutations";
 import { GroupForm } from "@components/groups/GroupForm";
 import { SelectableUserRow } from "@components/groups/SelectableUserRow";
+import { useCreateGroup, useInviteMembers } from "@hooks/useGroupMutations";
+import { useFollowingUsers } from "@hooks/useGroups";
+import { useProfile } from "@hooks/useProfile";
 
 export default function GroupCreateScreen() {
   const router = useRouter();

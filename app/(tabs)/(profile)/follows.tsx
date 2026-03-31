@@ -1,3 +1,4 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   View,
@@ -7,15 +8,14 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { UserRow } from "@components/profile/UserRow";
 import { useFollowingUsers } from "@hooks/useGroups";
+import { useProfile } from "@hooks/useProfile";
 import {
   useFollowersUsers,
   useFollowUser,
   useUnfollowUser,
 } from "@hooks/useRelationship";
-import { useProfile } from "@hooks/useProfile";
-import { UserRow } from "@components/profile/UserRow";
 
 export default function FollowsScreen() {
   const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();

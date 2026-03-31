@@ -1,3 +1,4 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
   ScrollView,
@@ -9,11 +10,10 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { MemberRow } from "@components/groups/MemberRow";
+import { useDeleteGroup } from "@hooks/useGroupMutations";
 import { useGroupMembers } from "@hooks/useGroups";
 import { useProfile } from "@hooks/useProfile";
-import { useDeleteGroup } from "@hooks/useGroupMutations";
-import { MemberRow } from "@components/groups/MemberRow";
 
 export default function MembersScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

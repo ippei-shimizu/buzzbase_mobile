@@ -1,3 +1,5 @@
+import type { GroupRanking, RankingEntry } from "../../types/dashboard";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   View,
@@ -6,11 +8,9 @@ import {
   StyleSheet,
   type ViewStyle,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { API_BASE_URL } from "@constants/api";
 import { Image } from "react-native";
 import { GroupDefaultIcon } from "@components/icon/GroupDefaultIcon";
-import type { GroupRanking, RankingEntry } from "../../types/dashboard";
+import { API_BASE_URL } from "@constants/api";
 import { EmptyState } from "./EmptyState";
 
 interface GroupRankingsProps {

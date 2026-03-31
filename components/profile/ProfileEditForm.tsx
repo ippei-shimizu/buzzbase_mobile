@@ -11,9 +11,9 @@ import {
 } from "react-native";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
 import { API_BASE_URL } from "@constants/api";
+import { AwardSection } from "./AwardSection";
 import { PositionSection } from "./PositionSection";
 import { TeamSection } from "./TeamSection";
-import { AwardSection } from "./AwardSection";
 
 interface AwardItem {
   id?: number;
@@ -58,13 +58,13 @@ interface ProfileEditFormProps {
 
 export const ProfileEditForm = ({
   name,
-  userId,
+  userId: _userId,
   introduction,
   isPrivate,
   imageUri,
   isUpdating,
   onChangeName,
-  onChangeUserId,
+  onChangeUserId: _onChangeUserId,
   onChangeIntroduction,
   onChangeIsPrivate,
   onPickImage,

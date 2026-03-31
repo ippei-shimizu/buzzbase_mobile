@@ -1,10 +1,10 @@
-import { View, Text, TouchableOpacity, Image, Platform } from "react-native";
 import { Link } from "expo-router";
-import { TextInput } from "@components/ui/TextInput";
+import { View, Text, TouchableOpacity, Image, Platform } from "react-native";
+import { AppleSignInButton } from "@components/auth/AppleSignInButton";
+import { GoogleSignInButton } from "@components/auth/GoogleSignInButton";
 import { Button } from "@components/ui/Button";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
-import { GoogleSignInButton } from "@components/auth/GoogleSignInButton";
-import { AppleSignInButton } from "@components/auth/AppleSignInButton";
+import { TextInput } from "@components/ui/TextInput";
 
 interface Props {
   email: string;

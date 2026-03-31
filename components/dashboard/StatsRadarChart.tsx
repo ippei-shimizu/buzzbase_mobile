@@ -1,3 +1,4 @@
+import type { RadarAxis } from "../../types/dashboard";
 import React, { useState } from "react";
 import {
   View,
@@ -14,7 +15,6 @@ import Svg, {
   Text as SvgText,
   G,
 } from "react-native-svg";
-import type { RadarAxis } from "../../types/dashboard";
 
 interface StatsRadarChartProps {
   data: RadarAxis[];

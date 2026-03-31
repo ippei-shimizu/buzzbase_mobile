@@ -1,3 +1,5 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   View,
@@ -7,8 +9,6 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@stores/authStore";
 
 interface SettingsItem {

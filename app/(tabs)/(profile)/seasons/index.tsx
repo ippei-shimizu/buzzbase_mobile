@@ -1,3 +1,6 @@
+import type { Season } from "../../../../types/season";
+import { Ionicons } from "@expo/vector-icons";
+import { Stack } from "expo-router";
 import React from "react";
 import {
   View,
@@ -10,15 +13,12 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
-import { Stack } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useMySeasons } from "@hooks/useSeasons";
 import {
   useCreateSeason,
   useUpdateSeason,
   useDeleteSeason,
 } from "@hooks/useSeasonMutations";
-import type { Season } from "../../../../types/season";
+import { useMySeasons } from "@hooks/useSeasons";
 
 export default function SeasonsScreen() {
   const { seasons, isLoading, refetch, isRefreshing } = useMySeasons();

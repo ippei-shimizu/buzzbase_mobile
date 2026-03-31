@@ -1,8 +1,8 @@
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { NumberInputRow } from "./NumberInputRow";
+import { Button } from "@components/ui/Button";
 import { NumberInput } from "@components/ui/NumberInput";
 import { Select } from "@components/ui/Select";
-import { Button } from "@components/ui/Button";
+import { NumberInputRow } from "./NumberInputRow";
 
 interface Props {
   win: number;

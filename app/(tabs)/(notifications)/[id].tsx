@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
   View,
@@ -7,7 +8,6 @@ import {
   StyleSheet,
   useWindowDimensions,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
 import { WebView } from "react-native-webview";
 import { useManagementNotice } from "@hooks/useNotifications";
 import { markdownToHtml } from "@utils/markdownToHtml";

@@ -1,9 +1,9 @@
+import type { GameResult } from "../../types/gameResult";
+import { useRouter } from "expo-router";
 import React from "react";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
 import { useGameResults } from "@hooks/useGameResults";
 import { GameResultList } from "../game-results/GameResultList";
-import type { GameResult } from "../../types/gameResult";
 
 export const ProfileGamesTab = () => {
   const router = useRouter();

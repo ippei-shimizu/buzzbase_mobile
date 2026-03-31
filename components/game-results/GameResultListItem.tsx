@@ -1,6 +1,6 @@
+import type { GameResult } from "../../types/gameResult";
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import type { GameResult } from "../../types/gameResult";
 
 interface GameResultListItemProps {
   game: GameResult;
