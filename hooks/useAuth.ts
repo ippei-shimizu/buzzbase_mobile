@@ -9,6 +9,7 @@ import {
   validateToken,
 } from "@services/authService";
 import { googleSignIn } from "@services/googleAuthService";
+import { appleSignIn } from "@services/appleAuthService";
 import type { SignInData, SignUpData } from "../types/auth";
 
 /**
@@ -75,6 +76,14 @@ export const useAuth = () => {
     return response;
   };
 
+  const appleLogin = async () => {
+    const response = await appleSignIn();
+    if (!response) return null; // ユーザーキャンセル
+    setIsLoggedIn(true);
+    setIsLoading(false);
+    return response;
+  };
+
   return {
     isLoggedIn,
     isLoading,
@@ -83,5 +92,6 @@ export const useAuth = () => {
     signUp,
     resendConfirmation,
     googleLogin,
+    appleLogin,
   };
 };

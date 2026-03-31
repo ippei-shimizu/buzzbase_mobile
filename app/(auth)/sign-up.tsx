@@ -9,7 +9,7 @@ import { SignUpForm } from "@components/auth/SignUpForm";
 
 export default function SignUpScreen() {
   const router = useRouter();
-  const { signUp, googleLogin } = useAuth();
+  const { signUp, googleLogin, appleLogin } = useAuth();
   const { validateEmail, validatePassword, getEmailError, getPasswordError } =
     useFormValidation();
 
@@ -84,6 +84,26 @@ export default function SignUpScreen() {
     }
   };
 
+  const handleAppleSignIn = async () => {
+    setErrors([]);
+
+    try {
+      const response = await appleLogin();
+      if (!response) return; // ユーザーキャンセル
+      if (response?.requires_username) {
+        router.replace("/(auth)/username-registration");
+      } else {
+        router.replace("/(tabs)");
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        setErrors(["Appleログインに失敗しました。もう一度お試しください"]);
+      } else {
+        setErrors(["Appleログインに失敗しました"]);
+      }
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
       <KeyboardAvoidingView
@@ -105,6 +125,7 @@ export default function SignUpScreen() {
           onPasswordConfirmationChange={setPasswordConfirmation}
           onSubmit={handleSubmit}
           onGoogleSignIn={handleGoogleSignIn}
+          onAppleSignIn={handleAppleSignIn}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>

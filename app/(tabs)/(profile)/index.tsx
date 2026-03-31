@@ -583,7 +583,7 @@ export default function ProfileScreen() {
                 <Ionicons name="search-outline" size={22} color="#F4F4F4" />
               </TouchableOpacity>
               <TouchableOpacity onPress={openMenu}>
-                <Ionicons name="menu" size={24} color="#F4F4F4" />
+                <MenuIcon size={24} color="#F4F4F4" />
               </TouchableOpacity>
             </View>
           ),
