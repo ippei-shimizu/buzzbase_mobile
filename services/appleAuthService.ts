@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import Constants from "expo-constants";
+import * as AppleAuthentication from "expo-apple-authentication";
 import axiosInstance from "@utils/axiosInstance";
 import * as SecureStore from "expo-secure-store";
 
@@ -15,14 +16,24 @@ export const appleSignIn = async () => {
     throw new Error("Apple認証はiOSでのみ利用可能です");
   }
 
-  const AppleAuthentication = require("expo-apple-authentication");
-
-  const credential = await AppleAuthentication.signInAsync({
-    requestedScopes: [
-      AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-      AppleAuthentication.AppleAuthenticationScope.EMAIL,
-    ],
-  });
+  let credential;
+  try {
+    credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+    });
+  } catch (error: unknown) {
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      (error as { code: string }).code === "ERR_REQUEST_CANCELED"
+    ) {
+      return null;
+    }
+    throw error;
+  }
 
   const identityToken = credential.identityToken;
   if (!identityToken)

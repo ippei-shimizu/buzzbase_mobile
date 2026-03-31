@@ -78,6 +78,7 @@ export const useAuth = () => {
 
   const appleLogin = async () => {
     const response = await appleSignIn();
+    if (!response) return null; // ユーザーキャンセル
     setIsLoggedIn(true);
     setIsLoading(false);
     return response;

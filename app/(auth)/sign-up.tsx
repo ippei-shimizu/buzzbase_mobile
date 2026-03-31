@@ -19,7 +19,6 @@ export default function SignUpScreen() {
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isAppleLoading, setIsAppleLoading] = useState(false);
 
   const isValid =
     email !== "" &&
@@ -87,10 +86,10 @@ export default function SignUpScreen() {
 
   const handleAppleSignIn = async () => {
     setErrors([]);
-    setIsAppleLoading(true);
 
     try {
       const response = await appleLogin();
+      if (!response) return; // ユーザーキャンセル
       if (response?.requires_username) {
         router.replace("/(auth)/username-registration");
       } else {
@@ -102,8 +101,6 @@ export default function SignUpScreen() {
       } else {
         setErrors(["Appleログインに失敗しました"]);
       }
-    } finally {
-      setIsAppleLoading(false);
     }
   };
 
@@ -128,7 +125,6 @@ export default function SignUpScreen() {
           onPasswordConfirmationChange={setPasswordConfirmation}
           onSubmit={handleSubmit}
           onGoogleSignIn={handleGoogleSignIn}
-          isAppleLoading={isAppleLoading}
           onAppleSignIn={handleAppleSignIn}
         />
       </KeyboardAvoidingView>

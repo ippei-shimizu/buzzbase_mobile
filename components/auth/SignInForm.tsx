@@ -15,7 +15,6 @@ interface Props {
   isSubmitting: boolean;
   isValid: boolean;
   isGoogleLoading?: boolean;
-  isAppleLoading?: boolean;
   onEmailChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
   onSubmit: () => void;
@@ -32,7 +31,6 @@ export function SignInForm({
   isSubmitting,
   isValid,
   isGoogleLoading = false,
-  isAppleLoading = false,
   onEmailChange,
   onPasswordChange,
   onSubmit,
@@ -108,7 +106,7 @@ export function SignInForm({
       <GoogleSignInButton onPress={onGoogleSignIn} loading={isGoogleLoading} />
 
       {Platform.OS === "ios" && (
-        <AppleSignInButton onPress={onAppleSignIn} loading={isAppleLoading} />
+        <AppleSignInButton onPress={onAppleSignIn} />
       )}
 
       <View style={{ marginTop: 24, alignItems: "center" }}>
