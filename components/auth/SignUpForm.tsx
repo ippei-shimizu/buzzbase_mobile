@@ -122,9 +122,7 @@ export function SignUpForm({
         label="Googleで登録"
       />
 
-      {Platform.OS === "ios" && (
-        <AppleSignInButton onPress={onAppleSignIn} />
-      )}
+      {Platform.OS === "ios" && <AppleSignInButton onPress={onAppleSignIn} />}
 
       <View style={{ marginTop: 24, alignItems: "center" }}>
         <Link href="/(auth)/sign-in" asChild>

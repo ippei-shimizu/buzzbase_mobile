@@ -105,9 +105,7 @@ export function SignInForm({
 
       <GoogleSignInButton onPress={onGoogleSignIn} loading={isGoogleLoading} />
 
-      {Platform.OS === "ios" && (
-        <AppleSignInButton onPress={onAppleSignIn} />
-      )}
+      {Platform.OS === "ios" && <AppleSignInButton onPress={onAppleSignIn} />}
 
       <View style={{ marginTop: 24, alignItems: "center" }}>
         <Link href="/(auth)/sign-up" asChild>

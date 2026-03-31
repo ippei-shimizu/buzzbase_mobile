@@ -36,8 +36,7 @@ export const appleSignIn = async () => {
   }
 
   const identityToken = credential.identityToken;
-  if (!identityToken)
-    throw new Error("Apple IDトークンの取得に失敗しました");
+  if (!identityToken) throw new Error("Apple IDトークンの取得に失敗しました");
 
   const fullName =
     credential.fullName?.givenName || credential.fullName?.familyName
