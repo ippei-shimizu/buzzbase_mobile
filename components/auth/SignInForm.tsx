@@ -1,9 +1,10 @@
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image, Platform } from "react-native";
 import { Link } from "expo-router";
 import { TextInput } from "@components/ui/TextInput";
 import { Button } from "@components/ui/Button";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { GoogleSignInButton } from "@components/auth/GoogleSignInButton";
+import { AppleSignInButton } from "@components/auth/AppleSignInButton";
 
 interface Props {
   email: string;
@@ -14,10 +15,12 @@ interface Props {
   isSubmitting: boolean;
   isValid: boolean;
   isGoogleLoading?: boolean;
+  isAppleLoading?: boolean;
   onEmailChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
   onSubmit: () => void;
   onGoogleSignIn: () => void;
+  onAppleSignIn: () => void;
 }
 
 export function SignInForm({
@@ -29,10 +32,12 @@ export function SignInForm({
   isSubmitting,
   isValid,
   isGoogleLoading = false,
+  isAppleLoading = false,
   onEmailChange,
   onPasswordChange,
   onSubmit,
   onGoogleSignIn,
+  onAppleSignIn,
 }: Props) {
   return (
     <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 24 }}>
@@ -101,6 +106,10 @@ export function SignInForm({
       </View>
 
       <GoogleSignInButton onPress={onGoogleSignIn} loading={isGoogleLoading} />
+
+      {Platform.OS === "ios" && (
+        <AppleSignInButton onPress={onAppleSignIn} loading={isAppleLoading} />
+      )}
 
       <View style={{ marginTop: 24, alignItems: "center" }}>
         <Link href="/(auth)/sign-up" asChild>

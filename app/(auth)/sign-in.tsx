@@ -9,7 +9,7 @@ import { SignInForm } from "@components/auth/SignInForm";
 
 export default function SignInScreen() {
   const router = useRouter();
-  const { login, googleLogin } = useAuth();
+  const { login, googleLogin, appleLogin } = useAuth();
   const { validateEmail, validatePassword, getEmailError, getPasswordError } =
     useFormValidation();
 
@@ -18,6 +18,7 @@ export default function SignInScreen() {
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
 
   const isValid =
     email !== "" &&
@@ -85,6 +86,28 @@ export default function SignInScreen() {
     }
   };
 
+  const handleAppleSignIn = async () => {
+    setErrors([]);
+    setIsAppleLoading(true);
+
+    try {
+      const response = await appleLogin();
+      if (response?.requires_username) {
+        router.replace("/(auth)/username-registration");
+      } else {
+        router.replace("/(tabs)");
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        setErrors(["Appleログインに失敗しました。もう一度お試しください"]);
+      } else {
+        setErrors(["Appleログインに失敗しました"]);
+      }
+    } finally {
+      setIsAppleLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
       <KeyboardAvoidingView
@@ -104,6 +127,8 @@ export default function SignInScreen() {
           onPasswordChange={setPassword}
           onSubmit={handleSubmit}
           onGoogleSignIn={handleGoogleSignIn}
+          isAppleLoading={isAppleLoading}
+          onAppleSignIn={handleAppleSignIn}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>
