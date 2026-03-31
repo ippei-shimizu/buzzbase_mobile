@@ -1,6 +1,6 @@
-import { TouchableOpacity, Alert } from "react-native";
-import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { Stack, useRouter } from "expo-router";
+import { TouchableOpacity, Alert } from "react-native";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 
 export default function GameRecordLayout() {

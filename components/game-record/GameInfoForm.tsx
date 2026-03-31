@@ -1,3 +1,6 @@
+import type { Team, Position } from "../../types/gameRecord";
+import type { Season } from "../../types/season";
+import { Ionicons } from "@expo/vector-icons";
 import { useState, useMemo } from "react";
 import {
   View,
@@ -7,11 +10,8 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { SelectPicker } from "@components/ui/SelectPicker";
 import { Button } from "@components/ui/Button";
-import type { Team, Position } from "../../types/gameRecord";
-import type { Season } from "../../types/season";
+import { SelectPicker } from "@components/ui/SelectPicker";
 
 interface Props {
   date: string;
@@ -67,16 +67,16 @@ export function GameInfoForm({
   date,
   matchType,
   myTeamName,
-  myTeamId,
+  myTeamId: _myTeamId,
   opponentTeamName,
-  opponentTeamId,
+  opponentTeamId: _opponentTeamId,
   myTeamScore,
   opponentTeamScore,
   battingOrder,
   defensivePosition,
   memo,
   tournamentName,
-  tournamentId,
+  tournamentId: _tournamentId,
   tournaments,
   seasonId,
   seasons,

@@ -1,3 +1,4 @@
+import type { FollowStatus } from "../../types/profile";
 import React from "react";
 import {
   TouchableOpacity,
@@ -5,7 +6,6 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import type { FollowStatus } from "../../types/profile";
 
 interface FollowButtonProps {
   followStatus: FollowStatus;

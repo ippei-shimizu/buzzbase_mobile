@@ -1,10 +1,10 @@
+import { AxiosError } from "axios";
+import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams } from "expo-router";
-import { AxiosError } from "axios";
-import { useAuth } from "@hooks/useAuth";
 import { ConfirmationPendingView } from "@components/auth/ConfirmationPendingView";
+import { useAuth } from "@hooks/useAuth";
 
 export default function ConfirmationPendingScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();

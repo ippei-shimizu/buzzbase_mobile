@@ -1,3 +1,6 @@
+import type { BattingStats, PitchingStats } from "../../types/dashboard";
+import type { StatsFilters } from "../../types/profile";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   View,
@@ -7,17 +10,14 @@ import {
   TouchableWithoutFeedback,
   type ViewStyle,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import type { BattingStats, PitchingStats } from "../../types/dashboard";
-import type { StatsFilters } from "../../types/profile";
+import { useProfileStats } from "@hooks/useProfileStats";
+import { useMySeasons } from "@hooks/useSeasons";
 import {
   normalizeBattingStats,
   normalizePitchingStats,
 } from "@utils/radarChartUtils";
-import { useProfileStats } from "@hooks/useProfileStats";
-import { useMySeasons } from "@hooks/useSeasons";
-import { StatsRadarChart } from "./StatsRadarChart";
 import { EmptyState } from "./EmptyState";
+import { StatsRadarChart } from "./StatsRadarChart";
 
 interface StatsOverviewProps {
   battingStats: BattingStats;

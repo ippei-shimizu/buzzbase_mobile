@@ -1,3 +1,5 @@
+import type { GameResult } from "../../types/gameResult";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   View,
@@ -7,8 +9,6 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import type { GameResult } from "../../types/gameResult";
 
 interface GameResultDetailProps {
   game: GameResult;

@@ -1,7 +1,7 @@
+import type { Group } from "../../types/group";
 import React from "react";
 import { Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { GroupDefaultIcon } from "@components/icon/GroupDefaultIcon";
-import type { Group } from "../../types/group";
 
 interface GroupListCardProps {
   group: Group;

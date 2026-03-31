@@ -1,3 +1,4 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState, useMemo } from "react";
 import {
   ScrollView,
@@ -8,11 +9,10 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useProfile } from "@hooks/useProfile";
-import { useFollowingUsers, useGroupMembers } from "@hooks/useGroups";
-import { useInviteMembers } from "@hooks/useGroupMutations";
 import { SelectableUserRow } from "@components/groups/SelectableUserRow";
+import { useInviteMembers } from "@hooks/useGroupMutations";
+import { useFollowingUsers, useGroupMembers } from "@hooks/useGroups";
+import { useProfile } from "@hooks/useProfile";
 
 export default function InviteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

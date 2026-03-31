@@ -1,3 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import React, { useLayoutEffect } from "react";
 import {
   View,
@@ -7,13 +10,10 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { useDashboard } from "@hooks/useDashboard";
-import { useNotificationCount } from "@hooks/useNotifications";
 import { DashboardContent } from "@components/dashboard/DashboardContent";
 import { NotificationBell } from "@components/dashboard/NotificationBell";
+import { useDashboard } from "@hooks/useDashboard";
+import { useNotificationCount } from "@hooks/useNotifications";
 
 export default function HomeScreen() {
   const router = useRouter();

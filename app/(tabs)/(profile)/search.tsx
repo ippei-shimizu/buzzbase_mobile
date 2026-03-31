@@ -1,3 +1,7 @@
+import type { FollowingUser } from "../../../types/group";
+import type { SearchUser } from "../../../types/user";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   View,
@@ -10,12 +14,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useUserSearch } from "@hooks/useUserSearch";
 import { UserRow } from "@components/profile/UserRow";
-import type { FollowingUser } from "../../../types/group";
-import type { SearchUser } from "../../../types/user";
+import { useUserSearch } from "@hooks/useUserSearch";
 
 const toFollowingUser = (user: SearchUser): FollowingUser => ({
   ...user,

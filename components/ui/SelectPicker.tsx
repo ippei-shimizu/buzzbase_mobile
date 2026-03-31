@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   View,
@@ -7,7 +8,6 @@ import {
   FlatList,
   StyleSheet,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 
 interface PickerItem {
   label: string;

@@ -1,10 +1,10 @@
-import { Share, View } from "react-native";
-import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useGameRecord } from "@hooks/useGameRecord";
-import { useGameRecordStore } from "../../stores/gameRecordStore";
+import { useRouter } from "expo-router";
+import { Share, View } from "react-native";
 import { SummaryView } from "@components/game-record/SummaryView";
 import { BottomTabBar } from "@components/ui/BottomTabBar";
+import { useGameRecord } from "@hooks/useGameRecord";
+import { useGameRecordStore } from "../../stores/gameRecordStore";
 
 export default function SummaryScreen() {
   const router = useRouter();

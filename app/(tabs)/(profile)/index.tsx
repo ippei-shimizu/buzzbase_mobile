@@ -1,3 +1,7 @@
+import type { GameResult } from "../../../types/gameResult";
+import type { StatsFilters } from "../../../types/profile";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter, Stack } from "expo-router";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   View,
@@ -14,28 +18,24 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
-import { useRouter, Stack } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { MenuIcon } from "@components/icon/MenuIcon";
-import { NoteIcon } from "@components/icon/NoteIcon";
+import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { CalendarIcon } from "@components/icon/CalendarIcon";
 import { MailIcon } from "@components/icon/MailIcon";
-import { useProfile } from "@hooks/useProfile";
-import { useProfileStats } from "@hooks/useProfileStats";
-import { useUserProfileDetail } from "@hooks/useRelationship";
-import { useMySeasons } from "@hooks/useSeasons";
+import { MenuIcon } from "@components/icon/MenuIcon";
+import { NoteIcon } from "@components/icon/NoteIcon";
+import { ProfileHeader } from "@components/profile/ProfileHeader";
+import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
+import { useUserAwards } from "@hooks/useAwards";
+import { useGameResults } from "@hooks/useGameResults";
 import {
   useTeams,
   usePrefectures,
   useBaseballCategories,
 } from "@hooks/useMasterData";
-import { useUserAwards } from "@hooks/useAwards";
-import { useGameResults } from "@hooks/useGameResults";
-import { ProfileHeader } from "@components/profile/ProfileHeader";
-import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
-import { GameResultListItem } from "@components/game-results/GameResultListItem";
-import type { StatsFilters } from "../../../types/profile";
-import type { GameResult } from "../../../types/gameResult";
+import { useProfile } from "@hooks/useProfile";
+import { useProfileStats } from "@hooks/useProfileStats";
+import { useUserProfileDetail } from "@hooks/useRelationship";
+import { useMySeasons } from "@hooks/useSeasons";
 
 function FilterDropdown({
   label,

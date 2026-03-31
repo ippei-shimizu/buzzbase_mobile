@@ -1,3 +1,5 @@
+import type { RecentGameResult } from "../../types/dashboard";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   View,
@@ -6,8 +8,6 @@ import {
   TouchableOpacity,
   type ViewStyle,
 } from "react-native";
-import { useRouter } from "expo-router";
-import type { RecentGameResult } from "../../types/dashboard";
 import { EmptyState } from "./EmptyState";
 
 interface RecentGameResultsProps {

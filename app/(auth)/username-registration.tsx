@@ -1,8 +1,8 @@
+import { AxiosError } from "axios";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { AxiosError } from "axios";
 import { UsernameRegistrationForm } from "@components/auth/UsernameRegistrationForm";
 import axiosInstance from "@utils/axiosInstance";
 

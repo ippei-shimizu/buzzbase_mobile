@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -5,13 +6,12 @@ import {
   Platform,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { GameInfoForm } from "@components/game-record/GameInfoForm";
+import { StepIndicator } from "@components/game-record/StepIndicator";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { useProfile } from "@hooks/useProfile";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
-import { StepIndicator } from "@components/game-record/StepIndicator";
-import { GameInfoForm } from "@components/game-record/GameInfoForm";
 
 export default function Step1GameInfoScreen() {
   const router = useRouter();

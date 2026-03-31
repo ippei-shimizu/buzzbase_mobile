@@ -1,15 +1,15 @@
+import type { UserProfile, FollowStatus } from "../../types/profile";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import type { UserProfile, FollowStatus } from "../../types/profile";
-import { FollowCounts } from "./FollowCounts";
-import { FollowButton } from "./FollowButton";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
-import { GloveIcon } from "@components/ui/icons/GloveIcon";
 import { BallIcon } from "@components/ui/icons/BallIcon";
 import { CrownIcon } from "@components/ui/icons/CrownIcon";
+import { GloveIcon } from "@components/ui/icons/GloveIcon";
 import { LockIcon } from "@components/ui/icons/LockIcon";
 import { API_BASE_URL } from "@constants/api";
+import { FollowButton } from "./FollowButton";
+import { FollowCounts } from "./FollowCounts";
 
 interface ProfileHeaderProps {
   profile: UserProfile;

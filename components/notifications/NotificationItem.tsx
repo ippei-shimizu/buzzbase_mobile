@@ -1,13 +1,13 @@
-import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
-import { API_BASE_URL } from "@constants/api";
 import type {
   NotificationItem as NotificationItemType,
   UserNotification,
   ManagementNotification,
 } from "../../types/notification";
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
+import { API_BASE_URL } from "@constants/api";
 
 interface NotificationItemProps {
   notification: NotificationItemType;

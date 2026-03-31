@@ -1,3 +1,7 @@
+import type { GameResult } from "../../../types/gameResult";
+import type { StatsFilters } from "../../../types/profile";
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   View,
@@ -8,26 +12,22 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
-import { GameResultListItem } from "@components/game-results/GameResultListItem";
-import {
-  useUserProfileDetail,
-  useFollowUser,
-  useUnfollowUser,
-} from "@hooks/useRelationship";
+import { useUserAwards } from "@hooks/useAwards";
+import { useUserGameResults } from "@hooks/useGameResults";
 import {
   useTeams,
   usePrefectures,
   useBaseballCategories,
 } from "@hooks/useMasterData";
-import { useUserAwards } from "@hooks/useAwards";
 import { useUserStats } from "@hooks/useProfileStats";
-import { useUserGameResults } from "@hooks/useGameResults";
-import type { StatsFilters } from "../../../types/profile";
-import type { GameResult } from "../../../types/gameResult";
+import {
+  useUserProfileDetail,
+  useFollowUser,
+  useUnfollowUser,
+} from "@hooks/useRelationship";
 
 export default function UserProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();

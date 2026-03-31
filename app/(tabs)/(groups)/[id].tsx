@@ -1,3 +1,5 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import React from "react";
 import {
   ScrollView,
@@ -9,11 +11,9 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useGroupDetail } from "@hooks/useGroups";
-import { GroupDefaultIcon } from "@components/icon/GroupDefaultIcon";
 import { GroupDetailStats } from "@components/groups/GroupDetailStats";
+import { GroupDefaultIcon } from "@components/icon/GroupDefaultIcon";
+import { useGroupDetail } from "@hooks/useGroups";
 
 export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

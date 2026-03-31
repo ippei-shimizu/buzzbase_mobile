@@ -1,3 +1,5 @@
+import type { DashboardData } from "../../types/dashboard";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   ScrollView,
@@ -5,11 +7,9 @@ import {
   StyleSheet,
   type ViewStyle,
 } from "react-native";
-import { useRouter } from "expo-router";
-import type { DashboardData } from "../../types/dashboard";
-import { StatsOverview } from "./StatsOverview";
-import { RecentGameResults } from "./RecentGameResults";
 import { GroupRankings } from "./GroupRankings";
+import { RecentGameResults } from "./RecentGameResults";
+import { StatsOverview } from "./StatsOverview";
 
 interface DashboardContentProps {
   data: DashboardData;

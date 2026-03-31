@@ -1,6 +1,6 @@
+import type { BaseballNoteListItem } from "../../types/baseballNote";
 import React from "react";
 import { Text, TouchableOpacity, StyleSheet } from "react-native";
-import type { BaseballNoteListItem } from "../../types/baseballNote";
 
 interface NoteListCardProps {
   note: BaseballNoteListItem;

@@ -1,3 +1,4 @@
+import { useRouter, useLocalSearchParams } from "expo-router";
 import React, { useState, useEffect } from "react";
 import {
   ScrollView,
@@ -8,10 +9,9 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { useBaseballNote } from "@hooks/useBaseballNotes";
-import { useUpdateBaseballNote } from "@hooks/useBaseballNoteMutations";
 import { NoteForm } from "@components/baseball-notes/NoteForm";
+import { useUpdateBaseballNote } from "@hooks/useBaseballNoteMutations";
+import { useBaseballNote } from "@hooks/useBaseballNotes";
 import { textToSlateMemo, slateMemoToText } from "@utils/slateUtils";
 
 export default function NoteEditScreen() {

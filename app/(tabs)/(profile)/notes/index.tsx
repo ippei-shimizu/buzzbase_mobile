@@ -1,3 +1,5 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter, Stack } from "expo-router";
 import React from "react";
 import {
   View,
@@ -8,10 +10,8 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { useRouter, Stack } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useBaseballNotes } from "@hooks/useBaseballNotes";
 import { NoteListCard } from "@components/baseball-notes/NoteListCard";
+import { useBaseballNotes } from "@hooks/useBaseballNotes";
 
 export default function NotesIndexScreen() {
   const router = useRouter();

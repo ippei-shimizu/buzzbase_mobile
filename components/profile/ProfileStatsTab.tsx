@@ -1,6 +1,6 @@
+import type { BattingStats, PitchingStats } from "../../types/dashboard";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import type { BattingStats, PitchingStats } from "../../types/dashboard";
 import { EmptyState } from "../dashboard/EmptyState";
 
 interface ProfileStatsTabProps {

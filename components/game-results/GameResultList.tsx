@@ -1,3 +1,4 @@
+import type { GameResult } from "../../types/gameResult";
 import React from "react";
 import {
   FlatList,
@@ -6,9 +7,8 @@ import {
   View,
   StyleSheet,
 } from "react-native";
-import type { GameResult } from "../../types/gameResult";
-import { GameResultListItem } from "./GameResultListItem";
 import { EmptyState } from "../dashboard/EmptyState";
+import { GameResultListItem } from "./GameResultListItem";
 
 interface GameResultListProps {
   data: GameResult[];
