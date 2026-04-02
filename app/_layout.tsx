@@ -1,4 +1,5 @@
 import "../global.css";
+import { useEffect } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -12,7 +13,9 @@ configureGoogleSignIn();
 function RootLayoutInner() {
   usePushNotifications();
   const { initInstallDate } = useStoreReview();
-  initInstallDate();
+  useEffect(() => {
+    initInstallDate();
+  }, [initInstallDate]);
 
   return (
     <>

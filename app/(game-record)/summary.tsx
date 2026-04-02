@@ -58,12 +58,12 @@ export default function SummaryScreen() {
     }
   };
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
     resetFlow();
     queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     queryClient.invalidateQueries({ queryKey: ["gameResults"] });
     queryClient.invalidateQueries({ queryKey: ["userGameResults"] });
-    await checkAndRequestReview();
+    checkAndRequestReview().catch(() => {});
     router.replace("/(tabs)/(game-results)");
   };
 
