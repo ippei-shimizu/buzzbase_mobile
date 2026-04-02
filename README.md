@@ -179,6 +179,7 @@ eas build --platform ios --profile production --auto-submit
 ```
 
 提出後の流れ:
+
 1. Appleの処理完了を待つ（5〜10分、メールで通知）
 2. [App Store Connect](https://appstoreconnect.apple.com) → アプリ → 「App Store」タブ
 3. 「ビルド」セクションで新しいビルドを選択
