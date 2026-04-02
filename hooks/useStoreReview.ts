@@ -40,15 +40,14 @@ export const useStoreReview = () => {
 
     // 3. インストールから7日以上経過しているか
     const installDate = await SecureStore.getItemAsync(KEYS.INSTALL_DATE);
-    if (daysSince(installDate) < MIN_DAYS_SINCE_INSTALL) return;
+    if (!installDate || daysSince(installDate) < MIN_DAYS_SINCE_INSTALL) return;
 
     // 4. 年の表示回数をチェック（年が変わっていたらリセット）
     const currentYear = new Date().getFullYear();
     const storedYear = await SecureStore.getItemAsync(KEYS.SHOWN_YEAR);
-    let shownCount = parseInt(
-      (await SecureStore.getItemAsync(KEYS.SHOWN_COUNT)) ?? "0",
-      10,
-    ) || 0;
+    let shownCount =
+      parseInt((await SecureStore.getItemAsync(KEYS.SHOWN_COUNT)) ?? "0", 10) ||
+      0;
 
     if (storedYear !== String(currentYear)) {
       shownCount = 0;
