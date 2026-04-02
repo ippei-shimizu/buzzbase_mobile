@@ -164,6 +164,26 @@ eas build --profile preview --platform ios
 | `preview`            | テスト配信       | 本番API   | Ad Hoc / TestFlight     |
 | `production`         | ストア公開       | 本番API   | App Store / Google Play |
 
+## App Store 提出手順（iOS）
+
+```bash
+# 1. 本番ビルド（ビルド番号は autoIncrement で自動加算）
+eas build --platform ios --profile production
+
+# 2. ビルド完了後、App Store Connect に提出
+eas submit --platform ios --profile production
+# → 「Select a build from EAS」を選択 → 最新ビルドを選択
+
+# ※ ビルドと提出を一括で実行する場合
+eas build --platform ios --profile production --auto-submit
+```
+
+提出後の流れ:
+1. Appleの処理完了を待つ（5〜10分、メールで通知）
+2. [App Store Connect](https://appstoreconnect.apple.com) → アプリ → 「App Store」タブ
+3. 「ビルド」セクションで新しいビルドを選択
+4. 「審査に提出」をクリック
+
 ## 開発コマンド
 
 `make help` で全コマンドを確認可能。
