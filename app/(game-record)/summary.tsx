@@ -4,6 +4,7 @@ import { Share, View } from "react-native";
 import { SummaryView } from "@components/game-record/SummaryView";
 import { BottomTabBar } from "@components/ui/BottomTabBar";
 import { useGameRecord } from "@hooks/useGameRecord";
+import { useStoreReview } from "@hooks/useStoreReview";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 
 export default function SummaryScreen() {
@@ -11,6 +12,7 @@ export default function SummaryScreen() {
   const queryClient = useQueryClient();
   const { resetFlow } = useGameRecord();
   const store = useGameRecordStore();
+  const { checkAndRequestReview } = useStoreReview();
 
   const handleShare = async () => {
     const lines: string[] = [];
@@ -56,11 +58,12 @@ export default function SummaryScreen() {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     resetFlow();
     queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     queryClient.invalidateQueries({ queryKey: ["gameResults"] });
     queryClient.invalidateQueries({ queryKey: ["userGameResults"] });
+    await checkAndRequestReview();
     router.replace("/(tabs)/(game-results)");
   };
 
