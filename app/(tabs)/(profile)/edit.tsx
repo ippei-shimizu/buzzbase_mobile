@@ -141,6 +141,19 @@ export default function ProfileEditScreen() {
   const handleSave = async () => {
     if (!profile) return;
 
+    // user_idバリデーション
+    const userIdPattern = /^[A-Za-z0-9_-]+$/;
+    if (
+      userId &&
+      (!userIdPattern.test(userId) || userId.length < 3 || userId.length > 30)
+    ) {
+      Alert.alert(
+        "入力エラー",
+        "ユーザーIDは半角英数字、ハイフン(-)、アンダーバー(_)のみ、3〜30文字で入力してください",
+      );
+      return;
+    }
+
     try {
       // 1. プロフィール基本情報更新
       const formData = new FormData();
@@ -227,8 +240,25 @@ export default function ProfileEditScreen() {
       }
 
       router.back();
-    } catch {
-      Alert.alert("エラー", "プロフィールの更新に失敗しました");
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "response" in error &&
+        error.response &&
+        typeof error.response === "object" &&
+        "data" in error.response &&
+        error.response.data &&
+        typeof error.response.data === "object" &&
+        "errors" in error.response.data
+      ) {
+        const axiosError = error as {
+          response: { data: { errors: string[] } };
+        };
+        Alert.alert("エラー", axiosError.response.data.errors.join("\n"));
+      } else {
+        Alert.alert("エラー", "プロフィールの更新に失敗しました");
+      }
     }
   };
 

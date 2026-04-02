@@ -58,13 +58,13 @@ interface ProfileEditFormProps {
 
 export const ProfileEditForm = ({
   name,
-  userId: _userId,
+  userId,
   introduction,
   isPrivate,
   imageUri,
   isUpdating,
   onChangeName,
-  onChangeUserId: _onChangeUserId,
+  onChangeUserId,
   onChangeIntroduction,
   onChangeIsPrivate,
   onPickImage,
@@ -140,6 +140,27 @@ export const ProfileEditForm = ({
           placeholder="名前を入力"
           placeholderTextColor="#71717A"
         />
+      </View>
+
+      {/* ユーザーID */}
+      <View style={styles.field}>
+        <Text style={styles.label}>ユーザーID</Text>
+        <View style={styles.userIdRow}>
+          <Text style={styles.atMark}>@</Text>
+          <TextInput
+            style={[styles.input, styles.userIdInput]}
+            value={userId}
+            onChangeText={onChangeUserId}
+            placeholder="buzz_base235"
+            placeholderTextColor="#71717A"
+            autoCapitalize="none"
+            autoCorrect={false}
+            maxLength={30}
+          />
+        </View>
+        <Text style={styles.userIdHint}>
+          半角英数字、ハイフン(-)、アンダーバー(_)のみ、3〜30文字
+        </Text>
       </View>
 
       {/* 自己紹介 */}
@@ -260,6 +281,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     color: "#F4F4F4",
     fontSize: 16,
+  },
+  userIdRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  atMark: {
+    color: "#d08000",
+    fontSize: 16,
+    marginRight: 4,
+    paddingVertical: 10,
+  },
+  userIdInput: {
+    flex: 1,
+  },
+  userIdHint: {
+    color: "#71717A",
+    fontSize: 12,
+    marginTop: 4,
   },
   textArea: {
     minHeight: 60,
