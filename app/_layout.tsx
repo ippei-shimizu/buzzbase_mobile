@@ -3,6 +3,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { usePushNotifications } from "@hooks/usePushNotifications";
+import { useStoreReview } from "@hooks/useStoreReview";
 import { configureGoogleSignIn } from "@services/googleAuthService";
 import { queryClient } from "@utils/queryClient";
 
@@ -10,6 +11,8 @@ configureGoogleSignIn();
 
 function RootLayoutInner() {
   usePushNotifications();
+  const { initInstallDate } = useStoreReview();
+  initInstallDate();
 
   return (
     <>
