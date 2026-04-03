@@ -185,6 +185,34 @@ eas build --platform ios --profile production --auto-submit
 3. 「ビルド」セクションで新しいビルドを選択
 4. 「審査に提出」をクリック
 
+### バージョン更新が必要なケース
+
+App Storeで既に承認済みのバージョン（例: `1.0.0`）と同じバージョンでは、新しいビルドを提出できない。
+submit時に以下のエラーが出た場合はバージョンを上げる必要がある:
+
+```
+90062: The value for key CFBundleShortVersionString [1.0.0] in the Info.plist
+file must contain a higher version than that of the previously approved version [1.0.0].
+```
+
+対処手順:
+
+```bash
+# 1. app.json の version を更新（例: 1.0.0 → 1.0.1）
+#    "version": "1.0.1"
+#    ※ version はビルド時にバイナリに埋め込まれるため、既存ビルドの再submitでは解決できない
+
+# 2. 再ビルド（buildNumber は autoIncrement で自動加算される）
+eas build --platform ios --profile production
+
+# 3. 提出
+eas submit --platform ios --profile production
+```
+
+バージョニングルール:
+- `version`（CFBundleShortVersionString）: ユーザーに表示されるバージョン。App Store承認後は上げる必要がある
+- `buildNumber`（CFBundleVersion）: 同一version内のビルド識別子。`autoIncrement: true` で自動管理
+
 ## 開発コマンド
 
 `make help` で全コマンドを確認可能。
