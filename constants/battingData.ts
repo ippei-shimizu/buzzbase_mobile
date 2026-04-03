@@ -6,9 +6,13 @@ export const battingResultsPositions = [
   { id: 4, label: "二" },
   { id: 5, label: "三" },
   { id: 6, label: "遊" },
-  { id: 7, label: "左" },
-  { id: 8, label: "中" },
-  { id: 9, label: "右" },
+  { id: 7, label: "左線" },
+  { id: 8, label: "左" },
+  { id: 9, label: "左中" },
+  { id: 10, label: "中" },
+  { id: 11, label: "右中" },
+  { id: 12, label: "右" },
+  { id: 13, label: "右線" },
 ];
 
 export const battingResultsList = [
