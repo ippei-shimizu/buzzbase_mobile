@@ -1,0 +1,102 @@
+export interface HitDirection {
+  id: number;
+  label: string;
+  count: number;
+}
+
+export interface PlateAppearanceCategory {
+  category: string;
+  count: number;
+  percentage: number;
+}
+
+export interface BattingStatsRow {
+  label: string;
+  games: number;
+  plate_appearances: number;
+  at_bats: number;
+  hit: number;
+  two_base_hit: number;
+  three_base_hit: number;
+  home_run: number;
+  total_bases: number;
+  runs_batted_in: number;
+  run: number;
+  strike_out: number;
+  base_on_balls: number;
+  hit_by_pitch: number;
+  sacrifice_hit: number;
+  sacrifice_fly: number;
+  stealing_base: number;
+  caught_stealing: number;
+  error: number;
+  batting_average: number;
+  slugging_percentage: number;
+  ops: number;
+  iso: number;
+  bb_per_k: number;
+  babip: number;
+}
+
+export interface PitchingStatsRow {
+  label: string;
+  appearances: number;
+  win: number;
+  loss: number;
+  hold: number;
+  saves: number;
+  complete_games: number;
+  shutouts: number;
+  innings_pitched: number;
+  hits_allowed: number;
+  home_runs_hit: number;
+  strikeouts: number;
+  base_on_balls: number;
+  hit_by_pitch: number;
+  earned_run: number;
+  era: number;
+  whip: number;
+  k_per_nine: number;
+  bb_per_nine: number;
+  k_bb: number;
+  win_percentage: number;
+}
+
+export interface WinLossSummary {
+  wins: number;
+  losses: number;
+  draws: number;
+  total: number;
+  win_rate: number;
+}
+
+export interface MatchTypeRecord {
+  match_type: string;
+  total: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  win_rate: number;
+}
+
+export interface MonthlyGame {
+  month: number;
+  count: number;
+}
+
+export interface OpponentRecord {
+  team_name: string;
+  wins: number;
+  losses: number;
+  draws: number;
+  total: number;
+}
+
+export interface GameSummary {
+  win_loss: WinLossSummary;
+  match_type_breakdown: MatchTypeRecord[];
+  monthly_games: MonthlyGame[];
+  opponent_records: OpponentRecord[];
+}
+
+export type StatsPeriod = "yearly" | "monthly" | "daily";
