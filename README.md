@@ -210,6 +210,7 @@ eas submit --platform ios --profile production
 ```
 
 バージョニングルール:
+
 - `version`（CFBundleShortVersionString）: ユーザーに表示されるバージョン。App Store承認後は上げる必要がある
 - `buildNumber`（CFBundleVersion）: 同一version内のビルド識別子。`autoIncrement: true` で自動管理
 
