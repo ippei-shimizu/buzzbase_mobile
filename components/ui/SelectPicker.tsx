@@ -62,16 +62,24 @@ export function SelectPicker({
       </TouchableOpacity>
 
       <Modal visible={visible} transparent animationType="slide">
-        <TouchableOpacity
-          style={styles.overlay}
-          activeOpacity={1}
-          onPress={() => setVisible(false)}
-        >
+        <View style={styles.overlay}>
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+            activeOpacity={1}
+            onPress={() => setVisible(false)}
+          />
           <View style={styles.sheet}>
             <Text style={styles.sheetTitle}>{label || "選択"}</Text>
             <FlatList
               data={items}
               keyExtractor={(item) => String(item.value)}
+              nestedScrollEnabled
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={[
@@ -96,7 +104,7 @@ export function SelectPicker({
               )}
             />
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     </View>
   );
