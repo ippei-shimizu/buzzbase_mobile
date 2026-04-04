@@ -1,6 +1,6 @@
+import type { BattingStatsRow, PitchingStatsRow } from "../../types/stats";
 import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import type { BattingStatsRow, PitchingStatsRow } from "../../types/stats";
 
 interface Column<T> {
   key: keyof T;
@@ -21,7 +21,13 @@ const fmt2 = (v: number) => v.toFixed(2);
 const fmtInt = (v: number) => String(v);
 
 export const BATTING_COLUMNS: Column<BattingStatsRow>[] = [
-  { key: "batting_average", label: "打率", width: 50, format: fmt3, highlight: true },
+  {
+    key: "batting_average",
+    label: "打率",
+    width: 50,
+    format: fmt3,
+    highlight: true,
+  },
   { key: "games", label: "試合", width: 40, format: fmtInt },
   { key: "plate_appearances", label: "打席", width: 40, format: fmtInt },
   { key: "at_bats", label: "打数", width: 40, format: fmtInt },
@@ -88,7 +94,10 @@ export function StatsTable<T extends { label: string }>({
               </Text>
             </View>
             {columns.map((col) => (
-              <View key={String(col.key)} style={[styles.cell, { width: col.width }]}>
+              <View
+                key={String(col.key)}
+                style={[styles.cell, { width: col.width }]}
+              >
                 <Text style={styles.headerText}>{col.label}</Text>
               </View>
             ))}
@@ -106,8 +115,12 @@ export function StatsTable<T extends { label: string }>({
                   !career && i < rows.length - 1 && styles.rowBorder,
                 ]}
               >
-                <View style={[styles.stickyCell, career && styles.careerStickyCell]}>
-                  <Text style={[styles.labelText, career && styles.careerLabelText]}>
+                <View
+                  style={[styles.stickyCell, career && styles.careerStickyCell]}
+                >
+                  <Text
+                    style={[styles.labelText, career && styles.careerLabelText]}
+                  >
                     {row[labelKey] as string}
                   </Text>
                 </View>
@@ -115,7 +128,10 @@ export function StatsTable<T extends { label: string }>({
                   const val = row[col.key] as number;
                   const formatted = col.format ? col.format(val) : String(val);
                   return (
-                    <View key={String(col.key)} style={[styles.cell, { width: col.width }]}>
+                    <View
+                      key={String(col.key)}
+                      style={[styles.cell, { width: col.width }]}
+                    >
                       <Text
                         style={[
                           styles.cellText,

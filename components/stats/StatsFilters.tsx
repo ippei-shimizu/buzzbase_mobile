@@ -1,3 +1,4 @@
+import type { StatsFilters as StatsFiltersType } from "../../types/profile";
 import React, { useState } from "react";
 import {
   View,
@@ -7,7 +8,6 @@ import {
   FlatList,
   StyleSheet,
 } from "react-native";
-import type { StatsFilters as StatsFiltersType } from "../../types/profile";
 
 interface StatsFiltersProps {
   filters: StatsFiltersType;
@@ -57,9 +57,12 @@ export const StatsFilters = ({
 
   const getOptions = (key: FilterKey) => {
     switch (key) {
-      case "year": return yearOptions;
-      case "matchType": return MATCH_TYPES;
-      case "seasonId": return seasonOptions;
+      case "year":
+        return yearOptions;
+      case "matchType":
+        return MATCH_TYPES;
+      case "seasonId":
+        return seasonOptions;
     }
   };
 
@@ -83,7 +86,11 @@ export const StatsFilters = ({
       ))}
 
       {activeDropdown && (
-        <Modal transparent animationType="fade" onRequestClose={() => setActiveDropdown(null)}>
+        <Modal
+          transparent
+          animationType="fade"
+          onRequestClose={() => setActiveDropdown(null)}
+        >
           <TouchableOpacity
             style={styles.overlay}
             activeOpacity={1}
@@ -101,7 +108,8 @@ export const StatsFilters = ({
                     <Text
                       style={[
                         styles.dropdownText,
-                        filters[activeDropdown] === item.value && styles.dropdownTextActive,
+                        filters[activeDropdown] === item.value &&
+                          styles.dropdownTextActive,
                       ]}
                     >
                       {item.label}
@@ -129,12 +137,17 @@ const styles = StyleSheet.create({
   },
   filterText: { color: "#aaa", fontSize: 11 },
   overlay: {
-    flex: 1, backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center", alignItems: "center",
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   dropdown: {
-    backgroundColor: "#222", borderRadius: 12,
-    width: 200, maxHeight: 300, padding: 8,
+    backgroundColor: "#222",
+    borderRadius: 12,
+    width: 200,
+    maxHeight: 300,
+    padding: 8,
   },
   dropdownItem: { paddingVertical: 10, paddingHorizontal: 12 },
   dropdownText: { color: "#ccc", fontSize: 14 },

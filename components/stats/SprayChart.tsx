@@ -1,3 +1,4 @@
+import type { HitDirection } from "../../types/stats";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Svg, {
@@ -10,7 +11,6 @@ import Svg, {
   LinearGradient,
   Stop,
 } from "react-native-svg";
-import type { HitDirection } from "../../types/stats";
 
 interface SprayChartProps {
   directions: HitDirection[];

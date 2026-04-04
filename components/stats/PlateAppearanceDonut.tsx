@@ -1,8 +1,8 @@
 // mobile/components/stats/PlateAppearanceDonut.tsx
+import type { PlateAppearanceCategory } from "../../types/stats";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Svg, { Circle, Text as SvgText } from "react-native-svg";
-import type { PlateAppearanceCategory } from "../../types/stats";
 
 interface PlateAppearanceDonutProps {
   breakdown: PlateAppearanceCategory[];
@@ -10,12 +10,12 @@ interface PlateAppearanceDonutProps {
 }
 
 const COLORS: Record<string, string> = {
-  "安打": "#ef4444",
-  "ゴロ": "#6b7280",
-  "フライ": "#3b82f6",
-  "三振": "#f59e0b",
-  "四死球": "#10b981",
-  "その他": "#8b5cf6",
+  安打: "#ef4444",
+  ゴロ: "#6b7280",
+  フライ: "#3b82f6",
+  三振: "#f59e0b",
+  四死球: "#10b981",
+  その他: "#8b5cf6",
 };
 
 const SIZE = 120;
@@ -50,13 +50,19 @@ export const PlateAppearanceDonut = ({
       <View style={styles.row}>
         <Svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
           <Circle
-            cx={SIZE / 2} cy={SIZE / 2} r={RADIUS}
-            fill="none" stroke="#222" strokeWidth={STROKE_WIDTH}
+            cx={SIZE / 2}
+            cy={SIZE / 2}
+            r={RADIUS}
+            fill="none"
+            stroke="#222"
+            strokeWidth={STROKE_WIDTH}
           />
           {segments.map((seg) => (
             <Circle
               key={seg.category}
-              cx={SIZE / 2} cy={SIZE / 2} r={RADIUS}
+              cx={SIZE / 2}
+              cy={SIZE / 2}
+              r={RADIUS}
               fill="none"
               stroke={seg.color}
               strokeWidth={STROKE_WIDTH}
@@ -65,14 +71,21 @@ export const PlateAppearanceDonut = ({
             />
           ))}
           <SvgText
-            x={SIZE / 2} y={SIZE / 2 - 6}
-            textAnchor="middle" fill="#fff" fontSize={16} fontWeight="700"
+            x={SIZE / 2}
+            y={SIZE / 2 - 6}
+            textAnchor="middle"
+            fill="#fff"
+            fontSize={16}
+            fontWeight="700"
           >
             {totalPlateAppearances}
           </SvgText>
           <SvgText
-            x={SIZE / 2} y={SIZE / 2 + 10}
-            textAnchor="middle" fill="#888" fontSize={9}
+            x={SIZE / 2}
+            y={SIZE / 2 + 10}
+            textAnchor="middle"
+            fill="#888"
+            fontSize={9}
           >
             打席
           </SvgText>

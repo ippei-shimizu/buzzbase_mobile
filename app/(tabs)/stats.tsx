@@ -1,3 +1,5 @@
+import type { StatsFilters as StatsFiltersType } from "../../types/profile";
+import type { StatsPeriod } from "../../types/stats";
 import React, { useState, useCallback } from "react";
 import {
   View,
@@ -8,25 +10,21 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { StatsFilters } from "@components/stats/StatsFilters";
-import { SprayChart } from "@components/stats/SprayChart";
+import { PeriodToggle } from "@components/stats/PeriodToggle";
 import { PlateAppearanceDonut } from "@components/stats/PlateAppearanceDonut";
+import { SprayChart } from "@components/stats/SprayChart";
+import { StatsFilters } from "@components/stats/StatsFilters";
 import {
   StatsTable,
   BATTING_COLUMNS,
   PITCHING_COLUMNS,
 } from "@components/stats/StatsTable";
-import { PeriodToggle } from "@components/stats/PeriodToggle";
-import { GameResultSummary } from "@components/stats/GameResultSummary";
 import {
   useHitDirections,
   usePlateAppearanceBreakdown,
   useBattingStatsTable,
   usePitchingStatsTable,
-  useGameSummary,
 } from "@hooks/useStats";
-import type { StatsFilters as StatsFiltersType } from "../../types/profile";
-import type { StatsPeriod } from "../../types/stats";
 
 type ActiveTab = "batting" | "pitching";
 
@@ -43,29 +41,24 @@ export default function StatsScreen() {
   const paBreakdown = usePlateAppearanceBreakdown(filters);
   const battingTable = useBattingStatsTable(battingPeriod, tableYear);
   const pitchingTable = usePitchingStatsTable(pitchingPeriod, tableYear);
-  const gameSummary = useGameSummary(filters.year);
-
   const isLoading =
     hitDirections.isLoading ||
     paBreakdown.isLoading ||
     battingTable.isLoading ||
-    pitchingTable.isLoading ||
-    gameSummary.isLoading;
+    pitchingTable.isLoading;
 
   const isRefreshing =
     hitDirections.isFetching ||
     paBreakdown.isFetching ||
     battingTable.isFetching ||
-    pitchingTable.isFetching ||
-    gameSummary.isFetching;
+    pitchingTable.isFetching;
 
   const onRefresh = useCallback(() => {
     hitDirections.refetch();
     paBreakdown.refetch();
     battingTable.refetch();
     pitchingTable.refetch();
-    gameSummary.refetch();
-  }, [hitDirections, paBreakdown, battingTable, pitchingTable, gameSummary]);
+  }, [hitDirections, paBreakdown, battingTable, pitchingTable]);
 
   const handleBattingPeriodChange = useCallback(
     (period: StatsPeriod) => {
@@ -88,8 +81,9 @@ export default function StatsScreen() {
   );
 
   // TODO: replace with real available years from API
-  const availableYears = Array.from({ length: 5 }, (_, i) =>
-    new Date().getFullYear() - i,
+  const availableYears = Array.from(
+    { length: 5 },
+    (_, i) => new Date().getFullYear() - i,
   );
 
   if (isLoading) {
@@ -157,9 +151,7 @@ export default function StatsScreen() {
       {/* Batting Tab */}
       {activeTab === "batting" && (
         <View>
-          {hitDirections.data && (
-            <SprayChart directions={hitDirections.data} />
-          )}
+          {hitDirections.data && <SprayChart directions={hitDirections.data} />}
           {paBreakdown.data && (
             <PlateAppearanceDonut
               breakdown={paBreakdown.data}
@@ -205,9 +197,6 @@ export default function StatsScreen() {
           )}
         </View>
       )}
-
-      {/* Game Result Summary (always shown) */}
-      {gameSummary.data && <GameResultSummary summary={gameSummary.data} />}
     </ScrollView>
   );
 }

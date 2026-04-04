@@ -1,6 +1,6 @@
+import type { StatsPeriod } from "../../types/stats";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import type { StatsPeriod } from "../../types/stats";
 
 interface PeriodToggleProps {
   value: StatsPeriod;
@@ -21,9 +21,7 @@ export const PeriodToggle = ({ value, onChange }: PeriodToggleProps) => (
         style={[styles.option, value === opt.value && styles.optionActive]}
         onPress={() => onChange(opt.value)}
       >
-        <Text
-          style={[styles.label, value === opt.value && styles.labelActive]}
-        >
+        <Text style={[styles.label, value === opt.value && styles.labelActive]}>
           {opt.label}
         </Text>
       </TouchableOpacity>
