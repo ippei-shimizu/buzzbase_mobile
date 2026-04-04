@@ -58,8 +58,18 @@ export const getPitchingStatsTable = async (
   return res.data.rows;
 };
 
-export const getGameSummary = async (year?: string): Promise<GameSummary> => {
-  const params = year ? `?year=${year}` : "";
-  const res = await axiosInstance.get(`${STATS_URL}/game_summary${params}`);
+export const getGameSummary = async (
+  year?: string,
+  matchType?: string,
+  seasonId?: string,
+): Promise<GameSummary> => {
+  const params = new URLSearchParams();
+  if (year) params.append("year", year);
+  if (matchType) params.append("match_type", matchType);
+  if (seasonId) params.append("season_id", seasonId);
+  const query = params.toString();
+  const res = await axiosInstance.get(
+    `${STATS_URL}/game_summary${query ? `?${query}` : ""}`,
+  );
   return res.data;
 };

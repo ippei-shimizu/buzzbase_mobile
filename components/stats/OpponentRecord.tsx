@@ -1,7 +1,6 @@
-// mobile/components/stats/OpponentRecord.tsx
+import type { OpponentRecord as OpponentRecordType } from "../../types/stats";
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import type { OpponentRecord as OpponentRecordType } from "../../types/stats";
 
 interface OpponentRecordProps {
   records: OpponentRecordType[];
@@ -17,14 +16,29 @@ export const OpponentRecordList = ({ records }: OpponentRecordProps) => {
     <View>
       <Text style={styles.sectionTitle}>対戦相手別</Text>
       <View style={styles.list}>
-        {displayed.map((r) => (
-          <View key={r.team_name} style={styles.item}>
-            <Text style={styles.teamName} numberOfLines={1}>{r.team_name}</Text>
-            <Text style={[styles.stat, { color: "#ef4444" }]}>{r.wins}勝</Text>
-            <Text style={[styles.stat, { color: "#3b82f6" }]}>{r.losses}敗</Text>
-            <Text style={[styles.stat, { color: "#6b7280" }]}>{r.draws}分</Text>
-          </View>
-        ))}
+        {displayed.map((r) => {
+          const winRate =
+            r.wins + r.losses > 0
+              ? (r.wins / (r.wins + r.losses)).toFixed(3).replace(/^0/, "")
+              : ".000";
+          return (
+            <View key={r.team_name} style={styles.item}>
+              <Text style={styles.teamName} numberOfLines={1}>
+                {r.team_name}
+              </Text>
+              <Text style={[styles.stat, { color: "#f31260" }]}>
+                {r.wins}勝
+              </Text>
+              <Text style={[styles.stat, { color: "#006fee" }]}>
+                {r.losses}敗
+              </Text>
+              <Text style={[styles.stat, { color: "#6b7280" }]}>
+                {r.draws}分
+              </Text>
+              <Text style={styles.winRate}>{winRate}</Text>
+            </View>
+          );
+        })}
       </View>
       {records.length > INITIAL_SHOW && (
         <TouchableOpacity onPress={() => setExpanded(!expanded)}>
@@ -38,14 +52,35 @@ export const OpponentRecordList = ({ records }: OpponentRecordProps) => {
 };
 
 const styles = StyleSheet.create({
-  sectionTitle: { fontSize: 13, fontWeight: "600", color: "#ccc", marginBottom: 8 },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#F4F4F4",
+    marginBottom: 12,
+  },
   list: { gap: 6 },
   item: {
-    flexDirection: "row", alignItems: "center",
-    backgroundColor: "#111", borderRadius: 8,
-    paddingVertical: 10, paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#3A3A3A",
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
   },
-  teamName: { flex: 1, color: "#ccc", fontSize: 12 },
-  stat: { fontWeight: "700", fontSize: 12, marginLeft: 12 },
-  toggle: { textAlign: "center", color: "#555", fontSize: 12, paddingVertical: 8 },
+  teamName: { flex: 1, color: "#F4F4F4", fontSize: 14 },
+  stat: { fontWeight: "700", fontSize: 14, marginLeft: 12 },
+  winRate: {
+    color: "#d08000",
+    fontWeight: "700",
+    fontSize: 14,
+    marginLeft: 12,
+    minWidth: 36,
+    textAlign: "right" as const,
+  },
+  toggle: {
+    textAlign: "center",
+    color: "#71717A",
+    fontSize: 12,
+    paddingVertical: 8,
+  },
 });

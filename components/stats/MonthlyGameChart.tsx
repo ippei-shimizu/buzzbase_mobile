@@ -1,8 +1,7 @@
-// mobile/components/stats/MonthlyGameChart.tsx
+import type { MonthlyGame } from "../../types/stats";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Svg, { Rect, Text as SvgText } from "react-native-svg";
-import type { MonthlyGame } from "../../types/stats";
 
 interface MonthlyGameChartProps {
   games: MonthlyGame[];
@@ -18,7 +17,7 @@ export const MonthlyGameChart = ({ games }: MonthlyGameChartProps) => {
   const barWidth = Math.min(30, (300 - BAR_GAP * games.length) / games.length);
 
   return (
-    <View>
+    <View style={styles.container}>
       <Text style={styles.sectionTitle}>月別試合数</Text>
       <View style={styles.chartContainer}>
         <Svg
@@ -32,20 +31,29 @@ export const MonthlyGameChart = ({ games }: MonthlyGameChartProps) => {
             return (
               <React.Fragment key={g.month}>
                 <SvgText
-                  x={x + barWidth / 2} y={y - 4}
-                  textAnchor="middle" fill="#aaa" fontSize={9}
+                  x={x + barWidth / 2}
+                  y={y - 4}
+                  textAnchor="middle"
+                  fill="#A1A1AA"
+                  fontSize={9}
                 >
                   {g.count}
                 </SvgText>
                 <Rect
-                  x={x} y={y}
-                  width={barWidth} height={barH}
-                  rx={3} fill="#f59e0b"
+                  x={x}
+                  y={y}
+                  width={barWidth}
+                  height={barH}
+                  rx={3}
+                  fill="#d08000"
                   opacity={0.5 + (g.count / maxCount) * 0.5}
                 />
                 <SvgText
-                  x={x + barWidth / 2} y={CHART_HEIGHT + 14}
-                  textAnchor="middle" fill="#555" fontSize={10}
+                  x={x + barWidth / 2}
+                  y={CHART_HEIGHT + 14}
+                  textAnchor="middle"
+                  fill="#71717A"
+                  fontSize={10}
                 >
                   {g.month}月
                 </SvgText>
@@ -59,6 +67,12 @@ export const MonthlyGameChart = ({ games }: MonthlyGameChartProps) => {
 };
 
 const styles = StyleSheet.create({
-  sectionTitle: { fontSize: 13, fontWeight: "600", color: "#ccc", marginBottom: 8 },
-  chartContainer: { alignItems: "center", marginBottom: 16 },
+  container: { marginBottom: 16 },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#F4F4F4",
+    marginBottom: 12,
+  },
+  chartContainer: { alignItems: "center" },
 });

@@ -33,8 +33,12 @@ export const usePitchingStatsTable = (period: StatsPeriod, year?: string) =>
     queryFn: () => getPitchingStatsTable(period, year),
   });
 
-export const useGameSummary = (year?: string) =>
+export const useGameSummary = (
+  year?: string,
+  matchType?: string,
+  seasonId?: string,
+) =>
   useQuery({
-    queryKey: ["gameSummary", year],
-    queryFn: () => getGameSummary(year),
+    queryKey: ["gameSummary", year, matchType, seasonId],
+    queryFn: () => getGameSummary(year, matchType, seasonId),
   });

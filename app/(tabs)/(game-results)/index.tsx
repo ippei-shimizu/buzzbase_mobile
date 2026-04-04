@@ -7,6 +7,7 @@ import {
   Text,
   TextInput,
   FlatList,
+  ScrollView,
   RefreshControl,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -16,8 +17,12 @@ import {
   Platform,
 } from "react-native";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
+import { GameResultSummary } from "@components/stats/GameResultSummary";
 import { useGameResults } from "@hooks/useGameResults";
 import { useMySeasons } from "@hooks/useSeasons";
+import { useGameSummary } from "@hooks/useStats";
+
+type ScreenTab = "summary" | "list";
 
 const MATCH_TYPE_OPTIONS = [
   { key: "regular", label: "公式戦" },
@@ -173,6 +178,28 @@ export default function GameResultsScreen() {
     isFetchingNextPage,
   } = useGameResults();
   const { seasons } = useMySeasons();
+
+  // Screen tab state
+  const [screenTab, setScreenTab] = useState<ScreenTab>("summary");
+
+  // Summary tab filters (independent)
+  const [summaryYear, setSummaryYear] = useState<string | undefined>(undefined);
+  const [summaryMatchType, setSummaryMatchType] = useState<string | undefined>(
+    undefined,
+  );
+  const [summarySeasonId, setSummarySeasonId] = useState<string | undefined>(
+    undefined,
+  );
+  const [summaryActiveFilter, setSummaryActiveFilter] = useState<string | null>(
+    null,
+  );
+  const toggleSummaryFilter = (id: string) =>
+    setSummaryActiveFilter((prev) => (prev === id ? null : id));
+  const gameSummary = useGameSummary(
+    summaryYear,
+    summaryMatchType,
+    summarySeasonId,
+  );
 
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   useEffect(() => {
@@ -352,47 +379,188 @@ export default function GameResultsScreen() {
     </View>
   );
 
+  const summaryYearOptions = [
+    { key: "all", label: "通算" },
+    ...Array.from({ length: 5 }, (_, i) => {
+      const y = String(new Date().getFullYear() - i);
+      return { key: y, label: y };
+    }),
+  ];
+
   return (
-    <FlatList
-      ref={flatListRef}
-      data={filteredResults}
-      keyExtractor={(item) => String(item.game_result_id)}
-      renderItem={({ item }) => (
-        <View style={styles.cardContainer}>
-          <GameResultListItem game={item} onPress={handlePressItem} />
-        </View>
-      )}
-      ListHeaderComponent={headerComponent}
-      contentContainerStyle={[
-        styles.content,
-        keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
-      ]}
-      onEndReached={handleEndReached}
-      onEndReachedThreshold={0.5}
-      keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="interactive"
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={refetch}
-          tintColor="#d08000"
-        />
-      }
-      ListFooterComponent={
-        isFetchingNextPage ? (
-          <View style={styles.footer}>
-            <ActivityIndicator color="#d08000" />
+    <View style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
+      {/* Screen Tab Bar */}
+      <View style={styles.screenTabBar}>
+        <TouchableOpacity
+          style={[
+            styles.screenTab,
+            screenTab === "summary" && styles.screenTabActive,
+          ]}
+          onPress={() => setScreenTab("summary")}
+        >
+          <Text
+            style={[
+              styles.screenTabText,
+              screenTab === "summary" && styles.screenTabTextActive,
+            ]}
+          >
+            サマリー
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.screenTab,
+            screenTab === "list" && styles.screenTabActive,
+          ]}
+          onPress={() => setScreenTab("list")}
+        >
+          <Text
+            style={[
+              styles.screenTabText,
+              screenTab === "list" && styles.screenTabTextActive,
+            ]}
+          >
+            一覧
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Summary Tab */}
+      {screenTab === "summary" && (
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.content}
+          refreshControl={
+            <RefreshControl
+              refreshing={gameSummary.isFetching}
+              onRefresh={() => gameSummary.refetch()}
+              tintColor="#d08000"
+            />
+          }
+        >
+          <TouchableOpacity
+            style={styles.recordButton}
+            onPress={() => router.push("/(game-record)/step1-game-info")}
+          >
+            <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.recordButtonText}>試合結果を記録する</Text>
+          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>
+            <FilterDropdown
+              label="年度"
+              value={summaryYear}
+              options={summaryYearOptions}
+              onSelect={(v) => setSummaryYear(v === "all" ? undefined : v)}
+              isOpen={summaryActiveFilter === "summaryYear"}
+              onToggle={() => toggleSummaryFilter("summaryYear")}
+            />
+            <FilterDropdown
+              label="種別"
+              value={summaryMatchType}
+              options={MATCH_TYPE_OPTIONS}
+              onSelect={setSummaryMatchType}
+              isOpen={summaryActiveFilter === "summaryMatchType"}
+              onToggle={() => toggleSummaryFilter("summaryMatchType")}
+            />
+            <FilterDropdown
+              label="シーズン"
+              value={summarySeasonId}
+              options={seasons.map((s) => ({
+                key: String(s.id),
+                label: s.name,
+              }))}
+              onSelect={setSummarySeasonId}
+              isOpen={summaryActiveFilter === "summarySeason"}
+              onToggle={() => toggleSummaryFilter("summarySeason")}
+            />
           </View>
-        ) : null
-      }
-      ListEmptyComponent={
-        <Text style={styles.emptyText}>試合結果がありません</Text>
-      }
-    />
+          <Text style={styles.activeFilterLabel}>
+            {summaryYear ? `${summaryYear}年` : "通算"}
+            {summaryMatchType
+              ? ` / ${MATCH_TYPE_OPTIONS.find((o) => o.key === summaryMatchType)?.label ?? summaryMatchType}`
+              : ""}
+            {summarySeasonId
+              ? ` / ${seasons.find((s) => String(s.id) === summarySeasonId)?.name ?? ""}`
+              : ""}
+          </Text>
+          {gameSummary.isLoading ? (
+            <View style={styles.center}>
+              <ActivityIndicator size="large" color="#d08000" />
+            </View>
+          ) : gameSummary.data ? (
+            <GameResultSummary summary={gameSummary.data} />
+          ) : null}
+        </ScrollView>
+      )}
+
+      {/* List Tab */}
+      {screenTab === "list" && (
+        <FlatList
+          ref={flatListRef}
+          data={filteredResults}
+          keyExtractor={(item) => String(item.game_result_id)}
+          renderItem={({ item }) => (
+            <View style={styles.cardContainer}>
+              <GameResultListItem game={item} onPress={handlePressItem} />
+            </View>
+          )}
+          ListHeaderComponent={headerComponent}
+          contentContainerStyle={[
+            styles.content,
+            keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
+          ]}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.5}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={refetch}
+              tintColor="#d08000"
+            />
+          }
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={styles.footer}>
+                <ActivityIndicator color="#d08000" />
+              </View>
+            ) : null
+          }
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>試合結果がありません</Text>
+          }
+        />
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screenTabBar: {
+    flexDirection: "row",
+    backgroundColor: "#2E2E2E",
+    borderBottomWidth: 1,
+    borderBottomColor: "#424242",
+  },
+  screenTab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  screenTabActive: {
+    borderBottomColor: "#d08000",
+  },
+  screenTabText: {
+    color: "#A1A1AA",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  screenTabTextActive: {
+    color: "#F4F4F4",
+  },
   center: {
     flex: 1,
     justifyContent: "center",
@@ -453,5 +621,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     marginTop: 40,
+  },
+  activeFilterLabel: {
+    color: "#A1A1AA",
+    fontSize: 12,
+    marginBottom: 12,
   },
 });

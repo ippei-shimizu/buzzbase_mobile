@@ -70,15 +70,6 @@ export interface WinLossSummary {
   win_rate: number;
 }
 
-export interface MatchTypeRecord {
-  match_type: string;
-  total: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  win_rate: number;
-}
-
 export interface MonthlyGame {
   month: number;
   count: number;
@@ -92,9 +83,27 @@ export interface OpponentRecord {
   total: number;
 }
 
+export interface Scoring {
+  runs_for: number;
+  runs_against: number;
+  run_differential: number;
+  avg_runs_for: number;
+  avg_runs_against: number;
+}
+
+export interface RecentFormGame {
+  game_result_id: number;
+  date: string;
+  opponent: string;
+  result: "win" | "loss" | "draw";
+  my_score: number;
+  opponent_score: number;
+}
+
 export interface GameSummary {
   win_loss: WinLossSummary;
-  match_type_breakdown: MatchTypeRecord[];
+  scoring: Scoring;
+  recent_form: RecentFormGame[];
   monthly_games: MonthlyGame[];
   opponent_records: OpponentRecord[];
 }
