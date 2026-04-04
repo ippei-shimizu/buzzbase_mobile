@@ -71,6 +71,7 @@ export const PITCHING_COLUMNS: Column<PitchingStatsRow>[] = [
   { key: "strikeouts", label: "三振", width: 40, format: fmtInt },
   { key: "base_on_balls", label: "四球", width: 40, format: fmtInt },
   { key: "hit_by_pitch", label: "死球", width: 40, format: fmtInt },
+  { key: "run_allowed", label: "失点", width: 40, format: fmtInt },
   { key: "earned_run", label: "自責点", width: 44, format: fmtInt },
   { key: "whip", label: "WHIP", width: 48, format: fmt2 },
   { key: "k_per_nine", label: "K/9", width: 44, format: fmt2 },
