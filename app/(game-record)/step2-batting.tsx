@@ -17,6 +17,8 @@ export default function Step2BattingScreen() {
   };
 
   const handleSubmit = () => {
+    if (submitStep2.isPending) return;
+
     setErrors([]);
     submitStep2.mutate(undefined, {
       onSuccess: () => {
@@ -31,6 +33,8 @@ export default function Step2BattingScreen() {
   };
 
   const handleSkipPitching = () => {
+    if (submitStep2.isPending) return;
+
     setErrors([]);
     submitStep2.mutate(undefined, {
       onSuccess: () => {

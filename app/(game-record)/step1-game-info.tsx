@@ -66,6 +66,8 @@ export default function Step1GameInfoScreen() {
   };
 
   const handleSubmit = () => {
+    if (submitStep1.isPending) return;
+
     setErrors([]);
     const validationErrors: string[] = [];
 

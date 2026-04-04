@@ -17,6 +17,8 @@ export default function Step3PitchingScreen() {
   };
 
   const handleSubmit = () => {
+    if (submitStep3.isPending) return;
+
     setErrors([]);
     submitStep3.mutate(undefined, {
       onSuccess: () => {
