@@ -20,7 +20,10 @@ export const getHitDirections = async (
   if (filters.year) params.append("year", filters.year);
   if (filters.matchType) params.append("match_type", filters.matchType);
   if (filters.seasonId) params.append("season_id", filters.seasonId);
-  const res = await axiosInstance.get(`${STATS_URL}/hit_directions?${params}`);
+  const query = params.toString();
+  const res = await axiosInstance.get(
+    `${STATS_URL}/hit_directions${query ? `?${query}` : ""}`,
+  );
   return res.data;
 };
 
@@ -31,8 +34,9 @@ export const getPlateAppearanceBreakdown = async (
   if (filters.year) params.append("year", filters.year);
   if (filters.matchType) params.append("match_type", filters.matchType);
   if (filters.seasonId) params.append("season_id", filters.seasonId);
+  const query = params.toString();
   const res = await axiosInstance.get(
-    `${STATS_URL}/plate_appearance_breakdown?${params}`,
+    `${STATS_URL}/plate_appearance_breakdown${query ? `?${query}` : ""}`,
   );
   return res.data.breakdown;
 };

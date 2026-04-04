@@ -170,15 +170,6 @@ export const SprayChart = ({ directions, homeRuns = [] }: SprayChartProps) => {
             d={`M ${HOME.x},${HOME.y - 15} L ${FIRST.x - 5},${FIRST.y + 2} L ${SECOND.x},${SECOND.y + 8} L ${THIRD.x + 5},${THIRD.y + 2} Z`}
             fill="#4a8e32"
           />
-          {/* 内野芝のストライプ */}
-          <G clipPath="url(#fieldClip)">
-            <ClipPath id="infieldGrassClip">
-              <Path
-                d={`M ${HOME.x},${HOME.y - 15} L ${FIRST.x - 5},${FIRST.y + 2} L ${SECOND.x},${SECOND.y + 8} L ${THIRD.x + 5},${THIRD.y + 2} Z`}
-              />
-            </ClipPath>
-          </G>
-
           {/* ===== ファウルライン ===== */}
           <Line
             x1={HOME.x}

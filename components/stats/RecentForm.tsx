@@ -19,10 +19,10 @@ export const RecentForm = ({ games }: RecentFormProps) => {
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>直近の試合</Text>
       <View style={styles.row}>
-        {games.map((g, i) => {
+        {games.map((g) => {
           const display = RESULT_DISPLAY[g.result] ?? RESULT_DISPLAY.draw;
           return (
-            <View key={i} style={styles.game}>
+            <View key={g.game_result_id} style={styles.game}>
               <Text style={[styles.mark, { color: display.color }]}>
                 {display.mark}
               </Text>

@@ -48,7 +48,7 @@ export const BATTING_COLUMNS: Column<BattingStatsRow>[] = [
   { key: "sacrifice_fly", label: "犠飛", width: 40, format: fmtInt },
   { key: "stealing_base", label: "盗塁", width: 40, format: fmtInt },
   { key: "caught_stealing", label: "盗塁死", width: 44, format: fmtInt },
-  { key: "error", label: "併殺打", width: 44, format: fmtInt },
+  { key: "error", label: "失策", width: 40, format: fmtInt },
   { key: "slugging_percentage", label: "長打率", width: 48, format: fmt3 },
   { key: "ops", label: "OPS", width: 48, format: fmt3 },
   { key: "iso", label: "ISO", width: 48, format: fmt3 },

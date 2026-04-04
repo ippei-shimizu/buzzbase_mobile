@@ -196,20 +196,23 @@ export default function StatsScreen() {
     hitDirections.isLoading ||
     paBreakdown.isLoading ||
     battingTable.isLoading ||
-    pitchingTable.isLoading;
+    pitchingTable.isLoading ||
+    eraTrend.isLoading;
 
   const isRefreshing =
     hitDirections.isFetching ||
     paBreakdown.isFetching ||
     battingTable.isFetching ||
-    pitchingTable.isFetching;
+    pitchingTable.isFetching ||
+    eraTrend.isFetching;
 
   const onRefresh = useCallback(() => {
     hitDirections.refetch();
     paBreakdown.refetch();
     battingTable.refetch();
     pitchingTable.refetch();
-  }, [hitDirections, paBreakdown, battingTable, pitchingTable]);
+    eraTrend.refetch();
+  }, [hitDirections, paBreakdown, battingTable, pitchingTable, eraTrend]);
 
   const handleBattingPeriodChange = useCallback(
     (period: StatsPeriod) => {
