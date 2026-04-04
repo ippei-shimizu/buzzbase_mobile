@@ -8,6 +8,7 @@ export interface PlateAppearancePayload {
     batting_result: string;
     batting_position_id: number;
     plate_result_id: number;
+    hit_direction_id?: number;
   };
 }
 
