@@ -22,7 +22,10 @@ import {
   checkExistingPlateAppearance,
   updatePlateAppearance,
 } from "../services/plateAppearanceService";
-import { computeBattingStats } from "@constants/battingData";
+import {
+  computeBattingStats,
+  hitDirectionToLegacy,
+} from "@constants/battingData";
 import { getCurrentUserProfile } from "../services/profileService";
 
 export const useGameRecord = () => {
@@ -146,8 +149,10 @@ export const useGameRecord = () => {
             user_id: userId,
             batter_box_number: i + 1,
             batting_result: resultText,
-            batting_position_id: box.position,
+            batting_position_id:
+              hitDirectionToLegacy[box.position] ?? box.position,
             plate_result_id: box.result,
+            hit_direction_id: box.position > 0 ? box.position : undefined,
           },
         };
 

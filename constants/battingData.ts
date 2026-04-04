@@ -15,6 +15,24 @@ export const battingResultsPositions = [
   { id: 13, label: "右線" },
 ];
 
+// hit_direction_id(新13方向) → batting_position_id(旧9方向) への変換
+// 旧IDに存在しない方向（左線/左中/右中/右線）は最も近い旧IDにマッピング
+export const hitDirectionToLegacy: Record<number, number> = {
+  1: 1, // 投→投
+  2: 2, // 捕→捕
+  3: 3, // 一→一
+  4: 4, // 二→二
+  5: 5, // 三→三
+  6: 6, // 遊→遊
+  7: 7, // 左線→左
+  8: 7, // 左→左
+  9: 7, // 左中→左
+  10: 8, // 中→中
+  11: 9, // 右中→右
+  12: 9, // 右→右
+  13: 9, // 右線→右
+};
+
 export const battingResultsList = [
   { id: 0, label: "-" },
   { id: 1, label: "ゴロ" },
