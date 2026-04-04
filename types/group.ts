@@ -19,6 +19,7 @@ export interface GroupDetail {
   batting_stats: Record<string, number | null>[];
   pitching_aggregate: Record<string, number | null>[];
   pitching_stats: Record<string, number | null>[];
+  available_years?: number[];
 }
 
 export interface GroupMembers {

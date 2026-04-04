@@ -11,8 +11,18 @@ export const getGroups = async (): Promise<Group[]> => {
   return response.data;
 };
 
-export const getGroupDetail = async (id: number): Promise<GroupDetail> => {
-  const response = await axiosInstance.get<GroupDetail>(`/groups/${id}`);
+export const getGroupDetail = async (
+  id: number,
+  year?: string,
+  matchType?: string,
+): Promise<GroupDetail> => {
+  const params = new URLSearchParams();
+  if (year && year !== "通算") params.append("year", year);
+  if (matchType && matchType !== "全て") params.append("match_type", matchType);
+  const query = params.toString();
+  const response = await axiosInstance.get<GroupDetail>(
+    `/groups/${id}${query ? `?${query}` : ""}`,
+  );
   return response.data;
 };
 

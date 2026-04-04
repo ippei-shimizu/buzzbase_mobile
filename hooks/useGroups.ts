@@ -22,10 +22,14 @@ export const useGroups = () => {
   };
 };
 
-export const useGroupDetail = (id: number | undefined) => {
+export const useGroupDetail = (
+  id: number | undefined,
+  year?: string,
+  matchType?: string,
+) => {
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
-    queryKey: ["group", id],
-    queryFn: () => getGroupDetail(id!),
+    queryKey: ["group", id, year, matchType],
+    queryFn: () => getGroupDetail(id!, year, matchType),
     enabled: !!id,
   });
 
