@@ -212,7 +212,14 @@ export default function StatsScreen() {
     battingTable.refetch();
     pitchingTable.refetch();
     eraTrend.refetch();
-  }, [hitDirections, paBreakdown, battingTable, pitchingTable, eraTrend]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    hitDirections.refetch,
+    paBreakdown.refetch,
+    battingTable.refetch,
+    pitchingTable.refetch,
+    eraTrend.refetch,
+  ]);
 
   const handleBattingPeriodChange = useCallback(
     (period: StatsPeriod) => {

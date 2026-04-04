@@ -113,9 +113,10 @@ export function StatsTable<T extends { label: string; opponent?: string }>({
           {/* 固定列データ */}
           {rows.map((row, i) => {
             const career = isCareerRow(row);
+            const rowKey = `${row.label}-${row.opponent ?? ""}`;
             return (
               <View
-                key={i}
+                key={rowKey}
                 style={[
                   styles.fixedCell,
                   { width: fixedWidth, height: rowHeight },
@@ -163,9 +164,10 @@ export function StatsTable<T extends { label: string; opponent?: string }>({
             {/* スクロール領域データ */}
             {rows.map((row, i) => {
               const career = isCareerRow(row);
+              const rowKey = `${row.label}-${row.opponent ?? ""}`;
               return (
                 <View
-                  key={i}
+                  key={rowKey}
                   style={[
                     styles.scrollRow,
                     { height: rowHeight },
