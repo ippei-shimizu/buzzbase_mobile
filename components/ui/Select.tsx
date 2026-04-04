@@ -64,15 +64,24 @@ export function Select({
         animationType="fade"
         onRequestClose={() => setVisible(false)}
       >
-        <Pressable
+        <View
           style={{
             flex: 1,
             backgroundColor: "rgba(0,0,0,0.5)",
             justifyContent: "center",
             alignItems: "center",
           }}
-          onPress={() => setVisible(false)}
         >
+          <Pressable
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+            onPress={() => setVisible(false)}
+          />
           <View
             style={{
               backgroundColor: "#3a3a3a",
@@ -85,6 +94,7 @@ export function Select({
             <FlatList
               data={options}
               keyExtractor={(item) => String(item.id)}
+              nestedScrollEnabled
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={{
@@ -108,7 +118,7 @@ export function Select({
               )}
             />
           </View>
-        </Pressable>
+        </View>
       </Modal>
     </>
   );

@@ -254,7 +254,10 @@ export default function GameResultsScreen() {
     return filtered.sort((a, b) => {
       const da = new Date(a.match_result.date_and_time).getTime();
       const db = new Date(b.match_result.date_and_time).getTime();
-      return sortDesc ? db - da : da - db;
+      if (da !== db) return sortDesc ? db - da : da - db;
+      return sortDesc
+        ? b.game_result_id - a.game_result_id
+        : a.game_result_id - b.game_result_id;
     });
   }, [
     gameResults,
