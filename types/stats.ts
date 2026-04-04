@@ -2,6 +2,18 @@ export interface HitDirection {
   id: number;
   label: string;
   count: number;
+  top_category: string;
+}
+
+export interface HomeRunDirection {
+  id: number;
+  label: string;
+  count: number;
+}
+
+export interface HitDirectionData {
+  directions: HitDirection[];
+  home_runs: HomeRunDirection[];
 }
 
 export interface PlateAppearanceCategory {
@@ -12,6 +24,7 @@ export interface PlateAppearanceCategory {
 
 export interface BattingStatsRow {
   label: string;
+  opponent?: string;
   games: number;
   plate_appearances: number;
   at_bats: number;
@@ -40,6 +53,7 @@ export interface BattingStatsRow {
 
 export interface PitchingStatsRow {
   label: string;
+  opponent?: string;
   appearances: number;
   win: number;
   loss: number;
@@ -81,6 +95,11 @@ export interface OpponentRecord {
   losses: number;
   draws: number;
   total: number;
+}
+
+export interface EraTrendPoint {
+  month: number;
+  era: number;
 }
 
 export interface Scoring {

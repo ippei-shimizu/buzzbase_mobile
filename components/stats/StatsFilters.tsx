@@ -1,11 +1,11 @@
 import type { StatsFilters as StatsFiltersType } from "../../types/profile";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
-  Modal,
-  FlatList,
+  TouchableWithoutFeedback,
   StyleSheet,
 } from "react-native";
 
@@ -16,13 +16,87 @@ interface StatsFiltersProps {
   availableSeasons?: { id: string; name: string }[];
 }
 
-type FilterKey = "year" | "matchType" | "seasonId";
-
-const MATCH_TYPES = [
-  { value: undefined, label: "全て" },
-  { value: "公式戦", label: "公式戦" },
-  { value: "オープン戦", label: "オープン戦" },
+const MATCH_TYPE_OPTIONS = [
+  { key: "公式戦", label: "公式戦" },
+  { key: "オープン戦", label: "オープン戦" },
 ];
+
+function FilterDropdown({
+  label,
+  value,
+  options,
+  onSelect,
+  isOpen,
+  onToggle,
+}: {
+  label: string;
+  value: string | undefined;
+  options: { key: string; label: string }[];
+  onSelect: (key: string | undefined) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  const selectedLabel = options.find((o) => o.key === value)?.label ?? "全て";
+
+  return (
+    <View style={{ zIndex: isOpen ? 100 : 0 }}>
+      <TouchableOpacity style={styles.button} onPress={onToggle}>
+        <Text style={styles.buttonText}>
+          {label}: {selectedLabel}
+        </Text>
+        <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+      </TouchableOpacity>
+
+      {isOpen && (
+        <>
+          <TouchableWithoutFeedback onPress={onToggle}>
+            <View style={styles.overlayBg} />
+          </TouchableWithoutFeedback>
+          <View style={styles.dropdown}>
+            <TouchableOpacity
+              style={[styles.dropdownItem, !value && styles.dropdownItemActive]}
+              onPress={() => {
+                onSelect(undefined);
+                onToggle();
+              }}
+            >
+              <Text
+                style={[
+                  styles.dropdownText,
+                  !value && styles.dropdownTextActive,
+                ]}
+              >
+                全て
+              </Text>
+            </TouchableOpacity>
+            {options.map((opt) => (
+              <TouchableOpacity
+                key={opt.key}
+                style={[
+                  styles.dropdownItem,
+                  value === opt.key && styles.dropdownItemActive,
+                ]}
+                onPress={() => {
+                  onSelect(opt.key);
+                  onToggle();
+                }}
+              >
+                <Text
+                  style={[
+                    styles.dropdownText,
+                    value === opt.key && styles.dropdownTextActive,
+                  ]}
+                >
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </>
+      )}
+    </View>
+  );
+}
 
 export const StatsFilters = ({
   filters,
@@ -30,126 +104,111 @@ export const StatsFilters = ({
   availableYears,
   availableSeasons = [],
 }: StatsFiltersProps) => {
-  const [activeDropdown, setActiveDropdown] = useState<FilterKey | null>(null);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const toggleFilter = (id: string) =>
+    setActiveFilter((prev) => (prev === id ? null : id));
 
   const yearOptions = [
-    { value: undefined, label: "通算" },
-    ...availableYears.map((y) => ({ value: String(y), label: `${y}年` })),
+    { key: "all", label: "通算" },
+    ...availableYears.map((y) => ({ key: String(y), label: `${y}` })),
   ];
 
-  const seasonOptions = [
-    { value: undefined, label: "全シーズン" },
-    ...availableSeasons.map((s) => ({ value: s.id, label: s.name })),
-  ];
-
-  const getDisplayLabel = (key: FilterKey): string => {
-    switch (key) {
-      case "year":
-        return filters.year ? `${filters.year}年` : "通算";
-      case "matchType":
-        return filters.matchType || "全て";
-      case "seasonId": {
-        const season = availableSeasons.find((s) => s.id === filters.seasonId);
-        return season?.name || "シーズン";
-      }
-    }
-  };
-
-  const getOptions = (key: FilterKey) => {
-    switch (key) {
-      case "year":
-        return yearOptions;
-      case "matchType":
-        return MATCH_TYPES;
-      case "seasonId":
-        return seasonOptions;
-    }
-  };
-
-  const handleSelect = (key: FilterKey, value: string | undefined) => {
-    onFiltersChange({ ...filters, [key]: value });
-    setActiveDropdown(null);
-  };
-
-  const filterKeys: FilterKey[] = ["year", "matchType", "seasonId"];
+  const seasonOptions = availableSeasons.map((s) => ({
+    key: s.id,
+    label: s.name,
+  }));
 
   return (
     <View style={styles.container}>
-      {filterKeys.map((key) => (
-        <TouchableOpacity
-          key={key}
-          style={styles.filterButton}
-          onPress={() => setActiveDropdown(activeDropdown === key ? null : key)}
-        >
-          <Text style={styles.filterText}>{getDisplayLabel(key)} ▼</Text>
-        </TouchableOpacity>
-      ))}
-
-      {activeDropdown && (
-        <Modal
-          transparent
-          animationType="fade"
-          onRequestClose={() => setActiveDropdown(null)}
-        >
-          <TouchableOpacity
-            style={styles.overlay}
-            activeOpacity={1}
-            onPress={() => setActiveDropdown(null)}
-          >
-            <View style={styles.dropdown}>
-              <FlatList
-                data={getOptions(activeDropdown)}
-                keyExtractor={(item) => item.value ?? "none"}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.dropdownItem}
-                    onPress={() => handleSelect(activeDropdown, item.value)}
-                  >
-                    <Text
-                      style={[
-                        styles.dropdownText,
-                        filters[activeDropdown] === item.value &&
-                          styles.dropdownTextActive,
-                      ]}
-                    >
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              />
-            </View>
-          </TouchableOpacity>
-        </Modal>
+      <FilterDropdown
+        label="年度"
+        value={filters.year}
+        options={yearOptions}
+        onSelect={(v) =>
+          onFiltersChange({ ...filters, year: v === "all" ? undefined : v })
+        }
+        isOpen={activeFilter === "year"}
+        onToggle={() => toggleFilter("year")}
+      />
+      <FilterDropdown
+        label="種別"
+        value={filters.matchType}
+        options={MATCH_TYPE_OPTIONS}
+        onSelect={(v) => onFiltersChange({ ...filters, matchType: v })}
+        isOpen={activeFilter === "matchType"}
+        onToggle={() => toggleFilter("matchType")}
+      />
+      {seasonOptions.length > 0 && (
+        <FilterDropdown
+          label="シーズン"
+          value={filters.seasonId}
+          options={seasonOptions}
+          onSelect={(v) => onFiltersChange({ ...filters, seasonId: v })}
+          isOpen={activeFilter === "seasonId"}
+          onToggle={() => toggleFilter("seasonId")}
+        />
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flexDirection: "row", gap: 6, paddingVertical: 8 },
-  filterButton: {
-    backgroundColor: "#111",
-    borderWidth: 1,
-    borderColor: "#333",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 6,
+  container: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+    paddingVertical: 12,
   },
-  filterText: { color: "#aaa", fontSize: 11 },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
+  button: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 4,
+    borderWidth: 1,
+    borderColor: "#71717b",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  buttonText: {
+    color: "#F4F4F4",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  overlayBg: {
+    position: "absolute" as const,
+    top: -500,
+    left: -500,
+    right: -500,
+    bottom: -500,
+    zIndex: 99,
   },
   dropdown: {
-    backgroundColor: "#222",
-    borderRadius: 12,
-    width: 200,
-    maxHeight: 300,
-    padding: 8,
+    position: "absolute",
+    top: 36,
+    left: 0,
+    zIndex: 100,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 10,
+    paddingVertical: 4,
+    minWidth: 160,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  dropdownItem: { paddingVertical: 10, paddingHorizontal: 12 },
-  dropdownText: { color: "#ccc", fontSize: 14 },
-  dropdownTextActive: { color: "#f59e0b", fontWeight: "700" },
+  dropdownItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  dropdownItemActive: {
+    backgroundColor: "#4A4A4A",
+  },
+  dropdownText: {
+    color: "#F4F4F4",
+    fontSize: 14,
+  },
+  dropdownTextActive: {
+    color: "#d08000",
+  },
 });

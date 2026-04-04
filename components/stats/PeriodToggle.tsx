@@ -32,7 +32,7 @@ export const PeriodToggle = ({ value, onChange }: PeriodToggleProps) => (
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: "#111",
+    backgroundColor: "#3A3A3A",
     borderRadius: 8,
     padding: 2,
     gap: 2,
@@ -43,14 +43,14 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   optionActive: {
-    backgroundColor: "#f59e0b",
+    backgroundColor: "#d08000",
   },
   label: {
-    fontSize: 11,
-    color: "#666",
+    fontSize: 12,
+    color: "#A1A1AA",
     fontWeight: "600",
   },
   labelActive: {
-    color: "#000",
+    color: "#F4F4F4",
   },
 });

@@ -4,6 +4,7 @@ import {
   getPlateAppearanceBreakdown,
   getBattingStatsTable,
   getPitchingStatsTable,
+  getEraTrend,
   getGameSummary,
 } from "../services/statsService";
 import type { StatsFilters } from "../types/profile";
@@ -21,16 +22,32 @@ export const usePlateAppearanceBreakdown = (filters: StatsFilters) =>
     queryFn: () => getPlateAppearanceBreakdown(filters),
   });
 
-export const useBattingStatsTable = (period: StatsPeriod, year?: string) =>
+export const useBattingStatsTable = (
+  period: StatsPeriod,
+  year?: string,
+  seasonId?: string,
+) =>
   useQuery({
-    queryKey: ["battingTable", period, year],
-    queryFn: () => getBattingStatsTable(period, year),
+    queryKey: ["battingTable", period, year, seasonId],
+    queryFn: () => getBattingStatsTable(period, year, seasonId),
   });
 
-export const usePitchingStatsTable = (period: StatsPeriod, year?: string) =>
+export const usePitchingStatsTable = (
+  period: StatsPeriod,
+  year?: string,
+  seasonId?: string,
+) =>
   useQuery({
-    queryKey: ["pitchingTable", period, year],
-    queryFn: () => getPitchingStatsTable(period, year),
+    queryKey: ["pitchingTable", period, year, seasonId],
+    queryFn: () => getPitchingStatsTable(period, year, seasonId),
+  });
+
+export const useEraTrend = (year?: string, seasonId?: string, enabled = true) =>
+  useQuery({
+    queryKey: ["eraTrend", year, seasonId],
+    queryFn: () => getEraTrend(year, seasonId),
+    enabled,
+    staleTime: 0,
   });
 
 export const useGameSummary = (

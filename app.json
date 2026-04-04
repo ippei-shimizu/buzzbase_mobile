@@ -21,7 +21,8 @@
         "NSCameraUsageDescription": "プロフィール画像の撮影に使用します",
         "NSPhotoLibraryUsageDescription": "プロフィール画像の選択に使用します",
         "ITSAppUsesNonExemptEncryption": false,
-        "CFBundleDevelopmentRegion": "ja"
+        "CFBundleDevelopmentRegion": "ja",
+        "UIDesignRequiresCompatibility": true
       }
     },
     "android": {
