@@ -17,7 +17,8 @@ const APP_STORE_URL = "https://apps.apple.com/jp/app/buzz-base/id6761011816";
 export default function ShareInviteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const groupId = id ? Number(id) : undefined;
-  const { getOrCreateInviteLink, isPending, data } = useGetOrCreateInviteLink();
+  const { getOrCreateInviteLink, isPending, isError, data } =
+    useGetOrCreateInviteLink();
 
   const fetchInviteLink = useCallback(() => {
     if (groupId) {
@@ -42,6 +43,17 @@ export default function ShareInviteScreen() {
 
     await Share.share({ message });
   };
+
+  if (isError) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.errorText}>招待コードの取得に失敗しました</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchInviteLink}>
+          <Text style={styles.retryButtonText}>再試行</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   if (isPending || !data) {
     return (
@@ -89,6 +101,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#2E2E2E",
+  },
+  errorText: {
+    color: "#A1A1AA",
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  retryButton: {
+    borderWidth: 1,
+    borderColor: "#d08000",
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+  },
+  retryButtonText: {
+    color: "#d08000",
+    fontSize: 14,
+    fontWeight: "600",
   },
   groupName: {
     color: "#F4F4F4",

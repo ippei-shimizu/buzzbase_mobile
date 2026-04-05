@@ -113,6 +113,7 @@ export const useGetOrCreateInviteLink = () => {
   return {
     getOrCreateInviteLink: mutation.mutateAsync,
     isPending: mutation.isPending,
+    isError: mutation.isError,
     data: mutation.data,
   };
 };

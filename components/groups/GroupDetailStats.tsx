@@ -74,6 +74,7 @@ function buildRanking(
   users: GroupUser[],
   dataArrays: Record<string, number | string | null>[],
   key: string,
+  inverse = false,
 ): RankedUser[] {
   const ranked = users.map((user) => {
     const data = findUserData(dataArrays, user.id);
@@ -85,25 +86,11 @@ function buildRanking(
   });
   return ranked
     .filter((r) => r.value !== null)
-    .sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
-}
-
-function buildInverseRanking(
-  users: GroupUser[],
-  dataArrays: Record<string, number | string | null>[],
-  key: string,
-): RankedUser[] {
-  const ranked = users.map((user) => {
-    const data = findUserData(dataArrays, user.id);
-    const raw = data?.[key];
-    return {
-      user,
-      value: typeof raw === "number" ? raw : null,
-    };
-  });
-  return ranked
-    .filter((r) => r.value !== null)
-    .sort((a, b) => (a.value ?? 0) - (b.value ?? 0));
+    .sort((a, b) =>
+      inverse
+        ? (a.value ?? 0) - (b.value ?? 0)
+        : (b.value ?? 0) - (a.value ?? 0),
+    );
 }
 
 function formatValue(value: number | null, decimals: number): string {
@@ -186,9 +173,12 @@ export const GroupDetailStats = ({
     return (Array.isArray(src) ? src : []).flat().filter(Boolean);
   };
 
-  const ranking = category.inverse
-    ? buildInverseRanking(detail.accepted_users, getDataSource(), category.key)
-    : buildRanking(detail.accepted_users, getDataSource(), category.key);
+  const ranking = buildRanking(
+    detail.accepted_users,
+    getDataSource(),
+    category.key,
+    category.inverse,
+  );
 
   const handleTabChange = (tab: "batting" | "pitching") => {
     setActiveTab(tab);
