@@ -6,6 +6,8 @@ import {
   inviteMembers,
   acceptInvitation,
   declineInvitation,
+  getOrCreateInviteLink,
+  acceptInviteLink,
 } from "../services/groupService";
 
 export const useCreateGroup = () => {
@@ -99,6 +101,35 @@ export const useAcceptInvitation = () => {
 
   return {
     acceptInvitation: mutation.mutateAsync,
+    isAccepting: mutation.isPending,
+  };
+};
+
+export const useGetOrCreateInviteLink = () => {
+  const mutation = useMutation({
+    mutationFn: getOrCreateInviteLink,
+  });
+
+  return {
+    getOrCreateInviteLink: mutation.mutateAsync,
+    isPending: mutation.isPending,
+    data: mutation.data,
+  };
+};
+
+export const useAcceptInviteLink = () => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: acceptInviteLink,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+
+  return {
+    acceptInviteLink: mutation.mutateAsync,
     isAccepting: mutation.isPending,
   };
 };

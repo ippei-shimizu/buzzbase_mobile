@@ -33,6 +33,10 @@ export default function GroupsTabScreen() {
     );
   }
 
+  const handleJoin = () => {
+    router.push("/(groups)/join");
+  };
+
   const banner = (
     <View style={styles.banner}>
       <Text style={styles.bannerTitle}>友達とグループを作成しよう！</Text>
@@ -44,6 +48,14 @@ export default function GroupsTabScreen() {
         <Ionicons name="add-circle" size={18} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
+  );
+
+  const joinBanner = (
+    <TouchableOpacity style={styles.joinButton} onPress={handleJoin}>
+      <Ionicons name="ticket-outline" size={18} color="#d08000" />
+      <Text style={styles.joinButtonText}>招待コードでグループに参加</Text>
+      <Ionicons name="chevron-forward" size={16} color="#71717A" />
+    </TouchableOpacity>
   );
 
   const groupListHeader =
@@ -65,6 +77,7 @@ export default function GroupsTabScreen() {
         ListHeaderComponent={
           <>
             {banner}
+            {joinBanner}
             {groupListHeader}
           </>
         }
@@ -128,6 +141,24 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "700",
+  },
+  joinButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "#27272a",
+    borderWidth: 1,
+    borderColor: "#3f3f46",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  joinButtonText: {
+    flex: 1,
+    color: "#F4F4F4",
+    fontSize: 14,
+    fontWeight: "600",
   },
   sectionTitle: {
     color: "#F4F4F4",

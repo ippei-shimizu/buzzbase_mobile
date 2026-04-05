@@ -28,6 +28,25 @@ export interface GroupMembers {
   group_creator_id: number;
 }
 
+export interface InviteLinkResponse {
+  code: string;
+  group_name: string;
+  group_id: number;
+}
+
+export interface InviteLinkInfo {
+  group: {
+    id: number;
+    name: string;
+    icon: string | null;
+    member_count: number;
+  };
+  inviter: {
+    name: string;
+    image: { url: string | null };
+  };
+}
+
 export interface FollowingUser {
   id: number;
   name: string;

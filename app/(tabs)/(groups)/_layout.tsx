@@ -16,6 +16,8 @@ export default function GroupsTabLayout() {
       <Stack.Screen name="edit" options={{ title: "グループ編集" }} />
       <Stack.Screen name="members" options={{ title: "メンバー" }} />
       <Stack.Screen name="invite" options={{ title: "メンバー招待" }} />
+      <Stack.Screen name="share-invite" options={{ title: "招待コード" }} />
+      <Stack.Screen name="join" options={{ title: "招待コードで参加" }} />
     </Stack>
   );
 }
