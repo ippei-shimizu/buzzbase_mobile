@@ -22,7 +22,8 @@ export default function GroupDetailScreen() {
   const [selectedYear, setSelectedYear] = useState("通算");
   const [selectedMatchType, setSelectedMatchType] = useState("全て");
   const year = selectedYear === "通算" ? undefined : selectedYear;
-  const matchType = selectedMatchType === "全て" ? undefined : selectedMatchType;
+  const matchType =
+    selectedMatchType === "全て" ? undefined : selectedMatchType;
   const { data, isLoading, refetch, isRefreshing } = useGroupDetail(
     groupId,
     year,
