@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useProfileStats } from "@hooks/useProfileStats";
 import { useMySeasons } from "@hooks/useSeasons";
+import { formatRate, formatRate2 } from "@utils/formatStats";
 import {
   normalizeBattingStats,
   normalizePitchingStats,
@@ -27,6 +28,8 @@ interface StatsOverviewProps {
 
 function formatStat(value: number | undefined | null, decimals = 3): string {
   if (value == null) return "-";
+  if (decimals === 3) return formatRate(value);
+  if (decimals === 2) return formatRate2(value);
   return value.toFixed(decimals);
 }
 

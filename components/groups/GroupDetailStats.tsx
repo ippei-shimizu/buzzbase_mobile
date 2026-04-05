@@ -11,6 +11,7 @@ import {
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
 import { FilterChip } from "@components/ui/FilterChip";
 import { API_BASE_URL } from "@constants/api";
+import { formatRate, formatRate2 } from "@utils/formatStats";
 
 const MATCH_TYPE_OPTIONS = [
   { key: "全て", label: "全て" },
@@ -108,11 +109,9 @@ function buildInverseRanking(
 function formatValue(value: number | null, decimals: number): string {
   if (value === null) return "-";
   if (decimals === 0) return String(value);
-  const formatted = value.toFixed(decimals);
-  if (decimals === 3 && value < 1 && value > -1) {
-    return formatted.replace(/^0/, "");
-  }
-  return formatted;
+  if (decimals === 3) return formatRate(value);
+  if (decimals === 2) return formatRate2(value);
+  return value.toFixed(decimals);
 }
 
 const RankingRow = ({

@@ -1,6 +1,7 @@
 import type { WinLossSummary } from "../../types/stats";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { formatRate } from "@utils/formatStats";
 
 interface WinLossCardsProps {
   summary: WinLossSummary;
@@ -36,9 +37,7 @@ export const WinLossCards = ({ summary }: WinLossCardsProps) => {
       </View>
       <View style={styles.rateRow}>
         <Text style={styles.rateLabel}>{total}試合 / 勝率</Text>
-        <Text style={styles.rateValue}>
-          {summary.win_rate.toFixed(3).replace(/^0/, "")}
-        </Text>
+        <Text style={styles.rateValue}>{formatRate(summary.win_rate)}</Text>
       </View>
       <View style={styles.bar}>
         {winPct > 0 && (
