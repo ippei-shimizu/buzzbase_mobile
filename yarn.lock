@@ -3672,6 +3672,11 @@ expo-asset@~55.0.8:
     "@expo/image-utils" "^0.8.12"
     expo-constants "~55.0.7"
 
+expo-clipboard@^55.0.11:
+  version "55.0.11"
+  resolved "https://registry.yarnpkg.com/expo-clipboard/-/expo-clipboard-55.0.11.tgz#978c0004a2584b9f58317a2f1ea0e75dd5a126c6"
+  integrity sha512-l2zbhVdHamtK4U34zY/NpF0dd1vMcJnxtZz2CjcOudhyB9dlpuAcZMkgbELs9YTbnKWPF8+wRPKosDu8RPCUIw==
+
 expo-constants@^55.0.7, expo-constants@~55.0.7:
   version "55.0.7"
   resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-55.0.7.tgz#c9fcb4b2f2a6eb06a760bdd4f4425ba8f3f937b9"

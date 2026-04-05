@@ -1,6 +1,7 @@
 import type { OpponentRecord as OpponentRecordType } from "../../types/stats";
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { formatRate } from "@utils/formatStats";
 
 interface OpponentRecordProps {
   records: OpponentRecordType[];
@@ -19,7 +20,7 @@ export const OpponentRecordList = ({ records }: OpponentRecordProps) => {
         {displayed.map((r) => {
           const winRate =
             r.wins + r.losses > 0
-              ? (r.wins / (r.wins + r.losses)).toFixed(3).replace(/^0/, "")
+              ? formatRate(r.wins / (r.wins + r.losses))
               : ".000";
           return (
             <View key={r.team_name} style={styles.item}>

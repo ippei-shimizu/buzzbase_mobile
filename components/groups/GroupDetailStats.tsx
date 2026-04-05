@@ -1,11 +1,31 @@
 import type { GroupDetail, GroupUser } from "../../types/group";
 import React, { useState } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
+import { FilterChip } from "@components/ui/FilterChip";
 import { API_BASE_URL } from "@constants/api";
+import { formatRate, formatRate2 } from "@utils/formatStats";
+
+const MATCH_TYPE_OPTIONS = [
+  { key: "全て", label: "全て" },
+  { key: "regular", label: "公式戦" },
+  { key: "open", label: "オープン戦" },
+];
 
 interface GroupDetailStatsProps {
   detail: GroupDetail;
+  selectedYear: string;
+  selectedMatchType: string;
+  availableYears: number[];
+  onYearChange: (year: string) => void;
+  onMatchTypeChange: (matchType: string) => void;
 }
 
 interface Category {
@@ -54,6 +74,7 @@ function buildRanking(
   users: GroupUser[],
   dataArrays: Record<string, number | string | null>[],
   key: string,
+  inverse = false,
 ): RankedUser[] {
   const ranked = users.map((user) => {
     const data = findUserData(dataArrays, user.id);
@@ -65,30 +86,19 @@ function buildRanking(
   });
   return ranked
     .filter((r) => r.value !== null)
-    .sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
-}
-
-function buildInverseRanking(
-  users: GroupUser[],
-  dataArrays: Record<string, number | string | null>[],
-  key: string,
-): RankedUser[] {
-  const ranked = users.map((user) => {
-    const data = findUserData(dataArrays, user.id);
-    const raw = data?.[key];
-    return {
-      user,
-      value: typeof raw === "number" ? raw : null,
-    };
-  });
-  return ranked
-    .filter((r) => r.value !== null)
-    .sort((a, b) => (a.value ?? 0) - (b.value ?? 0));
+    .sort((a, b) =>
+      inverse
+        ? (a.value ?? 0) - (b.value ?? 0)
+        : (b.value ?? 0) - (a.value ?? 0),
+    );
 }
 
 function formatValue(value: number | null, decimals: number): string {
   if (value === null) return "-";
-  return decimals > 0 ? value.toFixed(decimals) : String(value);
+  if (decimals === 0) return String(value);
+  if (decimals === 3) return formatRate(value);
+  if (decimals === 2) return formatRate2(value);
+  return value.toFixed(decimals);
 }
 
 const RankingRow = ({
@@ -133,7 +143,14 @@ const RankingRow = ({
   );
 };
 
-export const GroupDetailStats = ({ detail }: GroupDetailStatsProps) => {
+export const GroupDetailStats = ({
+  detail,
+  selectedYear,
+  selectedMatchType,
+  availableYears,
+  onYearChange,
+  onMatchTypeChange,
+}: GroupDetailStatsProps) => {
   const [activeTab, setActiveTab] = useState<"batting" | "pitching">("batting");
   const [selectedCategory, setSelectedCategory] = useState(0);
 
@@ -156,9 +173,12 @@ export const GroupDetailStats = ({ detail }: GroupDetailStatsProps) => {
     return (Array.isArray(src) ? src : []).flat().filter(Boolean);
   };
 
-  const ranking = category.inverse
-    ? buildInverseRanking(detail.accepted_users, getDataSource(), category.key)
-    : buildRanking(detail.accepted_users, getDataSource(), category.key);
+  const ranking = buildRanking(
+    detail.accepted_users,
+    getDataSource(),
+    category.key,
+    category.inverse,
+  );
 
   const handleTabChange = (tab: "batting" | "pitching") => {
     setActiveTab(tab);
@@ -168,6 +188,35 @@ export const GroupDetailStats = ({ detail }: GroupDetailStatsProps) => {
   return (
     <View>
       <Text style={styles.sectionTitle}>個人成績ランキング</Text>
+
+      {/* Filters */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterContainer}
+        contentContainerStyle={styles.filterContent}
+      >
+        <FilterChip
+          label="年度"
+          value={selectedYear}
+          defaultValue="通算"
+          options={[
+            { key: "通算", label: "通算" },
+            ...availableYears.map((y) => ({
+              key: String(y),
+              label: `${y}年`,
+            })),
+          ]}
+          onChange={onYearChange}
+        />
+        <FilterChip
+          label="種別"
+          value={selectedMatchType}
+          defaultValue="全て"
+          options={MATCH_TYPE_OPTIONS}
+          onChange={onMatchTypeChange}
+        />
+      </ScrollView>
 
       {/* Tabs */}
       <View style={styles.tabContainer}>
@@ -245,7 +294,13 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 18,
     fontWeight: "700",
-    marginBottom: 16,
+    marginBottom: 12,
+  },
+  filterContainer: {
+    marginBottom: 12,
+  },
+  filterContent: {
+    gap: 8,
   },
   tabContainer: {
     flexDirection: "row",

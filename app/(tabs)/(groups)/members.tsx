@@ -88,6 +88,13 @@ export default function MembersScreen() {
         <Text style={styles.inviteButtonText}>メンバーを招待</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity
+        style={styles.shareInviteButton}
+        onPress={() => router.push(`/(groups)/share-invite?id=${id}`)}
+      >
+        <Text style={styles.shareInviteButtonText}>招待コードで共有</Text>
+      </TouchableOpacity>
+
       {isCreator && (
         <View style={styles.creatorActions}>
           <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
@@ -136,6 +143,19 @@ const styles = StyleSheet.create({
   },
   inviteButtonText: {
     color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  shareInviteButton: {
+    borderWidth: 1,
+    borderColor: "#d08000",
+    borderRadius: 8,
+    padding: 14,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  shareInviteButtonText: {
+    color: "#d08000",
     fontSize: 16,
     fontWeight: "600",
   },

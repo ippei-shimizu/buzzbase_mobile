@@ -73,7 +73,7 @@ export default function GroupCreateScreen() {
         await inviteMembers({ id: group.id, userIds: selectedUserIds });
       }
 
-      router.replace(`/(groups)/${group.id}`);
+      router.replace(`/(groups)/share-invite?id=${group.id}`);
     } catch {
       Alert.alert("エラー", "グループの作成に失敗しました");
     }
@@ -112,7 +112,8 @@ export default function GroupCreateScreen() {
         <View style={styles.inviteSection}>
           <Text style={styles.inviteTitle}>メンバーを選択</Text>
           <Text style={styles.inviteDescription}>
-            フォローしているユーザーのみ招待可能
+            フォローしているユーザーのみ招待可能{"\n"}
+            アプリ未登録の人は作成後に招待コードで招待できます
           </Text>
           {isLoadingUsers ? (
             <ActivityIndicator

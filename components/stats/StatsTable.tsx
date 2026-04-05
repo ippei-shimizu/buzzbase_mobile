@@ -1,6 +1,7 @@
 import type { BattingStatsRow, PitchingStatsRow } from "../../types/stats";
 import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { formatRate, formatRate2 } from "@utils/formatStats";
 
 interface Column<T> {
   key: keyof T;
@@ -16,12 +17,20 @@ interface StatsTableProps<T> {
   labelKey: keyof T;
 }
 
-const fmt3 = (v: number) => v.toFixed(3).replace(/^0/, "");
-const fmt2 = (v: number) => v.toFixed(2);
+const fmt3 = (v: number) => formatRate(v);
+const fmt2 = (v: number) => formatRate2(v);
 const fmtInt = (v: number) => String(v);
 
+const VERTICAL_CHAR_MAP: Record<string, string> = {
+  ー: "｜",
+  "/": "／",
+};
+
 const toVertical = (text: string) =>
-  text.replace(/\//g, "／").split("").join("\n");
+  text
+    .split("")
+    .map((c) => VERTICAL_CHAR_MAP[c] ?? c)
+    .join("\n");
 
 export const BATTING_COLUMNS: Column<BattingStatsRow>[] = [
   {

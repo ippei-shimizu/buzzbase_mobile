@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   ScrollView,
   View,
@@ -19,7 +19,16 @@ export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const groupId = id ? Number(id) : undefined;
-  const { data, isLoading, refetch, isRefreshing } = useGroupDetail(groupId);
+  const [selectedYear, setSelectedYear] = useState("通算");
+  const [selectedMatchType, setSelectedMatchType] = useState("全て");
+  const year = selectedYear === "通算" ? undefined : selectedYear;
+  const matchType =
+    selectedMatchType === "全て" ? undefined : selectedMatchType;
+  const { data, isLoading, refetch, isRefreshing } = useGroupDetail(
+    groupId,
+    year,
+    matchType,
+  );
 
   if (isLoading || !data) {
     return (
@@ -75,7 +84,14 @@ export default function GroupDetailScreen() {
             <Text style={styles.memberCount}>{accepted_users.length}人</Text>
           </View>
         </View>
-        <GroupDetailStats detail={data} />
+        <GroupDetailStats
+          detail={data}
+          selectedYear={selectedYear}
+          selectedMatchType={selectedMatchType}
+          availableYears={data.available_years ?? []}
+          onYearChange={setSelectedYear}
+          onMatchTypeChange={setSelectedMatchType}
+        />
       </ScrollView>
     </>
   );

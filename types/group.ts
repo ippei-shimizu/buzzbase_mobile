@@ -19,12 +19,32 @@ export interface GroupDetail {
   batting_stats: Record<string, number | null>[];
   pitching_aggregate: Record<string, number | null>[];
   pitching_stats: Record<string, number | null>[];
+  available_years?: number[];
 }
 
 export interface GroupMembers {
   group: Group;
   accepted_users: GroupUser[];
   group_creator_id: number;
+}
+
+export interface InviteLinkResponse {
+  code: string;
+  group_name: string;
+  group_id: number;
+}
+
+export interface InviteLinkInfo {
+  group: {
+    id: number;
+    name: string;
+    icon: string | null;
+    member_count: number;
+  };
+  inviter: {
+    name: string;
+    image: { url: string | null };
+  };
 }
 
 export interface FollowingUser {

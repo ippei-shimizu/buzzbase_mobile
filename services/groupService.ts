@@ -4,6 +4,8 @@ import type {
   GroupDetail,
   GroupMembers,
   FollowingUser,
+  InviteLinkResponse,
+  InviteLinkInfo,
 } from "../types/group";
 
 export const getGroups = async (): Promise<Group[]> => {
@@ -11,8 +13,18 @@ export const getGroups = async (): Promise<Group[]> => {
   return response.data;
 };
 
-export const getGroupDetail = async (id: number): Promise<GroupDetail> => {
-  const response = await axiosInstance.get<GroupDetail>(`/groups/${id}`);
+export const getGroupDetail = async (
+  id: number,
+  year?: string,
+  matchType?: string,
+): Promise<GroupDetail> => {
+  const params = new URLSearchParams();
+  if (year) params.append("year", year);
+  if (matchType) params.append("match_type", matchType);
+  const query = params.toString();
+  const response = await axiosInstance.get<GroupDetail>(
+    `/groups/${id}${query ? `?${query}` : ""}`,
+  );
   return response.data;
 };
 
@@ -58,6 +70,34 @@ export const acceptInvitation = async (groupId: number): Promise<void> => {
 
 export const declineInvitation = async (groupId: number): Promise<void> => {
   await axiosInstance.post(`/group_invitations/${groupId}/declined_invitation`);
+};
+
+export const getOrCreateInviteLink = async (
+  groupId: number,
+): Promise<InviteLinkResponse> => {
+  const response = await axiosInstance.post<InviteLinkResponse>(
+    `/groups/${groupId}/invite_link`,
+  );
+  return response.data;
+};
+
+export const getInviteLinkInfo = async (
+  code: string,
+): Promise<InviteLinkInfo> => {
+  const response = await axiosInstance.get<InviteLinkInfo>(
+    `/invite_links/${code}`,
+  );
+  return response.data;
+};
+
+export const acceptInviteLink = async (
+  code: string,
+): Promise<{ success: boolean; group_id: number }> => {
+  const response = await axiosInstance.post<{
+    success: boolean;
+    group_id: number;
+  }>(`/invite_links/${code}/accept`);
+  return response.data;
 };
 
 export const getFollowingUsers = async (

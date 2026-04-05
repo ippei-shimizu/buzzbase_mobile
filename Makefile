@@ -1,4 +1,4 @@
-.PHONY: start ios android lint format typecheck install prebuild help
+.PHONY: start ios android lint lint-fix format typecheck install prebuild help
 
 help:
 	@echo "使用可能なコマンド:"
@@ -6,6 +6,7 @@ help:
 	@echo "  make ios             - iOSシミュレータで起動"
 	@echo "  make android         - Androidエミュレータで起動"
 	@echo "  make lint            - ESLintでコードをチェック"
+	@echo "  make lint-fix        - ESLintで自動修正"
 	@echo "  make format          - Prettierでコードフォーマット"
 	@echo "  make typecheck       - TypeScriptの型チェックを実行"
 	@echo "  make install         - 依存関係をインストール"
@@ -22,6 +23,9 @@ android:
 
 lint:
 	yarn lint
+
+lint-fix:
+	npx expo lint --fix
 
 format:
 	yarn format
