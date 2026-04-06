@@ -63,4 +63,5 @@ export const useGameSummary = (
   useQuery({
     queryKey: ["gameSummary", year, matchType, seasonId],
     queryFn: () => getGameSummary(year, matchType, seasonId),
+    placeholderData: keepPreviousData,
   });

@@ -124,18 +124,20 @@ function FetchingOverlay({
   children: React.ReactNode;
 }) {
   return (
-    <View style={{ opacity: isFetching ? 0.5 : 1 }}>
-      {children}
+    <View>
+      <View style={{ opacity: isFetching ? 0.5 : 1 }}>{children}</View>
       {isFetching && (
-        <ActivityIndicator
-          size="small"
-          color="#d08000"
-          style={{
-            position: "absolute",
-            top: "50%",
-            alignSelf: "center",
-          }}
-        />
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <ActivityIndicator size="small" color="#d08000" />
+          </View>
+        </View>
       )}
     </View>
   );
@@ -224,19 +226,18 @@ export default function StatsScreen() {
     pitchingTable.isLoading ||
     eraTrend.isLoading;
 
-  const isRefreshing =
-    hitDirections.isFetching ||
-    paBreakdown.isFetching ||
-    battingTable.isFetching ||
-    pitchingTable.isFetching ||
-    eraTrend.isFetching;
+  const [manualRefreshing, setManualRefreshing] = useState(false);
 
-  const onRefresh = useCallback(() => {
-    hitDirections.refetch();
-    paBreakdown.refetch();
-    battingTable.refetch();
-    pitchingTable.refetch();
-    eraTrend.refetch();
+  const onRefresh = useCallback(async () => {
+    setManualRefreshing(true);
+    await Promise.all([
+      hitDirections.refetch(),
+      paBreakdown.refetch(),
+      battingTable.refetch(),
+      pitchingTable.refetch(),
+      eraTrend.refetch(),
+    ]);
+    setManualRefreshing(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     hitDirections.refetch,
@@ -305,7 +306,7 @@ export default function StatsScreen() {
       style={styles.container}
       refreshControl={
         <RefreshControl
-          refreshing={isRefreshing}
+          refreshing={manualRefreshing}
           onRefresh={onRefresh}
           tintColor="#d08000"
         />
