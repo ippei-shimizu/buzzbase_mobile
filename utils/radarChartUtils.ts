@@ -81,13 +81,7 @@ export function normalizePitchingStats(pitching: PitchingStats): RadarAxis[] {
   const { k_per_nine, bb_per_nine, era, whip, win_percentage } =
     pitching.calculated;
 
-  if (
-    k_per_nine === 0 &&
-    bb_per_nine === 0 &&
-    era === 0 &&
-    whip === 0 &&
-    win_percentage === 0
-  ) {
+  if (!pitching.aggregate || pitching.aggregate.number_of_appearances === 0) {
     return [];
   }
 
