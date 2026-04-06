@@ -1,7 +1,13 @@
 import type { GameResult } from "../../../types/gameResult";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useRef, useState, useMemo, useEffect } from "react";
+import React, {
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+} from "react";
 import {
   View,
   Text,
@@ -200,6 +206,12 @@ export default function GameResultsScreen() {
     summaryMatchType,
     summarySeasonId,
   );
+  const [summaryRefreshing, setSummaryRefreshing] = useState(false);
+  const onSummaryRefresh = useCallback(async () => {
+    setSummaryRefreshing(true);
+    await gameSummary.refetch();
+    setSummaryRefreshing(false);
+  }, [gameSummary.refetch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   useEffect(() => {
@@ -300,7 +312,7 @@ export default function GameResultsScreen() {
     );
   }
 
-  const headerComponent = (
+  const listFilterHeader = (
     <View style={styles.filterSection}>
       {/* 試合記録ボタン */}
       <TouchableOpacity
@@ -317,6 +329,7 @@ export default function GameResultsScreen() {
           gap: 8,
           flexWrap: "wrap",
           marginBottom: 12,
+          zIndex: 100,
         }}
       >
         <FilterDropdown
@@ -355,7 +368,14 @@ export default function GameResultsScreen() {
       </View>
 
       {/* 検索 + ソート */}
-      <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+      <View
+        style={{
+          flexDirection: "row",
+          gap: 8,
+          alignItems: "center",
+          zIndex: 1,
+        }}
+      >
         <View style={styles.searchBox}>
           <Ionicons name="search" size={16} color="#71717A" />
           <TextInput
@@ -435,8 +455,8 @@ export default function GameResultsScreen() {
           contentContainerStyle={styles.content}
           refreshControl={
             <RefreshControl
-              refreshing={gameSummary.isFetching}
-              onRefresh={() => gameSummary.refetch()}
+              refreshing={summaryRefreshing}
+              onRefresh={onSummaryRefresh}
               tintColor="#d08000"
             />
           }
@@ -486,54 +506,60 @@ export default function GameResultsScreen() {
               ? ` / ${seasons.find((s) => String(s.id) === summarySeasonId)?.name ?? ""}`
               : ""}
           </Text>
-          {gameSummary.isLoading ? (
+          {!gameSummary.data && gameSummary.isLoading ? (
             <View style={styles.center}>
               <ActivityIndicator size="large" color="#d08000" />
             </View>
           ) : gameSummary.data ? (
-            <GameResultSummary summary={gameSummary.data} />
+            <View style={{ opacity: gameSummary.isFetching ? 0.5 : 1 }}>
+              <GameResultSummary summary={gameSummary.data} />
+            </View>
           ) : null}
         </ScrollView>
       )}
 
       {/* List Tab */}
       {screenTab === "list" && (
-        <FlatList
-          ref={flatListRef}
-          data={filteredResults}
-          keyExtractor={(item) => String(item.game_result_id)}
-          renderItem={({ item }) => (
-            <View style={styles.cardContainer}>
-              <GameResultListItem game={item} onPress={handlePressItem} />
-            </View>
-          )}
-          ListHeaderComponent={headerComponent}
-          contentContainerStyle={[
-            styles.content,
-            keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
-          ]}
-          onEndReached={handleEndReached}
-          onEndReachedThreshold={0.5}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={refetch}
-              tintColor="#d08000"
-            />
-          }
-          ListFooterComponent={
-            isFetchingNextPage ? (
-              <View style={styles.footer}>
-                <ActivityIndicator color="#d08000" />
+        <View style={{ flex: 1 }}>
+          <View style={{ paddingHorizontal: 16, paddingTop: 16, zIndex: 100 }}>
+            {listFilterHeader}
+          </View>
+          <FlatList
+            ref={flatListRef}
+            data={filteredResults}
+            keyExtractor={(item) => String(item.game_result_id)}
+            renderItem={({ item }) => (
+              <View style={styles.cardContainer}>
+                <GameResultListItem game={item} onPress={handlePressItem} />
               </View>
-            ) : null
-          }
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>試合結果がありません</Text>
-          }
-        />
+            )}
+            contentContainerStyle={[
+              { paddingHorizontal: 16, paddingBottom: 32, flexGrow: 1 },
+              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
+            ]}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.5}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={refetch}
+                tintColor="#d08000"
+              />
+            }
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View style={styles.footer}>
+                  <ActivityIndicator color="#d08000" />
+                </View>
+              ) : null
+            }
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>試合結果がありません</Text>
+            }
+          />
+        </View>
       )}
     </View>
   );

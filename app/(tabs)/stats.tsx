@@ -116,6 +116,33 @@ function TableFilterDropdown({
   );
 }
 
+function FetchingOverlay({
+  isFetching,
+  children,
+}: {
+  isFetching: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <View>
+      <View style={{ opacity: isFetching ? 0.5 : 1 }}>{children}</View>
+      {isFetching && (
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <ActivityIndicator size="small" color="#d08000" />
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
+
 const tableFilterStyles = StyleSheet.create({
   button: {
     flexDirection: "row",
@@ -199,19 +226,18 @@ export default function StatsScreen() {
     pitchingTable.isLoading ||
     eraTrend.isLoading;
 
-  const isRefreshing =
-    hitDirections.isFetching ||
-    paBreakdown.isFetching ||
-    battingTable.isFetching ||
-    pitchingTable.isFetching ||
-    eraTrend.isFetching;
+  const [manualRefreshing, setManualRefreshing] = useState(false);
 
-  const onRefresh = useCallback(() => {
-    hitDirections.refetch();
-    paBreakdown.refetch();
-    battingTable.refetch();
-    pitchingTable.refetch();
-    eraTrend.refetch();
+  const onRefresh = useCallback(async () => {
+    setManualRefreshing(true);
+    await Promise.all([
+      hitDirections.refetch(),
+      paBreakdown.refetch(),
+      battingTable.refetch(),
+      pitchingTable.refetch(),
+      eraTrend.refetch(),
+    ]);
+    setManualRefreshing(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     hitDirections.refetch,
@@ -260,7 +286,14 @@ export default function StatsScreen() {
     activeTab === "batting" ? battingPeriod : pitchingPeriod;
   const showTableFilters = currentPeriod !== "yearly";
 
-  if (isLoading) {
+  const hasNoData =
+    !hitDirections.data &&
+    !paBreakdown.data &&
+    !battingTable.data &&
+    !pitchingTable.data &&
+    !eraTrend.data;
+
+  if (hasNoData && isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#d08000" />
@@ -273,7 +306,7 @@ export default function StatsScreen() {
       style={styles.container}
       refreshControl={
         <RefreshControl
-          refreshing={isRefreshing}
+          refreshing={manualRefreshing}
           onRefresh={onRefresh}
           tintColor="#d08000"
         />
@@ -332,19 +365,23 @@ export default function StatsScreen() {
       {activeTab === "batting" && (
         <View style={styles.content}>
           {hitDirections.data && (
-            <SprayChart
-              directions={hitDirections.data.directions}
-              homeRuns={hitDirections.data.home_runs}
-            />
+            <FetchingOverlay isFetching={hitDirections.isFetching}>
+              <SprayChart
+                directions={hitDirections.data.directions}
+                homeRuns={hitDirections.data.home_runs}
+              />
+            </FetchingOverlay>
           )}
           {paBreakdown.data && (
-            <PlateAppearanceDonut
-              breakdown={paBreakdown.data}
-              totalPlateAppearances={paBreakdown.data.reduce(
-                (sum, c) => sum + c.count,
-                0,
-              )}
-            />
+            <FetchingOverlay isFetching={paBreakdown.isFetching}>
+              <PlateAppearanceDonut
+                breakdown={paBreakdown.data}
+                totalPlateAppearances={paBreakdown.data.reduce(
+                  (sum, c) => sum + c.count,
+                  0,
+                )}
+              />
+            </FetchingOverlay>
           )}
           <View style={styles.tableHeader}>
             <Text style={styles.tableHeaderLabel}>打撃成績</Text>
@@ -376,11 +413,13 @@ export default function StatsScreen() {
             </View>
           )}
           {battingTable.data && (
-            <StatsTable
-              rows={battingTable.data}
-              columns={BATTING_COLUMNS}
-              labelKey="label"
-            />
+            <FetchingOverlay isFetching={battingTable.isFetching}>
+              <StatsTable
+                rows={battingTable.data}
+                columns={BATTING_COLUMNS}
+                labelKey="label"
+              />
+            </FetchingOverlay>
           )}
         </View>
       )}
@@ -389,7 +428,9 @@ export default function StatsScreen() {
       {activeTab === "pitching" && (
         <View style={styles.content}>
           {eraTrend.data && eraTrend.data.length > 0 && (
-            <EraTrendChart data={eraTrend.data} />
+            <FetchingOverlay isFetching={eraTrend.isFetching}>
+              <EraTrendChart data={eraTrend.data} />
+            </FetchingOverlay>
           )}
           <View style={styles.tableHeader}>
             <Text style={styles.tableHeaderLabel}>投球成績</Text>
@@ -421,11 +462,13 @@ export default function StatsScreen() {
             </View>
           )}
           {pitchingTable.data && (
-            <StatsTable
-              rows={pitchingTable.data}
-              columns={PITCHING_COLUMNS}
-              labelKey="label"
-            />
+            <FetchingOverlay isFetching={pitchingTable.isFetching}>
+              <StatsTable
+                rows={pitchingTable.data}
+                columns={PITCHING_COLUMNS}
+                labelKey="label"
+              />
+            </FetchingOverlay>
           )}
         </View>
       )}
