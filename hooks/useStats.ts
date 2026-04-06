@@ -1,4 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import type { StatsFilters } from "../types/profile";
+import type { StatsPeriod } from "../types/stats";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   getHitDirections,
   getPlateAppearanceBreakdown,
@@ -7,19 +9,19 @@ import {
   getEraTrend,
   getGameSummary,
 } from "../services/statsService";
-import type { StatsFilters } from "../types/profile";
-import type { StatsPeriod } from "../types/stats";
 
 export const useHitDirections = (filters: StatsFilters) =>
   useQuery({
     queryKey: ["hitDirections", filters],
     queryFn: () => getHitDirections(filters),
+    placeholderData: keepPreviousData,
   });
 
 export const usePlateAppearanceBreakdown = (filters: StatsFilters) =>
   useQuery({
     queryKey: ["paBreakdown", filters],
     queryFn: () => getPlateAppearanceBreakdown(filters),
+    placeholderData: keepPreviousData,
   });
 
 export const useBattingStatsTable = (
@@ -30,6 +32,7 @@ export const useBattingStatsTable = (
   useQuery({
     queryKey: ["battingTable", period, year, seasonId],
     queryFn: () => getBattingStatsTable(period, year, seasonId),
+    placeholderData: keepPreviousData,
   });
 
 export const usePitchingStatsTable = (
@@ -40,6 +43,7 @@ export const usePitchingStatsTable = (
   useQuery({
     queryKey: ["pitchingTable", period, year, seasonId],
     queryFn: () => getPitchingStatsTable(period, year, seasonId),
+    placeholderData: keepPreviousData,
   });
 
 export const useEraTrend = (year?: string, seasonId?: string, enabled = true) =>
@@ -48,6 +52,7 @@ export const useEraTrend = (year?: string, seasonId?: string, enabled = true) =>
     queryFn: () => getEraTrend(year, seasonId),
     enabled,
     staleTime: 0,
+    placeholderData: keepPreviousData,
   });
 
 export const useGameSummary = (
