@@ -4,7 +4,7 @@
  */
 export function formatRate(value: number): string {
   const formatted = value.toFixed(3);
-  if (value < 1 && value > -1) {
+  if (value !== 0 && value < 1 && value > -1) {
     return formatted.replace(/^0/, "");
   }
   return formatted;
@@ -16,7 +16,7 @@ export function formatRate(value: number): string {
  */
 export function formatRate2(value: number): string {
   const formatted = value.toFixed(2);
-  if (value < 1 && value > -1) {
+  if (value !== 0 && value < 1 && value > -1) {
     return formatted.replace(/^0/, "");
   }
   return formatted;
