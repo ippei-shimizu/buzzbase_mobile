@@ -51,7 +51,7 @@ export const signUp = async (data: SignUpData): Promise<void> => {
     password_confirmation: data.passwordConfirmation,
     confirm_success_url:
       process.env.EXPO_PUBLIC_CONFIRM_SUCCESS_URL ||
-      "http://localhost:8100/signin",
+      "buzzbase://confirmation-success",
   });
 };
 
@@ -61,6 +61,6 @@ export const resendConfirmation = async (email: string): Promise<void> => {
     email,
     redirect_url:
       process.env.EXPO_PUBLIC_CONFIRM_SUCCESS_URL ||
-      "http://localhost:8100/signin",
+      "buzzbase://confirmation-success",
   });
 };
