@@ -136,6 +136,17 @@ export const useGameRecord = () => {
       const userId = await resolveUserId();
       const stats = computeBattingStats(s.battingBoxes);
 
+      // 未記入ならスキップ
+      const isBattingEmpty =
+        stats.plateAppearances === 0 &&
+        s.runsBattedIn === 0 &&
+        s.run === 0 &&
+        s.stealingBase === 0 &&
+        s.caughtStealing === 0 &&
+        s.battingError === 0;
+
+      if (isBattingEmpty) return;
+
       // 打席ごとにplate_appearanceを送信
       const filteredBoxes = s.battingBoxes.filter((box) => box.result !== 0);
       for (let i = 0; i < filteredBoxes.length; i++) {
@@ -213,6 +224,25 @@ export const useGameRecord = () => {
       const userId = await resolveUserId();
       const inningsPitched =
         s.inningsPitchedWhole + s.inningsPitchedFraction / 3;
+
+      // 未記入ならスキップ
+      const isPitchingEmpty =
+        inningsPitched === 0 &&
+        s.win === 0 &&
+        s.loss === 0 &&
+        s.hold === 0 &&
+        s.saves === 0 &&
+        s.numberOfPitches === 0 &&
+        !s.gotToTheDistance &&
+        s.runAllowed === 0 &&
+        s.earnedRun === 0 &&
+        s.hitsAllowed === 0 &&
+        s.homeRunsHit === 0 &&
+        s.strikeouts === 0 &&
+        s.pitchingBaseOnBalls === 0 &&
+        s.pitchingHitByPitch === 0;
+
+      if (isPitchingEmpty) return;
 
       const pitchingResultPayload = {
         game_result_id: s.gameResultId!,
