@@ -133,7 +133,6 @@ export const useGameRecord = () => {
   const submitStep2 = useMutation({
     mutationFn: async () => {
       const s = useGameRecordStore.getState();
-      const userId = await resolveUserId();
       const stats = computeBattingStats(s.battingBoxes);
 
       // 未記入ならスキップ
@@ -146,6 +145,8 @@ export const useGameRecord = () => {
         s.battingError === 0;
 
       if (isBattingEmpty) return;
+
+      const userId = await resolveUserId();
 
       // 打席ごとにplate_appearanceを送信
       const filteredBoxes = s.battingBoxes.filter((box) => box.result !== 0);
@@ -221,7 +222,6 @@ export const useGameRecord = () => {
   const submitStep3 = useMutation({
     mutationFn: async () => {
       const s = useGameRecordStore.getState();
-      const userId = await resolveUserId();
       const inningsPitched =
         s.inningsPitchedWhole + s.inningsPitchedFraction / 3;
 
@@ -243,6 +243,8 @@ export const useGameRecord = () => {
         s.pitchingHitByPitch === 0;
 
       if (isPitchingEmpty) return;
+
+      const userId = await resolveUserId();
 
       const pitchingResultPayload = {
         game_result_id: s.gameResultId!,
