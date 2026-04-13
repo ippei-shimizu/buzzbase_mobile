@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getTournaments } from "../services/gameRecordService";
+import { getTournaments } from "@services/gameRecordService";
 
 export const useTournaments = () => {
   const { data, isLoading } = useQuery({

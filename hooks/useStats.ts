@@ -51,8 +51,8 @@ export const usePitchingStatsTable = (
 export const useEraTrend = (
   year?: string,
   seasonId?: string,
-  enabled = true,
   tournamentId?: string,
+  enabled = true,
 ) =>
   useQuery({
     queryKey: ["eraTrend", year, seasonId, tournamentId],

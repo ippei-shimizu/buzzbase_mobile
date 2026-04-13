@@ -224,8 +224,8 @@ export default function StatsScreen() {
   const eraTrend = useEraTrend(
     filters.year,
     filters.seasonId,
-    activeTab === "pitching",
     filters.tournamentId,
+    activeTab === "pitching",
   );
   const isLoading =
     hitDirections.isLoading ||
