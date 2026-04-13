@@ -37,6 +37,7 @@ import { useProfile } from "@hooks/useProfile";
 import { useProfileStats } from "@hooks/useProfileStats";
 import { useUserProfileDetail } from "@hooks/useRelationship";
 import { useMySeasons } from "@hooks/useSeasons";
+import { useTournaments } from "@hooks/useTournaments";
 
 function FilterDropdown({
   label,
@@ -191,6 +192,9 @@ export default function ProfileScreen() {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(
     undefined,
   );
+  const [selectedTournamentId, setSelectedTournamentId] = useState<
+    string | undefined
+  >(undefined);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const toggleFilter = (id: string) =>
     setActiveFilter((prev) => (prev === id ? null : id));
@@ -198,6 +202,7 @@ export default function ProfileScreen() {
     ...(selectedYear ? { year: selectedYear } : {}),
     ...(selectedMatchType ? { matchType: selectedMatchType } : {}),
     ...(selectedSeasonId ? { seasonId: selectedSeasonId } : {}),
+    ...(selectedTournamentId ? { tournamentId: selectedTournamentId } : {}),
   };
   // 試合タブフィルター
   const [gameSearchQuery, setGameSearchQuery] = useState("");
@@ -262,6 +267,7 @@ export default function ProfileScreen() {
 
   const { profile, isLoading, refetch, isRefreshing } = useProfile();
   const { seasons } = useMySeasons();
+  const { tournaments } = useTournaments();
   const { data: profileDetail } = useUserProfileDetail(
     profile?.user_id ?? undefined,
   );
@@ -292,6 +298,7 @@ export default function ProfileScreen() {
     year: selectedYear ?? "通算",
     match_type: selectedMatchType ?? "全て",
     season_id: selectedSeasonId,
+    tournament_id: selectedTournamentId,
     search: debouncedGameSearch || undefined,
     sort_by: "date",
     sort_order: gameSortDesc ? "desc" : "asc",
@@ -528,6 +535,22 @@ export default function ProfileScreen() {
                       isOpen={activeFilter === "season"}
                       onToggle={() => toggleFilter("season")}
                     />
+                    {tournaments.length > 0 && (
+                      <FilterDropdown
+                        label="大会"
+                        value={selectedTournamentId}
+                        options={tournaments.map((t) => ({
+                          key: String(t.id),
+                          label: t.name,
+                        }))}
+                        onSelect={(v) => {
+                          setSelectedTournamentId(v);
+                          setGameCurrentPage(1);
+                        }}
+                        isOpen={activeFilter === "tournament"}
+                        onToggle={() => toggleFilter("tournament")}
+                      />
+                    )}
                   </View>
                 }
               />
@@ -695,6 +718,22 @@ export default function ProfileScreen() {
               isOpen={activeFilter === "game-season"}
               onToggle={() => toggleFilter("game-season")}
             />
+            {tournaments.length > 0 && (
+              <FilterDropdown
+                label="大会"
+                value={selectedTournamentId}
+                options={tournaments.map((t) => ({
+                  key: String(t.id),
+                  label: t.name,
+                }))}
+                onSelect={(v) => {
+                  setSelectedTournamentId(v);
+                  setGameCurrentPage(1);
+                }}
+                isOpen={activeFilter === "game-tournament"}
+                onToggle={() => toggleFilter("game-tournament")}
+              />
+            )}
           </View>
 
           {/* 検索 + ソート */}

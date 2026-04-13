@@ -28,10 +28,11 @@ export const useBattingStatsTable = (
   period: StatsPeriod,
   year?: string,
   seasonId?: string,
+  tournamentId?: string,
 ) =>
   useQuery({
-    queryKey: ["battingTable", period, year, seasonId],
-    queryFn: () => getBattingStatsTable(period, year, seasonId),
+    queryKey: ["battingTable", period, year, seasonId, tournamentId],
+    queryFn: () => getBattingStatsTable(period, year, seasonId, tournamentId),
     placeholderData: keepPreviousData,
   });
 
@@ -39,17 +40,23 @@ export const usePitchingStatsTable = (
   period: StatsPeriod,
   year?: string,
   seasonId?: string,
+  tournamentId?: string,
 ) =>
   useQuery({
-    queryKey: ["pitchingTable", period, year, seasonId],
-    queryFn: () => getPitchingStatsTable(period, year, seasonId),
+    queryKey: ["pitchingTable", period, year, seasonId, tournamentId],
+    queryFn: () => getPitchingStatsTable(period, year, seasonId, tournamentId),
     placeholderData: keepPreviousData,
   });
 
-export const useEraTrend = (year?: string, seasonId?: string, enabled = true) =>
+export const useEraTrend = (
+  year?: string,
+  seasonId?: string,
+  tournamentId?: string,
+  enabled = true,
+) =>
   useQuery({
-    queryKey: ["eraTrend", year, seasonId],
-    queryFn: () => getEraTrend(year, seasonId),
+    queryKey: ["eraTrend", year, seasonId, tournamentId],
+    queryFn: () => getEraTrend(year, seasonId, tournamentId),
     enabled,
     staleTime: 0,
     placeholderData: keepPreviousData,
@@ -59,9 +66,10 @@ export const useGameSummary = (
   year?: string,
   matchType?: string,
   seasonId?: string,
+  tournamentId?: string,
 ) =>
   useQuery({
-    queryKey: ["gameSummary", year, matchType, seasonId],
-    queryFn: () => getGameSummary(year, matchType, seasonId),
+    queryKey: ["gameSummary", year, matchType, seasonId, tournamentId],
+    queryFn: () => getGameSummary(year, matchType, seasonId, tournamentId),
     placeholderData: keepPreviousData,
   });

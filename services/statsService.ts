@@ -20,6 +20,8 @@ export const getHitDirections = async (
   if (filters.year) params.append("year", filters.year);
   if (filters.matchType) params.append("match_type", filters.matchType);
   if (filters.seasonId) params.append("season_id", filters.seasonId);
+  if (filters.tournamentId)
+    params.append("tournament_id", filters.tournamentId);
   const query = params.toString();
   const res = await axiosInstance.get(
     `${STATS_URL}/hit_directions${query ? `?${query}` : ""}`,
@@ -34,6 +36,8 @@ export const getPlateAppearanceBreakdown = async (
   if (filters.year) params.append("year", filters.year);
   if (filters.matchType) params.append("match_type", filters.matchType);
   if (filters.seasonId) params.append("season_id", filters.seasonId);
+  if (filters.tournamentId)
+    params.append("tournament_id", filters.tournamentId);
   const query = params.toString();
   const res = await axiosInstance.get(
     `${STATS_URL}/plate_appearance_breakdown${query ? `?${query}` : ""}`,
@@ -45,11 +49,13 @@ export const getBattingStatsTable = async (
   period: StatsPeriod,
   year?: string,
   seasonId?: string,
+  tournamentId?: string,
 ): Promise<BattingStatsRow[]> => {
   const params = new URLSearchParams();
   params.append("period", period);
   if (year) params.append("year", year);
   if (seasonId) params.append("season_id", seasonId);
+  if (tournamentId) params.append("tournament_id", tournamentId);
   const res = await axiosInstance.get(`${STATS_URL}/batting?${params}`);
   return res.data.rows;
 };
@@ -58,11 +64,13 @@ export const getPitchingStatsTable = async (
   period: StatsPeriod,
   year?: string,
   seasonId?: string,
+  tournamentId?: string,
 ): Promise<PitchingStatsRow[]> => {
   const params = new URLSearchParams();
   params.append("period", period);
   if (year) params.append("year", year);
   if (seasonId) params.append("season_id", seasonId);
+  if (tournamentId) params.append("tournament_id", tournamentId);
   const res = await axiosInstance.get(`${STATS_URL}/pitching?${params}`);
   return res.data.rows;
 };
@@ -70,10 +78,12 @@ export const getPitchingStatsTable = async (
 export const getEraTrend = async (
   year?: string,
   seasonId?: string,
+  tournamentId?: string,
 ): Promise<EraTrendPoint[]> => {
   const params = new URLSearchParams();
   if (year) params.append("year", year);
   if (seasonId) params.append("season_id", seasonId);
+  if (tournamentId) params.append("tournament_id", tournamentId);
   const query = params.toString();
   const url = `${STATS_URL}/era_trend${query ? `?${query}` : ""}`;
   const res = await axiosInstance.get(url);
@@ -84,11 +94,13 @@ export const getGameSummary = async (
   year?: string,
   matchType?: string,
   seasonId?: string,
+  tournamentId?: string,
 ): Promise<GameSummary> => {
   const params = new URLSearchParams();
   if (year) params.append("year", year);
   if (matchType) params.append("match_type", matchType);
   if (seasonId) params.append("season_id", seasonId);
+  if (tournamentId) params.append("tournament_id", tournamentId);
   const query = params.toString();
   const res = await axiosInstance.get(
     `${STATS_URL}/game_summary${query ? `?${query}` : ""}`,

@@ -6,7 +6,6 @@ import {
   View,
   Text,
   TextInput,
-  FlatList,
   ScrollView,
   RefreshControl,
   TouchableOpacity,
@@ -22,6 +21,7 @@ import { GameResultSummary } from "@components/stats/GameResultSummary";
 import { useFilteredGameResults } from "@hooks/useGameResults";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useGameSummary } from "@hooks/useStats";
+import { useTournaments } from "@hooks/useTournaments";
 
 type ScreenTab = "summary" | "list";
 
@@ -167,8 +167,9 @@ const filterStyles = StyleSheet.create({
 
 export default function GameResultsScreen() {
   const router = useRouter();
-  const flatListRef = useRef<FlatList>(null);
+  const scrollRef = useRef<ScrollView>(null);
   const { seasons } = useMySeasons();
+  const { tournaments } = useTournaments();
 
   // Screen tab state
   const [screenTab, setScreenTab] = useState<ScreenTab>("summary");
@@ -181,6 +182,9 @@ export default function GameResultsScreen() {
   const [summarySeasonId, setSummarySeasonId] = useState<string | undefined>(
     undefined,
   );
+  const [summaryTournamentId, setSummaryTournamentId] = useState<
+    string | undefined
+  >(undefined);
   const [summaryActiveFilter, setSummaryActiveFilter] = useState<string | null>(
     null,
   );
@@ -190,6 +194,7 @@ export default function GameResultsScreen() {
     summaryYear,
     summaryMatchType,
     summarySeasonId,
+    summaryTournamentId,
   );
   const [summaryRefreshing, setSummaryRefreshing] = useState(false);
   const onSummaryRefresh = useCallback(async () => {
@@ -225,6 +230,9 @@ export default function GameResultsScreen() {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(
     undefined,
   );
+  const [selectedTournamentId, setSelectedTournamentId] = useState<
+    string | undefined
+  >(undefined);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const toggleFilter = (id: string) =>
     setActiveFilter((prev) => (prev === id ? null : id));
@@ -254,6 +262,7 @@ export default function GameResultsScreen() {
     year: selectedYear ?? "通算",
     match_type: selectedMatchType ?? "全て",
     season_id: selectedSeasonId,
+    tournament_id: selectedTournamentId,
     search: debouncedSearch || undefined,
     sort_by: "date",
     sort_order: sortDesc ? "desc" : "asc",
@@ -271,7 +280,7 @@ export default function GameResultsScreen() {
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
   }, []);
 
   if (isLoading) {
@@ -352,6 +361,22 @@ export default function GameResultsScreen() {
           isOpen={activeFilter === "season"}
           onToggle={() => toggleFilter("season")}
         />
+        {tournaments.length > 0 && (
+          <FilterDropdown
+            label="大会"
+            value={selectedTournamentId}
+            options={tournaments.map((t) => ({
+              key: String(t.id),
+              label: t.name,
+            }))}
+            onSelect={(v) => {
+              setSelectedTournamentId(v);
+              setCurrentPage(1);
+            }}
+            isOpen={activeFilter === "tournament"}
+            onToggle={() => toggleFilter("tournament")}
+          />
+        )}
       </View>
 
       {/* 検索 + ソート */}
@@ -372,7 +397,7 @@ export default function GameResultsScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             onFocus={() =>
-              flatListRef.current?.scrollToOffset({ offset: 0, animated: true })
+              scrollRef.current?.scrollTo({ y: 0, animated: true })
             }
           />
         </View>
@@ -458,7 +483,14 @@ export default function GameResultsScreen() {
             <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
             <Text style={styles.recordButtonText}>試合結果を記録する</Text>
           </TouchableOpacity>
-          <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 8,
+              flexWrap: "wrap",
+              marginBottom: 16,
+            }}
+          >
             <FilterDropdown
               label="年度"
               value={summaryYear}
@@ -486,6 +518,19 @@ export default function GameResultsScreen() {
               isOpen={summaryActiveFilter === "summarySeason"}
               onToggle={() => toggleSummaryFilter("summarySeason")}
             />
+            {tournaments.length > 0 && (
+              <FilterDropdown
+                label="大会"
+                value={summaryTournamentId}
+                options={tournaments.map((t) => ({
+                  key: String(t.id),
+                  label: t.name,
+                }))}
+                onSelect={setSummaryTournamentId}
+                isOpen={summaryActiveFilter === "summaryTournament"}
+                onToggle={() => toggleSummaryFilter("summaryTournament")}
+              />
+            )}
           </View>
           <Text style={styles.activeFilterLabel}>
             {summaryYear ? `${summaryYear}年` : "通算"}
@@ -494,6 +539,9 @@ export default function GameResultsScreen() {
               : ""}
             {summarySeasonId
               ? ` / ${seasons.find((s) => String(s.id) === summarySeasonId)?.name ?? ""}`
+              : ""}
+            {summaryTournamentId
+              ? ` / ${tournaments.find((t) => String(t.id) === summaryTournamentId)?.name ?? ""}`
               : ""}
           </Text>
           {!gameSummary.data && gameSummary.isLoading ? (
@@ -510,16 +558,35 @@ export default function GameResultsScreen() {
 
       {/* List Tab */}
       {screenTab === "list" && (
-        <View style={{ flex: 1 }}>
-          <View style={{ paddingHorizontal: 16, paddingTop: 16, zIndex: 100 }}>
-            {listFilterHeader}
-          </View>
-          <FlatList
-            ref={flatListRef}
-            data={gameResults}
-            keyExtractor={(item) => String(item.game_result_id)}
-            renderItem={({ item }) => (
+        <ScrollView
+          ref={scrollRef}
+          style={{ flex: 1 }}
+          contentContainerStyle={[
+            {
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 32,
+              flexGrow: 1,
+            },
+            keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={refetch}
+              tintColor="#d08000"
+            />
+          }
+        >
+          {listFilterHeader}
+          {gameResults.length === 0 ? (
+            <Text style={styles.emptyText}>試合結果がありません</Text>
+          ) : (
+            gameResults.map((item) => (
               <View
+                key={item.game_result_id}
                 style={[
                   styles.cardContainer,
                   isFetching && !isLoading && { opacity: 0.5 },
@@ -527,36 +594,18 @@ export default function GameResultsScreen() {
               >
                 <GameResultListItem game={item} onPress={handlePressItem} />
               </View>
-            )}
-            contentContainerStyle={[
-              { paddingHorizontal: 16, paddingBottom: 32, flexGrow: 1 },
-              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
-            ]}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={refetch}
-                tintColor="#d08000"
-              />
-            }
-            ListFooterComponent={
-              pagination ? (
-                <GamePagination
-                  currentPage={pagination.current_page}
-                  totalPages={pagination.total_pages}
-                  totalCount={pagination.total_count}
-                  perPage={pagination.per_page}
-                  onPageChange={handlePageChange}
-                />
-              ) : null
-            }
-            ListEmptyComponent={
-              <Text style={styles.emptyText}>試合結果がありません</Text>
-            }
-          />
-        </View>
+            ))
+          )}
+          {pagination && (
+            <GamePagination
+              currentPage={pagination.current_page}
+              totalPages={pagination.total_pages}
+              totalCount={pagination.total_count}
+              perPage={pagination.per_page}
+              onPageChange={handlePageChange}
+            />
+          )}
+        </ScrollView>
       )}
     </View>
   );
