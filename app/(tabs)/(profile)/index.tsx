@@ -19,6 +19,7 @@ import {
   Platform,
 } from "react-native";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
+import { GamePagination } from "@components/game-results/GamePagination";
 import { CalendarIcon } from "@components/icon/CalendarIcon";
 import { MailIcon } from "@components/icon/MailIcon";
 import { MenuIcon } from "@components/icon/MenuIcon";
@@ -26,7 +27,7 @@ import { NoteIcon } from "@components/icon/NoteIcon";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
 import { useUserAwards } from "@hooks/useAwards";
-import { useGameResults } from "@hooks/useGameResults";
+import { useFilteredGameResults } from "@hooks/useGameResults";
 import {
   useTeams,
   usePrefectures,
@@ -199,7 +200,17 @@ export default function ProfileScreen() {
   };
   // 試合タブフィルター
   const [gameSearchQuery, setGameSearchQuery] = useState("");
+  const [debouncedGameSearch, setDebouncedGameSearch] = useState("");
   const [gameSortDesc, setGameSortDesc] = useState(true);
+  const [gameCurrentPage, setGameCurrentPage] = useState(1);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedGameSearch(gameSearchQuery);
+      setGameCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [gameSearchQuery]);
 
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   useEffect(() => {
@@ -270,10 +281,20 @@ export default function ProfileScreen() {
   // 試合結果
   const {
     gameResults,
+    pagination: gamePagination,
     isLoading: isGamesLoading,
+    isFetching: isGamesFetching,
     isRefreshing: isGamesRefreshing,
     refetch: refetchGames,
-  } = useGameResults();
+  } = useFilteredGameResults({
+    page: gameCurrentPage,
+    year: selectedYear ?? "通算",
+    match_type: selectedMatchType ?? "全て",
+    season_id: selectedSeasonId,
+    search: debouncedGameSearch || undefined,
+    sort_by: "date",
+    sort_order: gameSortDesc ? "desc" : "asc",
+  });
 
   const team = teams?.find((t) => t.id === profile?.team_id);
   const categoryName = categories?.find(
@@ -299,6 +320,10 @@ export default function ProfileScreen() {
     refetchStats();
     refetchGames();
   };
+
+  const handleGamePageChange = useCallback((page: number) => {
+    setGameCurrentPage(page);
+  }, []);
 
   const handlePressGame = (game: GameResult) => {
     router.push({
@@ -628,7 +653,10 @@ export default function ProfileScreen() {
                   return { key: y, label: y };
                 }),
               ]}
-              onSelect={(v) => setSelectedYear(v === "all" ? undefined : v)}
+              onSelect={(v) => {
+                setSelectedYear(v === "all" ? undefined : v);
+                setGameCurrentPage(1);
+              }}
               isOpen={activeFilter === "game-year"}
               onToggle={() => toggleFilter("game-year")}
             />
@@ -636,7 +664,10 @@ export default function ProfileScreen() {
               label="種別"
               value={selectedMatchType}
               options={MATCH_TYPE_OPTIONS}
-              onSelect={setSelectedMatchType}
+              onSelect={(v) => {
+                setSelectedMatchType(v);
+                setGameCurrentPage(1);
+              }}
               isOpen={activeFilter === "game-matchType"}
               onToggle={() => toggleFilter("game-matchType")}
             />
@@ -647,7 +678,10 @@ export default function ProfileScreen() {
                 key: String(s.id),
                 label: s.name,
               }))}
-              onSelect={setSelectedSeasonId}
+              onSelect={(v) => {
+                setSelectedSeasonId(v);
+                setGameCurrentPage(1);
+              }}
               isOpen={activeFilter === "game-season"}
               onToggle={() => toggleFilter("game-season")}
             />
@@ -674,7 +708,10 @@ export default function ProfileScreen() {
             </View>
             <TouchableOpacity
               style={filterStyles.button}
-              onPress={() => setGameSortDesc((p) => !p)}
+              onPress={() => {
+                setGameSortDesc((p) => !p);
+                setGameCurrentPage(1);
+              }}
             >
               <Text style={filterStyles.buttonText}>
                 日付（{gameSortDesc ? "新しい順" : "古い順"}）
@@ -686,53 +723,32 @@ export default function ProfileScreen() {
           <View style={styles.gamesContainer}>
             {isGamesLoading ? (
               <ActivityIndicator color="#d08000" style={{ marginTop: 40 }} />
+            ) : gameResults.length === 0 ? (
+              <Text style={styles.emptyText}>試合記録がありません</Text>
             ) : (
-              (() => {
-                let filtered = gameResults.filter((g) => {
-                  if (selectedYear && selectedYear !== "all") {
-                    const year = new Date(
-                      g.match_result.date_and_time,
-                    ).getFullYear();
-                    if (String(year) !== selectedYear) return false;
-                  }
-                  if (
-                    selectedMatchType &&
-                    g.match_result.match_type !== selectedMatchType
-                  )
-                    return false;
-                  if (
-                    selectedSeasonId &&
-                    String(g.season_id) !== selectedSeasonId
-                  )
-                    return false;
-                  if (gameSearchQuery.trim()) {
-                    const q = gameSearchQuery.trim().toLowerCase();
-                    if (
-                      !g.match_result.opponent_team_name
-                        ?.toLowerCase()
-                        .includes(q)
-                    )
-                      return false;
-                  }
-                  return true;
-                });
-                filtered = filtered.sort((a, b) => {
-                  const da = new Date(a.match_result.date_and_time).getTime();
-                  const db = new Date(b.match_result.date_and_time).getTime();
-                  return gameSortDesc ? db - da : da - db;
-                });
-                return filtered.length === 0 ? (
-                  <Text style={styles.emptyText}>試合記録がありません</Text>
-                ) : (
-                  filtered.map((item) => (
-                    <GameResultListItem
-                      key={item.game_result_id}
-                      game={item}
-                      onPress={handlePressGame}
-                    />
-                  ))
-                );
-              })()
+              <>
+                {gameResults.map((item) => (
+                  <View
+                    key={item.game_result_id}
+                    style={
+                      isGamesFetching && !isGamesLoading
+                        ? { opacity: 0.5 }
+                        : undefined
+                    }
+                  >
+                    <GameResultListItem game={item} onPress={handlePressGame} />
+                  </View>
+                ))}
+                {gamePagination ? (
+                  <GamePagination
+                    currentPage={gamePagination.current_page}
+                    totalPages={gamePagination.total_pages}
+                    totalCount={gamePagination.total_count}
+                    perPage={gamePagination.per_page}
+                    onPageChange={handleGamePageChange}
+                  />
+                ) : null}
+              </>
             )}
           </View>
         </View>

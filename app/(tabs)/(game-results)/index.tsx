@@ -1,13 +1,7 @@
 import type { GameResult } from "../../../types/gameResult";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, {
-  useRef,
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-} from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -23,8 +17,9 @@ import {
   Platform,
 } from "react-native";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
+import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultSummary } from "@components/stats/GameResultSummary";
-import { useGameResults } from "@hooks/useGameResults";
+import { useFilteredGameResults } from "@hooks/useGameResults";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useGameSummary } from "@hooks/useStats";
 
@@ -173,16 +168,6 @@ const filterStyles = StyleSheet.create({
 export default function GameResultsScreen() {
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
-  const {
-    gameResults,
-    isLoading,
-    isError,
-    refetch,
-    isRefreshing,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useGameResults();
   const { seasons } = useMySeasons();
 
   // Screen tab state
@@ -244,41 +229,35 @@ export default function GameResultsScreen() {
   const toggleFilter = (id: string) =>
     setActiveFilter((prev) => (prev === id ? null : id));
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sortDesc, setSortDesc] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const filteredResults = useMemo(() => {
-    let filtered = gameResults.filter((g) => {
-      if (selectedYear && selectedYear !== "all") {
-        const year = new Date(g.match_result.date_and_time).getFullYear();
-        if (String(year) !== selectedYear) return false;
-      }
-      if (selectedMatchType && g.match_result.match_type !== selectedMatchType)
-        return false;
-      if (selectedSeasonId && String(g.season_id) !== selectedSeasonId)
-        return false;
-      if (searchQuery.trim()) {
-        const q = searchQuery.trim().toLowerCase();
-        if (!g.match_result.opponent_team_name?.toLowerCase().includes(q))
-          return false;
-      }
-      return true;
-    });
-    return filtered.sort((a, b) => {
-      const da = new Date(a.match_result.date_and_time).getTime();
-      const db = new Date(b.match_result.date_and_time).getTime();
-      if (da !== db) return sortDesc ? db - da : da - db;
-      return sortDesc
-        ? b.game_result_id - a.game_result_id
-        : a.game_result_id - b.game_result_id;
-    });
-  }, [
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const {
     gameResults,
-    selectedYear,
-    selectedMatchType,
-    selectedSeasonId,
-    searchQuery,
-    sortDesc,
-  ]);
+    pagination,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+    isRefreshing,
+  } = useFilteredGameResults({
+    page: currentPage,
+    year: selectedYear ?? "通算",
+    match_type: selectedMatchType ?? "全て",
+    season_id: selectedSeasonId,
+    search: debouncedSearch || undefined,
+    sort_by: "date",
+    sort_order: sortDesc ? "desc" : "asc",
+  });
 
   const handlePressItem = (game: GameResult) => {
     router.push({
@@ -290,11 +269,10 @@ export default function GameResultsScreen() {
     });
   };
 
-  const handleEndReached = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  };
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, []);
 
   if (isLoading) {
     return (
@@ -342,7 +320,10 @@ export default function GameResultsScreen() {
               return { key: y, label: y };
             }),
           ]}
-          onSelect={(v) => setSelectedYear(v === "all" ? undefined : v)}
+          onSelect={(v) => {
+            setSelectedYear(v === "all" ? undefined : v);
+            setCurrentPage(1);
+          }}
           isOpen={activeFilter === "year"}
           onToggle={() => toggleFilter("year")}
         />
@@ -350,7 +331,10 @@ export default function GameResultsScreen() {
           label="種別"
           value={selectedMatchType}
           options={MATCH_TYPE_OPTIONS}
-          onSelect={setSelectedMatchType}
+          onSelect={(v) => {
+            setSelectedMatchType(v);
+            setCurrentPage(1);
+          }}
           isOpen={activeFilter === "matchType"}
           onToggle={() => toggleFilter("matchType")}
         />
@@ -361,7 +345,10 @@ export default function GameResultsScreen() {
             key: String(s.id),
             label: s.name,
           }))}
-          onSelect={setSelectedSeasonId}
+          onSelect={(v) => {
+            setSelectedSeasonId(v);
+            setCurrentPage(1);
+          }}
           isOpen={activeFilter === "season"}
           onToggle={() => toggleFilter("season")}
         />
@@ -391,7 +378,10 @@ export default function GameResultsScreen() {
         </View>
         <TouchableOpacity
           style={filterStyles.button}
-          onPress={() => setSortDesc((p) => !p)}
+          onPress={() => {
+            setSortDesc((p) => !p);
+            setCurrentPage(1);
+          }}
         >
           <Text style={filterStyles.buttonText}>
             日付（{sortDesc ? "新しい順" : "古い順"}）
@@ -526,10 +516,15 @@ export default function GameResultsScreen() {
           </View>
           <FlatList
             ref={flatListRef}
-            data={filteredResults}
+            data={gameResults}
             keyExtractor={(item) => String(item.game_result_id)}
             renderItem={({ item }) => (
-              <View style={styles.cardContainer}>
+              <View
+                style={[
+                  styles.cardContainer,
+                  isFetching && !isLoading && { opacity: 0.5 },
+                ]}
+              >
                 <GameResultListItem game={item} onPress={handlePressItem} />
               </View>
             )}
@@ -537,8 +532,6 @@ export default function GameResultsScreen() {
               { paddingHorizontal: 16, paddingBottom: 32, flexGrow: 1 },
               keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
             ]}
-            onEndReached={handleEndReached}
-            onEndReachedThreshold={0.5}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
             refreshControl={
@@ -549,10 +542,14 @@ export default function GameResultsScreen() {
               />
             }
             ListFooterComponent={
-              isFetchingNextPage ? (
-                <View style={styles.footer}>
-                  <ActivityIndicator color="#d08000" />
-                </View>
+              pagination ? (
+                <GamePagination
+                  currentPage={pagination.current_page}
+                  totalPages={pagination.total_pages}
+                  totalCount={pagination.total_count}
+                  perPage={pagination.per_page}
+                  onPageChange={handlePageChange}
+                />
               ) : null
             }
             ListEmptyComponent={
@@ -641,10 +638,6 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   cardContainer: {},
-  footer: {
-    paddingVertical: 16,
-    alignItems: "center",
-  },
   emptyText: {
     color: "#A1A1AA",
     fontSize: 14,
