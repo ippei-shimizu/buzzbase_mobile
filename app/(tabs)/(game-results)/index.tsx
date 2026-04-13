@@ -16,8 +16,8 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
-import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { GamePagination } from "@components/game-results/GamePagination";
+import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { GameResultSummary } from "@components/stats/GameResultSummary";
 import { useFilteredGameResults } from "@hooks/useGameResults";
 import { useMySeasons } from "@hooks/useSeasons";

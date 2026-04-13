@@ -12,8 +12,8 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { GamePagination } from "@components/game-results/GamePagination";
+import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
 import { useUserAwards } from "@hooks/useAwards";

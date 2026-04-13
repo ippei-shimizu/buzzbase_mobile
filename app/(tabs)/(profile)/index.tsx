@@ -18,8 +18,8 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
-import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { GamePagination } from "@components/game-results/GamePagination";
+import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { CalendarIcon } from "@components/icon/CalendarIcon";
 import { MailIcon } from "@components/icon/MailIcon";
 import { MenuIcon } from "@components/icon/MenuIcon";
