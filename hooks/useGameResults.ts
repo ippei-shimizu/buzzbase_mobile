@@ -1,8 +1,11 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   getGameResults,
   getUserGameResults,
+  getFilteredGameResults,
+  getFilteredUserGameResults,
 } from "../services/gameResultService";
+import type { GameResultFilterParams } from "../services/gameResultService";
 import type { GameResult } from "../types/gameResult";
 
 /** ページネーションキャッシュ混在時の重複排除 */
@@ -36,6 +39,50 @@ export const useUserGameResults = (userId: number | undefined) => {
     isLoading,
     isRefreshing: isRefetching,
     refetch,
+  };
+};
+
+export const useFilteredGameResults = (params: GameResultFilterParams) => {
+  const { data, isLoading, isError, error, refetch, isRefetching, isFetching } =
+    useQuery({
+      queryKey: ["filteredGameResults", params],
+      queryFn: () => getFilteredGameResults(params),
+      placeholderData: (prev) => prev,
+    });
+
+  return {
+    gameResults: data?.data ?? [],
+    pagination: data?.pagination ?? null,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+    isRefreshing: isRefetching,
+  };
+};
+
+export const useFilteredUserGameResults = (
+  userId: number | undefined,
+  params: GameResultFilterParams,
+) => {
+  const { data, isLoading, isError, error, refetch, isRefetching, isFetching } =
+    useQuery({
+      queryKey: ["filteredUserGameResults", userId, params],
+      queryFn: () => getFilteredUserGameResults(userId!, params),
+      placeholderData: (prev) => prev,
+      enabled: !!userId,
+    });
+
+  return {
+    gameResults: data?.data ?? [],
+    pagination: data?.pagination ?? null,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+    isRefreshing: isRefetching,
   };
 };
 

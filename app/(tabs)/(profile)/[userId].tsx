@@ -2,7 +2,7 @@ import type { GameResult } from "../../../types/gameResult";
 import type { StatsFilters } from "../../../types/profile";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,11 +12,12 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
 import { useUserAwards } from "@hooks/useAwards";
-import { useUserGameResults } from "@hooks/useGameResults";
+import { useFilteredUserGameResults } from "@hooks/useGameResults";
 import {
   useTeams,
   usePrefectures,
@@ -32,6 +33,7 @@ import {
 export default function UserProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const router = useRouter();
+  const scrollRef = useRef<ScrollView>(null);
   const [activeTab, setActiveTab] = useState(0);
 
   const { data, isLoading, refetch, isRefreshing } =
@@ -63,12 +65,24 @@ export default function UserProfileScreen() {
   } = useUserStats(data?.user.id, filters);
 
   // 試合結果
+  const [gameCurrentPage, setGameCurrentPage] = useState(1);
   const {
     gameResults,
+    pagination: gamePagination,
     isLoading: isGamesLoading,
+    isFetching: isGamesFetching,
     isRefreshing: isGamesRefreshing,
     refetch: refetchGames,
-  } = useUserGameResults(data?.user.id);
+  } = useFilteredUserGameResults(data?.user.id, {
+    page: gameCurrentPage,
+    sort_by: "date",
+    sort_order: "desc",
+  });
+
+  const handleGamePageChange = useCallback((page: number) => {
+    setGameCurrentPage(page);
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, []);
 
   const isPrivateAndNotFollowing =
     data?.is_private &&
@@ -124,6 +138,7 @@ export default function UserProfileScreen() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       style={styles.container}
       contentContainerStyle={{ paddingBottom: 16 }}
       bounces
@@ -250,13 +265,32 @@ export default function UserProfileScreen() {
                 ) : gameResults.length === 0 ? (
                   <Text style={styles.emptyText}>試合記録がありません</Text>
                 ) : (
-                  gameResults.map((item) => (
-                    <GameResultListItem
-                      key={item.game_result_id}
-                      game={item}
-                      onPress={handlePressGame}
-                    />
-                  ))
+                  <>
+                    {gameResults.map((item) => (
+                      <View
+                        key={item.game_result_id}
+                        style={
+                          isGamesFetching && !isGamesLoading
+                            ? { opacity: 0.5 }
+                            : undefined
+                        }
+                      >
+                        <GameResultListItem
+                          game={item}
+                          onPress={handlePressGame}
+                        />
+                      </View>
+                    ))}
+                    {gamePagination ? (
+                      <GamePagination
+                        currentPage={gamePagination.current_page}
+                        totalPages={gamePagination.total_pages}
+                        totalCount={gamePagination.total_count}
+                        perPage={gamePagination.per_page}
+                        onPageChange={handleGamePageChange}
+                      />
+                    ) : null}
+                  </>
                 )}
               </View>
             )}
