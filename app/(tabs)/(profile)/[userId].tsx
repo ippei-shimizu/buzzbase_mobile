@@ -99,9 +99,8 @@ export default function UserProfileScreen() {
 
   const handlePressGame = (game: GameResult) => {
     router.push({
-      pathname: "/(game-results)/[id]",
+      pathname: "/(profile)/game-detail",
       params: {
-        id: game.game_result_id,
         game: JSON.stringify(game),
       },
     });

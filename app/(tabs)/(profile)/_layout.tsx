@@ -32,6 +32,7 @@ export default function ProfileLayout() {
         name="calculation-of-grades"
         options={{ title: "成績の算出方法" }}
       />
+      <Stack.Screen name="game-detail" options={{ title: "試合詳細" }} />
     </Stack>
   );
 }
