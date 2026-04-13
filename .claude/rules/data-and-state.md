@@ -2,10 +2,10 @@
 
 ## 状態管理の役割分担
 
-| 種類 | ライブラリ | 用途 |
-|------|-----------|------|
-| サーバー状態 | TanStack Query | API データのキャッシュ・再取得 |
-| クライアント状態 | Zustand | UI状態・フォームウィザード |
+| 種類             | ライブラリ     | 用途                           |
+| ---------------- | -------------- | ------------------------------ |
+| サーバー状態     | TanStack Query | API データのキャッシュ・再取得 |
+| クライアント状態 | Zustand        | UI状態・フォームウィザード     |
 
 ## TanStack Query パターン
 
@@ -17,7 +17,14 @@ export const useProfile = () => {
     queryKey: ["profile"],
     queryFn: getCurrentUserProfile,
   });
-  return { profile: data, isLoading, isError, error, refetch, isRefreshing: isRefetching };
+  return {
+    profile: data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefreshing: isRefetching,
+  };
 };
 ```
 
