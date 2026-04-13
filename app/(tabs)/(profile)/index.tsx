@@ -2,7 +2,7 @@ import type { GameResult } from "../../../types/gameResult";
 import type { StatsFilters } from "../../../types/profile";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack } from "expo-router";
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -140,11 +140,11 @@ const filterStyles = StyleSheet.create({
     fontWeight: "500",
   },
   overlayBg: {
-    position: "fixed" as never,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    position: "absolute" as const,
+    top: -500,
+    left: -500,
+    right: -500,
+    bottom: -500,
     zIndex: 99,
   },
   dropdown: {
@@ -180,6 +180,7 @@ const filterStyles = StyleSheet.create({
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const gameScrollRef = useRef<ScrollView>(null);
   const [activeTab, setActiveTab] = useState(0);
   const [selectedYear, setSelectedYear] = useState<string | undefined>(
     undefined,
@@ -323,6 +324,7 @@ export default function ProfileScreen() {
 
   const handleGamePageChange = useCallback((page: number) => {
     setGameCurrentPage(page);
+    gameScrollRef.current?.scrollTo({ y: 0, animated: true });
   }, []);
 
   const handlePressGame = (game: GameResult) => {
@@ -494,9 +496,10 @@ export default function ProfileScreen() {
                           return { key: y, label: y };
                         }),
                       ]}
-                      onSelect={(v) =>
-                        setSelectedYear(v === "all" ? undefined : v)
-                      }
+                      onSelect={(v) => {
+                        setSelectedYear(v === "all" ? undefined : v);
+                        setGameCurrentPage(1);
+                      }}
                       isOpen={activeFilter === "year"}
                       onToggle={() => toggleFilter("year")}
                     />
@@ -504,7 +507,10 @@ export default function ProfileScreen() {
                       label="種別"
                       value={selectedMatchType}
                       options={MATCH_TYPE_OPTIONS}
-                      onSelect={setSelectedMatchType}
+                      onSelect={(v) => {
+                        setSelectedMatchType(v);
+                        setGameCurrentPage(1);
+                      }}
                       isOpen={activeFilter === "matchType"}
                       onToggle={() => toggleFilter("matchType")}
                     />
@@ -515,7 +521,10 @@ export default function ProfileScreen() {
                         key: String(s.id),
                         label: s.name,
                       }))}
-                      onSelect={setSelectedSeasonId}
+                      onSelect={(v) => {
+                        setSelectedSeasonId(v);
+                        setGameCurrentPage(1);
+                      }}
                       isOpen={activeFilter === "season"}
                       onToggle={() => toggleFilter("season")}
                     />
@@ -616,6 +625,7 @@ export default function ProfileScreen() {
       />
 
       <ScrollView
+        ref={gameScrollRef}
         style={styles.container}
         contentContainerStyle={{
           paddingBottom: keyboardHeight > 0 ? keyboardHeight : 0,

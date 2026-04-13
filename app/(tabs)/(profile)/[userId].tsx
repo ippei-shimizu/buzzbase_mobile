@@ -2,7 +2,7 @@ import type { GameResult } from "../../../types/gameResult";
 import type { StatsFilters } from "../../../types/profile";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState, useCallback } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -33,6 +33,7 @@ import {
 export default function UserProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const router = useRouter();
+  const scrollRef = useRef<ScrollView>(null);
   const [activeTab, setActiveTab] = useState(0);
 
   const { data, isLoading, refetch, isRefreshing } =
@@ -80,6 +81,7 @@ export default function UserProfileScreen() {
 
   const handleGamePageChange = useCallback((page: number) => {
     setGameCurrentPage(page);
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
   }, []);
 
   const isPrivateAndNotFollowing =
@@ -136,6 +138,7 @@ export default function UserProfileScreen() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       style={styles.container}
       contentContainerStyle={{ paddingBottom: 16 }}
       bounces
