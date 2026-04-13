@@ -47,4 +47,5 @@ export interface StatsFilters {
   year?: string;
   matchType?: string;
   seasonId?: string;
+  tournamentId?: string;
 }

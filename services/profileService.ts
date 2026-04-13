@@ -25,6 +25,8 @@ export const getProfileBattingStats = async (
   if (filters.year) params.append("year", filters.year);
   if (filters.matchType) params.append("match_type", filters.matchType);
   if (filters.seasonId) params.append("season_id", filters.seasonId);
+  if (filters.tournamentId)
+    params.append("tournament_id", filters.tournamentId);
 
   const response = await axiosInstance.get<BattingStats>(
     `${API_BASE_URL}/api/v2/dashboard/batting_stats?${params.toString()}`,
@@ -41,6 +43,8 @@ export const getUserBattingStats = async (
   if (filters.year) params.append("year", filters.year);
   if (filters.matchType) params.append("match_type", filters.matchType);
   if (filters.seasonId) params.append("season_id", filters.seasonId);
+  if (filters.tournamentId)
+    params.append("tournament_id", filters.tournamentId);
 
   const response = await axiosInstance.get<BattingStats>(
     `${API_BASE_URL}/api/v2/dashboard/batting_stats?${params.toString()}`,
@@ -57,6 +61,8 @@ export const getUserPitchingStats = async (
   if (filters.year) params.append("year", filters.year);
   if (filters.matchType) params.append("match_type", filters.matchType);
   if (filters.seasonId) params.append("season_id", filters.seasonId);
+  if (filters.tournamentId)
+    params.append("tournament_id", filters.tournamentId);
 
   const response = await axiosInstance.get<PitchingStats>(
     `${API_BASE_URL}/api/v2/dashboard/pitching_stats?${params.toString()}`,
@@ -84,6 +90,8 @@ export const getProfilePitchingStats = async (
   if (filters.year) params.append("year", filters.year);
   if (filters.matchType) params.append("match_type", filters.matchType);
   if (filters.seasonId) params.append("season_id", filters.seasonId);
+  if (filters.tournamentId)
+    params.append("tournament_id", filters.tournamentId);
 
   const response = await axiosInstance.get<PitchingStats>(
     `${API_BASE_URL}/api/v2/dashboard/pitching_stats?${params.toString()}`,
