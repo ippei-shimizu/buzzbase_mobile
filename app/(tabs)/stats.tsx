@@ -30,6 +30,7 @@ import {
   usePitchingStatsTable,
   useEraTrend,
 } from "@hooks/useStats";
+import { useTournaments } from "@hooks/useTournaments";
 
 type ActiveTab = "batting" | "pitching";
 
@@ -195,6 +196,9 @@ export default function StatsScreen() {
   const [tableSeasonId, setTableSeasonId] = useState<string | undefined>(
     undefined,
   );
+  const [tableTournamentId, setTableTournamentId] = useState<
+    string | undefined
+  >(undefined);
   const [tableActiveFilter, setTableActiveFilter] = useState<string | null>(
     null,
   );
@@ -202,22 +206,26 @@ export default function StatsScreen() {
     setTableActiveFilter((prev) => (prev === id ? null : id));
 
   const { seasons } = useMySeasons();
+  const { tournaments } = useTournaments();
   const hitDirections = useHitDirections(filters);
   const paBreakdown = usePlateAppearanceBreakdown(filters);
   const battingTable = useBattingStatsTable(
     battingPeriod,
     tableYear,
     tableSeasonId,
+    tableTournamentId,
   );
   const pitchingTable = usePitchingStatsTable(
     pitchingPeriod,
     tableYear,
     tableSeasonId,
+    tableTournamentId,
   );
   const eraTrend = useEraTrend(
     filters.year,
     filters.seasonId,
     activeTab === "pitching",
+    filters.tournamentId,
   );
   const isLoading =
     hitDirections.isLoading ||
@@ -280,6 +288,11 @@ export default function StatsScreen() {
   const seasonOptions = seasons.map((s) => ({
     key: String(s.id),
     label: s.name,
+  }));
+
+  const tournamentOptions = tournaments.map((t) => ({
+    key: String(t.id),
+    label: t.name,
   }));
 
   const currentPeriod =
@@ -358,6 +371,10 @@ export default function StatsScreen() {
             id: String(s.id),
             name: s.name,
           }))}
+          availableTournaments={tournaments.map((t) => ({
+            id: String(t.id),
+            name: t.name,
+          }))}
         />
       </View>
 
@@ -410,6 +427,16 @@ export default function StatsScreen() {
                   onToggle={() => toggleTableFilter("tableSeason")}
                 />
               )}
+              {tournamentOptions.length > 0 && (
+                <TableFilterDropdown
+                  label="大会"
+                  value={tableTournamentId}
+                  options={tournamentOptions}
+                  onSelect={setTableTournamentId}
+                  isOpen={tableActiveFilter === "tableTournament"}
+                  onToggle={() => toggleTableFilter("tableTournament")}
+                />
+              )}
             </View>
           )}
           {battingTable.data && (
@@ -457,6 +484,16 @@ export default function StatsScreen() {
                   onSelect={setTableSeasonId}
                   isOpen={tableActiveFilter === "tableSeason"}
                   onToggle={() => toggleTableFilter("tableSeason")}
+                />
+              )}
+              {tournamentOptions.length > 0 && (
+                <TableFilterDropdown
+                  label="大会"
+                  value={tableTournamentId}
+                  options={tournamentOptions}
+                  onSelect={setTableTournamentId}
+                  isOpen={tableActiveFilter === "tableTournament"}
+                  onToggle={() => toggleTableFilter("tableTournament")}
                 />
               )}
             </View>

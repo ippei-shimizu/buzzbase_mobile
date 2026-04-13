@@ -14,6 +14,7 @@ interface StatsFiltersProps {
   onFiltersChange: (filters: StatsFiltersType) => void;
   availableYears: number[];
   availableSeasons?: { id: string; name: string }[];
+  availableTournaments?: { id: string; name: string }[];
 }
 
 const MATCH_TYPE_OPTIONS = [
@@ -103,6 +104,7 @@ export const StatsFilters = ({
   onFiltersChange,
   availableYears,
   availableSeasons = [],
+  availableTournaments = [],
 }: StatsFiltersProps) => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const toggleFilter = (id: string) =>
@@ -116,6 +118,11 @@ export const StatsFilters = ({
   const seasonOptions = availableSeasons.map((s) => ({
     key: s.id,
     label: s.name,
+  }));
+
+  const tournamentOptions = availableTournaments.map((t) => ({
+    key: t.id,
+    label: t.name,
   }));
 
   return (
@@ -146,6 +153,16 @@ export const StatsFilters = ({
           onSelect={(v) => onFiltersChange({ ...filters, seasonId: v })}
           isOpen={activeFilter === "seasonId"}
           onToggle={() => toggleFilter("seasonId")}
+        />
+      )}
+      {tournamentOptions.length > 0 && (
+        <FilterDropdown
+          label="大会"
+          value={filters.tournamentId}
+          options={tournamentOptions}
+          onSelect={(v) => onFiltersChange({ ...filters, tournamentId: v })}
+          isOpen={activeFilter === "tournamentId"}
+          onToggle={() => toggleFilter("tournamentId")}
         />
       )}
     </View>
