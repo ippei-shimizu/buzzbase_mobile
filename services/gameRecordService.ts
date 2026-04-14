@@ -136,6 +136,17 @@ export const getTournaments = async (): Promise<
   return response.data;
 };
 
+/** GET /tournaments/user_tournaments — ユーザーの試合に紐づく大会のみ取得 */
+export const getUserTournaments = async (
+  userId?: number,
+): Promise<{ id: number; name: string }[]> => {
+  const params = userId ? { user_id: userId } : {};
+  const response = await axiosInstance.get("/tournaments/user_tournaments", {
+    params,
+  });
+  return response.data;
+};
+
 /** POST /tournaments — 大会名新規作成 */
 export const createTournament = async (
   name: string,
