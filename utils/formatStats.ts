@@ -11,8 +11,8 @@ export function formatRate(value: number): string {
 }
 
 /**
- * 防御率など小数2桁の率系成績値をフォーマットする
- * 1未満の場合は先頭の0を除去
+ * 勝率など小数2桁の率系成績値をフォーマットする
+ * 1未満の場合は先頭の0を除去（例: 0.67 → .67）
  */
 export function formatRate2(value: number): string {
   const formatted = value.toFixed(2);
@@ -20,4 +20,12 @@ export function formatRate2(value: number): string {
     return formatted.replace(/^0/, "");
   }
   return formatted;
+}
+
+/**
+ * 防御率・WHIP・K/9等の投手指標をフォーマットする
+ * 先頭の0を除去しない（例: 0.50 → 0.50）
+ */
+export function formatEra(value: number): string {
+  return value.toFixed(2);
 }

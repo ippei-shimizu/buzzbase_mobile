@@ -1,7 +1,7 @@
 import type { BattingStats, PitchingStats } from "../../types/dashboard";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { formatRate, formatRate2 } from "@utils/formatStats";
+import { formatRate, formatEra } from "@utils/formatStats";
 import { EmptyState } from "../dashboard/EmptyState";
 
 interface ProfileStatsTabProps {
@@ -13,7 +13,7 @@ interface ProfileStatsTabProps {
 function formatStat(value: number | undefined | null, decimals = 3): string {
   if (value == null) return "-";
   if (decimals === 3) return formatRate(value);
-  if (decimals === 2) return formatRate2(value);
+  if (decimals === 2) return formatEra(value);
   return value.toFixed(decimals);
 }
 
