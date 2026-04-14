@@ -27,9 +27,8 @@ const GameResultCard = ({ game }: { game: RecentGameResult }) => {
 
   const handlePress = () => {
     router.push({
-      pathname: "/(game-results)/[id]",
+      pathname: "/game-result-detail",
       params: {
-        id: game.id,
         game: JSON.stringify({
           game_result_id: game.id,
           user_id: 0,
