@@ -17,10 +17,12 @@ export const getGroupDetail = async (
   id: number,
   year?: string,
   matchType?: string,
+  tournamentId?: string,
 ): Promise<GroupDetail> => {
   const params = new URLSearchParams();
   if (year) params.append("year", year);
   if (matchType) params.append("match_type", matchType);
+  if (tournamentId) params.append("tournament_id", tournamentId);
   const query = params.toString();
   const response = await axiosInstance.get<GroupDetail>(
     `/groups/${id}${query ? `?${query}` : ""}`,

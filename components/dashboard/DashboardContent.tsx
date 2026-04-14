@@ -29,7 +29,7 @@ export const DashboardContent = ({
   const router = useRouter();
 
   const handleGroupPress = (groupId: number) => {
-    router.push(`/(groups)/${groupId}`);
+    router.push({ pathname: "/group-detail", params: { id: groupId } });
   };
 
   const handleShowAll = () => {

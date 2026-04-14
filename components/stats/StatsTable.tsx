@@ -1,7 +1,7 @@
 import type { BattingStatsRow, PitchingStatsRow } from "../../types/stats";
 import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { formatRate, formatRate2 } from "@utils/formatStats";
+import { formatRate, formatEra } from "@utils/formatStats";
 
 interface Column<T> {
   key: keyof T;
@@ -18,7 +18,7 @@ interface StatsTableProps<T> {
 }
 
 const fmt3 = (v: number) => formatRate(v);
-const fmt2 = (v: number) => formatRate2(v);
+const fmt2 = (v: number) => formatEra(v);
 const fmtInt = (v: number) => String(v);
 
 const VERTICAL_CHAR_MAP: Record<string, string> = {

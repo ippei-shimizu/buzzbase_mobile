@@ -1,12 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useLocalSearchParams, Stack } from "expo-router";
 import React, { useState } from "react";
 import {
   ScrollView,
   View,
   Text,
   Image,
-  TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
   StyleSheet,
@@ -15,9 +13,8 @@ import { GroupDetailStats } from "@components/groups/GroupDetailStats";
 import { GroupDefaultIcon } from "@components/icon/GroupDefaultIcon";
 import { useGroupDetail } from "@hooks/useGroups";
 
-export default function GroupDetailScreen() {
+export default function GroupDetailModal() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const groupId = id ? Number(id) : undefined;
   const [selectedYear, setSelectedYear] = useState("通算");
   const [selectedMatchType, setSelectedMatchType] = useState("全て");
@@ -54,13 +51,7 @@ export default function GroupDetailScreen() {
         options={{
           title: "",
           headerTitle: () => null,
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => router.push(`/(groups)/members?id=${group.id}`)}
-            >
-              <Ionicons name="menu-outline" size={24} color="#F4F4F4" />
-            </TouchableOpacity>
-          ),
+          headerBackTitle: "戻る",
         }}
       />
       <ScrollView
@@ -118,22 +109,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#2E2E2E",
-  },
-  headerTitleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  headerIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-  },
-  headerTitle: {
-    color: "#F4F4F4",
-    fontSize: 16,
-    fontWeight: "600",
-    maxWidth: 200,
   },
   groupNameRow: {
     flexDirection: "row",

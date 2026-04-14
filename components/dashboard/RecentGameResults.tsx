@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   type ViewStyle,
 } from "react-native";
+import { useProfile } from "@hooks/useProfile";
 import { EmptyState } from "./EmptyState";
 
 interface RecentGameResultsProps {
@@ -22,17 +23,17 @@ const formatDate = (dateStr: string): string => {
 
 const GameResultCard = ({ game }: { game: RecentGameResult }) => {
   const router = useRouter();
+  const { profile } = useProfile();
   const isWin = game.my_team_score > game.opponent_team_score;
   const isLoss = game.my_team_score < game.opponent_team_score;
 
   const handlePress = () => {
     router.push({
-      pathname: "/(game-results)/[id]",
+      pathname: "/game-result-detail",
       params: {
-        id: game.id,
         game: JSON.stringify({
           game_result_id: game.id,
-          user_id: 0,
+          user_id: profile?.id ?? 0,
           season_id: null,
           season_name: null,
           match_result: {

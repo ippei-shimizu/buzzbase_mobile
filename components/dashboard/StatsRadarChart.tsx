@@ -168,7 +168,7 @@ export const StatsRadarChart = ({
 
           const tooltipPos: ViewStyle = {
             position: "absolute" as const,
-            top: isTop ? p.y - 70 : p.y + 18,
+            top: isTop ? p.y - 70 : p.y - 40,
             ...(isLeft
               ? { left: 0 }
               : isRight

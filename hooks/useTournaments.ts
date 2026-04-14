@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { getTournaments } from "@services/gameRecordService";
+import { getUserTournaments } from "@services/gameRecordService";
 
-export const useTournaments = () => {
+export const useTournaments = (userId?: number) => {
   const { data, isLoading } = useQuery({
-    queryKey: ["tournaments"],
-    queryFn: getTournaments,
+    queryKey: ["userTournaments", userId],
+    queryFn: () => getUserTournaments(userId),
   });
 
   return {

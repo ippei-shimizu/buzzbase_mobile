@@ -7,6 +7,7 @@ interface Props {
 export function AppleSignInButton({ onPress }: Props) {
   if (Platform.OS !== "ios") return null;
 
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const AppleAuthentication = require("expo-apple-authentication");
 
   return (

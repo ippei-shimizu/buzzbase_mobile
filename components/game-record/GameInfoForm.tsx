@@ -8,7 +8,9 @@ import {
   ScrollView,
   TextInput as RNTextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   StyleSheet,
+  Keyboard,
 } from "react-native";
 import { Button } from "@components/ui/Button";
 import { SelectPicker } from "@components/ui/SelectPicker";
@@ -217,9 +219,6 @@ export function GameInfoForm({
                 setShowTournamentSuggestions(true);
               }}
               onFocus={() => setShowTournamentSuggestions(true)}
-              onBlur={() =>
-                setTimeout(() => setShowTournamentSuggestions(false), 200)
-              }
               placeholder="大会名を入力"
               placeholderTextColor="#71717A"
             />
@@ -227,21 +226,32 @@ export function GameInfoForm({
           </View>
         </FormRow>
         {showTournamentSuggestions && filteredTournaments.length > 0 && (
-          <View style={styles.suggestions}>
-            {filteredTournaments.slice(0, 5).map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                style={styles.suggestionItem}
-                onPress={() => {
-                  onFieldChange("tournamentName", item.name);
-                  onFieldChange("tournamentId", item.id);
-                  setShowTournamentSuggestions(false);
-                }}
-              >
-                <Text style={styles.suggestionText}>{item.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <>
+            <TouchableWithoutFeedback
+              onPress={() => {
+                setShowTournamentSuggestions(false);
+                Keyboard.dismiss();
+              }}
+            >
+              <View style={styles.suggestionsOverlay} />
+            </TouchableWithoutFeedback>
+            <ScrollView style={styles.suggestions} nestedScrollEnabled>
+              {filteredTournaments.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.suggestionItem}
+                  onPress={() => {
+                    onFieldChange("tournamentName", item.name);
+                    onFieldChange("tournamentId", item.id);
+                    setShowTournamentSuggestions(false);
+                    Keyboard.dismiss();
+                  }}
+                >
+                  <Text style={styles.suggestionText}>{item.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
         )}
 
         <View style={styles.divider} />
@@ -524,12 +534,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
+  suggestionsOverlay: {
+    position: "absolute" as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 9,
+  },
   suggestions: {
     backgroundColor: "#3a3a3a",
     borderRadius: 8,
     marginTop: -8,
     marginBottom: 8,
-    maxHeight: 150,
+    maxHeight: 200,
+    zIndex: 10,
   },
   suggestionItem: {
     paddingVertical: 10,

@@ -1,31 +1,22 @@
 import type { GroupDetail, GroupUser } from "../../types/group";
+import type { StatsFilters as StatsFiltersType } from "../../types/profile";
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
+import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { StatsFilters } from "@components/stats/StatsFilters";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
-import { FilterChip } from "@components/ui/FilterChip";
 import { API_BASE_URL } from "@constants/api";
-import { formatRate, formatRate2 } from "@utils/formatStats";
-
-const MATCH_TYPE_OPTIONS = [
-  { key: "全て", label: "全て" },
-  { key: "regular", label: "公式戦" },
-  { key: "open", label: "オープン戦" },
-];
+import { formatRate, formatEra } from "@utils/formatStats";
 
 interface GroupDetailStatsProps {
   detail: GroupDetail;
   selectedYear: string;
   selectedMatchType: string;
+  selectedTournamentId?: string;
   availableYears: number[];
+  availableTournaments?: { id: number; name: string }[];
   onYearChange: (year: string) => void;
   onMatchTypeChange: (matchType: string) => void;
+  onTournamentChange: (tournamentId: string | undefined) => void;
 }
 
 interface Category {
@@ -97,7 +88,7 @@ function formatValue(value: number | null, decimals: number): string {
   if (value === null) return "-";
   if (decimals === 0) return String(value);
   if (decimals === 3) return formatRate(value);
-  if (decimals === 2) return formatRate2(value);
+  if (decimals === 2) return formatEra(value);
   return value.toFixed(decimals);
 }
 
@@ -147,12 +138,42 @@ export const GroupDetailStats = ({
   detail,
   selectedYear,
   selectedMatchType,
+  selectedTournamentId,
   availableYears,
+  availableTournaments = [],
   onYearChange,
   onMatchTypeChange,
+  onTournamentChange,
 }: GroupDetailStatsProps) => {
   const [activeTab, setActiveTab] = useState<"batting" | "pitching">("batting");
   const [selectedCategory, setSelectedCategory] = useState(0);
+
+  // StatsFiltersは日本語キー("公式戦"/"オープン戦")を使うが、
+  // グループAPIはDB値("regular"/"open")を期待するため変換する
+  const matchTypeToJa: Record<string, string> = {
+    regular: "公式戦",
+    open: "オープン戦",
+  };
+  const matchTypeToEn: Record<string, string> = {
+    公式戦: "regular",
+    オープン戦: "open",
+  };
+
+  const filters: StatsFiltersType = {
+    year: selectedYear === "通算" ? undefined : selectedYear,
+    matchType:
+      selectedMatchType === "全て"
+        ? undefined
+        : (matchTypeToJa[selectedMatchType] ?? selectedMatchType),
+    tournamentId: selectedTournamentId,
+  };
+
+  const handleFiltersChange = (newFilters: StatsFiltersType) => {
+    onYearChange(newFilters.year ?? "通算");
+    const mt = newFilters.matchType;
+    onMatchTypeChange(mt ? (matchTypeToEn[mt] ?? mt) : "全て");
+    onTournamentChange(newFilters.tournamentId);
+  };
 
   const categories =
     activeTab === "batting" ? BATTING_CATEGORIES : PITCHING_CATEGORIES;
@@ -190,33 +211,15 @@ export const GroupDetailStats = ({
       <Text style={styles.sectionTitle}>個人成績ランキング</Text>
 
       {/* Filters */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterContainer}
-        contentContainerStyle={styles.filterContent}
-      >
-        <FilterChip
-          label="年度"
-          value={selectedYear}
-          defaultValue="通算"
-          options={[
-            { key: "通算", label: "通算" },
-            ...availableYears.map((y) => ({
-              key: String(y),
-              label: `${y}年`,
-            })),
-          ]}
-          onChange={onYearChange}
-        />
-        <FilterChip
-          label="種別"
-          value={selectedMatchType}
-          defaultValue="全て"
-          options={MATCH_TYPE_OPTIONS}
-          onChange={onMatchTypeChange}
-        />
-      </ScrollView>
+      <StatsFilters
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        availableYears={availableYears}
+        availableTournaments={availableTournaments.map((t) => ({
+          id: String(t.id),
+          name: t.name,
+        }))}
+      />
 
       {/* Tabs */}
       <View style={styles.tabContainer}>
@@ -294,13 +297,7 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 18,
     fontWeight: "700",
-    marginBottom: 12,
-  },
-  filterContainer: {
-    marginBottom: 12,
-  },
-  filterContent: {
-    gap: 8,
+    marginBottom: 4,
   },
   tabContainer: {
     flexDirection: "row",

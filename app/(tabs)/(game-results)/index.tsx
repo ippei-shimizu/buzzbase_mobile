@@ -62,47 +62,49 @@ function FilterDropdown({
             <View style={filterStyles.overlayBg} />
           </TouchableWithoutFeedback>
           <View style={filterStyles.dropdown}>
-            <TouchableOpacity
-              style={[
-                filterStyles.dropdownItem,
-                !value && filterStyles.dropdownItemActive,
-              ]}
-              onPress={() => {
-                onSelect(undefined);
-                onToggle();
-              }}
-            >
-              <Text
-                style={[
-                  filterStyles.dropdownText,
-                  !value && filterStyles.dropdownTextActive,
-                ]}
-              >
-                全て
-              </Text>
-            </TouchableOpacity>
-            {options.map((opt) => (
+            <ScrollView style={filterStyles.dropdownScroll} nestedScrollEnabled>
               <TouchableOpacity
-                key={opt.key}
                 style={[
                   filterStyles.dropdownItem,
-                  value === opt.key && filterStyles.dropdownItemActive,
+                  !value && filterStyles.dropdownItemActive,
                 ]}
                 onPress={() => {
-                  onSelect(opt.key);
+                  onSelect(undefined);
                   onToggle();
                 }}
               >
                 <Text
                   style={[
                     filterStyles.dropdownText,
-                    value === opt.key && filterStyles.dropdownTextActive,
+                    !value && filterStyles.dropdownTextActive,
                   ]}
                 >
-                  {opt.label}
+                  全て
                 </Text>
               </TouchableOpacity>
-            ))}
+              {options.map((opt) => (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[
+                    filterStyles.dropdownItem,
+                    value === opt.key && filterStyles.dropdownItemActive,
+                  ]}
+                  onPress={() => {
+                    onSelect(opt.key);
+                    onToggle();
+                  }}
+                >
+                  <Text
+                    style={[
+                      filterStyles.dropdownText,
+                      value === opt.key && filterStyles.dropdownTextActive,
+                    ]}
+                  >
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </>
       )}
@@ -148,6 +150,9 @@ const filterStyles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  dropdownScroll: {
+    maxHeight: 280,
   },
   dropdownItem: {
     paddingHorizontal: 16,
