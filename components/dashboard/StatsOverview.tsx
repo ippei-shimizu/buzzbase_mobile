@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import {
   View,
   Text,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -13,7 +14,7 @@ import {
 import { useProfileStats } from "@hooks/useProfileStats";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useTournaments } from "@hooks/useTournaments";
-import { formatRate, formatRate2 } from "@utils/formatStats";
+import { formatRate, formatEra } from "@utils/formatStats";
 import {
   normalizeBattingStats,
   normalizePitchingStats,
@@ -30,7 +31,7 @@ interface StatsOverviewProps {
 function formatStat(value: number | undefined | null, decimals = 3): string {
   if (value == null) return "-";
   if (decimals === 3) return formatRate(value);
-  if (decimals === 2) return formatRate2(value);
+  if (decimals === 2) return formatEra(value);
   return value.toFixed(decimals);
 }
 
@@ -90,47 +91,49 @@ function FilterDropdown({
             <View style={filterStyles.overlayBg} />
           </TouchableWithoutFeedback>
           <View style={filterStyles.dropdown}>
-            <TouchableOpacity
-              style={[
-                filterStyles.dropdownItem,
-                !value && filterStyles.dropdownItemActive,
-              ]}
-              onPress={() => {
-                onSelect(undefined);
-                onToggle();
-              }}
-            >
-              <Text
-                style={[
-                  filterStyles.dropdownText,
-                  !value && filterStyles.dropdownTextActive,
-                ]}
-              >
-                全て
-              </Text>
-            </TouchableOpacity>
-            {options.map((opt) => (
+            <ScrollView style={filterStyles.dropdownScroll} nestedScrollEnabled>
               <TouchableOpacity
-                key={opt.key}
                 style={[
                   filterStyles.dropdownItem,
-                  value === opt.key && filterStyles.dropdownItemActive,
+                  !value && filterStyles.dropdownItemActive,
                 ]}
                 onPress={() => {
-                  onSelect(opt.key);
+                  onSelect(undefined);
                   onToggle();
                 }}
               >
                 <Text
                   style={[
                     filterStyles.dropdownText,
-                    value === opt.key && filterStyles.dropdownTextActive,
+                    !value && filterStyles.dropdownTextActive,
                   ]}
                 >
-                  {opt.label}
+                  全て
                 </Text>
               </TouchableOpacity>
-            ))}
+              {options.map((opt) => (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[
+                    filterStyles.dropdownItem,
+                    value === opt.key && filterStyles.dropdownItemActive,
+                  ]}
+                  onPress={() => {
+                    onSelect(opt.key);
+                    onToggle();
+                  }}
+                >
+                  <Text
+                    style={[
+                      filterStyles.dropdownText,
+                      value === opt.key && filterStyles.dropdownTextActive,
+                    ]}
+                  >
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </>
       )}
@@ -528,6 +531,9 @@ const filterStyles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  dropdownScroll: {
+    maxHeight: 280,
   },
   dropdownItem: {
     paddingHorizontal: 16,

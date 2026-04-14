@@ -69,47 +69,52 @@ function TableFilterDropdown({
             <View style={tableFilterStyles.overlayBg} />
           </TouchableWithoutFeedback>
           <View style={tableFilterStyles.dropdown}>
-            <TouchableOpacity
-              style={[
-                tableFilterStyles.dropdownItem,
-                !value && tableFilterStyles.dropdownItemActive,
-              ]}
-              onPress={() => {
-                onSelect(undefined);
-                onToggle();
-              }}
+            <ScrollView
+              style={tableFilterStyles.dropdownScroll}
+              nestedScrollEnabled
             >
-              <Text
-                style={[
-                  tableFilterStyles.dropdownText,
-                  !value && tableFilterStyles.dropdownTextActive,
-                ]}
-              >
-                全て
-              </Text>
-            </TouchableOpacity>
-            {options.map((opt) => (
               <TouchableOpacity
-                key={opt.key}
                 style={[
                   tableFilterStyles.dropdownItem,
-                  value === opt.key && tableFilterStyles.dropdownItemActive,
+                  !value && tableFilterStyles.dropdownItemActive,
                 ]}
                 onPress={() => {
-                  onSelect(opt.key);
+                  onSelect(undefined);
                   onToggle();
                 }}
               >
                 <Text
                   style={[
                     tableFilterStyles.dropdownText,
-                    value === opt.key && tableFilterStyles.dropdownTextActive,
+                    !value && tableFilterStyles.dropdownTextActive,
                   ]}
                 >
-                  {opt.label}
+                  全て
                 </Text>
               </TouchableOpacity>
-            ))}
+              {options.map((opt) => (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[
+                    tableFilterStyles.dropdownItem,
+                    value === opt.key && tableFilterStyles.dropdownItemActive,
+                  ]}
+                  onPress={() => {
+                    onSelect(opt.key);
+                    onToggle();
+                  }}
+                >
+                  <Text
+                    style={[
+                      tableFilterStyles.dropdownText,
+                      value === opt.key && tableFilterStyles.dropdownTextActive,
+                    ]}
+                  >
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </>
       )}
@@ -167,7 +172,7 @@ const tableFilterStyles = StyleSheet.create({
   dropdown: {
     position: "absolute",
     top: 36,
-    left: 0,
+    right: 0,
     zIndex: 100,
     backgroundColor: "#3A3A3A",
     borderRadius: 10,
@@ -178,6 +183,9 @@ const tableFilterStyles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  dropdownScroll: {
+    maxHeight: 280,
   },
   dropdownItem: { paddingHorizontal: 16, paddingVertical: 10 },
   dropdownItemActive: { backgroundColor: "#4A4A4A" },
@@ -448,6 +456,7 @@ export default function StatsScreen() {
               />
             </FetchingOverlay>
           )}
+          <View style={styles.tableBottomSpacer} />
         </View>
       )}
 
@@ -507,6 +516,7 @@ export default function StatsScreen() {
               />
             </FetchingOverlay>
           )}
+          <View style={styles.tableBottomSpacer} />
         </View>
       )}
     </ScrollView>
@@ -569,5 +579,8 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     marginBottom: 12,
     justifyContent: "flex-end",
+  },
+  tableBottomSpacer: {
+    height: 300,
   },
 });

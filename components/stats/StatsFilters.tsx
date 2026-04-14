@@ -6,6 +6,7 @@ import {
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  ScrollView,
   StyleSheet,
 } from "react-native";
 
@@ -54,44 +55,49 @@ function FilterDropdown({
             <View style={styles.overlayBg} />
           </TouchableWithoutFeedback>
           <View style={styles.dropdown}>
-            <TouchableOpacity
-              style={[styles.dropdownItem, !value && styles.dropdownItemActive]}
-              onPress={() => {
-                onSelect(undefined);
-                onToggle();
-              }}
-            >
-              <Text
-                style={[
-                  styles.dropdownText,
-                  !value && styles.dropdownTextActive,
-                ]}
-              >
-                全て
-              </Text>
-            </TouchableOpacity>
-            {options.map((opt) => (
+            <ScrollView style={styles.dropdownScroll} nestedScrollEnabled>
               <TouchableOpacity
-                key={opt.key}
                 style={[
                   styles.dropdownItem,
-                  value === opt.key && styles.dropdownItemActive,
+                  !value && styles.dropdownItemActive,
                 ]}
                 onPress={() => {
-                  onSelect(opt.key);
+                  onSelect(undefined);
                   onToggle();
                 }}
               >
                 <Text
                   style={[
                     styles.dropdownText,
-                    value === opt.key && styles.dropdownTextActive,
+                    !value && styles.dropdownTextActive,
                   ]}
                 >
-                  {opt.label}
+                  全て
                 </Text>
               </TouchableOpacity>
-            ))}
+              {options.map((opt) => (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[
+                    styles.dropdownItem,
+                    value === opt.key && styles.dropdownItemActive,
+                  ]}
+                  onPress={() => {
+                    onSelect(opt.key);
+                    onToggle();
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownText,
+                      value === opt.key && styles.dropdownTextActive,
+                    ]}
+                  >
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </>
       )}
@@ -213,6 +219,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  dropdownScroll: {
+    maxHeight: 280,
   },
   dropdownItem: {
     paddingHorizontal: 16,
