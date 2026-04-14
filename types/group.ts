@@ -20,6 +20,7 @@ export interface GroupDetail {
   pitching_aggregate: Record<string, number | null>[];
   pitching_stats: Record<string, number | null>[];
   available_years?: number[];
+  available_tournaments?: { id: number; name: string }[];
 }
 
 export interface GroupMembers {
