@@ -1,12 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useLocalSearchParams, Stack } from "expo-router";
 import React, { useState } from "react";
 import {
   ScrollView,
   View,
   Text,
   Image,
-  TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
   StyleSheet,
@@ -17,7 +15,6 @@ import { useGroupDetail } from "@hooks/useGroups";
 
 export default function GroupDetailModal() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const groupId = id ? Number(id) : undefined;
   const [selectedYear, setSelectedYear] = useState("通算");
   const [selectedMatchType, setSelectedMatchType] = useState("全て");
@@ -55,13 +52,6 @@ export default function GroupDetailModal() {
           title: "",
           headerTitle: () => null,
           headerBackTitle: "戻る",
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => router.push(`/(groups)/members?id=${group.id}`)}
-            >
-              <Ionicons name="menu-outline" size={24} color="#F4F4F4" />
-            </TouchableOpacity>
-          ),
         }}
       />
       <ScrollView
