@@ -155,7 +155,7 @@ export default function UserProfileScreen() {
       {data.incoming_follow_request_id && (
         <FollowRequestBanner
           followRequestId={data.incoming_follow_request_id}
-          actorName={data.user.name ?? ""}
+          actorName={data.user.name ?? "このユーザー"}
         />
       )}
 

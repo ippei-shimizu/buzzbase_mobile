@@ -105,6 +105,7 @@ export const useRejectFollowRequest = () => {
     mutationFn: rejectFollowRequest,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
   });
 

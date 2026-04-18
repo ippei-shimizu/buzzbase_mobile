@@ -13,7 +13,12 @@ export default function NotificationGameDetailScreen() {
     return null;
   }
 
-  const game: GameResult = JSON.parse(gameJson);
+  let game: GameResult;
+  try {
+    game = JSON.parse(gameJson);
+  } catch {
+    return null;
+  }
 
   const handleShare = () => {
     shareGameResult(game);
