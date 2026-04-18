@@ -12,6 +12,9 @@ export default function NotificationsTabLayout() {
     >
       <Stack.Screen name="index" options={{ title: "お知らせ" }} />
       <Stack.Screen name="[id]" options={{ title: "お知らせ詳細" }} />
+      <Stack.Screen name="user/[userId]" options={{ title: "プロフィール" }} />
+      <Stack.Screen name="user/follows" options={{ title: "フォロー" }} />
+      <Stack.Screen name="user/game-detail" options={{ title: "試合詳細" }} />
     </Stack>
   );
 }

@@ -4,6 +4,8 @@ import {
   followUser,
   unfollowUser,
   getFollowersUsers,
+  acceptFollowRequest,
+  rejectFollowRequest,
 } from "../services/relationshipService";
 
 export const useUserProfileDetail = (userId: string | undefined) => {
@@ -75,5 +77,40 @@ export const useUnfollowUser = () => {
     isUnfollowing: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error,
+  };
+};
+
+export const useAcceptFollowRequest = () => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: acceptFollowRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["followersUsers"] });
+    },
+  });
+
+  return {
+    acceptFollowRequest: mutation.mutateAsync,
+    isAccepting: mutation.isPending,
+  };
+};
+
+export const useRejectFollowRequest = () => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: rejectFollowRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    },
+  });
+
+  return {
+    rejectFollowRequest: mutation.mutateAsync,
+    isRejecting: mutation.isPending,
   };
 };

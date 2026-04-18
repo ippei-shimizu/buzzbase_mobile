@@ -43,7 +43,7 @@ export default function NotificationsScreen() {
       if (un.read_at === null) {
         markNotificationRead(un.id);
       }
-      router.push(`/(profile)/${un.actor_user_id}`);
+      router.push(`/(notifications)/user/${un.actor_user_id}`);
     }
   };
 

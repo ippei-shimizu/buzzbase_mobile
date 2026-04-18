@@ -1,5 +1,5 @@
-import type { GameResult } from "../../../types/gameResult";
-import type { StatsFilters } from "../../../types/profile";
+import type { GameResult } from "../../../../types/gameResult";
+import type { StatsFilters } from "../../../../types/profile";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState, useCallback } from "react";
@@ -31,7 +31,7 @@ import {
   useUnfollowUser,
 } from "@hooks/useRelationship";
 
-export default function UserProfileScreen() {
+export default function NotificationUserProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
@@ -114,7 +114,7 @@ export default function UserProfileScreen() {
 
   const handlePressGame = (game: GameResult) => {
     router.push({
-      pathname: "/(profile)/game-detail",
+      pathname: "/(notifications)/user/game-detail",
       params: {
         game: JSON.stringify(game),
       },
@@ -169,13 +169,13 @@ export default function UserProfileScreen() {
           onFollowPress={handleFollowPress}
           onFollowingCountPress={() => {
             router.push({
-              pathname: "/(profile)/follows",
+              pathname: "/(notifications)/user/follows",
               params: { id: String(data.user.id), tab: "following" },
             });
           }}
           onFollowersCountPress={() => {
             router.push({
-              pathname: "/(profile)/follows",
+              pathname: "/(notifications)/user/follows",
               params: { id: String(data.user.id), tab: "followers" },
             });
           }}
