@@ -4,10 +4,22 @@ import type {
   ManagementNotification,
 } from "../../types/notification";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
 import { API_BASE_URL } from "@constants/api";
+import {
+  useAcceptFollowRequest,
+  useRejectFollowRequest,
+} from "@hooks/useRelationship";
+import { deleteNotification } from "@services/notificationService";
 
 interface NotificationItemProps {
   notification: NotificationItemType;
@@ -78,9 +90,44 @@ export const NotificationItemComponent = ({
   const iconName = getIconName(notification.event_type);
   const text = getNotificationText(notification);
 
+  const isFollowRequest =
+    isUserNotification(notification) &&
+    notification.event_type === "follow_request";
+
+  const [handled, setHandled] = useState(false);
+  const [handledType, setHandledType] = useState<"accepted" | "rejected">();
+  const { acceptFollowRequest, isAccepting } = useAcceptFollowRequest();
+  const { rejectFollowRequest, isRejecting } = useRejectFollowRequest();
+
+  const handleAccept = async () => {
+    if (!isUserNotification(notification) || !notification.follow_request_id)
+      return;
+    try {
+      await acceptFollowRequest(notification.follow_request_id);
+      await deleteNotification(notification.id);
+      setHandled(true);
+      setHandledType("accepted");
+    } catch {}
+  };
+
+  const handleReject = async () => {
+    if (!isUserNotification(notification) || !notification.follow_request_id)
+      return;
+    try {
+      await rejectFollowRequest(notification.follow_request_id);
+      await deleteNotification(notification.id);
+      setHandled(true);
+      setHandledType("rejected");
+    } catch {}
+  };
+
   return (
     <TouchableOpacity
-      style={[styles.container, isUnread && styles.unreadContainer]}
+      style={[
+        styles.container,
+        isUnread && styles.unreadContainer,
+        handled && styles.handledContainer,
+      ]}
       onPress={() => onPress(notification)}
       activeOpacity={0.7}
     >
@@ -106,28 +153,68 @@ export const NotificationItemComponent = ({
       )}
 
       <View style={styles.content}>
-        <Text style={styles.text} numberOfLines={2}>
-          {isUserNotification(notification) && (
-            <Text style={styles.actorName}>{notification.actor_name}</Text>
-          )}
-          {isUserNotification(notification)
-            ? text.slice(notification.actor_name.length)
-            : text}
-        </Text>
-        <View style={styles.meta}>
-          {isUserNotification(notification) && (
-            <Ionicons
-              name={iconName}
-              size={14}
-              color="#A1A1AA"
-              style={styles.metaIcon}
-            />
-          )}
-          <Text style={styles.date}>{formatDate(notification.created_at)}</Text>
-        </View>
+        {handled ? (
+          <Text style={[styles.text, styles.handledText]}>
+            <Text style={styles.actorName}>
+              {(notification as UserNotification).actor_name}
+            </Text>
+            さんのフォローリクエストを
+            {handledType === "accepted" ? "承認しました" : "拒否しました"}
+          </Text>
+        ) : (
+          <>
+            <Text style={styles.text} numberOfLines={2}>
+              {isUserNotification(notification) && (
+                <Text style={styles.actorName}>{notification.actor_name}</Text>
+              )}
+              {isUserNotification(notification)
+                ? text.slice(notification.actor_name.length)
+                : text}
+            </Text>
+            <View style={styles.meta}>
+              {isUserNotification(notification) && (
+                <Ionicons
+                  name={iconName}
+                  size={14}
+                  color="#A1A1AA"
+                  style={styles.metaIcon}
+                />
+              )}
+              <Text style={styles.date}>
+                {formatDate(notification.created_at)}
+              </Text>
+            </View>
+            {isFollowRequest && (
+              <View style={styles.actionButtons}>
+                <TouchableOpacity
+                  style={styles.acceptButton}
+                  onPress={handleAccept}
+                  disabled={isAccepting || isRejecting}
+                >
+                  {isAccepting ? (
+                    <ActivityIndicator size="small" color="#F4F4F4" />
+                  ) : (
+                    <Text style={styles.acceptButtonText}>承認する</Text>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.rejectButton}
+                  onPress={handleReject}
+                  disabled={isAccepting || isRejecting}
+                >
+                  {isRejecting ? (
+                    <ActivityIndicator size="small" color="#F4F4F4" />
+                  ) : (
+                    <Text style={styles.rejectButtonText}>拒否する</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+          </>
+        )}
       </View>
 
-      {isUnread && <View style={styles.unreadDot} />}
+      {isUnread && !handled && <View style={styles.unreadDot} />}
     </TouchableOpacity>
   );
 };
@@ -184,5 +271,42 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "#d08000",
     marginLeft: 8,
+  },
+  handledContainer: {
+    opacity: 0.5,
+  },
+  handledText: {
+    color: "#A1A1AA",
+  },
+  actionButtons: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 8,
+  },
+  acceptButton: {
+    backgroundColor: "#d08000",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 6,
+    minWidth: 80,
+    alignItems: "center",
+  },
+  acceptButtonText: {
+    color: "#F4F4F4",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  rejectButton: {
+    backgroundColor: "#3A3A3A",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 6,
+    minWidth: 80,
+    alignItems: "center",
+  },
+  rejectButtonText: {
+    color: "#F4F4F4",
+    fontSize: 13,
+    fontWeight: "600",
   },
 });
