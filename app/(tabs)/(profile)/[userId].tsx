@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
+import { FollowRequestBanner } from "@components/profile/FollowRequestBanner";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
 import { useUserAwards } from "@hooks/useAwards";
@@ -150,6 +151,14 @@ export default function UserProfileScreen() {
         />
       }
     >
+      {/* フォローリクエストバナー */}
+      {data.incoming_follow_request_id && (
+        <FollowRequestBanner
+          followRequestId={data.incoming_follow_request_id}
+          actorName={data.user.name ?? ""}
+        />
+      )}
+
       {/* index 0: ProfileHeader */}
       <View>
         <ProfileHeader
