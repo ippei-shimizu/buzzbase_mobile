@@ -41,6 +41,7 @@ export interface UserProfileDetail {
   following_count: number | null;
   followers_count: number | null;
   is_private: boolean;
+  incoming_follow_request_id: number | null;
 }
 
 export interface StatsFilters {

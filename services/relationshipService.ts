@@ -1,5 +1,9 @@
 import axiosInstance from "@utils/axiosInstance";
-import type { FollowResponse, UnfollowResponse } from "../types/relationship";
+import type {
+  FollowResponse,
+  FollowRequestResponse,
+  UnfollowResponse,
+} from "../types/relationship";
 import type { FollowingUser } from "../types/group";
 
 export const followUser = async (
@@ -16,6 +20,24 @@ export const unfollowUser = async (
 ): Promise<UnfollowResponse> => {
   const response = await axiosInstance.delete<UnfollowResponse>(
     `/relationships/${followedId}`,
+  );
+  return response.data;
+};
+
+export const acceptFollowRequest = async (
+  relationshipId: number,
+): Promise<FollowRequestResponse> => {
+  const response = await axiosInstance.post<FollowRequestResponse>(
+    `/relationships/${relationshipId}/accept_follow_request`,
+  );
+  return response.data;
+};
+
+export const rejectFollowRequest = async (
+  relationshipId: number,
+): Promise<FollowRequestResponse> => {
+  const response = await axiosInstance.post<FollowRequestResponse>(
+    `/relationships/${relationshipId}/reject_follow_request`,
   );
   return response.data;
 };
