@@ -15,7 +15,8 @@ export default function NoteCreateScreen() {
   const router = useRouter();
   const { createNote, isCreating } = useCreateBaseballNote();
 
-  const today = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(today);
   const [memo, setMemo] = useState("");
