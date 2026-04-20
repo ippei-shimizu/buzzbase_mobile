@@ -48,6 +48,7 @@ export default function Step1GameInfoScreen() {
 
   useEffect(() => {
     if (hasInitialized.current) return;
+    hasInitialized.current = true;
 
     const state = useGameRecordStore.getState();
     // 編集モードでないのに前回のデータが残っている場合はリセットして新規作成
@@ -56,7 +57,6 @@ export default function Step1GameInfoScreen() {
     }
 
     if (!useGameRecordStore.getState().isEditMode) {
-      hasInitialized.current = true;
       setIsInitializing(true);
       createGameResultMutation.mutate(undefined, {
         onSuccess: (data) => {
