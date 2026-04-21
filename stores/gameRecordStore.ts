@@ -82,7 +82,10 @@ const initialState = {
   seasonId: null,
   tournamentId: null,
   tournamentName: "",
-  date: new Date().toISOString().split("T")[0],
+  date: (() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  })(),
   matchType: "練習試合",
   myTeamName: "",
   myTeamId: null,
@@ -251,5 +254,9 @@ export const useGameRecordStore = create<GameRecordState>((set, get) => ({
     });
   },
 
-  reset: () => set(initialState),
+  reset: () => {
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    set({ ...initialState, date: today });
+  },
 }));

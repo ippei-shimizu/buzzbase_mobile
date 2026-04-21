@@ -47,9 +47,16 @@ export default function Step1GameInfoScreen() {
   }, [profile, teamsQuery.data]);
 
   useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
     const state = useGameRecordStore.getState();
-    if (!state.gameResultId && !state.isEditMode && !hasInitialized.current) {
-      hasInitialized.current = true;
+    // 編集モードでないのに前回のデータが残っている場合はリセットして新規作成
+    if (state.gameResultId && !state.isEditMode) {
+      store.reset();
+    }
+
+    if (!useGameRecordStore.getState().isEditMode) {
       setIsInitializing(true);
       createGameResultMutation.mutate(undefined, {
         onSuccess: (data) => {

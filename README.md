@@ -128,10 +128,10 @@ Google Sign-In・Push NotificationsはExpo Goで動作しないため、`Constan
 ### Expo Go（基本機能の確認）
 
 ```bash
-cd mobile
-yarn install
-yarn start
-# → QRコードをスマホのExpo Goアプリでスキャン
+# iOSシミュレータ
+npx expo run:ios
+# Androidエミュレータ
+npx expo run:android
 ```
 
 > Google認証・プッシュ通知はExpo Goでは動作しない

@@ -122,7 +122,7 @@ export function StatsTable<T extends { label: string; opponent?: string }>({
           {/* 固定列データ */}
           {rows.map((row, i) => {
             const career = isCareerRow(row);
-            const rowKey = `${row.label}-${row.opponent ?? ""}`;
+            const rowKey = `${row.label}-${row.opponent ?? ""}-${i}`;
             return (
               <View
                 key={rowKey}
@@ -173,7 +173,7 @@ export function StatsTable<T extends { label: string; opponent?: string }>({
             {/* スクロール領域データ */}
             {rows.map((row, i) => {
               const career = isCareerRow(row);
-              const rowKey = `${row.label}-${row.opponent ?? ""}`;
+              const rowKey = `${row.label}-${row.opponent ?? ""}-${i}`;
               return (
                 <View
                   key={rowKey}
