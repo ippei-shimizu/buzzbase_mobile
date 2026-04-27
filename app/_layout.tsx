@@ -1,5 +1,7 @@
 import "../global.css";
+import * as Sentry from "@sentry/react-native";
 import { QueryClientProvider } from "@tanstack/react-query";
+import Constants from "expo-constants";
 import * as Linking from "expo-linking";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -9,6 +11,15 @@ import { usePushNotifications } from "@hooks/usePushNotifications";
 import { useStoreReview } from "@hooks/useStoreReview";
 import { configureGoogleSignIn } from "@services/googleAuthService";
 import { queryClient } from "@utils/queryClient";
+
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: !__DEV__,
+  environment: __DEV__ ? "development" : "production",
+  release: Constants.expoConfig?.version,
+  tracesSampleRate: 0.1,
+  sendDefaultPii: false,
+});
 
 configureGoogleSignIn();
 
@@ -81,10 +92,12 @@ function RootLayoutInner() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <RootLayoutInner />
     </QueryClientProvider>
   );
 }
+
+export default Sentry.wrap(RootLayout);

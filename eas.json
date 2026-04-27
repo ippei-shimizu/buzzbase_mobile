@@ -14,7 +14,8 @@
         "EXPO_PUBLIC_API_URL": "http://localhost:3100",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "889577013867-8oe50vgbh3jdeo48m4j4gri3onak0unt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://4e52665b92ac47a7d12b146af4ecbdb1@o4510939494678528.ingest.us.sentry.io/4511292435202048"
       }
     },
     "development-device": {
@@ -24,7 +25,8 @@
         "EXPO_PUBLIC_API_URL": "http://localhost:3100",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "889577013867-8oe50vgbh3jdeo48m4j4gri3onak0unt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://4e52665b92ac47a7d12b146af4ecbdb1@o4510939494678528.ingest.us.sentry.io/4511292435202048"
       }
     },
     "preview": {
@@ -36,7 +38,8 @@
         "EXPO_PUBLIC_API_URL": "https://mysterious-hollows-68593-7476ce827bc4.herokuapp.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "889577013867-8oe50vgbh3jdeo48m4j4gri3onak0unt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://4e52665b92ac47a7d12b146af4ecbdb1@o4510939494678528.ingest.us.sentry.io/4511292435202048"
       }
     },
     "production": {
@@ -45,7 +48,8 @@
         "EXPO_PUBLIC_API_URL": "https://mysterious-hollows-68593-7476ce827bc4.herokuapp.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "889577013867-8oe50vgbh3jdeo48m4j4gri3onak0unt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://4e52665b92ac47a7d12b146af4ecbdb1@o4510939494678528.ingest.us.sentry.io/4511292435202048"
       }
     }
   },
