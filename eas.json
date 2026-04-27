@@ -12,6 +12,7 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "http://localhost:3100",
+        "EXPO_PUBLIC_APP_ENV": "development",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "889577013867-8oe50vgbh3jdeo48m4j4gri3onak0unt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com"
@@ -22,6 +23,7 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API_URL": "http://localhost:3100",
+        "EXPO_PUBLIC_APP_ENV": "development",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "889577013867-8oe50vgbh3jdeo48m4j4gri3onak0unt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com"
@@ -34,6 +36,7 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://mysterious-hollows-68593-7476ce827bc4.herokuapp.com",
+        "EXPO_PUBLIC_APP_ENV": "preview",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "889577013867-8oe50vgbh3jdeo48m4j4gri3onak0unt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com"
@@ -43,6 +46,7 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API_URL": "https://mysterious-hollows-68593-7476ce827bc4.herokuapp.com",
+        "EXPO_PUBLIC_APP_ENV": "production",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "889577013867-8oe50vgbh3jdeo48m4j4gri3onak0unt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com"

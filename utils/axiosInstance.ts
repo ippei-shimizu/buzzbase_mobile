@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import { API_V1_URL } from "@constants/api";
@@ -44,6 +45,17 @@ axiosInstance.interceptors.response.use(
       await SecureStore.deleteItemAsync("access-token");
       await SecureStore.deleteItemAsync("client");
       await SecureStore.deleteItemAsync("uid");
+    } else if (!error.response || error.response.status >= 500) {
+      Sentry.captureException(error, {
+        tags: {
+          source: "axios",
+          status: String(error.response?.status ?? "network"),
+        },
+        extra: {
+          url: error.config?.url,
+          method: error.config?.method,
+        },
+      });
     }
     return Promise.reject(error);
   },
