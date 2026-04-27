@@ -1,7 +1,8 @@
-import { Platform } from "react-native";
+import * as Sentry from "@sentry/react-native";
 import Constants from "expo-constants";
-import axiosInstance from "@utils/axiosInstance";
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
+import axiosInstance from "@utils/axiosInstance";
 
 const isExpoGo = Constants.appOwnership === "expo";
 
@@ -39,6 +40,9 @@ export const googleSignIn = async () => {
     await SecureStore.setItemAsync("client", headers["client"]);
     await SecureStore.setItemAsync("uid", headers["uid"]);
   }
+
+  const userId = apiResponse.data?.data?.id;
+  if (userId) Sentry.setUser({ id: String(userId) });
 
   return apiResponse.data;
 };

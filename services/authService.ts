@@ -5,8 +5,9 @@
  * レスポンスヘッダーからトークンをSecureStoreに保存する。
  * Web版 front/app/services/authService.tsx に対応。
  */
-import * as SecureStore from "expo-secure-store";
 import type { AuthResponse, SignInData, SignUpData } from "../types/auth";
+import * as Sentry from "@sentry/react-native";
+import * as SecureStore from "expo-secure-store";
 import axiosInstance from "@utils/axiosInstance";
 
 /** レスポンスヘッダーから認証トークンをSecureStoreに保存 */
@@ -26,7 +27,11 @@ export const signIn = async (data: SignInData): Promise<AuthResponse> => {
     password: data.password,
   });
   await saveTokens(response.headers as Record<string, string>);
-  return response.data;
+  const body = response.data as AuthResponse;
+  if (body.data?.id) {
+    Sentry.setUser({ id: String(body.data.id) });
+  }
+  return body;
 };
 
 /** ログアウトしSecureStoreからトークンを削除 */
@@ -35,12 +40,17 @@ export const signOut = async (): Promise<void> => {
   await SecureStore.deleteItemAsync("access-token");
   await SecureStore.deleteItemAsync("client");
   await SecureStore.deleteItemAsync("uid");
+  Sentry.setUser(null);
 };
 
 /** SecureStoreのトークンが有効か検証（アプリ起動時に使用） */
 export const validateToken = async (): Promise<AuthResponse> => {
   const response = await axiosInstance.get("/auth/validate_token");
-  return response.data;
+  const body = response.data as AuthResponse;
+  if (body.data?.id) {
+    Sentry.setUser({ id: String(body.data.id) });
+  }
+  return body;
 };
 
 /** メールアドレスとパスワードでサインアップ（トークンは保存しない。メール確認が先） */
