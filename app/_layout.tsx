@@ -15,7 +15,8 @@ import { queryClient } from "@utils/queryClient";
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
   enabled: !__DEV__,
-  environment: __DEV__ ? "development" : "production",
+  environment:
+    process.env.EXPO_PUBLIC_APP_ENV ?? (__DEV__ ? "development" : "production"),
   release: Constants.expoConfig?.version,
   tracesSampleRate: 0.1,
   sendDefaultPii: false,
