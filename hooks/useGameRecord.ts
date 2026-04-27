@@ -1,5 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useGameRecordStore } from "../stores/gameRecordStore";
+import {
+  computeBattingStats,
+  hitDirectionToLegacy,
+} from "@constants/battingData";
 import {
   createGameResult,
   updateGameResult,
@@ -22,11 +25,8 @@ import {
   checkExistingPlateAppearance,
   updatePlateAppearance,
 } from "../services/plateAppearanceService";
-import {
-  computeBattingStats,
-  hitDirectionToLegacy,
-} from "@constants/battingData";
 import { getCurrentUserProfile } from "../services/profileService";
+import { useGameRecordStore } from "../stores/gameRecordStore";
 
 export const useGameRecord = () => {
   const store = useGameRecordStore();
@@ -115,7 +115,7 @@ export const useGameRecord = () => {
         ...(tournamentId ? { tournament_id: tournamentId } : {}),
       };
 
-      if (store.isEditMode && store.matchResultId) {
+      if (store.matchResultId) {
         await updateMatchResult(store.matchResultId, matchResultPayload);
       } else {
         const matchResult = await createMatchResult(matchResultPayload);
@@ -203,7 +203,7 @@ export const useGameRecord = () => {
         error: s.battingError,
       };
 
-      if (s.isEditMode && s.battingAverageId) {
+      if (s.battingAverageId) {
         await updateBattingAverage(s.battingAverageId, battingAveragePayload);
       } else {
         const battingAverage = await createBattingAverage(
@@ -265,7 +265,7 @@ export const useGameRecord = () => {
         hit_by_pitch: s.pitchingHitByPitch,
       };
 
-      if (s.isEditMode && s.pitchingResultId) {
+      if (s.pitchingResultId) {
         await updatePitchingResult(s.pitchingResultId, pitchingResultPayload);
       } else {
         const pitchingResult = await createPitchingResult(
