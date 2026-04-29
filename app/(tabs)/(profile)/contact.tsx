@@ -1,5 +1,6 @@
+import { useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { WebView } from "react-native-webview";
 
 const CONTACT_URL =
@@ -7,9 +8,18 @@ const CONTACT_URL =
 
 export default function ContactScreen() {
   const [isLoading, setIsLoading] = useState(true);
+  const { subject } = useLocalSearchParams<{ subject?: string }>();
+  const showFeedbackBanner = subject === "feedback";
 
   return (
     <View style={styles.container}>
+      {showFeedbackBanner && (
+        <View style={styles.banner}>
+          <Text style={styles.bannerText}>
+            アプリへのご意見・改善要望をお聞かせください
+          </Text>
+        </View>
+      )}
       <WebView
         source={{ uri: CONTACT_URL }}
         style={styles.webview}
@@ -31,6 +41,19 @@ const styles = StyleSheet.create({
   },
   webview: {
     flex: 1,
+  },
+  banner: {
+    backgroundColor: "#3A3A3A",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#52525B",
+  },
+  bannerText: {
+    color: "#F4F4F4",
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,

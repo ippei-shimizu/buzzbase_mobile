@@ -1,7 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Share, View } from "react-native";
 import { SummaryView } from "@components/game-record/SummaryView";
+import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { BottomTabBar } from "@components/ui/BottomTabBar";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { useStoreReview } from "@hooks/useStoreReview";
@@ -12,7 +14,8 @@ export default function SummaryScreen() {
   const queryClient = useQueryClient();
   const { resetFlow } = useGameRecord();
   const store = useGameRecordStore();
-  const { checkAndRequestReview } = useStoreReview();
+  const { checkAndShowPrePrompt, requestNativeReview } = useStoreReview();
+  const [prePromptVisible, setPrePromptVisible] = useState(false);
 
   const handleShare = async () => {
     const lines: string[] = [];
@@ -58,13 +61,32 @@ export default function SummaryScreen() {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     resetFlow();
     queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     queryClient.invalidateQueries({ queryKey: ["gameResults"] });
     queryClient.invalidateQueries({ queryKey: ["userGameResults"] });
-    checkAndRequestReview().catch(() => {});
+
+    const shouldShow = await checkAndShowPrePrompt().catch(() => false);
+    if (shouldShow) {
+      setPrePromptVisible(true);
+      return;
+    }
     router.replace("/(tabs)/(game-results)");
+  };
+
+  const handlePrePromptYes = async () => {
+    setPrePromptVisible(false);
+    await requestNativeReview().catch(() => {});
+    router.replace("/(tabs)/(game-results)");
+  };
+
+  const handlePrePromptNo = () => {
+    setPrePromptVisible(false);
+    router.replace({
+      pathname: "/(tabs)/(profile)/contact",
+      params: { subject: "feedback" },
+    });
   };
 
   return (
@@ -105,6 +127,11 @@ export default function SummaryScreen() {
         onShare={handleShare}
       />
       <BottomTabBar />
+      <PreReviewPrompt
+        visible={prePromptVisible}
+        onYes={handlePrePromptYes}
+        onNo={handlePrePromptNo}
+      />
     </View>
   );
 }
