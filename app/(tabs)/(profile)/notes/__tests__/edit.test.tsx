@@ -223,6 +223,41 @@ describe("NoteEditScreen", () => {
       expect(capturedPreventRemove).toBe(true);
     });
 
+    it("date編集すると preventRemove=true", () => {
+      mockUseBaseballNote.mockReturnValue({
+        note: buildNote(),
+        isLoading: false,
+      });
+      render(<NoteEditScreen />);
+      fireEvent.changeText(
+        screen.getByPlaceholderText("YYYY-MM-DD"),
+        "2026-04-30",
+      );
+      expect(capturedPreventRemove).toBe(true);
+    });
+
+    it("TanStack Queryの再フェッチでサーバー側noteが変化してもガードは発動しない", () => {
+      mockUseBaseballNote.mockReturnValue({
+        note: buildNote(),
+        isLoading: false,
+      });
+      const { rerender } = render(<NoteEditScreen />);
+      // 初期化直後はガードされない
+      expect(capturedPreventRemove).toBe(false);
+
+      // ユーザーは何も編集していない状態で、サーバー側でメモが書き換わった想定
+      mockUseBaseballNote.mockReturnValue({
+        note: buildNote({
+          memo: textToSlateMemo("サーバー側で更新された別のメモ"),
+        }),
+        isLoading: false,
+      });
+      rerender(<NoteEditScreen />);
+
+      // ユーザーは編集していないのでガードしない（初期値はrefで固定する設計）
+      expect(capturedPreventRemove).toBe(false);
+    });
+
     it("ガード状態で戻ろうとすると確認 Alert が表示される", () => {
       mockUseBaseballNote.mockReturnValue({
         note: buildNote(),

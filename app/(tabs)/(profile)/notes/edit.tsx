@@ -1,6 +1,6 @@
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ScrollView,
   Alert,
@@ -28,24 +28,28 @@ export default function NoteEditScreen() {
   const [memo, setMemo] = useState("");
   const [initialized, setInitialized] = useState(false);
 
-  const initialMemo = useMemo(
-    () => (note ? slateMemoToText(note.memo) : ""),
-    [note],
-  );
+  const initialTitleRef = useRef("");
+  const initialDateRef = useRef("");
+  const initialMemoRef = useRef("");
 
   useEffect(() => {
     if (note && !initialized) {
+      const m = slateMemoToText(note.memo);
       setTitle(note.title);
       setDate(note.date);
-      setMemo(initialMemo);
+      setMemo(m);
+      initialTitleRef.current = note.title;
+      initialDateRef.current = note.date;
+      initialMemoRef.current = m;
       setInitialized(true);
     }
-  }, [note, initialized, initialMemo]);
+  }, [note, initialized]);
 
   const isDirty =
     initialized &&
-    !!note &&
-    (title !== note.title || date !== note.date || memo !== initialMemo);
+    (title !== initialTitleRef.current ||
+      date !== initialDateRef.current ||
+      memo !== initialMemoRef.current);
   const skipGuardRef = useRef(false);
 
   usePreventRemove(isDirty, ({ data }) => {
