@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as Sentry from "@sentry/react-native";
 import React, { useState } from "react";
 import {
   View,
@@ -31,7 +32,11 @@ export function FollowRequestBanner({
       await acceptFollowRequest(followRequestId);
       setHandled(true);
       setHandledType("accepted");
-    } catch {}
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { source: "follow-request-banner", action: "accept" },
+      });
+    }
   };
 
   const handleReject = async () => {
@@ -39,7 +44,11 @@ export function FollowRequestBanner({
       await rejectFollowRequest(followRequestId);
       setHandled(true);
       setHandledType("rejected");
-    } catch {}
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { source: "follow-request-banner", action: "reject" },
+      });
+    }
   };
 
   if (handled) {

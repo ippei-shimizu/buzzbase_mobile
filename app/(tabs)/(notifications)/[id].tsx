@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import { useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -104,7 +105,14 @@ export default function NoticeDetailScreen() {
             if (data.height) {
               setWebViewHeight(data.height);
             }
-          } catch {}
+          } catch (error) {
+            Sentry.captureException(error, {
+              tags: {
+                source: "notification-detail",
+                action: "webview-message",
+              },
+            });
+          }
         }}
       />
     </ScrollView>

@@ -4,6 +4,7 @@ import type {
   ManagementNotification,
 } from "../../types/notification";
 import { Ionicons } from "@expo/vector-icons";
+import * as Sentry from "@sentry/react-native";
 import React, { useState } from "react";
 import {
   View,
@@ -107,7 +108,11 @@ export const NotificationItemComponent = ({
       await deleteNotification(notification.id);
       setHandled(true);
       setHandledType("accepted");
-    } catch {}
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { source: "notification-item", action: "accept" },
+      });
+    }
   };
 
   const handleReject = async () => {
@@ -118,7 +123,11 @@ export const NotificationItemComponent = ({
       await deleteNotification(notification.id);
       setHandled(true);
       setHandledType("rejected");
-    } catch {}
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { source: "notification-item", action: "reject" },
+      });
+    }
   };
 
   return (
