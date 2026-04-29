@@ -13,10 +13,27 @@ import NoteEditScreen from "../edit";
 const mockBack = jest.fn();
 const mockUpdateNote = jest.fn();
 const mockUseBaseballNote = jest.fn();
+const mockNavDispatch = jest.fn();
+
+let capturedPreventRemove = false;
+let capturedRemoveCallback: (options: {
+  data: { action: unknown };
+}) => void = () => {};
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ back: mockBack }),
   useLocalSearchParams: () => ({ id: "42" }),
+}));
+
+jest.mock("@react-navigation/native", () => ({
+  usePreventRemove: (
+    preventRemove: boolean,
+    callback: (options: { data: { action: unknown } }) => void,
+  ) => {
+    capturedPreventRemove = preventRemove;
+    capturedRemoveCallback = callback;
+  },
+  useNavigation: () => ({ dispatch: mockNavDispatch }),
 }));
 
 jest.mock("@hooks/useBaseballNoteMutations", () => ({
@@ -29,6 +46,17 @@ jest.mock("@hooks/useBaseballNoteMutations", () => ({
 jest.mock("@hooks/useBaseballNotes", () => ({
   useBaseballNote: () => mockUseBaseballNote(),
 }));
+
+const triggerBack = () => {
+  capturedRemoveCallback({ data: { action: { type: "GO_BACK" } } });
+};
+
+const getDestructiveButton = () => {
+  const alertCalls = (Alert.alert as jest.Mock).mock.calls;
+  const lastCall = alertCalls[alertCalls.length - 1];
+  const buttons = lastCall[2] as { style?: string; onPress?: () => void }[];
+  return buttons.find((b) => b.style === "destructive");
+};
 
 const buildNote = (overrides: Partial<BaseballNote> = {}): BaseballNote => ({
   id: 42,
@@ -46,6 +74,9 @@ describe("NoteEditScreen", () => {
     mockUpdateNote.mockReset();
     mockUpdateNote.mockResolvedValue({ id: 42 });
     mockUseBaseballNote.mockReset();
+    mockNavDispatch.mockClear();
+    capturedPreventRemove = false;
+    capturedRemoveCallback = () => {};
     jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
   });
 
@@ -154,5 +185,94 @@ describe("NoteEditScreen", () => {
       ),
     );
     expect(mockBack).not.toHaveBeenCalled();
+  });
+
+  describe("未保存変更の戻り確認", () => {
+    it("初期データのまま戻る場合は preventRemove=false（ガードしない）", () => {
+      mockUseBaseballNote.mockReturnValue({
+        note: buildNote(),
+        isLoading: false,
+      });
+      render(<NoteEditScreen />);
+      expect(capturedPreventRemove).toBe(false);
+    });
+
+    it("title編集すると preventRemove=true（ガードする）", () => {
+      mockUseBaseballNote.mockReturnValue({
+        note: buildNote(),
+        isLoading: false,
+      });
+      render(<NoteEditScreen />);
+      fireEvent.changeText(
+        screen.getByPlaceholderText("タイトルを入力"),
+        "編集後",
+      );
+      expect(capturedPreventRemove).toBe(true);
+    });
+
+    it("memo編集すると preventRemove=true", () => {
+      mockUseBaseballNote.mockReturnValue({
+        note: buildNote(),
+        isLoading: false,
+      });
+      render(<NoteEditScreen />);
+      fireEvent.changeText(
+        screen.getByPlaceholderText("メモを入力"),
+        "全く別のメモ",
+      );
+      expect(capturedPreventRemove).toBe(true);
+    });
+
+    it("ガード状態で戻ろうとすると確認 Alert が表示される", () => {
+      mockUseBaseballNote.mockReturnValue({
+        note: buildNote(),
+        isLoading: false,
+      });
+      render(<NoteEditScreen />);
+      fireEvent.changeText(
+        screen.getByPlaceholderText("タイトルを入力"),
+        "編集後",
+      );
+      triggerBack();
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "変更を破棄しますか？",
+        "編集中の内容は失われます。",
+        expect.any(Array),
+      );
+    });
+
+    it("Alert で「破棄する」を選ぶと navigation.dispatch が呼ばれる", () => {
+      mockUseBaseballNote.mockReturnValue({
+        note: buildNote(),
+        isLoading: false,
+      });
+      render(<NoteEditScreen />);
+      fireEvent.changeText(
+        screen.getByPlaceholderText("タイトルを入力"),
+        "編集後",
+      );
+      triggerBack();
+      getDestructiveButton()?.onPress?.();
+      expect(mockNavDispatch).toHaveBeenCalledWith({ type: "GO_BACK" });
+    });
+
+    it("保存成功後の戻りは Alert なし・dispatch される", async () => {
+      mockUseBaseballNote.mockReturnValue({
+        note: buildNote(),
+        isLoading: false,
+      });
+      render(<NoteEditScreen />);
+      fireEvent.changeText(
+        screen.getByPlaceholderText("タイトルを入力"),
+        "編集後",
+      );
+      fireEvent.press(screen.getByText("保存"));
+      await waitFor(() => expect(mockBack).toHaveBeenCalledTimes(1));
+      triggerBack();
+      const alertCalls = (Alert.alert as jest.Mock).mock.calls;
+      const guardCall = alertCalls.find((c) => c[0] === "変更を破棄しますか？");
+      expect(guardCall).toBeUndefined();
+      expect(mockNavDispatch).toHaveBeenCalledWith({ type: "GO_BACK" });
+    });
   });
 });

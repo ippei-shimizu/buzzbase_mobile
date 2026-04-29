@@ -1,5 +1,6 @@
+import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ScrollView,
   Alert,
@@ -16,6 +17,7 @@ import { textToSlateMemo, slateMemoToText } from "@utils/slateUtils";
 
 export default function NoteEditScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const noteId = id ? Number(id) : undefined;
   const { note, isLoading } = useBaseballNote(noteId);
@@ -26,14 +28,40 @@ export default function NoteEditScreen() {
   const [memo, setMemo] = useState("");
   const [initialized, setInitialized] = useState(false);
 
+  const initialMemo = useMemo(
+    () => (note ? slateMemoToText(note.memo) : ""),
+    [note],
+  );
+
   useEffect(() => {
     if (note && !initialized) {
       setTitle(note.title);
       setDate(note.date);
-      setMemo(slateMemoToText(note.memo));
+      setMemo(initialMemo);
       setInitialized(true);
     }
-  }, [note, initialized]);
+  }, [note, initialized, initialMemo]);
+
+  const isDirty =
+    initialized &&
+    !!note &&
+    (title !== note.title || date !== note.date || memo !== initialMemo);
+  const skipGuardRef = useRef(false);
+
+  usePreventRemove(isDirty, ({ data }) => {
+    if (skipGuardRef.current) {
+      navigation.dispatch(data.action);
+      return;
+    }
+    Alert.alert("変更を破棄しますか？", "編集中の内容は失われます。", [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "破棄する",
+        style: "destructive",
+        onPress: () => navigation.dispatch(data.action),
+      },
+    ]);
+  });
 
   const handleSave = async () => {
     try {
@@ -45,6 +73,7 @@ export default function NoteEditScreen() {
           memo: textToSlateMemo(memo),
         },
       });
+      skipGuardRef.current = true;
       router.back();
     } catch {
       Alert.alert("エラー", "ノートの更新に失敗しました");

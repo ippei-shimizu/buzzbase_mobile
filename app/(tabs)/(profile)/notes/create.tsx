@@ -1,5 +1,6 @@
+import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   ScrollView,
   Alert,
@@ -13,6 +14,7 @@ import { textToSlateMemo } from "@utils/slateUtils";
 
 export default function NoteCreateScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { createNote, isCreating } = useCreateBaseballNote();
 
   const now = new Date();
@@ -21,6 +23,24 @@ export default function NoteCreateScreen() {
   const [date, setDate] = useState(today);
   const [memo, setMemo] = useState("");
 
+  const isDirty = title.length > 0 || memo.length > 0;
+  const skipGuardRef = useRef(false);
+
+  usePreventRemove(isDirty, ({ data }) => {
+    if (skipGuardRef.current) {
+      navigation.dispatch(data.action);
+      return;
+    }
+    Alert.alert("変更を破棄しますか？", "編集中の内容は失われます。", [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "破棄する",
+        style: "destructive",
+        onPress: () => navigation.dispatch(data.action),
+      },
+    ]);
+  });
+
   const handleSave = async () => {
     try {
       await createNote({
@@ -28,6 +48,7 @@ export default function NoteCreateScreen() {
         date,
         memo: textToSlateMemo(memo),
       });
+      skipGuardRef.current = true;
       router.back();
     } catch {
       Alert.alert("エラー", "ノートの作成に失敗しました");
