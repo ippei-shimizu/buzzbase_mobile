@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useEffect, useLayoutEffect, useRef } from "react";
+import React, { useEffect, useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -23,10 +23,9 @@ export default function HomeScreen() {
   const { count } = useNotificationCount();
   const navigation = useNavigation();
   const { triggerPositiveEvent, modalProps } = useReviewPromptModal();
-  const hasTriggeredRef = useRef(false);
 
   useEffect(() => {
-    if (hasTriggeredRef.current || !data) return;
+    if (!data) return;
     const inTopThree = data.group_rankings.some((group) =>
       [...group.batting_rankings, ...group.pitching_rankings].some(
         (entry) =>
@@ -36,8 +35,7 @@ export default function HomeScreen() {
       ),
     );
     if (inTopThree) {
-      hasTriggeredRef.current = true;
-      triggerPositiveEvent();
+      triggerPositiveEvent("dashboard-ranking-top3");
     }
   }, [data, triggerPositiveEvent]);
 

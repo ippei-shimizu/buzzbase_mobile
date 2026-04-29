@@ -287,17 +287,14 @@ export default function ProfileScreen() {
   } = useProfileStats(filters);
 
   const { triggerPositiveEvent, modalProps } = useReviewPromptModal();
-  const hasTriggeredStatsRef = useRef(false);
 
   useEffect(() => {
-    if (hasTriggeredStatsRef.current) return;
     const battingAvg = battingStats?.calculated?.batting_average;
     const era = pitchingStats?.calculated?.era;
     const hasPositiveBatting = battingAvg != null && battingAvg >= 0.3;
     const hasPositivePitching = era != null && era <= 3.0;
     if (hasPositiveBatting || hasPositivePitching) {
-      hasTriggeredStatsRef.current = true;
-      triggerPositiveEvent();
+      triggerPositiveEvent("profile-stats-positive");
     }
   }, [battingStats, pitchingStats, triggerPositiveEvent]);
 
