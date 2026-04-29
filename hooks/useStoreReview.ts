@@ -22,17 +22,13 @@ function daysSince(dateString: string | null): number {
   return Math.floor((now - then) / (1000 * 60 * 60 * 24));
 }
 
-async function recordPrePromptShown(): Promise<void> {
-  const currentYear = new Date().getFullYear();
-  const storedYear = await SecureStore.getItemAsync(KEYS.SHOWN_YEAR);
-  const prevCount =
-    parseInt((await SecureStore.getItemAsync(KEYS.SHOWN_COUNT)) ?? "0", 10) ||
-    0;
-  const baseCount = storedYear !== String(currentYear) ? 0 : prevCount;
-
+async function recordPrePromptShown(baseCount: number): Promise<void> {
   await SecureStore.setItemAsync(KEYS.LAST_SHOWN, new Date().toISOString());
   await SecureStore.setItemAsync(KEYS.SHOWN_COUNT, String(baseCount + 1));
-  await SecureStore.setItemAsync(KEYS.SHOWN_YEAR, String(currentYear));
+  await SecureStore.setItemAsync(
+    KEYS.SHOWN_YEAR,
+    String(new Date().getFullYear()),
+  );
 }
 
 export const useStoreReview = () => {
@@ -72,7 +68,7 @@ export const useStoreReview = () => {
     const isAvailable = await StoreReview.isAvailableAsync();
     if (!isAvailable) return false;
 
-    await recordPrePromptShown();
+    await recordPrePromptShown(shownCount);
     return true;
   }, []);
 

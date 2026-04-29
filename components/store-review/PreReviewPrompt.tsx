@@ -8,7 +8,12 @@ interface Props {
 
 export function PreReviewPrompt({ visible, onYes, onNo }: Props) {
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onNo}
+    >
       <View style={styles.overlay}>
         <View style={styles.card}>
           <Text style={styles.title}>BUZZ BASEは気に入っていますか？</Text>
