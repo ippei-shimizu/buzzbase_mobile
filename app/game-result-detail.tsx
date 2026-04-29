@@ -1,5 +1,6 @@
 import type { GameResult } from "../types/gameResult";
 import { Ionicons } from "@expo/vector-icons";
+import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import React from "react";
@@ -45,7 +46,10 @@ export default function GameResultDetailModal() {
       await deleteGameResult(game.game_result_id);
       queryClient.invalidateQueries({ queryKey: ["gameResults"] });
       router.back();
-    } catch {
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { source: "game-result-detail", action: "delete" },
+      });
       Alert.alert("エラー", "試合結果の削除に失敗しました");
     }
   };

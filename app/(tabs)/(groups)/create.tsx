@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter, Stack } from "expo-router";
 import React, { useState } from "react";
@@ -74,7 +75,10 @@ export default function GroupCreateScreen() {
       }
 
       router.replace(`/(groups)/share-invite?id=${group.id}`);
-    } catch {
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { source: "group-create", action: "create" },
+      });
       Alert.alert("エラー", "グループの作成に失敗しました");
     }
   };

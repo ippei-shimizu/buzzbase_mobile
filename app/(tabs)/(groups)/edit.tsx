@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import React, { useState, useEffect } from "react";
@@ -68,7 +69,10 @@ export default function GroupEditScreen() {
 
       await updateGroupInfo({ id: groupId, formData });
       router.back();
-    } catch {
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { source: "group-edit", action: "update" },
+      });
       Alert.alert("エラー", "グループの更新に失敗しました");
     }
   };

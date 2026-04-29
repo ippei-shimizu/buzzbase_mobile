@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -46,7 +47,10 @@ export default function MembersScreen() {
           try {
             await deleteGroup(groupId);
             router.dismissAll();
-          } catch {
+          } catch (error) {
+            Sentry.captureException(error, {
+              tags: { source: "group-members", action: "delete" },
+            });
             Alert.alert("エラー", "グループの削除に失敗しました");
           }
         },
