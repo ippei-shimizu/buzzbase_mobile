@@ -3,12 +3,14 @@ import * as StoreReview from "expo-store-review";
 import { useCallback } from "react";
 
 const KEYS = {
-  GAME_COUNT: "store_review_game_count",
+  POSITIVE_EVENT_COUNT: "store_review_positive_event_count",
   INSTALL_DATE: "store_review_install_date",
   LAST_SHOWN: "store_review_last_shown",
   SHOWN_COUNT: "store_review_shown_count",
   SHOWN_YEAR: "store_review_shown_year",
 } as const;
+
+const LEGACY_GAME_COUNT_KEY = "store_review_game_count";
 
 const MILESTONES = [2, 5, 20, 50, 100];
 const MIN_DAYS_SINCE_INSTALL = 7;
@@ -38,12 +40,27 @@ export const useStoreReview = () => {
     await SecureStore.setItemAsync(KEYS.INSTALL_DATE, new Date().toISOString());
   }, []);
 
-  const checkAndShowPrePrompt = useCallback(async (): Promise<boolean> => {
-    const currentCount = await SecureStore.getItemAsync(KEYS.GAME_COUNT);
-    const newCount = (parseInt(currentCount ?? "0", 10) || 0) + 1;
-    await SecureStore.setItemAsync(KEYS.GAME_COUNT, String(newCount));
+  const initPositiveEventCount = useCallback(async () => {
+    const existing = await SecureStore.getItemAsync(KEYS.POSITIVE_EVENT_COUNT);
+    if (existing !== null) return;
+    const legacy = await SecureStore.getItemAsync(LEGACY_GAME_COUNT_KEY);
+    await SecureStore.setItemAsync(KEYS.POSITIVE_EVENT_COUNT, legacy ?? "0");
+  }, []);
 
-    if (!MILESTONES.includes(newCount)) return false;
+  const incrementPositiveEvent = useCallback(async (): Promise<number> => {
+    const current = await SecureStore.getItemAsync(KEYS.POSITIVE_EVENT_COUNT);
+    const next = (parseInt(current ?? "0", 10) || 0) + 1;
+    await SecureStore.setItemAsync(KEYS.POSITIVE_EVENT_COUNT, String(next));
+    return next;
+  }, []);
+
+  const checkAndShowPrePrompt = useCallback(async (): Promise<boolean> => {
+    const currentCount = await SecureStore.getItemAsync(
+      KEYS.POSITIVE_EVENT_COUNT,
+    );
+    const count = parseInt(currentCount ?? "0", 10) || 0;
+
+    if (!MILESTONES.includes(count)) return false;
 
     const installDate = await SecureStore.getItemAsync(KEYS.INSTALL_DATE);
     if (!installDate || daysSince(installDate) < MIN_DAYS_SINCE_INSTALL) {
@@ -78,5 +95,11 @@ export const useStoreReview = () => {
     await StoreReview.requestReview();
   }, []);
 
-  return { initInstallDate, checkAndShowPrePrompt, requestNativeReview };
+  return {
+    initInstallDate,
+    initPositiveEventCount,
+    incrementPositiveEvent,
+    checkAndShowPrePrompt,
+    requestNativeReview,
+  };
 };

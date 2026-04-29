@@ -26,6 +26,7 @@ import { MenuIcon } from "@components/icon/MenuIcon";
 import { NoteIcon } from "@components/icon/NoteIcon";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
+import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { useUserAwards } from "@hooks/useAwards";
 import { useFilteredGameResults } from "@hooks/useGameResults";
 import {
@@ -36,6 +37,7 @@ import {
 import { useProfile } from "@hooks/useProfile";
 import { useProfileStats } from "@hooks/useProfileStats";
 import { useUserProfileDetail } from "@hooks/useRelationship";
+import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useTournaments } from "@hooks/useTournaments";
 
@@ -284,6 +286,18 @@ export default function ProfileScreen() {
     isRefreshing: isStatsRefreshing,
   } = useProfileStats(filters);
 
+  const { triggerPositiveEvent, modalProps } = useReviewPromptModal();
+
+  useEffect(() => {
+    const battingAvg = battingStats?.calculated?.batting_average;
+    const era = pitchingStats?.calculated?.era;
+    const hasPositiveBatting = battingAvg != null && battingAvg >= 0.3;
+    const hasPositivePitching = era != null && era <= 3.0;
+    if (hasPositiveBatting || hasPositivePitching) {
+      triggerPositiveEvent("profile-stats-positive");
+    }
+  }, [battingStats, pitchingStats, triggerPositiveEvent]);
+
   // マスターデータ・受賞歴
   const { data: teams } = useTeams();
   const { data: prefectures } = usePrefectures();
@@ -320,9 +334,12 @@ export default function ProfileScreen() {
   const handleSharePress = async () => {
     if (!profile?.user_id) return;
     try {
-      await Share.share({
+      const result = await Share.share({
         message: `BUZZ BASEで${profile.name ?? ""}のプロフィールをチェック！\nhttps://buzzbase.jp/${profile.user_id}`,
       });
+      if (result.action === Share.sharedAction) {
+        await triggerPositiveEvent();
+      }
     } catch {
       // ユーザーがキャンセルした場合やシェア失敗時は無視
     }
@@ -628,6 +645,7 @@ export default function ProfileScreen() {
             </View>
           </TouchableWithoutFeedback>
         )}
+        <PreReviewPrompt {...modalProps} />
       </>
     );
   }
@@ -869,6 +887,7 @@ export default function ProfileScreen() {
           </View>
         </TouchableWithoutFeedback>
       )}
+      <PreReviewPrompt {...modalProps} />
     </>
   );
 }

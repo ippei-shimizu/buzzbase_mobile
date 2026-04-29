@@ -1,12 +1,14 @@
-import { Share } from "react-native";
 import type { GameResult } from "../types/gameResult";
+import { Share } from "react-native";
 
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
   return `${date.getMonth() + 1}/${date.getDate()}`;
 };
 
-export const shareGameResult = async (game: GameResult): Promise<void> => {
+export const shareGameResult = async (
+  game: GameResult,
+): Promise<{ shared: boolean }> => {
   const { match_result, batting_average, pitching_result } = game;
 
   const lines: string[] = [];
@@ -38,8 +40,10 @@ export const shareGameResult = async (game: GameResult): Promise<void> => {
   lines.push("#BUZZBASE");
 
   try {
-    await Share.share({ message: lines.join("\n") });
+    const result = await Share.share({ message: lines.join("\n") });
+    return { shared: result.action === Share.sharedAction };
   } catch {
-    // ユーザーがキャンセルした場合やシェア失敗時は無視
+    // ユーザーがキャンセルした場合やシェア失敗時
+    return { shared: false };
   }
 };

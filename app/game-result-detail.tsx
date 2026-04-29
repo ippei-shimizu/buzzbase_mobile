@@ -5,7 +5,9 @@ import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import React from "react";
 import { TouchableOpacity, StyleSheet, Alert, View } from "react-native";
 import { GameResultDetail } from "@components/game-results/GameResultDetail";
+import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { useProfile } from "@hooks/useProfile";
+import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
 import { deleteGameResult } from "@services/gameResultService";
 import { shareGameResult } from "@utils/shareGameResult";
 import { useGameRecordStore } from "../stores/gameRecordStore";
@@ -16,6 +18,7 @@ export default function GameResultDetailModal() {
   const queryClient = useQueryClient();
   const { profile } = useProfile();
   const loadFromGameResult = useGameRecordStore((s) => s.loadFromGameResult);
+  const { triggerPositiveEvent, modalProps } = useReviewPromptModal();
 
   if (!gameJson) {
     return null;
@@ -24,8 +27,9 @@ export default function GameResultDetailModal() {
   const game: GameResult = JSON.parse(gameJson);
   const isOwner = profile?.id === game.user_id;
 
-  const handleShare = () => {
-    shareGameResult(game);
+  const handleShare = async () => {
+    const result = await shareGameResult(game);
+    if (result.shared) await triggerPositiveEvent();
   };
 
   const handleEdit = () => {
@@ -75,6 +79,7 @@ export default function GameResultDetailModal() {
         game={game}
         onDelete={isOwner ? handleDelete : undefined}
       />
+      <PreReviewPrompt {...modalProps} />
     </>
   );
 }

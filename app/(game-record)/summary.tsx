@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Share, View } from "react-native";
 import { SummaryView } from "@components/game-record/SummaryView";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
@@ -9,13 +9,32 @@ import { useGameRecord } from "@hooks/useGameRecord";
 import { useStoreReview } from "@hooks/useStoreReview";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 
+type PrePromptSource = "complete" | "share";
+
 export default function SummaryScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { resetFlow } = useGameRecord();
   const store = useGameRecordStore();
-  const { checkAndShowPrePrompt, requestNativeReview } = useStoreReview();
+  const { incrementPositiveEvent, checkAndShowPrePrompt, requestNativeReview } =
+    useStoreReview();
   const [prePromptVisible, setPrePromptVisible] = useState(false);
+  const sourceRef = useRef<PrePromptSource>("complete");
+
+  const tryShowPrePrompt = async (source: PrePromptSource) => {
+    try {
+      await incrementPositiveEvent();
+      const shouldShow = await checkAndShowPrePrompt();
+      if (shouldShow) {
+        sourceRef.current = source;
+        setPrePromptVisible(true);
+        return true;
+      }
+    } catch {
+      // 失敗時は静かに無視する
+    }
+    return false;
+  };
 
   const handleShare = async () => {
     const lines: string[] = [];
@@ -55,7 +74,10 @@ export default function SummaryScreen() {
     lines.push("#BUZZBASE");
 
     try {
-      await Share.share({ message: lines.join("\n") });
+      const result = await Share.share({ message: lines.join("\n") });
+      if (result.action === Share.sharedAction) {
+        await tryShowPrePrompt("share");
+      }
     } catch {
       // ユーザーがキャンセルした場合は無視
     }
@@ -67,26 +89,34 @@ export default function SummaryScreen() {
     queryClient.invalidateQueries({ queryKey: ["gameResults"] });
     queryClient.invalidateQueries({ queryKey: ["userGameResults"] });
 
-    const shouldShow = await checkAndShowPrePrompt().catch(() => false);
-    if (shouldShow) {
-      setPrePromptVisible(true);
-      return;
-    }
+    const shown = await tryShowPrePrompt("complete");
+    if (shown) return;
     router.replace("/(tabs)/(game-results)");
   };
 
   const handlePrePromptYes = async () => {
+    const source = sourceRef.current;
     setPrePromptVisible(false);
     await requestNativeReview().catch(() => {});
-    router.replace("/(tabs)/(game-results)");
+    if (source === "complete") {
+      router.replace("/(tabs)/(game-results)");
+    }
   };
 
   const handlePrePromptNo = () => {
+    const source = sourceRef.current;
     setPrePromptVisible(false);
-    router.replace({
-      pathname: "/(tabs)/(profile)/contact",
-      params: { subject: "feedback" },
-    });
+    if (source === "complete") {
+      router.replace({
+        pathname: "/(tabs)/(profile)/contact",
+        params: { subject: "feedback" },
+      });
+    } else {
+      router.push({
+        pathname: "/(tabs)/(profile)/contact",
+        params: { subject: "feedback" },
+      });
+    }
   };
 
   return (

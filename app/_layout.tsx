@@ -27,7 +27,7 @@ configureGoogleSignIn();
 function RootLayoutInner() {
   usePushNotifications();
   const router = useRouter();
-  const { initInstallDate } = useStoreReview();
+  const { initInstallDate, initPositiveEventCount } = useStoreReview();
 
   const handleDeepLink = useCallback(
     (url: string) => {
@@ -65,7 +65,8 @@ function RootLayoutInner() {
 
   useEffect(() => {
     initInstallDate();
-  }, [initInstallDate]);
+    initPositiveEventCount();
+  }, [initInstallDate, initPositiveEventCount]);
 
   return (
     <>

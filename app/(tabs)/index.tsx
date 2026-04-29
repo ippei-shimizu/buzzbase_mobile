@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useLayoutEffect } from "react";
+import React, { useEffect, useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -12,14 +12,32 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { DashboardContent } from "@components/dashboard/DashboardContent";
 import { NotificationBell } from "@components/dashboard/NotificationBell";
+import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { useDashboard } from "@hooks/useDashboard";
 import { useNotificationCount } from "@hooks/useNotifications";
+import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { data, isLoading, isError, refetch, isRefreshing } = useDashboard();
   const { count } = useNotificationCount();
   const navigation = useNavigation();
+  const { triggerPositiveEvent, modalProps } = useReviewPromptModal();
+
+  useEffect(() => {
+    if (!data) return;
+    const inTopThree = data.group_rankings.some((group) =>
+      [...group.batting_rankings, ...group.pitching_rankings].some(
+        (entry) =>
+          entry.current_rank !== null &&
+          entry.current_rank >= 1 &&
+          entry.current_rank <= 3,
+      ),
+    );
+    if (inTopThree) {
+      triggerPositiveEvent("dashboard-ranking-top3");
+    }
+  }, [data, triggerPositiveEvent]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -71,6 +89,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         }
       />
+      <PreReviewPrompt {...modalProps} />
     </SafeAreaView>
   );
 }
