@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   View,
   StyleSheet,
-  Keyboard,
+  KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import { NoteForm } from "@components/baseball-notes/NoteForm";
@@ -25,24 +25,6 @@ export default function NoteEditScreen() {
   const [date, setDate] = useState("");
   const [memo, setMemo] = useState("");
   const [initialized, setInitialized] = useState(false);
-
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  useEffect(() => {
-    const showEvent =
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent =
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-    const showSub = Keyboard.addListener(showEvent, (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
-    });
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      setKeyboardHeight(0);
-    });
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
 
   useEffect(() => {
     if (note && !initialized) {
@@ -78,26 +60,28 @@ export default function NoteEditScreen() {
   }
 
   return (
-    <ScrollView
+    <KeyboardAvoidingView
       style={styles.container}
-      contentContainerStyle={{
-        paddingBottom: keyboardHeight > 0 ? keyboardHeight : 0,
-      }}
-      keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="interactive"
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 96 : 0}
     >
-      <NoteForm
-        title={title}
-        date={date}
-        memo={memo}
-        isSaving={isUpdating}
-        onChangeTitle={setTitle}
-        onChangeDate={setDate}
-        onChangeMemo={setMemo}
-        onSave={handleSave}
-        saveLabel="保存"
-      />
-    </ScrollView>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+      >
+        <NoteForm
+          title={title}
+          date={date}
+          memo={memo}
+          isSaving={isUpdating}
+          onChangeTitle={setTitle}
+          onChangeDate={setDate}
+          onChangeMemo={setMemo}
+          onSave={handleSave}
+          saveLabel="保存"
+        />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
