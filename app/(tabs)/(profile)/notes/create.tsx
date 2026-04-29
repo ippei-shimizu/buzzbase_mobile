@@ -1,10 +1,11 @@
+import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import {
   ScrollView,
   Alert,
   StyleSheet,
-  Keyboard,
+  KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import { NoteForm } from "@components/baseball-notes/NoteForm";
@@ -13,6 +14,7 @@ import { textToSlateMemo } from "@utils/slateUtils";
 
 export default function NoteCreateScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { createNote, isCreating } = useCreateBaseballNote();
 
   const now = new Date();
@@ -21,23 +23,23 @@ export default function NoteCreateScreen() {
   const [date, setDate] = useState(today);
   const [memo, setMemo] = useState("");
 
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  useEffect(() => {
-    const showEvent =
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent =
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-    const showSub = Keyboard.addListener(showEvent, (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
-    });
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      setKeyboardHeight(0);
-    });
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
+  const isDirty = title.length > 0 || memo.length > 0;
+  const skipGuardRef = useRef(false);
+
+  usePreventRemove(isDirty, ({ data }) => {
+    if (skipGuardRef.current) {
+      navigation.dispatch(data.action);
+      return;
+    }
+    Alert.alert("変更を破棄しますか？", "編集中の内容は失われます。", [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "破棄する",
+        style: "destructive",
+        onPress: () => navigation.dispatch(data.action),
+      },
+    ]);
+  });
 
   const handleSave = async () => {
     try {
@@ -46,6 +48,7 @@ export default function NoteCreateScreen() {
         date,
         memo: textToSlateMemo(memo),
       });
+      skipGuardRef.current = true;
       router.back();
     } catch {
       Alert.alert("エラー", "ノートの作成に失敗しました");
@@ -53,26 +56,28 @@ export default function NoteCreateScreen() {
   };
 
   return (
-    <ScrollView
+    <KeyboardAvoidingView
       style={styles.container}
-      contentContainerStyle={{
-        paddingBottom: keyboardHeight > 0 ? keyboardHeight : 0,
-      }}
-      keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="interactive"
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 96 : 0}
     >
-      <NoteForm
-        title={title}
-        date={date}
-        memo={memo}
-        isSaving={isCreating}
-        onChangeTitle={setTitle}
-        onChangeDate={setDate}
-        onChangeMemo={setMemo}
-        onSave={handleSave}
-        saveLabel="作成"
-      />
-    </ScrollView>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+      >
+        <NoteForm
+          title={title}
+          date={date}
+          memo={memo}
+          isSaving={isCreating}
+          onChangeTitle={setTitle}
+          onChangeDate={setDate}
+          onChangeMemo={setMemo}
+          onSave={handleSave}
+          saveLabel="作成"
+        />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
