@@ -154,6 +154,16 @@ export default function ProfileEditScreen() {
       return;
     }
 
+    // チーム入力バリデーション: チーム名が入力されている場合はカテゴリーと都道府県の両方が必須
+    const trimmedTeamName = teamName.trim();
+    if (trimmedTeamName && (!selectedCategoryId || !selectedPrefectureId)) {
+      Alert.alert(
+        "入力エラー",
+        "チーム名を入力した場合は、所属カテゴリーと所属地域の両方を選択してください",
+      );
+      return;
+    }
+
     try {
       // 1. プロフィール基本情報更新
       const formData = new FormData();
@@ -173,24 +183,19 @@ export default function ProfileEditScreen() {
         } as unknown as Blob);
       }
 
-      // チーム処理
-      if (teamName.trim()) {
+      // チーム処理（バリデーション済みなのでカテゴリー・都道府県は必ず選択されている）
+      if (trimmedTeamName) {
         let teamId = selectedTeamId;
+        const teamPayload = {
+          name: trimmedTeamName,
+          category_id: selectedCategoryId as number,
+          prefecture_id: selectedPrefectureId as number,
+        };
         if (!teamId) {
-          // 新規チーム作成
-          const newTeam = await createTeam({
-            name: teamName.trim(),
-            category_id: selectedCategoryId ?? 0,
-            prefecture_id: selectedPrefectureId ?? 0,
-          });
+          const newTeam = await createTeam(teamPayload);
           teamId = newTeam.id;
         } else {
-          // 既存チーム更新
-          await updateTeam(teamId, {
-            name: teamName.trim(),
-            category_id: selectedCategoryId ?? undefined,
-            prefecture_id: selectedPrefectureId ?? undefined,
-          });
+          await updateTeam(teamId, teamPayload);
         }
         formData.append("user[team_id]", String(teamId));
       } else {
