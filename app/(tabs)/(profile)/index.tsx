@@ -32,6 +32,7 @@ import {
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
+import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useUserAwards } from "@hooks/useAwards";
 import { useFilteredGameResults } from "@hooks/useGameResults";
 import {
@@ -135,6 +136,7 @@ export default function ProfileScreen() {
   const { profile, isLoading, refetch, isRefreshing } = useProfile();
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
+  const { years: availableYears } = useAvailableYears();
   const { data: profileDetail } = useUserProfileDetail(
     profile?.user_id ?? undefined,
   );
@@ -380,10 +382,7 @@ export default function ProfileScreen() {
                       value={selectedYear}
                       options={[
                         { key: "all", label: "通算" },
-                        ...Array.from({ length: 5 }, (_, i) => {
-                          const y = String(new Date().getFullYear() - i);
-                          return { key: y, label: y };
-                        }),
+                        ...availableYears.map((y) => ({ key: y, label: y })),
                       ]}
                       onSelect={(v) => {
                         setSelectedYear(v === "all" ? undefined : v);
@@ -564,10 +563,7 @@ export default function ProfileScreen() {
               value={selectedYear}
               options={[
                 { key: "all", label: "通算" },
-                ...Array.from({ length: 5 }, (_, i) => {
-                  const y = String(new Date().getFullYear() - i);
-                  return { key: y, label: y };
-                }),
+                ...availableYears.map((y) => ({ key: y, label: y })),
               ]}
               onSelect={(v) => {
                 setSelectedYear(v === "all" ? undefined : v);
