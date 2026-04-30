@@ -5,7 +5,7 @@ import { View, Text, StyleSheet, type ViewStyle } from "react-native";
 import {
   FilterDropdown,
   MATCH_TYPE_OPTIONS,
-} from "@components/profile/FilterDropdown";
+} from "@components/ui/FilterDropdown";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useProfileStats } from "@hooks/useProfileStats";
 import { useMySeasons } from "@hooks/useSeasons";

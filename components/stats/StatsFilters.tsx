@@ -13,7 +13,7 @@ import {
 interface StatsFiltersProps {
   filters: StatsFiltersType;
   onFiltersChange: (filters: StatsFiltersType) => void;
-  availableYears: number[];
+  availableYears: (string | number)[];
   availableSeasons?: { id: string; name: string }[];
   availableTournaments?: { id: string; name: string }[];
 }

@@ -24,14 +24,14 @@ import { CalendarIcon } from "@components/icon/CalendarIcon";
 import { MailIcon } from "@components/icon/MailIcon";
 import { MenuIcon } from "@components/icon/MenuIcon";
 import { NoteIcon } from "@components/icon/NoteIcon";
-import {
-  FilterDropdown,
-  MATCH_TYPE_OPTIONS,
-  filterStyles,
-} from "@components/profile/FilterDropdown";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
+import {
+  FilterDropdown,
+  MATCH_TYPE_OPTIONS,
+  pillButtonStyle,
+} from "@components/ui/FilterDropdown";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useUserAwards } from "@hooks/useAwards";
 import { useFilteredGameResults } from "@hooks/useGameResults";
@@ -218,6 +218,11 @@ export default function ProfileScreen() {
     gameScrollRef.current?.scrollTo({ y: 0, animated: true });
   }, []);
 
+  const handleTabChange = (tab: number) => {
+    setActiveFilter(null);
+    setActiveTab(tab);
+  };
+
   const handlePressGame = (game: GameResult) => {
     router.push({
       pathname: "/(game-results)/[id]",
@@ -296,7 +301,7 @@ export default function ProfileScreen() {
             styles.tabPill,
             activeTab === 0 ? styles.tabPillActive : styles.tabPillInactive,
           ]}
-          onPress={() => setActiveTab(0)}
+          onPress={() => handleTabChange(0)}
         >
           <Text
             style={[
@@ -312,7 +317,7 @@ export default function ProfileScreen() {
             styles.tabPill,
             activeTab === 1 ? styles.tabPillActive : styles.tabPillInactive,
           ]}
-          onPress={() => setActiveTab(1)}
+          onPress={() => handleTabChange(1)}
         >
           <Text
             style={[
@@ -635,13 +640,13 @@ export default function ProfileScreen() {
               />
             </View>
             <TouchableOpacity
-              style={filterStyles.button}
+              style={pillButtonStyle.button}
               onPress={() => {
                 setGameSortDesc((p) => !p);
                 setGameCurrentPage(1);
               }}
             >
-              <Text style={filterStyles.buttonText}>
+              <Text style={pillButtonStyle.buttonText}>
                 日付（{gameSortDesc ? "新しい順" : "古い順"}）
               </Text>
               <Ionicons name="chevron-down" size={14} color="#A1A1AA" />

@@ -216,7 +216,7 @@ export default function StatsScreen() {
 
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
-  const { years: availableYearsRaw } = useAvailableYears();
+  const { years: availableYears } = useAvailableYears();
   const hitDirections = useHitDirections(filters);
   const paBreakdown = usePlateAppearanceBreakdown(filters);
   const battingTable = useBattingStatsTable(
@@ -285,11 +285,9 @@ export default function StatsScreen() {
     [tableYear, tableSeasonId],
   );
 
-  const availableYears = availableYearsRaw.map((y) => Number(y));
-
   const yearOptions = availableYears.map((y) => ({
-    key: String(y),
-    label: `${y}`,
+    key: y,
+    label: y,
   }));
 
   const seasonOptions = seasons.map((s) => ({

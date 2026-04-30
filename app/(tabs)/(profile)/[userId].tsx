@@ -15,14 +15,14 @@ import {
 } from "react-native";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
-import {
-  FilterDropdown,
-  MATCH_TYPE_OPTIONS,
-  filterStyles,
-} from "@components/profile/FilterDropdown";
 import { FollowRequestBanner } from "@components/profile/FollowRequestBanner";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
+import {
+  FilterDropdown,
+  MATCH_TYPE_OPTIONS,
+  pillButtonStyle,
+} from "@components/ui/FilterDropdown";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useUserAwards } from "@hooks/useAwards";
 import { useFilteredUserGameResults } from "@hooks/useGameResults";
@@ -133,6 +133,11 @@ export default function UserProfileScreen() {
     setGameCurrentPage(page);
     scrollRef.current?.scrollTo({ y: 0, animated: true });
   }, []);
+
+  const handleTabChange = (tab: number) => {
+    setActiveFilter(null);
+    setActiveTab(tab);
+  };
 
   const isPrivateAndNotFollowing =
     data?.is_private &&
@@ -272,7 +277,7 @@ export default function UserProfileScreen() {
                     ? styles.tabPillActive
                     : styles.tabPillInactive,
                 ]}
-                onPress={() => setActiveTab(0)}
+                onPress={() => handleTabChange(0)}
               >
                 <Text
                   style={[
@@ -290,7 +295,7 @@ export default function UserProfileScreen() {
                     ? styles.tabPillActive
                     : styles.tabPillInactive,
                 ]}
-                onPress={() => setActiveTab(1)}
+                onPress={() => handleTabChange(1)}
               >
                 <Text
                   style={[
@@ -471,13 +476,13 @@ export default function UserProfileScreen() {
                     />
                   </View>
                   <TouchableOpacity
-                    style={filterStyles.button}
+                    style={pillButtonStyle.button}
                     onPress={() => {
                       setGameSortDesc((p) => !p);
                       setGameCurrentPage(1);
                     }}
                   >
-                    <Text style={filterStyles.buttonText}>
+                    <Text style={pillButtonStyle.buttonText}>
                       日付（{gameSortDesc ? "新しい順" : "古い順"}）
                     </Text>
                     <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
