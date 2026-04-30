@@ -2,11 +2,12 @@ import type { GameResult } from "../../../types/gameResult";
 import type { StatsFilters } from "../../../types/profile";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
   ScrollView,
+  TextInput,
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
@@ -17,6 +18,7 @@ import { GameResultListItem } from "@components/game-results/GameResultListItem"
 import {
   FilterDropdown,
   MATCH_TYPE_OPTIONS,
+  filterStyles,
 } from "@components/profile/FilterDropdown";
 import { FollowRequestBanner } from "@components/profile/FollowRequestBanner";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
@@ -95,8 +97,20 @@ export default function UserProfileScreen() {
     isRefreshing: isStatsRefreshing,
   } = useUserStats(data?.user.id, filters);
 
-  // 試合結果
+  // 試合タブフィルター
+  const [gameSearchQuery, setGameSearchQuery] = useState("");
+  const [debouncedGameSearch, setDebouncedGameSearch] = useState("");
+  const [gameSortDesc, setGameSortDesc] = useState(true);
   const [gameCurrentPage, setGameCurrentPage] = useState(1);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedGameSearch(gameSearchQuery);
+      setGameCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [gameSearchQuery]);
+
   const {
     gameResults,
     pagination: gamePagination,
@@ -106,8 +120,13 @@ export default function UserProfileScreen() {
     refetch: refetchGames,
   } = useFilteredUserGameResults(data?.user.id, {
     page: gameCurrentPage,
+    year: selectedYear ?? "通算",
+    match_type: selectedMatchType ?? "全て",
+    season_id: selectedSeasonId,
+    tournament_id: selectedTournamentId,
+    search: debouncedGameSearch || undefined,
     sort_by: "date",
-    sort_order: "desc",
+    sort_order: gameSortDesc ? "desc" : "asc",
   });
 
   const handleGamePageChange = useCallback((page: number) => {
@@ -173,6 +192,8 @@ export default function UserProfileScreen() {
       style={styles.container}
       contentContainerStyle={{ paddingBottom: 16 }}
       bounces
+      keyboardDismissMode="interactive"
+      keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing || isStatsRefreshing || isGamesRefreshing}
@@ -310,9 +331,10 @@ export default function UserProfileScreen() {
                             label: y,
                           })),
                         ]}
-                        onSelect={(v) =>
-                          setSelectedYear(v === "all" ? undefined : v)
-                        }
+                        onSelect={(v) => {
+                          setSelectedYear(v === "all" ? undefined : v);
+                          setGameCurrentPage(1);
+                        }}
                         isOpen={activeFilter === "year"}
                         onToggle={() => toggleFilter("year")}
                       />
@@ -320,7 +342,10 @@ export default function UserProfileScreen() {
                         label="種別"
                         value={selectedMatchType}
                         options={MATCH_TYPE_OPTIONS}
-                        onSelect={setSelectedMatchType}
+                        onSelect={(v) => {
+                          setSelectedMatchType(v);
+                          setGameCurrentPage(1);
+                        }}
                         isOpen={activeFilter === "matchType"}
                         onToggle={() => toggleFilter("matchType")}
                       />
@@ -331,7 +356,10 @@ export default function UserProfileScreen() {
                           key: String(s.id),
                           label: s.name,
                         }))}
-                        onSelect={setSelectedSeasonId}
+                        onSelect={(v) => {
+                          setSelectedSeasonId(v);
+                          setGameCurrentPage(1);
+                        }}
                         isOpen={activeFilter === "season"}
                         onToggle={() => toggleFilter("season")}
                       />
@@ -343,7 +371,10 @@ export default function UserProfileScreen() {
                             key: String(t.id),
                             label: t.name,
                           }))}
-                          onSelect={setSelectedTournamentId}
+                          onSelect={(v) => {
+                            setSelectedTournamentId(v);
+                            setGameCurrentPage(1);
+                          }}
                           isOpen={activeFilter === "tournament"}
                           onToggle={() => toggleFilter("tournament")}
                         />
@@ -353,43 +384,144 @@ export default function UserProfileScreen() {
                 />
               )
             ) : (
-              <View style={styles.gamesContainer}>
-                {isGamesLoading ? (
-                  <ActivityIndicator
-                    color="#d08000"
-                    style={{ marginTop: 40 }}
+              <>
+                {/* フィルター */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 8,
+                    flexWrap: "wrap",
+                    marginBottom: 12,
+                  }}
+                >
+                  <FilterDropdown
+                    label="年度"
+                    value={selectedYear}
+                    options={[
+                      { key: "all", label: "通算" },
+                      ...availableYears.map((y) => ({ key: y, label: y })),
+                    ]}
+                    onSelect={(v) => {
+                      setSelectedYear(v === "all" ? undefined : v);
+                      setGameCurrentPage(1);
+                    }}
+                    isOpen={activeFilter === "game-year"}
+                    onToggle={() => toggleFilter("game-year")}
                   />
-                ) : gameResults.length === 0 ? (
-                  <Text style={styles.emptyText}>試合記録がありません</Text>
-                ) : (
-                  <>
-                    {gameResults.map((item) => (
-                      <View
-                        key={item.game_result_id}
-                        style={
-                          isGamesFetching && !isGamesLoading
-                            ? { opacity: 0.5 }
-                            : undefined
-                        }
-                      >
-                        <GameResultListItem
-                          game={item}
-                          onPress={handlePressGame}
+                  <FilterDropdown
+                    label="種別"
+                    value={selectedMatchType}
+                    options={MATCH_TYPE_OPTIONS}
+                    onSelect={(v) => {
+                      setSelectedMatchType(v);
+                      setGameCurrentPage(1);
+                    }}
+                    isOpen={activeFilter === "game-matchType"}
+                    onToggle={() => toggleFilter("game-matchType")}
+                  />
+                  <FilterDropdown
+                    label="シーズン"
+                    value={selectedSeasonId}
+                    options={seasons.map((s) => ({
+                      key: String(s.id),
+                      label: s.name,
+                    }))}
+                    onSelect={(v) => {
+                      setSelectedSeasonId(v);
+                      setGameCurrentPage(1);
+                    }}
+                    isOpen={activeFilter === "game-season"}
+                    onToggle={() => toggleFilter("game-season")}
+                  />
+                  {tournaments.length > 0 && (
+                    <FilterDropdown
+                      label="大会"
+                      value={selectedTournamentId}
+                      options={tournaments.map((t) => ({
+                        key: String(t.id),
+                        label: t.name,
+                      }))}
+                      onSelect={(v) => {
+                        setSelectedTournamentId(v);
+                        setGameCurrentPage(1);
+                      }}
+                      isOpen={activeFilter === "game-tournament"}
+                      onToggle={() => toggleFilter("game-tournament")}
+                    />
+                  )}
+                </View>
+
+                {/* 検索 + ソート */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 8,
+                    marginBottom: 12,
+                    alignItems: "center",
+                  }}
+                >
+                  <View style={styles.searchBox}>
+                    <Ionicons name="search" size={16} color="#71717A" />
+                    <TextInput
+                      style={styles.searchInput}
+                      placeholder="対戦相手を検索"
+                      placeholderTextColor="#71717A"
+                      value={gameSearchQuery}
+                      onChangeText={setGameSearchQuery}
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={filterStyles.button}
+                    onPress={() => {
+                      setGameSortDesc((p) => !p);
+                      setGameCurrentPage(1);
+                    }}
+                  >
+                    <Text style={filterStyles.buttonText}>
+                      日付（{gameSortDesc ? "新しい順" : "古い順"}）
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.gamesContainer}>
+                  {isGamesLoading ? (
+                    <ActivityIndicator
+                      color="#d08000"
+                      style={{ marginTop: 40 }}
+                    />
+                  ) : gameResults.length === 0 ? (
+                    <Text style={styles.emptyText}>試合記録がありません</Text>
+                  ) : (
+                    <>
+                      {gameResults.map((item) => (
+                        <View
+                          key={item.game_result_id}
+                          style={
+                            isGamesFetching && !isGamesLoading
+                              ? { opacity: 0.5 }
+                              : undefined
+                          }
+                        >
+                          <GameResultListItem
+                            game={item}
+                            onPress={handlePressGame}
+                          />
+                        </View>
+                      ))}
+                      {gamePagination ? (
+                        <GamePagination
+                          currentPage={gamePagination.current_page}
+                          totalPages={gamePagination.total_pages}
+                          totalCount={gamePagination.total_count}
+                          perPage={gamePagination.per_page}
+                          onPageChange={handleGamePageChange}
                         />
-                      </View>
-                    ))}
-                    {gamePagination ? (
-                      <GamePagination
-                        currentPage={gamePagination.current_page}
-                        totalPages={gamePagination.total_pages}
-                        totalCount={gamePagination.total_count}
-                        perPage={gamePagination.per_page}
-                        onPageChange={handleGamePageChange}
-                      />
-                    ) : null}
-                  </>
-                )}
-              </View>
+                      ) : null}
+                    </>
+                  )}
+                </View>
+              </>
             )}
           </View>
         </>
@@ -458,6 +590,23 @@ const styles = StyleSheet.create({
     backgroundColor: "#27272a",
     borderRadius: 12,
     padding: 16,
+  },
+  searchBox: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "#71717b",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: "#F4F4F4",
+    fontSize: 13,
+    padding: 0,
   },
   emptyText: {
     color: "#A1A1AA",
