@@ -14,6 +14,10 @@ import {
 } from "react-native";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
+import {
+  FilterDropdown,
+  MATCH_TYPE_OPTIONS,
+} from "@components/profile/FilterDropdown";
 import { FollowRequestBanner } from "@components/profile/FollowRequestBanner";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
@@ -30,6 +34,8 @@ import {
   useFollowUser,
   useUnfollowUser,
 } from "@hooks/useRelationship";
+import { useSeasons } from "@hooks/useSeasons";
+import { useTournaments } from "@hooks/useTournaments";
 
 export default function UserProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
@@ -56,7 +62,29 @@ export default function UserProfileScreen() {
   )?.name;
 
   // 成績フィルター
-  const filters: StatsFilters = {};
+  const [selectedYear, setSelectedYear] = useState<string | undefined>(
+    undefined,
+  );
+  const [selectedMatchType, setSelectedMatchType] = useState<
+    string | undefined
+  >(undefined);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(
+    undefined,
+  );
+  const [selectedTournamentId, setSelectedTournamentId] = useState<
+    string | undefined
+  >(undefined);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const toggleFilter = (id: string) =>
+    setActiveFilter((prev) => (prev === id ? null : id));
+  const filters: StatsFilters = {
+    ...(selectedYear ? { year: selectedYear } : {}),
+    ...(selectedMatchType ? { matchType: selectedMatchType } : {}),
+    ...(selectedSeasonId ? { seasonId: selectedSeasonId } : {}),
+    ...(selectedTournamentId ? { tournamentId: selectedTournamentId } : {}),
+  };
+  const { seasons } = useSeasons(data?.user.id);
+  const { tournaments } = useTournaments(data?.user.id);
   const {
     battingStats,
     pitchingStats,
@@ -262,6 +290,64 @@ export default function UserProfileScreen() {
                 <ProfileStatsTab
                   battingStats={battingStats}
                   pitchingStats={pitchingStats}
+                  seasonFilter={
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 8,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <FilterDropdown
+                        label="年度"
+                        value={selectedYear}
+                        options={[
+                          { key: "all", label: "通算" },
+                          ...Array.from({ length: 5 }, (_, i) => {
+                            const y = String(new Date().getFullYear() - i);
+                            return { key: y, label: y };
+                          }),
+                        ]}
+                        onSelect={(v) =>
+                          setSelectedYear(v === "all" ? undefined : v)
+                        }
+                        isOpen={activeFilter === "year"}
+                        onToggle={() => toggleFilter("year")}
+                      />
+                      <FilterDropdown
+                        label="種別"
+                        value={selectedMatchType}
+                        options={MATCH_TYPE_OPTIONS}
+                        onSelect={setSelectedMatchType}
+                        isOpen={activeFilter === "matchType"}
+                        onToggle={() => toggleFilter("matchType")}
+                      />
+                      <FilterDropdown
+                        label="シーズン"
+                        value={selectedSeasonId}
+                        options={seasons.map((s) => ({
+                          key: String(s.id),
+                          label: s.name,
+                        }))}
+                        onSelect={setSelectedSeasonId}
+                        isOpen={activeFilter === "season"}
+                        onToggle={() => toggleFilter("season")}
+                      />
+                      {tournaments.length > 0 && (
+                        <FilterDropdown
+                          label="大会"
+                          value={selectedTournamentId}
+                          options={tournaments.map((t) => ({
+                            key: String(t.id),
+                            label: t.name,
+                          }))}
+                          onSelect={setSelectedTournamentId}
+                          isOpen={activeFilter === "tournament"}
+                          onToggle={() => toggleFilter("tournament")}
+                        />
+                      )}
+                    </View>
+                  }
                 />
               )
             ) : (
