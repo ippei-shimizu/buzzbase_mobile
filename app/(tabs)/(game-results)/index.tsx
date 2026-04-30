@@ -18,6 +18,7 @@ import {
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { GameResultSummary } from "@components/stats/GameResultSummary";
+import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useFilteredGameResults } from "@hooks/useGameResults";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useGameSummary } from "@hooks/useStats";
@@ -175,6 +176,7 @@ export default function GameResultsScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
+  const { years: availableYears } = useAvailableYears();
 
   // Screen tab state
   const [screenTab, setScreenTab] = useState<ScreenTab>("summary");
@@ -329,10 +331,7 @@ export default function GameResultsScreen() {
           value={selectedYear}
           options={[
             { key: "all", label: "通算" },
-            ...Array.from({ length: 5 }, (_, i) => {
-              const y = String(new Date().getFullYear() - i);
-              return { key: y, label: y };
-            }),
+            ...availableYears.map((y) => ({ key: y, label: y })),
           ]}
           onSelect={(v) => {
             setSelectedYear(v === "all" ? undefined : v);
@@ -424,10 +423,7 @@ export default function GameResultsScreen() {
 
   const summaryYearOptions = [
     { key: "all", label: "通算" },
-    ...Array.from({ length: 5 }, (_, i) => {
-      const y = String(new Date().getFullYear() - i);
-      return { key: y, label: y };
-    }),
+    ...availableYears.map((y) => ({ key: y, label: y })),
   ];
 
   return (

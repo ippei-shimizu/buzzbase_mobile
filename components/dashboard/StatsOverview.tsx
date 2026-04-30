@@ -11,6 +11,7 @@ import {
   TouchableWithoutFeedback,
   type ViewStyle,
 } from "react-native";
+import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useProfileStats } from "@hooks/useProfileStats";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useTournaments } from "@hooks/useTournaments";
@@ -414,6 +415,7 @@ export const StatsOverview = ({
 
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
+  const { years: availableYears } = useAvailableYears();
 
   const battingStats =
     batting.hasFilters && filteredBatting ? filteredBatting : defaultBatting;
@@ -429,10 +431,7 @@ export const StatsOverview = ({
         value={f.selectedYear}
         options={[
           { key: "all", label: "通算" },
-          ...Array.from({ length: 5 }, (_, i) => {
-            const y = String(new Date().getFullYear() - i);
-            return { key: y, label: y };
-          }),
+          ...availableYears.map((y) => ({ key: y, label: y })),
         ]}
         onSelect={(v) => f.setSelectedYear(v === "all" ? undefined : v)}
         isOpen={f.activeFilter === "year"}
