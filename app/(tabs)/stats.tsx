@@ -22,6 +22,7 @@ import {
   BATTING_COLUMNS,
   PITCHING_COLUMNS,
 } from "@components/stats/StatsTable";
+import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useMySeasons } from "@hooks/useSeasons";
 import {
   useHitDirections,
@@ -215,6 +216,7 @@ export default function StatsScreen() {
 
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
+  const { years: availableYearsRaw } = useAvailableYears();
   const hitDirections = useHitDirections(filters);
   const paBreakdown = usePlateAppearanceBreakdown(filters);
   const battingTable = useBattingStatsTable(
@@ -283,10 +285,7 @@ export default function StatsScreen() {
     [tableYear, tableSeasonId],
   );
 
-  const availableYears = Array.from(
-    { length: 5 },
-    (_, i) => new Date().getFullYear() - i,
-  );
+  const availableYears = availableYearsRaw.map((y) => Number(y));
 
   const yearOptions = availableYears.map((y) => ({
     key: String(y),
