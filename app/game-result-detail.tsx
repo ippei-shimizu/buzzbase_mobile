@@ -10,6 +10,8 @@ import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { useProfile } from "@hooks/useProfile";
 import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
 import { deleteGameResult } from "@services/gameResultService";
+import { isAxios404 } from "@utils/axiosError";
+import { invalidateGameResultRelated } from "@utils/queryInvalidation";
 import { shareGameResult } from "@utils/shareGameResult";
 import { useGameRecordStore } from "../stores/gameRecordStore";
 
@@ -44,14 +46,19 @@ export default function GameResultDetailModal() {
   const handleDelete = async () => {
     try {
       await deleteGameResult(game.game_result_id);
-      queryClient.invalidateQueries({ queryKey: ["gameResults"] });
-      router.back();
     } catch (error) {
-      Sentry.captureException(error, {
-        tags: { source: "game-result-detail", action: "delete" },
-      });
-      Alert.alert("エラー", "試合結果の削除に失敗しました");
+      // 404 は既に削除済みなので成功扱い（クライアント側のキャッシュやナビゲーション
+      // パラメータに古い id が残るケースで 404 連打ループを起こさないため）。
+      if (!isAxios404(error)) {
+        Sentry.captureException(error, {
+          tags: { source: "game-result-detail", action: "delete" },
+        });
+        Alert.alert("エラー", "試合結果の削除に失敗しました");
+        return;
+      }
     }
+    invalidateGameResultRelated(queryClient);
+    router.back();
   };
 
   return (
