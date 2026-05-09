@@ -1,7 +1,6 @@
 import * as Sentry from "@sentry/react-native";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
-import { saveAuthTokensFromHeaders } from "@utils/authTokenStorage";
 import axiosInstance from "@utils/axiosInstance";
 
 const isExpoGo = Constants.appOwnership === "expo";
@@ -30,13 +29,10 @@ export const googleSignIn = async () => {
   const idToken = response.data?.idToken;
   if (!idToken) throw new Error("Google IDトークンの取得に失敗しました");
 
+  // トークンはレスポンスヘッダー経由でaxiosInstanceのレスポンスインターセプタが保存する
   const apiResponse = await axiosInstance.post("/google_sign_in", {
     id_token: idToken,
   });
-
-  await saveAuthTokensFromHeaders(
-    apiResponse.headers as Record<string, string>,
-  );
 
   const userId = apiResponse.data?.data?.id;
   if (userId) Sentry.setUser({ id: String(userId) });

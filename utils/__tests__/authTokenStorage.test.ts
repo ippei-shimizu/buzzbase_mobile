@@ -44,6 +44,15 @@ describe("authTokenStorage", () => {
         }),
       );
     });
+
+    it("未保存のキーを読んでも null を返しSentryは呼ばない（正常系）", async () => {
+      mockedSecureStore.getItemAsync.mockResolvedValueOnce(null);
+
+      const result = await getAuthToken("access-token");
+
+      expect(result).toBeNull();
+      expect(mockedSentry.captureException).not.toHaveBeenCalled();
+    });
   });
 
   describe("setAuthToken", () => {

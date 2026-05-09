@@ -1,16 +1,14 @@
 /**
  * 認証APIサービス
  *
- * devise_token_authのエンドポイントと通信し、
- * レスポンスヘッダーからトークンをSecureStoreに保存する。
+ * devise_token_authのエンドポイントと通信する。
+ * トークン保存は axiosInstance のレスポンスインターセプタで一元管理されるため、
+ * 各サービスでは明示的に保存しない（トークンは取得→ヘッダー→インターセプタの経路で保管）。
  * Web版 front/app/services/authService.tsx に対応。
  */
 import type { AuthResponse, SignInData, SignUpData } from "../types/auth";
 import * as Sentry from "@sentry/react-native";
-import {
-  clearAllAuthTokens,
-  saveAuthTokensFromHeaders,
-} from "@utils/authTokenStorage";
+import { clearAllAuthTokens } from "@utils/authTokenStorage";
 import axiosInstance from "@utils/axiosInstance";
 
 /** メールアドレスとパスワードでログイン */
@@ -19,7 +17,6 @@ export const signIn = async (data: SignInData): Promise<AuthResponse> => {
     email: data.email,
     password: data.password,
   });
-  await saveAuthTokensFromHeaders(response.headers as Record<string, string>);
   const body = response.data as AuthResponse;
   if (body.data?.id) {
     Sentry.setUser({ id: String(body.data.id) });
