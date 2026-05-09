@@ -18,7 +18,11 @@ interface Props {
   label?: string;
   items: PickerItem[];
   selectedValue: string | number | null;
-  onSelect: (value: string | number) => void;
+  /**
+   * 選択値が変わったときに呼ばれる。クリア操作時は null が渡る。
+   * 呼び出し側では null を「未選択」として扱うこと（id=0 は不正値として扱われる）。
+   */
+  onSelect: (value: string | number | null) => void;
   placeholder?: string;
   showClear?: boolean;
   compact?: boolean;
@@ -53,7 +57,7 @@ export function SelectPicker({
         </Text>
         <View style={styles.triggerActions}>
           {showClear && selectedValue ? (
-            <TouchableOpacity onPress={() => onSelect(0)} hitSlop={8}>
+            <TouchableOpacity onPress={() => onSelect(null)} hitSlop={8}>
               <Ionicons name="close-circle" size={18} color="#71717A" />
             </TouchableOpacity>
           ) : null}
