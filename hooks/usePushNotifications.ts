@@ -1,12 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { useAuthStore } from "../stores/authStore";
+import { useEffect, useRef } from "react";
+import { AppState } from "react-native";
 import {
   registerForPushNotifications,
   registerDeviceToken,
 } from "@services/pushNotificationService";
+import { useAuthStore } from "../stores/authStore";
 
 const isExpoGo = Constants.appOwnership === "expo";
 
@@ -28,6 +29,9 @@ export function usePushNotifications() {
 
     notificationListener.current =
       Notifications.addNotificationReceivedListener(() => {
+        // バックグラウンド/ロック中はSecureStore読込が失敗し得るので
+        // ここでのAPI再取得はスキップし、フォアグラウンド復帰後の再フェッチに任せる
+        if (AppState.currentState !== "active") return;
         queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
         queryClient.invalidateQueries({ queryKey: ["notifications"] });
       });

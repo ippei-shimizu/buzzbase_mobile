@@ -1,6 +1,6 @@
+import type { SignInData, SignUpData } from "../types/auth";
 import { useEffect } from "react";
-import * as SecureStore from "expo-secure-store";
-import { useAuthStore } from "@stores/authStore";
+import { appleSignIn } from "@services/appleAuthService";
 import {
   signIn,
   signOut,
@@ -9,8 +9,8 @@ import {
   validateToken,
 } from "@services/authService";
 import { googleSignIn } from "@services/googleAuthService";
-import { appleSignIn } from "@services/appleAuthService";
-import type { SignInData, SignUpData } from "../types/auth";
+import { useAuthStore } from "@stores/authStore";
+import { getAuthToken } from "@utils/authTokenStorage";
 
 /**
  * 認証カスタムフック
@@ -33,7 +33,7 @@ export const useAuth = () => {
     const checkAuth = async () => {
       setIsLoading(true);
       try {
-        const accessToken = await SecureStore.getItemAsync("access-token");
+        const accessToken = await getAuthToken("access-token");
         if (!accessToken) {
           setIsLoggedIn(false);
           return;

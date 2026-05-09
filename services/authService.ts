@@ -7,18 +7,11 @@
  */
 import type { AuthResponse, SignInData, SignUpData } from "../types/auth";
 import * as Sentry from "@sentry/react-native";
-import * as SecureStore from "expo-secure-store";
+import {
+  clearAllAuthTokens,
+  saveAuthTokensFromHeaders,
+} from "@utils/authTokenStorage";
 import axiosInstance from "@utils/axiosInstance";
-
-/** レスポンスヘッダーから認証トークンをSecureStoreに保存 */
-const saveTokens = async (headers: Record<string, string>) => {
-  const accessToken = headers["access-token"];
-  if (accessToken) {
-    await SecureStore.setItemAsync("access-token", accessToken);
-    await SecureStore.setItemAsync("client", headers["client"]);
-    await SecureStore.setItemAsync("uid", headers["uid"]);
-  }
-};
 
 /** メールアドレスとパスワードでログイン */
 export const signIn = async (data: SignInData): Promise<AuthResponse> => {
@@ -26,7 +19,7 @@ export const signIn = async (data: SignInData): Promise<AuthResponse> => {
     email: data.email,
     password: data.password,
   });
-  await saveTokens(response.headers as Record<string, string>);
+  await saveAuthTokensFromHeaders(response.headers as Record<string, string>);
   const body = response.data as AuthResponse;
   if (body.data?.id) {
     Sentry.setUser({ id: String(body.data.id) });
@@ -37,9 +30,7 @@ export const signIn = async (data: SignInData): Promise<AuthResponse> => {
 /** ログアウトしSecureStoreからトークンを削除 */
 export const signOut = async (): Promise<void> => {
   await axiosInstance.delete("/auth/sign_out");
-  await SecureStore.deleteItemAsync("access-token");
-  await SecureStore.deleteItemAsync("client");
-  await SecureStore.deleteItemAsync("uid");
+  await clearAllAuthTokens();
   Sentry.setUser(null);
 };
 

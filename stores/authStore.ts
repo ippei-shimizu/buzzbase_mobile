@@ -1,5 +1,5 @@
-import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
+import { clearAllAuthTokens } from "@utils/authTokenStorage";
 
 /**
  * 認証ストアの状態定義
@@ -27,9 +27,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   setIsLoggedIn: (value: boolean) => set({ isLoggedIn: value }),
   setIsLoading: (value: boolean) => set({ isLoading: value }),
   logout: async () => {
-    await SecureStore.deleteItemAsync("access-token");
-    await SecureStore.deleteItemAsync("client");
-    await SecureStore.deleteItemAsync("uid");
+    await clearAllAuthTokens();
     set({ isLoggedIn: false });
   },
 }));

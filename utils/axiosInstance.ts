@@ -1,24 +1,33 @@
 import * as Sentry from "@sentry/react-native";
 import axios from "axios";
-import * as SecureStore from "expo-secure-store";
 import { API_V1_URL } from "@constants/api";
+import {
+  clearAllAuthTokens,
+  getAuthToken,
+  saveAuthTokensFromHeaders,
+} from "./authTokenStorage";
 
 /**
  * axios共通インスタンス
  *
  * devise_token_auth用のインターセプタを設定:
- * - リクエスト: SecureStoreから認証トークンをヘッダーに付与
+ * - リクエスト: 認証トークンをSecureStore（`utils/authTokenStorage`）から読み出してヘッダーに付与
  * - レスポンス: 新しいトークンがあればSecureStoreを更新、401時はトークンをクリア
+ *
+ * SecureStoreの読み書きは `authTokenStorage` で `AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY` を
+ * 指定し、ロック中・バックグラウンド時にも例外を伝播させずSentryに記録する。
  */
 const axiosInstance = axios.create({
   baseURL: API_V1_URL,
 });
 
-/** リクエストインターセプタ: SecureStoreから認証ヘッダーを自動付与 */
+/** リクエストインターセプタ: 認証ヘッダーを並列に取得してまとめて付与 */
 axiosInstance.interceptors.request.use(async (config) => {
-  const accessToken = await SecureStore.getItemAsync("access-token");
-  const client = await SecureStore.getItemAsync("client");
-  const uid = await SecureStore.getItemAsync("uid");
+  const [accessToken, client, uid] = await Promise.all([
+    getAuthToken("access-token"),
+    getAuthToken("client"),
+    getAuthToken("uid"),
+  ]);
 
   if (accessToken && client && uid) {
     config.headers["access-token"] = accessToken;
@@ -31,20 +40,18 @@ axiosInstance.interceptors.request.use(async (config) => {
 
 /** レスポンスインターセプタ: トークン自動更新・401時のトークンクリア */
 axiosInstance.interceptors.response.use(
-  (response) => {
+  async (response) => {
     const newToken = response.headers["access-token"];
     if (newToken) {
-      SecureStore.setItemAsync("access-token", newToken);
-      SecureStore.setItemAsync("client", response.headers["client"]);
-      SecureStore.setItemAsync("uid", response.headers["uid"]);
+      await saveAuthTokensFromHeaders(
+        response.headers as Record<string, string>,
+      );
     }
     return response;
   },
   async (error) => {
     if (error.response?.status === 401) {
-      await SecureStore.deleteItemAsync("access-token");
-      await SecureStore.deleteItemAsync("client");
-      await SecureStore.deleteItemAsync("uid");
+      await clearAllAuthTokens();
     } else if (!error.response || error.response.status >= 500) {
       Sentry.captureException(error, {
         tags: {

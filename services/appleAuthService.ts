@@ -1,8 +1,8 @@
 import * as Sentry from "@sentry/react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import Constants from "expo-constants";
-import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
+import { saveAuthTokensFromHeaders } from "@utils/authTokenStorage";
 import axiosInstance from "@utils/axiosInstance";
 
 const isExpoGo = Constants.appOwnership === "expo";
@@ -52,12 +52,9 @@ export const appleSignIn = async () => {
     full_name: fullName,
   });
 
-  const headers = apiResponse.headers as Record<string, string>;
-  if (headers["access-token"]) {
-    await SecureStore.setItemAsync("access-token", headers["access-token"]);
-    await SecureStore.setItemAsync("client", headers["client"]);
-    await SecureStore.setItemAsync("uid", headers["uid"]);
-  }
+  await saveAuthTokensFromHeaders(
+    apiResponse.headers as Record<string, string>,
+  );
 
   const userId = apiResponse.data?.data?.id;
   if (userId) Sentry.setUser({ id: String(userId) });
