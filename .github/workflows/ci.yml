@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  lint-and-typecheck:
-    name: Lint & Typecheck
+  lint-and-test:
+    name: Lint & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -34,3 +34,6 @@ jobs:
 
       - name: Prettier check
         run: yarn format:check
+
+      - name: Run tests
+        run: yarn test:ci
