@@ -13,8 +13,8 @@ interface Props {
   prefectures: { label: string; value: number }[];
   onSelectTeam: (id: number, name: string) => void;
   onCustomTeamInput: (name: string) => void;
-  onSelectCategory: (value: string | number) => void;
-  onSelectPrefecture: (value: string | number) => void;
+  onSelectCategory: (value: string | number | null) => void;
+  onSelectPrefecture: (value: string | number | null) => void;
 }
 
 export const TeamSection = ({

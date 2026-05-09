@@ -47,8 +47,8 @@ interface ProfileEditFormProps {
   prefectureItems: { label: string; value: number }[];
   onSelectTeam: (id: number, name: string) => void;
   onCustomTeamInput: (name: string) => void;
-  onSelectCategory: (value: string | number) => void;
-  onSelectPrefecture: (value: string | number) => void;
+  onSelectCategory: (value: string | number | null) => void;
+  onSelectPrefecture: (value: string | number | null) => void;
   // 受賞歴
   awards: AwardItem[];
   onChangeAward: (index: number, title: string) => void;

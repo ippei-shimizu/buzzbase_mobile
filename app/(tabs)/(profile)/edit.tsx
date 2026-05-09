@@ -319,8 +319,12 @@ export default function ProfileEditScreen() {
           prefectureItems={prefectureItems}
           onSelectTeam={handleSelectTeam}
           onCustomTeamInput={handleCustomTeamInput}
-          onSelectCategory={(v) => setSelectedCategoryId(v as number)}
-          onSelectPrefecture={(v) => setSelectedPrefectureId(v as number)}
+          onSelectCategory={(v) =>
+            setSelectedCategoryId(typeof v === "number" ? v : null)
+          }
+          onSelectPrefecture={(v) =>
+            setSelectedPrefectureId(typeof v === "number" ? v : null)
+          }
           // 受賞歴
           awards={awards}
           onChangeAward={handleChangeAward}
