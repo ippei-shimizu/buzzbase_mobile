@@ -1,4 +1,5 @@
 import type { SignInData, SignUpData } from "../types/auth";
+import { isAxiosError } from "axios";
 import { useEffect } from "react";
 import { appleSignIn } from "@services/appleAuthService";
 import {
@@ -40,7 +41,14 @@ export const useAuth = () => {
         }
         await validateToken();
         setIsLoggedIn(true);
-      } catch {
+      } catch (error) {
+        // ネットワーク到達不可は「認証無効」ではないため、トークンを保持したまま
+        // 楽観的にログイン継続。後続APIで401が返った場合は axiosInstance の
+        // レスポンスインターセプタが clearAllAuthTokens を実行する。
+        if (isAxiosError(error) && !error.response) {
+          setIsLoggedIn(true);
+          return;
+        }
         setIsLoggedIn(false);
       } finally {
         setIsLoading(false);
