@@ -13,4 +13,14 @@ module.exports = {
     "^@stores/(.*)$": "<rootDir>/stores/$1",
   },
   testPathIgnorePatterns: ["/node_modules/", "/.expo/"],
+  collectCoverageFrom: [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "hooks/**/*.{ts,tsx}",
+    "services/**/*.{ts,tsx}",
+    "stores/**/*.{ts,tsx}",
+    "utils/**/*.{ts,tsx}",
+    "!**/__tests__/**",
+    "!**/*.d.ts",
+  ],
 };
