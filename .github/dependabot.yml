@@ -1,0 +1,45 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    target-branch: "main"
+    open-pull-requests-limit: 5
+    assignees:
+      - "ippei-shimizu"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "Update"
+      include: "scope"
+    ignore:
+      - dependency-name: "expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-native"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    target-branch: "main"
+    open-pull-requests-limit: 5
+    assignees:
+      - "ippei-shimizu"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "Update"
+      include: "scope"
