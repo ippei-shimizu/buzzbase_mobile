@@ -7,6 +7,7 @@ import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { BottomTabBar } from "@components/ui/BottomTabBar";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { useStoreReview } from "@hooks/useStoreReview";
+import { invalidateGameResultRelated } from "@utils/queryInvalidation";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 
 type PrePromptSource = "complete" | "share";
@@ -85,9 +86,7 @@ export default function SummaryScreen() {
 
   const handleComplete = async () => {
     resetFlow();
-    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    queryClient.invalidateQueries({ queryKey: ["gameResults"] });
-    queryClient.invalidateQueries({ queryKey: ["userGameResults"] });
+    invalidateGameResultRelated(queryClient);
 
     const shown = await tryShowPrePrompt("complete");
     if (shown) return;
