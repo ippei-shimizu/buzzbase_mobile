@@ -139,7 +139,7 @@ const PITCHING_STATS: StatDef[] = [
   },
   {
     name: "BB/9",
-    formula: "（与四球÷投球回）×イニング制",
+    formula: "（与四球数×イニング制）÷（投球回数）",
     description:
       "1試合あたりの与四球の数を示します。試合のイニング制（7回制 or 9回制）に応じて係数が変わります。",
   },

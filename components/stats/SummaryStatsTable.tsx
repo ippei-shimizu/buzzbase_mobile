@@ -53,10 +53,7 @@ export function SummaryStatsTable({ rows }: Props) {
   return (
     <View style={styles.table}>
       {rows.map((row, i) => (
-        <View
-          key={i}
-          style={[styles.tableRow, i % 2 === 0 && styles.tableRowEven]}
-        >
+        <View key={i} style={styles.tableRow}>
           <CellLabel label={row[0]} />
           <Text style={styles.cellValue}>{row[1]}</Text>
           <CellLabel label={row[2]} />
@@ -77,7 +74,6 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: "row",
   },
-  tableRowEven: {},
   cellLabel: {
     flex: 1,
     color: "#A1A1AA",
