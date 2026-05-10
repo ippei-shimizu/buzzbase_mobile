@@ -113,6 +113,7 @@ export const useGameRecord = () => {
         defensive_position: store.defensivePosition,
         memo: store.memo,
         inning_format: store.inningFormat,
+        appearance_type: store.appearanceType,
         ...(tournamentId ? { tournament_id: tournamentId } : {}),
       };
 

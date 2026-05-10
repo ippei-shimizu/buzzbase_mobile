@@ -1,4 +1,4 @@
-import type { Team, Position } from "../../types/gameRecord";
+import type { AppearanceType, Position, Team } from "../../types/gameRecord";
 import type { Season } from "../../types/season";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useMemo } from "react";
@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { Button } from "@components/ui/Button";
 import { SelectPicker } from "@components/ui/SelectPicker";
+import { APPEARANCE_TYPE_OPTIONS } from "@constants/appearanceType";
 
 interface Props {
   date: string;
@@ -35,16 +36,21 @@ interface Props {
   teams: Team[];
   positions: Position[];
   inningFormat: number;
+  appearanceType: AppearanceType;
   isSubmitting: boolean;
   errors: string[];
   onFieldChange: (field: string, value: string | number | null) => void;
   onSubmit: () => void;
 }
 
-const BATTING_ORDERS = Array.from({ length: 10 }, (_, i) => ({
-  label: i === 9 ? "DH" : `${i + 1}番`,
-  value: i === 9 ? "DH" : String(i + 1),
-}));
+// 打順の選択肢。1〜9番／DH に加え、代打・代走・途中出場・未出場ケース向けに「なし」を先頭に追加。
+const BATTING_ORDERS = [
+  { label: "なし", value: "" },
+  ...Array.from({ length: 10 }, (_, i) => ({
+    label: i === 9 ? "DH" : `${i + 1}番`,
+    value: i === 9 ? "DH" : String(i + 1),
+  })),
+];
 
 function FormRow({
   label,
@@ -86,6 +92,7 @@ export function GameInfoForm({
   teams,
   positions,
   inningFormat,
+  appearanceType,
   isSubmitting,
   errors,
   onFieldChange,
@@ -96,6 +103,21 @@ export function GameInfoForm({
     useState(false);
   const [showTournamentSuggestions, setShowTournamentSuggestions] =
     useState(false);
+
+  // 「先発」「途中出場」のときだけ打順／守備位置を必須にする。
+  // 代打／代走／未出場 を選んだ瞬間に打順／守備位置を「なし」（空文字）に自動セットして、
+  // 必須ラベルも消す。
+  const lineupRequired =
+    appearanceType === "starter" || appearanceType === "substitute";
+
+  const handleAppearanceTypeChange = (next: AppearanceType) => {
+    onFieldChange("appearanceType", next);
+    const nextRequiresLineup = next === "starter" || next === "substitute";
+    if (!nextRequiresLineup) {
+      onFieldChange("battingOrder", "");
+      onFieldChange("defensivePosition", "");
+    }
+  };
 
   const filteredMyTeams = useMemo(
     () =>
@@ -127,10 +149,12 @@ export function GameInfoForm({
     [tournamentName, tournaments],
   );
 
-  const positionItems = positions.map((p) => ({
-    label: p.name,
-    value: p.name,
-  }));
+  // 代打／代走／途中出場／未出場のときに守備位置を「なし」（未選択）にできるよう、
+  // 先頭に空値の選択肢を入れる。先発の必須バリデーションは Step1 画面側で値の有無を見て行う。
+  const positionItems = [
+    { label: "なし", value: "" },
+    ...positions.map((p) => ({ label: p.name, value: p.name })),
+  ];
 
   const seasonItems = [
     { label: "シーズン名を入力", value: "" },
@@ -223,6 +247,28 @@ export function GameInfoForm({
               >
                 <View style={styles.radioOuter}>
                   {inningFormat === opt.value && (
+                    <View style={styles.radioInner} />
+                  )}
+                </View>
+                <Text style={styles.radioLabel}>{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </FormRow>
+
+        <View style={styles.divider} />
+
+        {/* 出場区分（先発 / 途中出場 / 代打 / 代走 / 未出場） */}
+        <FormRow label="出場区分" required>
+          <View style={styles.appearanceRadioGroup}>
+            {APPEARANCE_TYPE_OPTIONS.map((opt) => (
+              <TouchableOpacity
+                key={opt.value}
+                style={styles.radioOption}
+                onPress={() => handleAppearanceTypeChange(opt.value)}
+              >
+                <View style={styles.radioOuter}>
+                  {appearanceType === opt.value && (
                     <View style={styles.radioInner} />
                   )}
                 </View>
@@ -395,8 +441,8 @@ export function GameInfoForm({
 
         <View style={styles.divider} />
 
-        {/* 打順 */}
-        <FormRow label="打順" required>
+        {/* 打順。先発・途中出場のときだけ必須。代打/代走/未出場のときは「なし」が自動選択される。 */}
+        <FormRow label="打順" required={lineupRequired}>
           <SelectPicker
             items={BATTING_ORDERS}
             selectedValue={battingOrder}
@@ -407,8 +453,8 @@ export function GameInfoForm({
 
         <View style={styles.divider} />
 
-        {/* 守備位置 */}
-        <FormRow label="守備位置" required>
+        {/* 守備位置。先発・途中出場のときだけ必須。代打/代走/未出場のときは「なし」が自動選択される。 */}
+        <FormRow label="守備位置" required={lineupRequired}>
           <SelectPicker
             items={positionItems}
             selectedValue={defensivePosition}
@@ -432,7 +478,9 @@ export function GameInfoForm({
       </View>
 
       <Button
-        title="打撃成績入力へ"
+        title={
+          appearanceType === "no_play" ? "試合結果まとめへ" : "打撃成績入力へ"
+        }
         onPress={onSubmit}
         loading={isSubmitting}
         disabled={isSubmitting}
@@ -516,6 +564,14 @@ const styles = StyleSheet.create({
   radioGroup: {
     flexDirection: "row",
     gap: 20,
+  },
+  // 出場区分は選択肢が5つあり、横一列だと画面幅に収まらないため
+  // 折り返しを許可し、行間と列間を調整する。
+  appearanceRadioGroup: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    columnGap: 16,
+    rowGap: 8,
   },
   radioOption: {
     flexDirection: "row",
