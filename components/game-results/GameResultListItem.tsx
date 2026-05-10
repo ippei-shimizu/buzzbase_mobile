@@ -1,6 +1,7 @@
 import type { GameResult } from "../../types/gameResult";
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
 
 interface GameResultListItemProps {
   game: GameResult;
@@ -84,12 +85,30 @@ export const GameResultListItem = ({
     <View style={styles.card}>
       {/* ヘッダー: 試合種別 + 日付 + 詳細ボタン */}
       <View style={styles.header}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+            flex: 1,
+          }}
+        >
           <View style={styles.matchTypeBadge}>
             <Text style={styles.matchTypeText}>
               {matchTypeLabel(match_result.match_type)}
             </Text>
           </View>
+          {(() => {
+            const badge = getAppearanceTypeBadgeLabel(
+              match_result.appearance_type,
+            );
+            return badge ? (
+              <View style={styles.appearanceBadge}>
+                <Text style={styles.appearanceBadgeText}>{badge}</Text>
+              </View>
+            ) : null;
+          })()}
           <Text style={styles.date}>
             {formatDate(match_result.date_and_time)}
           </Text>
@@ -224,6 +243,19 @@ const styles = StyleSheet.create({
   },
   matchTypeText: {
     color: "#d08000",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  appearanceBadge: {
+    backgroundColor: "#27272a",
+    borderWidth: 1,
+    borderColor: "#338EF7",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  appearanceBadgeText: {
+    color: "#338EF7",
     fontSize: 11,
     fontWeight: "600",
   },

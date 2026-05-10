@@ -9,6 +9,7 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
+import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
 
 interface GameResultDetailProps {
   game: GameResult;
@@ -39,7 +40,18 @@ const POSITION_MAP: Record<string, string> = {
   "10": "DH",
 };
 
-const positionLabel = (pos: string): string => POSITION_MAP[pos] ?? pos;
+const positionLabel = (pos: string): string => {
+  if (!pos) return "";
+  return POSITION_MAP[pos] ?? pos;
+};
+
+// 打順表示。空文字／未指定なら表示しない（「なし」を選んだ場合に「番」だけ残らないように）。
+// "DH" のように番号でない値はそのまま表示。
+const battingOrderLabel = (order: string): string => {
+  if (!order) return "";
+  if (/^\d+$/.test(order)) return `${order}番`;
+  return order;
+};
 
 const HIT_RESULTS = [
   "左安",
@@ -127,12 +139,30 @@ export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
       <View style={styles.card}>
         {/* ヘッダー */}
         <View style={styles.header}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              flexWrap: "wrap",
+              flex: 1,
+            }}
+          >
             <View style={styles.matchTypeBadge}>
               <Text style={styles.matchTypeText}>
                 {matchTypeLabel(match_result.match_type)}
               </Text>
             </View>
+            {(() => {
+              const badge = getAppearanceTypeBadgeLabel(
+                match_result.appearance_type,
+              );
+              return badge ? (
+                <View style={styles.appearanceBadge}>
+                  <Text style={styles.appearanceBadgeText}>{badge}</Text>
+                </View>
+              ) : null;
+            })()}
             <Text style={styles.dateText}>
               {formatDate(match_result.date_and_time)}
             </Text>
@@ -153,7 +183,9 @@ export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
 
         {/* マイチーム */}
         <Text style={styles.metaText}>マイチーム</Text>
-        <Text style={styles.teamName}>無所属</Text>
+        <Text style={styles.teamName}>
+          {match_result.my_team_name || "無所属"}
+        </Text>
 
         {/* スコア */}
         <View style={styles.scoreRow}>
@@ -177,11 +209,19 @@ export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
           </Text>
         </View>
 
-        {/* 打順・守備 */}
-        <Text style={styles.positionText}>
-          {match_result.batting_order}番{"  "}
-          {positionLabel(match_result.defensive_position)}
-        </Text>
+        {/* 打順・守備（未指定のときはセクション全体を非表示にする） */}
+        {(() => {
+          const orderLabel = battingOrderLabel(match_result.batting_order);
+          const posLabel = positionLabel(match_result.defensive_position);
+          if (!orderLabel && !posLabel) return null;
+          return (
+            <Text style={styles.positionText}>
+              {orderLabel}
+              {orderLabel && posLabel ? "  " : ""}
+              {posLabel}
+            </Text>
+          );
+        })()}
 
         {/* 打撃セクション */}
         {batting_average && (
@@ -302,6 +342,19 @@ const styles = StyleSheet.create({
   },
   matchTypeText: {
     color: "#d08000",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  appearanceBadge: {
+    backgroundColor: "#2E2E2E",
+    borderWidth: 1,
+    borderColor: "#338EF7",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  appearanceBadgeText: {
+    color: "#338EF7",
     fontSize: 11,
     fontWeight: "600",
   },
