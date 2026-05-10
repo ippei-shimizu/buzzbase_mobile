@@ -42,8 +42,8 @@ export const DangerActionButton = ({
 const styles = StyleSheet.create({
   base: {
     width: "100%",
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 13,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   },
   label: {
     color: "#EF4444",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
   },
 });
