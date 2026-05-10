@@ -11,11 +11,17 @@ import {
   StyleSheet,
 } from "react-native";
 import { GroupListCard } from "@components/groups/GroupListCard";
+import {
+  GlobalMenuButton,
+  GlobalMenuOverlay,
+  useGlobalMenu,
+} from "@components/ui/GlobalMenu";
 import { useGroups } from "@hooks/useGroups";
 
 export default function GroupsTabScreen() {
   const router = useRouter();
   const { groups, isLoading, refetch, isRefreshing } = useGroups();
+  const { menuVisible, menuOpacity, openMenu, closeMenu } = useGlobalMenu();
 
   const handleGroupPress = (id: number) => {
     router.push(`/(groups)/${id}`);
@@ -65,7 +71,11 @@ export default function GroupsTabScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ headerRight: () => null }} />
+      <Stack.Screen
+        options={{
+          headerRight: () => <GlobalMenuButton onPress={openMenu} />,
+        }}
+      />
       <FlatList
         style={styles.container}
         contentContainerStyle={styles.content}
@@ -88,6 +98,11 @@ export default function GroupsTabScreen() {
             tintColor="#d08000"
           />
         }
+      />
+      <GlobalMenuOverlay
+        visible={menuVisible}
+        opacity={menuOpacity}
+        onClose={closeMenu}
       />
     </>
   );

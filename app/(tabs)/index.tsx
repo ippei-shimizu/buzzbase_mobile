@@ -13,6 +13,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { DashboardContent } from "@components/dashboard/DashboardContent";
 import { NotificationBell } from "@components/dashboard/NotificationBell";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
+import {
+  GlobalMenuButton,
+  GlobalMenuOverlay,
+  useGlobalMenu,
+} from "@components/ui/GlobalMenu";
 import { useDashboard } from "@hooks/useDashboard";
 import { useNotificationCount } from "@hooks/useNotifications";
 import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
@@ -23,6 +28,7 @@ export default function HomeScreen() {
   const { count } = useNotificationCount();
   const navigation = useNavigation();
   const { triggerPositiveEvent, modalProps } = useReviewPromptModal();
+  const { menuVisible, menuOpacity, openMenu, closeMenu } = useGlobalMenu();
 
   useEffect(() => {
     if (!data) return;
@@ -42,13 +48,17 @@ export default function HomeScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <NotificationBell
-          count={count}
-          onPress={() => router.push("/(notifications)")}
-        />
+        <View style={styles.headerRight}>
+          <NotificationBell
+            count={count}
+            onPress={() => router.push("/(notifications)")}
+          />
+          <GlobalMenuButton onPress={openMenu} />
+        </View>
       ),
+      headerRightContainerStyle: { paddingRight: 16 },
     });
-  }, [navigation, count, router]);
+  }, [navigation, count, router, openMenu]);
 
   if (isLoading) {
     return (
@@ -89,6 +99,11 @@ export default function HomeScreen() {
           </TouchableOpacity>
         }
       />
+      <GlobalMenuOverlay
+        visible={menuVisible}
+        opacity={menuOpacity}
+        onClose={closeMenu}
+      />
       <PreReviewPrompt {...modalProps} />
     </SafeAreaView>
   );
@@ -128,5 +143,10 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
 });
