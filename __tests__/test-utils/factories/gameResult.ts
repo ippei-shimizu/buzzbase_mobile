@@ -21,6 +21,7 @@ export const buildMatchResult = (
   tournament_id: null,
   memo: null,
   inning_format: 9,
+  appearance_type: "starter",
   my_team_name: "テストイーグルス",
   opponent_team_name: "テストライオンズ",
   tournament_name: null,

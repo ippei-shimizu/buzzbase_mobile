@@ -11,6 +11,12 @@ export interface GameResultMatchResult {
   tournament_id: number | null;
   memo: string | null;
   inning_format: number;
+  appearance_type:
+    | "starter"
+    | "substitute"
+    | "pinch_hitter"
+    | "pinch_runner"
+    | "no_play";
   my_team_name: string;
   opponent_team_name: string;
   tournament_name: string | null;
