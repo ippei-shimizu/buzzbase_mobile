@@ -1,15 +1,5 @@
 import { buildGameResult } from "../../__tests__/test-utils/factories/gameResult";
-import {
-  battingResultsList,
-} from "../../constants/battingData";
 import { useGameRecordStore } from "../gameRecordStore";
-
-/** ラベルから battingResultsList の id を引く（テスト内のマジックナンバー回避用） */
-const resultId = (label: string): number => {
-  const found = battingResultsList.find((r) => r.label === label);
-  if (!found) throw new Error(`unknown batting result label: ${label}`);
-  return found.id;
-};
 
 const initialSnapshot = useGameRecordStore.getState();
 
