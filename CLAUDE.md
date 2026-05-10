@@ -23,6 +23,13 @@ React Native (Expo) で構築するBUZZ BASEのモバイルアプリ。
 - `yarn typecheck` - TypeScript型チェック
 - `yarn lint` - リンター実行
 - `yarn format` - Prettierフォーマット
+- `yarn test` - Jest テスト実行（`yarn test:ci` で CI と同条件）
+
+## テスト方針
+
+リファクタしても壊れにくい振る舞いベース（Testing Trophy 戦略）でテストを書く。
+HTTP モックは MSW v2 を使用し、`services/*` を `jest.mock` してはならない。
+詳細: `.claude/rules/testing.md`
 
 ## ディレクトリ構造
 
