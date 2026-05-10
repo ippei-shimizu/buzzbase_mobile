@@ -1,7 +1,10 @@
 import type { AppearanceType, Position, Team } from "../../types/gameRecord";
 import type { Season } from "../../types/season";
 import { Ionicons } from "@expo/vector-icons";
-import { useState, useMemo } from "react";
+import DateTimePicker, {
+  type DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
+import { useState, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -11,6 +14,8 @@ import {
   TouchableWithoutFeedback,
   StyleSheet,
   Keyboard,
+  Platform,
+  Modal,
 } from "react-native";
 import { Button } from "@components/ui/Button";
 import { SelectPicker } from "@components/ui/SelectPicker";
@@ -19,6 +24,24 @@ import {
   isLineupRequired,
 } from "@constants/appearanceType";
 
+/**
+ * Step1 試合情報フォームのフィールド単位エラー型。
+ * 必須項目のキーごとに人間向けメッセージを保持する。
+ * `errors` 配列ではなく構造化することで、フィールド近傍にメッセージを配置できる。
+ */
+export type GameInfoFieldErrors = Partial<
+  Record<
+    | "date"
+    | "myTeamName"
+    | "opponentTeamName"
+    | "myTeamScore"
+    | "opponentTeamScore"
+    | "battingOrder"
+    | "defensivePosition",
+    string
+  >
+>;
+
 interface Props {
   date: string;
   matchType: string;
@@ -26,8 +49,8 @@ interface Props {
   myTeamId: number | null;
   opponentTeamName: string;
   opponentTeamId: number | null;
-  myTeamScore: number;
-  opponentTeamScore: number;
+  myTeamScore: number | null;
+  opponentTeamScore: number | null;
   battingOrder: string;
   defensivePosition: string;
   memo: string;
@@ -41,7 +64,7 @@ interface Props {
   inningFormat: number;
   appearanceType: AppearanceType;
   isSubmitting: boolean;
-  errors: string[];
+  fieldErrors: GameInfoFieldErrors;
   onFieldChange: (field: string, value: string | number | null) => void;
   onSubmit: () => void;
 }
@@ -55,13 +78,39 @@ const BATTING_ORDERS = [
   })),
 ];
 
+/**
+ * "YYYY-MM-DD" 形式のローカル日付文字列を Date オブジェクトに変換する。
+ * 不正な値の場合は今日の日付を返す。
+ */
+function parseDateString(value: string): Date {
+  const matched = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!matched) return new Date();
+  const [, y, m, d] = matched;
+  return new Date(Number(y), Number(m) - 1, Number(d));
+}
+
+/** Date オブジェクトを "YYYY-MM-DD" 形式の文字列に変換する。 */
+function formatDateString(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/** "YYYY-MM-DD" を画面表示用の "YYYY/MM/DD" に変換する。 */
+function displayDateString(value: string): string {
+  return value ? value.replaceAll("-", "/") : "";
+}
+
 function FormRow({
   label,
   required,
+  error,
   children,
 }: {
   label: string;
   required?: boolean;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -70,7 +119,10 @@ function FormRow({
         {label}
         {required && <Text style={styles.required}> *</Text>}
       </Text>
-      <View style={styles.formInput}>{children}</View>
+      <View style={styles.formInput}>
+        {children}
+        {error ? <Text style={styles.fieldError}>{error}</Text> : null}
+      </View>
     </View>
   );
 }
@@ -97,7 +149,7 @@ export function GameInfoForm({
   inningFormat,
   appearanceType,
   isSubmitting,
-  errors,
+  fieldErrors,
   onFieldChange,
   onSubmit,
 }: Props) {
@@ -106,6 +158,8 @@ export function GameInfoForm({
     useState(false);
   const [showTournamentSuggestions, setShowTournamentSuggestions] =
     useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
 
   // 「先発」「途中出場」のときだけ打順／守備位置を必須にする。
   // 代打／代走／未出場 を選んだ瞬間に打順／守備位置を「なし」（空文字）に自動セットして、
@@ -117,6 +171,22 @@ export function GameInfoForm({
     if (!isLineupRequired(next)) {
       onFieldChange("battingOrder", "");
       onFieldChange("defensivePosition", "");
+    }
+  };
+
+  /**
+   * DateTimePicker からの日付変更ハンドラ。
+   * Android はダイアログ形式なので即時クローズし、iOS はモーダルでユーザーが「完了」するまで開いたままにする。
+   */
+  const handleDateChange = (
+    _event: DateTimePickerEvent,
+    selected?: Date | undefined,
+  ) => {
+    if (Platform.OS === "android") {
+      setShowDatePicker(false);
+    }
+    if (selected) {
+      onFieldChange("date", formatDateString(selected));
     }
   };
 
@@ -186,31 +256,81 @@ export function GameInfoForm({
     );
   };
 
-  return (
-    <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="handled">
-      <Text style={styles.heading}>試合結果を入力しよう！</Text>
+  const datePickerValue = parseDateString(date);
 
-      {errors.length > 0 && (
-        <View style={styles.errorBox}>
-          {errors.map((e) => (
-            <Text key={e} style={styles.errorText}>
-              {e}
-            </Text>
-          ))}
-        </View>
-      )}
+  return (
+    // 通常の ScrollView を使用。
+    // - キーボード表示時の見切れは step1-game-info の KeyboardAvoidingView でボトム余白を確保
+    // - 自チーム / 相手チーム / 大会名のサジェストが自動スクロールで隠れないよう、
+    //   フォーカス時の auto-scroll は意図的に行わない
+    // - メモ欄のみ onFocus → scrollToEnd で末尾までスクロール（要件③）
+    <ScrollView
+      ref={scrollRef}
+      style={styles.scrollView}
+      keyboardShouldPersistTaps="handled"
+      contentContainerStyle={{ paddingBottom: 40 }}
+    >
+      <Text style={styles.heading}>試合結果を入力しよう！</Text>
 
       <View style={styles.formCard}>
         {/* 試合日付 */}
-        <FormRow label="試合日付" required>
-          <RNTextInput
-            style={styles.input}
-            value={date}
-            onChangeText={(v) => onFieldChange("date", v)}
-            placeholder="YYYY/MM/DD"
-            placeholderTextColor="#71717A"
-          />
+        <FormRow label="試合日付" required error={fieldErrors.date}>
+          <TouchableOpacity
+            style={styles.dateInput}
+            onPress={() => setShowDatePicker(true)}
+            accessibilityRole="button"
+            accessibilityLabel="試合日付を選択"
+          >
+            <Text style={styles.inputText}>
+              {displayDateString(date) || "YYYY/MM/DD"}
+            </Text>
+            <Ionicons name="calendar-outline" size={18} color="#A1A1AA" />
+          </TouchableOpacity>
         </FormRow>
+        {/* iOS はモーダル内でカレンダーUI、Android は OS 標準ダイアログ */}
+        {showDatePicker && Platform.OS === "ios" && (
+          <Modal
+            transparent
+            animationType="slide"
+            visible
+            onRequestClose={() => setShowDatePicker(false)}
+          >
+            <View style={styles.datePickerOverlay}>
+              <TouchableOpacity
+                style={StyleSheet.absoluteFill}
+                activeOpacity={1}
+                onPress={() => setShowDatePicker(false)}
+              />
+              <View style={styles.datePickerSheet}>
+                <View style={styles.datePickerHeader}>
+                  <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                    <Text style={styles.datePickerDone}>完了</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.datePickerBody}>
+                  <DateTimePicker
+                    value={datePickerValue}
+                    mode="date"
+                    display="inline"
+                    onChange={handleDateChange}
+                    themeVariant="dark"
+                    locale="ja-JP"
+                    // BUZZ BASE のメインカラー (#d08000) に揃える
+                    accentColor="#d08000"
+                  />
+                </View>
+              </View>
+            </View>
+          </Modal>
+        )}
+        {showDatePicker && Platform.OS === "android" && (
+          <DateTimePicker
+            value={datePickerValue}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+          />
+        )}
 
         <View style={styles.divider} />
 
@@ -309,7 +429,7 @@ export function GameInfoForm({
             >
               <View style={styles.suggestionsOverlay} />
             </TouchableWithoutFeedback>
-            <ScrollView style={styles.suggestions} nestedScrollEnabled>
+            <View style={styles.suggestions}>
               {filteredTournaments.map((item) => (
                 <TouchableOpacity
                   key={item.id}
@@ -324,7 +444,7 @@ export function GameInfoForm({
                   <Text style={styles.suggestionText}>{item.name}</Text>
                 </TouchableOpacity>
               ))}
-            </ScrollView>
+            </View>
           </>
         )}
 
@@ -348,7 +468,7 @@ export function GameInfoForm({
         )}
 
         {/* 自チーム */}
-        <FormRow label="自チーム" required>
+        <FormRow label="自チーム" required error={fieldErrors.myTeamName}>
           <View style={styles.comboBox}>
             <RNTextInput
               style={styles.comboInput}
@@ -381,7 +501,11 @@ export function GameInfoForm({
         <View style={styles.divider} />
 
         {/* 相手チーム */}
-        <FormRow label="相手チーム" required>
+        <FormRow
+          label="相手チーム"
+          required
+          error={fieldErrors.opponentTeamName}
+        >
           <View style={styles.comboBox}>
             <RNTextInput
               style={styles.comboInput}
@@ -413,15 +537,26 @@ export function GameInfoForm({
 
         <View style={styles.divider} />
 
-        {/* 点数 */}
-        <FormRow label="点数" required>
+        {/* 点数（0-0 完封試合も有効値のため、空文字 → null として未入力を区別する） */}
+        <FormRow
+          label="点数"
+          required
+          error={fieldErrors.myTeamScore || fieldErrors.opponentTeamScore}
+        >
           <View style={styles.scoreRow}>
             <RNTextInput
               style={styles.scoreInput}
-              value={myTeamScore > 0 ? String(myTeamScore) : ""}
-              onChangeText={(v) =>
-                onFieldChange("myTeamScore", parseInt(v) || 0)
-              }
+              value={myTeamScore !== null ? String(myTeamScore) : ""}
+              onChangeText={(v) => {
+                if (v === "") {
+                  onFieldChange("myTeamScore", null);
+                  return;
+                }
+                const parsed = parseInt(v, 10);
+                if (!Number.isNaN(parsed)) {
+                  onFieldChange("myTeamScore", parsed);
+                }
+              }}
               placeholder="自分"
               placeholderTextColor="#71717A"
               keyboardType="number-pad"
@@ -429,10 +564,19 @@ export function GameInfoForm({
             <Text style={styles.scoreSeparator}>対</Text>
             <RNTextInput
               style={styles.scoreInput}
-              value={opponentTeamScore > 0 ? String(opponentTeamScore) : ""}
-              onChangeText={(v) =>
-                onFieldChange("opponentTeamScore", parseInt(v) || 0)
+              value={
+                opponentTeamScore !== null ? String(opponentTeamScore) : ""
               }
+              onChangeText={(v) => {
+                if (v === "") {
+                  onFieldChange("opponentTeamScore", null);
+                  return;
+                }
+                const parsed = parseInt(v, 10);
+                if (!Number.isNaN(parsed)) {
+                  onFieldChange("opponentTeamScore", parsed);
+                }
+              }}
               placeholder="相手"
               placeholderTextColor="#71717A"
               keyboardType="number-pad"
@@ -443,7 +587,11 @@ export function GameInfoForm({
         <View style={styles.divider} />
 
         {/* 打順。先発・途中出場のときだけ必須。代打/代走/未出場のときは「なし」が自動選択される。 */}
-        <FormRow label="打順" required={lineupRequired}>
+        <FormRow
+          label="打順"
+          required={lineupRequired}
+          error={fieldErrors.battingOrder}
+        >
           <SelectPicker
             items={BATTING_ORDERS}
             selectedValue={battingOrder}
@@ -455,7 +603,11 @@ export function GameInfoForm({
         <View style={styles.divider} />
 
         {/* 守備位置。先発・途中出場のときだけ必須。代打/代走/未出場のときは「なし」が自動選択される。 */}
-        <FormRow label="守備位置" required={lineupRequired}>
+        <FormRow
+          label="守備位置"
+          required={lineupRequired}
+          error={fieldErrors.defensivePosition}
+        >
           <SelectPicker
             items={positionItems}
             selectedValue={defensivePosition}
@@ -475,6 +627,13 @@ export function GameInfoForm({
           onChangeText={(v) => onFieldChange("memo", v)}
           placeholder="試合の中で気づいたこと、感じたことをメモしておこう！"
           placeholderTextColor="#71717A"
+          // フォーカス時に末尾までスクロールしてメモ欄をキーボードの上に表示する（要件③）。
+          // 親の KeyboardAvoidingView がボトム余白を確保するため、scrollToEnd と組み合わせて見切れを防ぐ。
+          onFocus={() => {
+            setTimeout(() => {
+              scrollRef.current?.scrollToEnd?.();
+            }, 100);
+          }}
         />
       </View>
 
@@ -503,16 +662,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 16,
   },
-  errorBox: {
-    backgroundColor: "rgba(243,18,96,0.1)",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-  },
-  errorText: {
-    color: "#F31260",
-    fontSize: 13,
-  },
   formCard: {
     backgroundColor: "#27272a",
     borderRadius: 12,
@@ -536,6 +685,11 @@ const styles = StyleSheet.create({
   formInput: {
     flex: 1,
   },
+  fieldError: {
+    marginTop: 6,
+    color: "#F31260",
+    fontSize: 12,
+  },
   divider: {
     height: 1,
     backgroundColor: "#3f3f46",
@@ -545,6 +699,19 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    justifyContent: "center",
+  },
+  // 日付入力はカレンダーアイコンを右端に並べる
+  dateInput: {
+    backgroundColor: "#3A3A3A",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  inputText: {
     color: "#F4F4F4",
     fontSize: 15,
   },
@@ -660,5 +827,33 @@ const styles = StyleSheet.create({
     fontSize: 15,
     minHeight: 80,
     textAlignVertical: "top",
+  },
+  datePickerOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  datePickerSheet: {
+    backgroundColor: "#2E2E2E",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 32,
+  },
+  datePickerHeader: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#424242",
+  },
+  // DateTimePicker 自体は左寄せで描画されるため、シート側で水平パディングを与えて中央揃えにする。
+  datePickerBody: {
+    paddingHorizontal: 12,
+  },
+  datePickerDone: {
+    color: "#d08000",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
