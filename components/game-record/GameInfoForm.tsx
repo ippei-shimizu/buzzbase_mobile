@@ -340,6 +340,9 @@ export function GameInfoForm({
             {["公式戦", "オープン戦"].map((type) => (
               <TouchableOpacity
                 key={type}
+                accessibilityRole="radio"
+                accessibilityLabel={type}
+                accessibilityState={{ selected: matchType === type }}
                 style={styles.radioOption}
                 onPress={() => onFieldChange("matchType", type)}
               >
@@ -363,6 +366,9 @@ export function GameInfoForm({
             ].map((opt) => (
               <TouchableOpacity
                 key={opt.value}
+                accessibilityRole="radio"
+                accessibilityLabel={opt.label}
+                accessibilityState={{ selected: inningFormat === opt.value }}
                 style={styles.radioOption}
                 onPress={() => onFieldChange("inningFormat", opt.value)}
               >
@@ -385,6 +391,9 @@ export function GameInfoForm({
             {APPEARANCE_TYPE_OPTIONS.map((opt) => (
               <TouchableOpacity
                 key={opt.value}
+                accessibilityRole="radio"
+                accessibilityLabel={opt.label}
+                accessibilityState={{ selected: appearanceType === opt.value }}
                 style={styles.radioOption}
                 onPress={() => handleAppearanceTypeChange(opt.value)}
               >

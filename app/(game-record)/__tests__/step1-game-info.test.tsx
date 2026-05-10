@@ -8,7 +8,8 @@
  * 方針:
  * - サービス関数は jest.mock せず、HTTP 層を MSW で intercept する。
  * - 環境境界（expo-router）のみ jest.mock。
- * - 公開 UI 経由で操作し、内部 state は assert しない。
+ * - 公開 UI（accessibilityRole="radio" の selected 状態 / SelectPicker の表示ラベル）
+ *   経由で確認する。Zustand store の内部 state は直接参照しない。
  */
 import { fireEvent, waitFor } from "@testing-library/react-native";
 import { useGameRecordStore } from "@stores/gameRecordStore";
@@ -62,7 +63,15 @@ beforeEach(() => {
 
 describe("Step1GameInfoScreen / form_defaults 初期値反映", () => {
   it("form_defaults の match_type / defensive_position / batting_order がフォームに反映される", async () => {
+    // 守備位置 SelectPicker のラベルが「ピッチャー」と表示されることを公開 UI で確認するため、
+    // positions は "ピッチャー" を含むレスポンスに上書きする。
     server.use(
+      http.get(apiUrl("/positions"), () =>
+        HttpResponse.json([
+          { id: 1, name: "ピッチャー" },
+          { id: 2, name: "キャッチャー" },
+        ]),
+      ),
       http.get(apiUrl("/match_results/form_defaults"), () =>
         HttpResponse.json({
           inning_format: 7,
@@ -73,15 +82,24 @@ describe("Step1GameInfoScreen / form_defaults 初期値反映", () => {
       ),
     );
 
-    renderWithProviders(<Step1GameInfoScreen />);
+    const { findByRole, findByText } = renderWithProviders(
+      <Step1GameInfoScreen />,
+    );
 
+    // イニング制ラジオ: 7回制が選択中
+    const sevenInning = await findByRole("radio", { name: "7回制" });
     await waitFor(() => {
-      const s = useGameRecordStore.getState();
-      expect(s.inningFormat).toBe(7);
-      expect(s.matchType).toBe("公式戦");
-      expect(s.defensivePosition).toBe("ピッチャー");
-      expect(s.battingOrder).toBe("5");
+      expect(sevenInning.props.accessibilityState?.selected).toBe(true);
     });
+
+    // 試合種類ラジオ: 公式戦が選択中
+    const officialGame = await findByRole("radio", { name: "公式戦" });
+    expect(officialGame.props.accessibilityState?.selected).toBe(true);
+
+    // SelectPicker の trigger に表示されるラベルで初期値を確認
+    // 打順: "5" → "5番"、守備位置: "ピッチャー"
+    expect(await findByText("5番")).toBeTruthy();
+    expect(await findByText("ピッチャー")).toBeTruthy();
   });
 
   it("form_defaults が nil を返した場合は initialState のデフォルトのまま", async () => {
@@ -96,18 +114,24 @@ describe("Step1GameInfoScreen / form_defaults 初期値反映", () => {
       ),
     );
 
-    renderWithProviders(<Step1GameInfoScreen />);
+    const { findByRole, findByText } = renderWithProviders(
+      <Step1GameInfoScreen />,
+    );
 
+    // イニング制: 9回制が選択中（initialState）
+    const nineInning = await findByRole("radio", { name: "9回制" });
     await waitFor(() => {
-      // 何度かポーリングして状態が落ち着くのを待つ
-      const s = useGameRecordStore.getState();
-      expect(s.inningFormat).toBe(9);
-      expect(s.matchType).toBe("公式戦");
-      // initialState の defensivePosition は ""
-      expect(s.defensivePosition).toBe("");
-      // initialState の battingOrder は "1"
-      expect(s.battingOrder).toBe("1");
+      expect(nineInning.props.accessibilityState?.selected).toBe(true);
     });
+
+    // 試合種類: 公式戦が選択中（initialState）
+    const officialGame = await findByRole("radio", { name: "公式戦" });
+    expect(officialGame.props.accessibilityState?.selected).toBe(true);
+
+    // 打順: initialState の "1" → "1番" が SelectPicker に表示される
+    expect(await findByText("1番")).toBeTruthy();
+    // 守備位置: initialState は ""（未選択）→ プレースホルダー「選択してください」
+    expect(await findByText("選択してください")).toBeTruthy();
   });
 });
 
