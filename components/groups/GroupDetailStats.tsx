@@ -3,7 +3,9 @@ import type { StatsFilters as StatsFiltersType } from "../../types/profile";
 import React, { useState } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { StatsFilters } from "@components/stats/StatsFilters";
+import { INNING_FORMAT_TOOLTIP } from "@components/stats/statTooltips";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
+import { StatTooltipLabel } from "@components/ui/StatTooltipLabel";
 import { API_BASE_URL } from "@constants/api";
 import { formatRate, formatEra } from "@utils/formatStats";
 
@@ -25,6 +27,7 @@ interface Category {
   source: string;
   decimals: number;
   inverse?: boolean;
+  tooltip?: string;
 }
 
 const BATTING_CATEGORIES: Category[] = [
@@ -37,7 +40,14 @@ const BATTING_CATEGORIES: Category[] = [
 ];
 
 const PITCHING_CATEGORIES: Category[] = [
-  { key: "era", label: "防御率", source: "stat", decimals: 2, inverse: true },
+  {
+    key: "era",
+    label: "防御率",
+    source: "stat",
+    decimals: 2,
+    inverse: true,
+    tooltip: INNING_FORMAT_TOOLTIP,
+  },
   { key: "win", label: "勝利", source: "agg", decimals: 0 },
   { key: "saves", label: "セーブ", source: "agg", decimals: 0 },
   { key: "hold", label: "HP", source: "agg", decimals: 0 },
@@ -273,7 +283,16 @@ export const GroupDetailStats = ({
 
       {/* Ranking list */}
       <View style={styles.rankingCard}>
-        <Text style={styles.rankingHeader}>{category.label}</Text>
+        {category.tooltip ? (
+          <StatTooltipLabel
+            label={category.label}
+            tooltip={category.tooltip}
+            textStyle={styles.rankingHeader}
+            containerStyle={styles.rankingHeaderTrigger}
+          />
+        ) : (
+          <Text style={styles.rankingHeader}>{category.label}</Text>
+        )}
         {ranking.length === 0 ? (
           <Text style={styles.emptyText}>データがありません</Text>
         ) : (
@@ -361,6 +380,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingVertical: 12,
     backgroundColor: "#3A3A3A",
+  },
+  // ツールチップ付きヘッダー: 内側 labelInline（破線アンダーライン）が文字幅にフィットするよう
+  // alignItems: 'center' を当て、padding と背景色は Pressable 側に持たせる。
+  rankingHeaderTrigger: {
+    paddingVertical: 12,
+    backgroundColor: "#3A3A3A",
+    alignItems: "center",
   },
   rankingRow: {
     flexDirection: "row",

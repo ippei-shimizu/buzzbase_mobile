@@ -11,6 +11,7 @@ import { StepIndicator } from "@components/game-record/StepIndicator";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { useProfile } from "@hooks/useProfile";
 import { useMySeasons } from "@hooks/useSeasons";
+import { getMatchResultFormDefaults } from "@services/matchResultService";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 
 export default function Step1GameInfoScreen() {
@@ -65,6 +66,18 @@ export default function Step1GameInfoScreen() {
         },
         onSettled: () => setIsInitializing(false),
       });
+      // 新規作成時、直近試合のイニング制を初期値として読み込む（履歴なしは 9）
+      getMatchResultFormDefaults()
+        .then((defaults) => {
+          if (typeof defaults?.inning_format === "number") {
+            useGameRecordStore
+              .getState()
+              .setField("inningFormat", defaults.inning_format);
+          }
+        })
+        .catch(() => {
+          // 取得失敗時は初期値 9 のまま
+        });
     }
   }, [createGameResultMutation]);
 
@@ -144,6 +157,7 @@ export default function Step1GameInfoScreen() {
         seasons={seasons}
         teams={teamsQuery.data ?? []}
         positions={positionsQuery.data ?? []}
+        inningFormat={store.inningFormat}
         isSubmitting={submitStep1.isPending}
         errors={errors}
         onFieldChange={handleFieldChange}

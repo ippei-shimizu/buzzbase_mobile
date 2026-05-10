@@ -10,6 +10,7 @@ export interface GameResultMatchResult {
   defensive_position: string;
   tournament_id: number | null;
   memo: string | null;
+  inning_format: number;
   my_team_name: string;
   opponent_team_name: string;
   tournament_name: string | null;

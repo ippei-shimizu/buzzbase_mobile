@@ -20,6 +20,7 @@ export interface MatchResultPayload {
   defensive_position: string;
   memo: string;
   tournament_id?: number;
+  inning_format: number;
 }
 
 export interface BattingAveragePayload {
