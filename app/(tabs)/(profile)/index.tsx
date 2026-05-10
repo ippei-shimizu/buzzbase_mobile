@@ -10,20 +10,14 @@ import {
   TextInput,
   RefreshControl,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   ActivityIndicator,
   StyleSheet,
-  Animated,
   Share,
   Keyboard,
   Platform,
 } from "react-native";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
-import { CalendarIcon } from "@components/icon/CalendarIcon";
-import { MailIcon } from "@components/icon/MailIcon";
-import { MenuIcon } from "@components/icon/MenuIcon";
-import { NoteIcon } from "@components/icon/NoteIcon";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
@@ -32,6 +26,11 @@ import {
   MATCH_TYPE_OPTIONS,
   pillButtonStyle,
 } from "@components/ui/FilterDropdown";
+import {
+  GlobalMenuButton,
+  GlobalMenuOverlay,
+  useGlobalMenu,
+} from "@components/ui/GlobalMenu";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useUserAwards } from "@hooks/useAwards";
 import { useFilteredGameResults } from "@hooks/useGameResults";
@@ -104,34 +103,7 @@ export default function ProfileScreen() {
     };
   }, []);
 
-  const [menuVisible, setMenuVisible] = useState(false);
-  const menuOpacity = useRef(new Animated.Value(0)).current;
-
-  const openMenu = () => {
-    setMenuVisible(true);
-    Animated.timing(menuOpacity, {
-      toValue: 1,
-      duration: 150,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const closeMenu = useCallback(() => {
-    Animated.timing(menuOpacity, {
-      toValue: 0,
-      duration: 120,
-      useNativeDriver: true,
-    }).start(() => setMenuVisible(false));
-  }, [menuOpacity]);
-
-  const handleMenuItem = (action: () => void) => {
-    closeMenu();
-    action();
-  };
-
-  useEffect(() => {
-    return () => closeMenu();
-  }, [closeMenu]);
+  const { menuVisible, menuOpacity, openMenu, closeMenu } = useGlobalMenu();
 
   const { profile, isLoading, refetch, isRefreshing } = useProfile();
   const { seasons } = useMySeasons();
@@ -238,6 +210,15 @@ export default function ProfileScreen() {
     );
   }
 
+  const headerRightContent = () => (
+    <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
+      <TouchableOpacity onPress={() => router.push("/(profile)/search")}>
+        <Ionicons name="search-outline" size={22} color="#F4F4F4" />
+      </TouchableOpacity>
+      <GlobalMenuButton onPress={openMenu} />
+    </View>
+  );
+
   const headerComponent = (
     <>
       {profile && (
@@ -336,22 +317,7 @@ export default function ProfileScreen() {
   if (activeTab === 0) {
     return (
       <>
-        <Stack.Screen
-          options={{
-            headerRight: () => (
-              <View style={{ flexDirection: "row", gap: 16 }}>
-                <TouchableOpacity
-                  onPress={() => router.push("/(profile)/search")}
-                >
-                  <Ionicons name="search-outline" size={22} color="#F4F4F4" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={openMenu}>
-                  <MenuIcon size={24} color="#F4F4F4" />
-                </TouchableOpacity>
-              </View>
-            ),
-          }}
-        />
+        <Stack.Screen options={{ headerRight: headerRightContent }} />
 
         <ScrollView
           style={styles.container}
@@ -444,71 +410,11 @@ export default function ProfileScreen() {
           </View>
         </ScrollView>
 
-        {menuVisible && (
-          <TouchableWithoutFeedback onPress={closeMenu}>
-            <View style={styles.menuOverlay}>
-              <Animated.View
-                style={[styles.menuContainer, { opacity: menuOpacity }]}
-              >
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={() =>
-                    handleMenuItem(() => router.push("/(profile)/notes"))
-                  }
-                >
-                  <NoteIcon size={20} color="#F4F4F4" />
-                  <Text style={styles.menuItemText}>野球ノート</Text>
-                </TouchableOpacity>
-                <View style={styles.menuDivider} />
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={() =>
-                    handleMenuItem(() => router.push("/(profile)/seasons"))
-                  }
-                >
-                  <CalendarIcon size={20} color="#F4F4F4" />
-                  <Text style={styles.menuItemText}>シーズン管理</Text>
-                </TouchableOpacity>
-                <View style={styles.menuDivider} />
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={() =>
-                    handleMenuItem(() =>
-                      router.push("/(profile)/calculation-of-grades"),
-                    )
-                  }
-                >
-                  <Ionicons
-                    name="calculator-outline"
-                    size={20}
-                    color="#F4F4F4"
-                  />
-                  <Text style={styles.menuItemText}>成績の算出方法</Text>
-                </TouchableOpacity>
-                <View style={styles.menuDivider} />
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={() =>
-                    handleMenuItem(() => router.push("/(profile)/contact"))
-                  }
-                >
-                  <MailIcon size={20} color="#F4F4F4" />
-                  <Text style={styles.menuItemText}>お問い合わせ</Text>
-                </TouchableOpacity>
-                <View style={styles.menuDivider} />
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={() =>
-                    handleMenuItem(() => router.push("/(profile)/settings"))
-                  }
-                >
-                  <Ionicons name="settings-outline" size={20} color="#F4F4F4" />
-                  <Text style={styles.menuItemText}>設定</Text>
-                </TouchableOpacity>
-              </Animated.View>
-            </View>
-          </TouchableWithoutFeedback>
-        )}
+        <GlobalMenuOverlay
+          visible={menuVisible}
+          opacity={menuOpacity}
+          onClose={closeMenu}
+        />
         <PreReviewPrompt {...modalProps} />
       </>
     );
@@ -517,22 +423,7 @@ export default function ProfileScreen() {
   // 試合タブ: ScrollView ベース（mapで展開）
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerRight: () => (
-            <View style={{ flexDirection: "row", gap: 16 }}>
-              <TouchableOpacity
-                onPress={() => router.push("/(profile)/search")}
-              >
-                <Ionicons name="search-outline" size={22} color="#F4F4F4" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={openMenu}>
-                <MenuIcon size={24} color="#F4F4F4" />
-              </TouchableOpacity>
-            </View>
-          ),
-        }}
-      />
+      <Stack.Screen options={{ headerRight: headerRightContent }} />
 
       <ScrollView
         ref={gameScrollRef}
@@ -687,67 +578,11 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
-      {menuVisible && (
-        <TouchableWithoutFeedback onPress={closeMenu}>
-          <View style={styles.menuOverlay}>
-            <Animated.View
-              style={[styles.menuContainer, { opacity: menuOpacity }]}
-            >
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() =>
-                  handleMenuItem(() => router.push("/(profile)/notes"))
-                }
-              >
-                <NoteIcon size={20} color="#F4F4F4" />
-                <Text style={styles.menuItemText}>野球ノート</Text>
-              </TouchableOpacity>
-              <View style={styles.menuDivider} />
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() =>
-                  handleMenuItem(() => router.push("/(profile)/seasons"))
-                }
-              >
-                <CalendarIcon size={20} color="#F4F4F4" />
-                <Text style={styles.menuItemText}>シーズン管理</Text>
-              </TouchableOpacity>
-              <View style={styles.menuDivider} />
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() =>
-                  handleMenuItem(() =>
-                    router.push("/(profile)/calculation-of-grades"),
-                  )
-                }
-              >
-                <Ionicons name="calculator-outline" size={20} color="#F4F4F4" />
-                <Text style={styles.menuItemText}>成績の算出方法</Text>
-              </TouchableOpacity>
-              <View style={styles.menuDivider} />
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() =>
-                  handleMenuItem(() => router.push("/(profile)/contact"))
-                }
-              >
-                <MailIcon size={20} color="#F4F4F4" />
-                <Text style={styles.menuItemText}>お問い合わせ</Text>
-              </TouchableOpacity>
-              <View style={styles.menuDivider} />
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() =>
-                  handleMenuItem(() => router.push("/(profile)/settings"))
-                }
-              >
-                <Ionicons name="settings-outline" size={20} color="#F4F4F4" />
-                <Text style={styles.menuItemText}>設定</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          </View>
-        </TouchableWithoutFeedback>
-      )}
+      <GlobalMenuOverlay
+        visible={menuVisible}
+        opacity={menuOpacity}
+        onClose={closeMenu}
+      />
       <PreReviewPrompt {...modalProps} />
     </>
   );
@@ -811,9 +646,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
   },
-  gameCardContainer: {
-    paddingHorizontal: 16,
-  },
   emptyText: {
     color: "#A1A1AA",
     fontSize: 14,
@@ -821,43 +653,5 @@ const styles = StyleSheet.create({
     marginTop: 40,
     marginBottom: 40,
     width: "100%",
-  },
-  menuOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  menuContainer: {
-    position: "absolute",
-    top: 4,
-    right: 16,
-    backgroundColor: "#3A3A3A",
-    borderRadius: 10,
-    paddingVertical: 4,
-    minWidth: 160,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  menuItemText: {
-    color: "#F4F4F4",
-    fontSize: 15,
-    fontWeight: "500",
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: "#4A4A4A",
-    marginHorizontal: 12,
   },
 });
