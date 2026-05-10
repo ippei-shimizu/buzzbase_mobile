@@ -89,6 +89,10 @@ function RootLayoutInner() {
           name="group-detail"
           options={{ headerBackTitle: "戻る" }}
         />
+        <Stack.Screen
+          name="settings"
+          options={{ title: "設定", headerBackTitle: "戻る" }}
+        />
       </Stack>
     </>
   );
