@@ -19,6 +19,13 @@ interface Props {
   onSelect: (id: number) => void;
   placeholder?: string;
   style?: object;
+  /**
+   * 選択操作を無効化する。true のときはタップしてもモーダルが開かず、
+   * 視覚的にもグレーアウトして無効状態であることを示す。
+   * 用途例: 打席結果が「三振」「四球」など打球方向を伴わないケースで、
+   * 打球方向の Select をユーザーに編集させたくない場合。
+   */
+  disabled?: boolean;
 }
 
 export function Select({
@@ -27,6 +34,7 @@ export function Select({
   onSelect,
   placeholder = "選択",
   style,
+  disabled = false,
 }: Props) {
   const [visible, setVisible] = useState(false);
 
@@ -36,12 +44,15 @@ export function Select({
   return (
     <>
       <TouchableOpacity
+        accessibilityState={{ disabled }}
+        disabled={disabled}
         style={[
           {
             borderBottomWidth: 1,
             borderBottomColor: "#71717A",
             paddingVertical: 8,
             paddingHorizontal: 4,
+            opacity: disabled ? 0.4 : 1,
           },
           style,
         ]}

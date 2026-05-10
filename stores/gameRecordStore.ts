@@ -1,7 +1,23 @@
 import type { AppearanceType, BattingBox } from "../types/gameRecord";
 import type { GameResult } from "../types/gameResult";
 import { create } from "zustand";
-import { getResultText } from "@constants/battingData";
+import {
+  getResultText,
+  isHitDirectionDisabledForResult,
+} from "@constants/battingData";
+
+/**
+ * バックエンドの match_type 内部表現（regular / open）を
+ * フォーム表示用の日本語ラベル（公式戦 / オープン戦）に変換する。
+ * ラジオの value 比較が表示ラベルベースのため、編集モードで API レスポンスを
+ * そのまま入れるとラジオが選択されない問題を防ぐ。
+ */
+function humanizeMatchType(value: string | null | undefined): string {
+  if (value === "regular") return "公式戦";
+  if (value === "open") return "オープン戦";
+  // 既に日本語ラベルや想定外の値はそのまま返す
+  return value ?? "公式戦";
+}
 
 interface GameRecordState {
   // 編集モード
@@ -24,8 +40,10 @@ interface GameRecordState {
   myTeamId: number | null;
   opponentTeamName: string;
   opponentTeamId: number | null;
-  myTeamScore: number;
-  opponentTeamScore: number;
+  // 0-0（完封試合）も有効な値のため、未入力を区別する目的で null を許容する。
+  // 必須バリデーションは Step1 画面側で null チェックする。
+  myTeamScore: number | null;
+  opponentTeamScore: number | null;
   battingOrder: string;
   defensivePosition: string;
   memo: string;
@@ -88,13 +106,15 @@ const initialState = {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   })(),
-  matchType: "練習試合",
+  // GameInfoForm のラジオは「公式戦 / オープン戦」のみ。サーバーへ送信時に
+  // MatchTypeConvertible で "公式戦" → "regular" に正規化される。
+  matchType: "公式戦",
   myTeamName: "",
   myTeamId: null,
   opponentTeamName: "",
   opponentTeamId: null,
-  myTeamScore: 0,
-  opponentTeamScore: 0,
+  myTeamScore: null,
+  opponentTeamScore: null,
   battingOrder: "1",
   defensivePosition: "",
   memo: "",
@@ -163,13 +183,29 @@ export const useGameRecordStore = create<GameRecordState>((set, get) => ({
     set({ battingBoxes: boxes });
   },
 
+  /**
+   * 打席の結果を更新する。
+   *
+   * 三振・振り逃げ・四球・死球・打撃妨害・走塁妨害・併殺打のように
+   * 打球方向が伴わない結果が選ばれた場合は、保存されている position も
+   * 0（"-"）にリセットする。これにより:
+   *   - サマリー表示の text が「捕三振」「投四球」のような無意味な組み合わせにならない
+   *   - 後続でユーザーが結果を打球を伴うものに変更し直したとき、誤った打球方向が残らない
+   *
+   * @param index 対象の打席 index
+   * @param resultId `battingResultsList` の id
+   */
   updateBattingBoxResult: (index, resultId) => {
     const boxes = get().battingBoxes.map((box, i) => {
       if (i !== index) return box;
+      const nextPosition = isHitDirectionDisabledForResult(resultId)
+        ? 0
+        : box.position;
       return {
         ...box,
+        position: nextPosition,
         result: resultId,
-        text: getResultText(box.position, resultId),
+        text: getResultText(nextPosition, resultId),
       };
     });
     set({ battingBoxes: boxes });
@@ -224,7 +260,7 @@ export const useGameRecordStore = create<GameRecordState>((set, get) => ({
       tournamentId: mr.tournament_id,
       tournamentName: mr.tournament_name ?? "",
       date: mr.date_and_time.split("T")[0],
-      matchType: mr.match_type,
+      matchType: humanizeMatchType(mr.match_type),
       myTeamName: mr.my_team_name ?? "",
       myTeamId: mr.my_team_id,
       opponentTeamName: mr.opponent_team_name,

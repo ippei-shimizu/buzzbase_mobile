@@ -42,8 +42,11 @@ export default function SummaryScreen() {
     const formattedDate = store.date
       ? `${new Date(store.date).getMonth() + 1}/${new Date(store.date).getDate()}`
       : "";
+    // Step1 のバリデーションを通過しているため null にはならない想定だが、念のためフォールバック。
+    const myScore = store.myTeamScore ?? 0;
+    const opponentScore = store.opponentTeamScore ?? 0;
     lines.push(
-      `${formattedDate} ${store.matchType} vs ${store.opponentTeamName} ${store.myTeamScore}-${store.opponentTeamScore}`,
+      `${formattedDate} ${store.matchType} vs ${store.opponentTeamName} ${myScore}-${opponentScore}`,
     );
 
     const filteredBoxes = store.battingBoxes.filter((box) => box.result !== 0);

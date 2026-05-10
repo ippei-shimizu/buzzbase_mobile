@@ -56,6 +56,28 @@ export const battingResultsList = [
   { id: 19, label: "併殺打" },
 ];
 
+/**
+ * 打球方向（hit direction）の入力が意味を成さない打撃結果の ID 集合。
+ * 三振・振り逃げ・四球・死球・打撃妨害・走塁妨害・併殺打が該当する。
+ *
+ * これらは打者が打球を飛ばさない・打球方向を伴わないケースのため、
+ * 打席編集 UI 側ではこの結果が選ばれた瞬間に打球方向の選択を無効化し、
+ * ストア側では position を 0（"-"）にリセットする運用とする。
+ */
+export const HIT_DIRECTION_DISABLED_RESULT_IDS: readonly number[] = [
+  13, 14, 15, 16, 17, 18, 19,
+];
+
+/**
+ * 指定の打撃結果 ID が、打球方向の入力を不要とするものかを返す。
+ *
+ * @param resultId 打撃結果 ID（`battingResultsList` の id）
+ * @return 打球方向を選択不可にすべきなら true、それ以外は false
+ */
+export function isHitDirectionDisabledForResult(resultId: number): boolean {
+  return HIT_DIRECTION_DISABLED_RESULT_IDS.includes(resultId);
+}
+
 export const resultShortForms: Record<string, string> = {
   ゴロ: "ゴ",
   フライ: "飛",

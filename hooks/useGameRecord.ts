@@ -107,8 +107,10 @@ export const useGameRecord = () => {
         match_type: store.matchType,
         my_team_id: myTeamId,
         opponent_team_id: opponentTeamId,
-        my_team_score: store.myTeamScore,
-        opponent_team_score: store.opponentTeamScore,
+        // Step1 画面のバリデーションで null は弾かれている前提だが、
+        // 万一のために 0 へフォールバック（API は数値必須のため）。
+        my_team_score: store.myTeamScore ?? 0,
+        opponent_team_score: store.opponentTeamScore ?? 0,
         batting_order: store.battingOrder,
         defensive_position: store.defensivePosition,
         memo: store.memo,

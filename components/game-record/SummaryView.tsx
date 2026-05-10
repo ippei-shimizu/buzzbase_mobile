@@ -10,8 +10,10 @@ interface Props {
   tournamentName: string;
   myTeamName: string;
   opponentTeamName: string;
-  myTeamScore: number;
-  opponentTeamScore: number;
+  // Step1 で必須バリデーションを通過しているため、サマリー時点では実値が入る。
+  // ただし型定義は store と揃え、null 安全に表示できるようにする。
+  myTeamScore: number | null;
+  opponentTeamScore: number | null;
   battingOrder: string;
   defensivePosition: string;
   memo: string;
@@ -115,10 +117,13 @@ export function SummaryView(props: Props) {
 
   const matchTypeLabel = MATCH_TYPE_LABELS[props.matchType] ?? props.matchType;
 
+  // 表示用に null は 0 にフォールバック（実運用上は Step1 のバリデーションで除外される）。
+  const myScoreDisplay = props.myTeamScore ?? 0;
+  const opponentScoreDisplay = props.opponentTeamScore ?? 0;
   const scoreIcon =
-    props.myTeamScore > props.opponentTeamScore
+    myScoreDisplay > opponentScoreDisplay
       ? { text: "◯", color: "#EF4444" }
-      : props.myTeamScore < props.opponentTeamScore
+      : myScoreDisplay < opponentScoreDisplay
         ? { text: "×", color: "#3B82F6" }
         : { text: "ー", color: "#F4F4F4" };
 
@@ -262,7 +267,7 @@ export function SummaryView(props: Props) {
             <Text
               style={{ fontSize: 20, fontWeight: "bold", color: "#F4F4F4" }}
             >
-              {props.myTeamScore} - {props.opponentTeamScore}
+              {myScoreDisplay} - {opponentScoreDisplay}
             </Text>
           </View>
           <View
