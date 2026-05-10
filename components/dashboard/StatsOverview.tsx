@@ -2,6 +2,7 @@ import type { BattingStats, PitchingStats } from "../../types/dashboard";
 import type { StatsFilters } from "../../types/profile";
 import React, { useState } from "react";
 import { View, Text, StyleSheet, type ViewStyle } from "react-native";
+import { SummaryStatsTable } from "@components/stats/SummaryStatsTable";
 import {
   FilterDropdown,
   MATCH_TYPE_OPTIONS,
@@ -29,28 +30,6 @@ function formatStat(value: number | undefined | null, decimals = 3): string {
   if (decimals === 3) return formatRate(value);
   if (decimals === 2) return formatEra(value);
   return value.toFixed(decimals);
-}
-
-function StatsTable({
-  rows,
-}: {
-  rows: [string, string | number, string, string | number][];
-}) {
-  return (
-    <View style={styles.table}>
-      {rows.map((row, i) => (
-        <View
-          key={i}
-          style={[styles.tableRow, i % 2 === 0 && styles.tableRowEven]}
-        >
-          <Text style={styles.cellLabel}>{row[0]}</Text>
-          <Text style={styles.cellValue}>{row[1]}</Text>
-          <Text style={styles.cellLabel}>{row[2]}</Text>
-          <Text style={styles.cellValue}>{row[3]}</Text>
-        </View>
-      ))}
-    </View>
-  );
 }
 
 // --- Sections ---
@@ -97,7 +76,7 @@ const BattingSection = ({
             </Text>
           </View>
 
-          <StatsTable
+          <SummaryStatsTable
             rows={[
               [
                 "打率",
@@ -201,7 +180,7 @@ const PitchingSection = ({
             </Text>
           </View>
 
-          <StatsTable
+          <SummaryStatsTable
             rows={[
               [
                 "防御率",
@@ -448,41 +427,5 @@ const styles = StyleSheet.create({
     color: "#A1A1AA",
     fontSize: 13,
     marginTop: 2,
-  },
-  table: {
-    borderWidth: 1,
-    borderColor: "#71717b",
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  tableRow: {
-    flexDirection: "row",
-  },
-  tableRowEven: {},
-  cellLabel: {
-    flex: 1,
-    color: "#A1A1AA",
-    fontSize: 13,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: "#27272a",
-    borderBottomWidth: 1,
-    borderBottomColor: "#71717b",
-    borderRightWidth: 1,
-    borderRightColor: "#71717b",
-  },
-  cellValue: {
-    flex: 1,
-    color: "#F4F4F4",
-    fontSize: 13,
-    fontWeight: "600",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    textAlign: "center",
-    backgroundColor: "#424242",
-    borderBottomWidth: 1,
-    borderBottomColor: "#71717b",
-    borderRightWidth: 1,
-    borderRightColor: "#71717b",
   },
 });

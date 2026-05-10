@@ -1,7 +1,9 @@
 import type { BattingStatsRow, PitchingStatsRow } from "../../types/stats";
 import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { StatTooltipLabel } from "@components/ui/StatTooltipLabel";
 import { formatRate, formatEra } from "@utils/formatStats";
+import { INNING_FORMAT_TOOLTIP } from "./statTooltips";
 
 interface Column<T> {
   key: keyof T;
@@ -9,6 +11,8 @@ interface Column<T> {
   width: number;
   format?: (value: number) => string;
   highlight?: boolean;
+  /** ヘッダータップで表示する補足説明。指定があれば StatTooltipLabel を使う */
+  tooltip?: string;
 }
 
 interface StatsTableProps<T> {
@@ -66,7 +70,14 @@ export const BATTING_COLUMNS: Column<BattingStatsRow>[] = [
 ];
 
 export const PITCHING_COLUMNS: Column<PitchingStatsRow>[] = [
-  { key: "era", label: "防御率", width: 48, format: fmt2, highlight: true },
+  {
+    key: "era",
+    label: "防御率",
+    width: 48,
+    format: fmt2,
+    highlight: true,
+    tooltip: INNING_FORMAT_TOOLTIP,
+  },
   { key: "appearances", label: "登板", width: 40, format: fmtInt },
   { key: "win", label: "勝利", width: 40, format: fmtInt },
   { key: "loss", label: "敗戦", width: 40, format: fmtInt },
@@ -83,8 +94,20 @@ export const PITCHING_COLUMNS: Column<PitchingStatsRow>[] = [
   { key: "run_allowed", label: "失点", width: 40, format: fmtInt },
   { key: "earned_run", label: "自責点", width: 44, format: fmtInt },
   { key: "whip", label: "WHIP", width: 48, format: fmt2 },
-  { key: "k_per_nine", label: "K/9", width: 44, format: fmt2 },
-  { key: "bb_per_nine", label: "BB/9", width: 48, format: fmt2 },
+  {
+    key: "k_per_nine",
+    label: "K/9",
+    width: 44,
+    format: fmt2,
+    tooltip: INNING_FORMAT_TOOLTIP,
+  },
+  {
+    key: "bb_per_nine",
+    label: "BB/9",
+    width: 48,
+    format: fmt2,
+    tooltip: INNING_FORMAT_TOOLTIP,
+  },
   { key: "k_bb", label: "K/BB", width: 48, format: fmt2 },
 ];
 
@@ -161,14 +184,32 @@ export function StatsTable<T extends { label: string; opponent?: string }>({
                 { height: HEADER_HEIGHT },
               ]}
             >
-              {columns.map((col) => (
-                <View
-                  key={String(col.key)}
-                  style={[styles.cell, { width: col.width }]}
-                >
-                  <Text style={styles.headerText}>{toVertical(col.label)}</Text>
-                </View>
-              ))}
+              {columns.map((col) => {
+                const verticalLabel = toVertical(col.label);
+                if (col.tooltip) {
+                  return (
+                    <View
+                      key={String(col.key)}
+                      style={[styles.cell, { width: col.width }]}
+                    >
+                      <StatTooltipLabel
+                        label={col.label}
+                        displayLabel={verticalLabel}
+                        tooltip={col.tooltip}
+                        textStyle={styles.headerText}
+                      />
+                    </View>
+                  );
+                }
+                return (
+                  <View
+                    key={String(col.key)}
+                    style={[styles.cell, { width: col.width }]}
+                  >
+                    <Text style={styles.headerText}>{verticalLabel}</Text>
+                  </View>
+                );
+              })}
             </View>
             {/* スクロール領域データ */}
             {rows.map((row, i) => {
