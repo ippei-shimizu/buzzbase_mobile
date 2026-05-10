@@ -7,6 +7,7 @@ import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect } from "react";
 import { Alert } from "react-native";
+import { Snackbar } from "@components/ui/Snackbar";
 import { usePushNotifications } from "@hooks/usePushNotifications";
 import { useStoreReview } from "@hooks/useStoreReview";
 import { configureGoogleSignIn } from "@services/googleAuthService";
@@ -94,6 +95,7 @@ function RootLayoutInner() {
           options={{ title: "設定", headerBackTitle: "戻る" }}
         />
       </Stack>
+      <Snackbar />
     </>
   );
 }

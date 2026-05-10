@@ -26,3 +26,39 @@ jest.mock("react-native-reanimated", () =>
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   require("react-native-reanimated/mock"),
 );
+
+// react-native-safe-area-context: テストでは固定の inset を返す。
+// 実環境では Expo Router がプロバイダを供給するが、テストでは直接フックを使えるようにする。
+jest.mock("react-native-safe-area-context", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require("react");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require("react-native");
+  const inset = { top: 0, right: 0, bottom: 0, left: 0 };
+  return {
+    SafeAreaProvider: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(View, null, children),
+    SafeAreaView: ({ children, ...rest }: { children: React.ReactNode }) =>
+      React.createElement(View, rest, children),
+    useSafeAreaInsets: () => inset,
+    useSafeAreaFrame: () => ({ x: 0, y: 0, width: 0, height: 0 }),
+  };
+});
+
+// @react-native-community/datetimepicker: テスト時は通常の View に差し替え、
+// onChange は __triggerDateChange グローバルから呼べるようにしておく。
+jest.mock("@react-native-community/datetimepicker", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require("react");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require("react-native");
+
+  return {
+    __esModule: true,
+    default: (props: { onChange?: (e: unknown, d: Date) => void }) =>
+      React.createElement(View, {
+        accessibilityLabel: "mock-datetimepicker",
+        ...props,
+      }),
+  };
+});
