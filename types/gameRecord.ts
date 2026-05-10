@@ -8,6 +8,13 @@ export interface Position {
   name: string;
 }
 
+export type AppearanceType =
+  | "starter"
+  | "substitute"
+  | "pinch_hitter"
+  | "pinch_runner"
+  | "no_play";
+
 export interface MatchResultPayload {
   game_result_id: number;
   date_and_time: string;
@@ -21,6 +28,7 @@ export interface MatchResultPayload {
   memo: string;
   tournament_id?: number;
   inning_format: number;
+  appearance_type: AppearanceType;
 }
 
 export interface BattingAveragePayload {

@@ -1,3 +1,5 @@
+import type { AppearanceType } from "./gameRecord";
+
 export interface GameResultMatchResult {
   id: number;
   date_and_time: string;
@@ -11,6 +13,7 @@ export interface GameResultMatchResult {
   tournament_id: number | null;
   memo: string | null;
   inning_format: number;
+  appearance_type: AppearanceType;
   my_team_name: string;
   opponent_team_name: string;
   tournament_name: string | null;

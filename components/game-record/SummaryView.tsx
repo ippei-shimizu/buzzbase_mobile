@@ -1,10 +1,12 @@
-import type { BattingBox } from "../../types/gameRecord";
+import type { AppearanceType, BattingBox } from "../../types/gameRecord";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
 
 interface Props {
   // 試合情報
   date: string;
   matchType: string;
+  appearanceType: AppearanceType;
   tournamentName: string;
   myTeamName: string;
   opponentTeamName: string;
@@ -120,13 +122,18 @@ export function SummaryView(props: Props) {
         ? { text: "×", color: "#3B82F6" }
         : { text: "ー", color: "#F4F4F4" };
 
-  const fractionStr = FRACTION_LABELS[props.inningsPitchedFraction] ?? "";
-  const inningsDisplay = `${props.inningsPitchedWhole}回${fractionStr}`;
+  // 未出場のときは打撃・投手セクションを丸ごと隠す（試合に出ていないので入力不要）。
+  const showStatsSections = props.appearanceType !== "no_play";
 
-  // 打席結果のテキストを取得（有効なもののみ）
-  const plateResults = props.battingBoxes.filter(
-    (box) => box.position !== 0 || box.result !== 0,
-  );
+  // 出場ありの場合のみ表示用の値を組み立てる（未出場のときは計算自体不要）。
+  const plateResults = showStatsSections
+    ? props.battingBoxes.filter((box) => box.position !== 0 || box.result !== 0)
+    : [];
+  const inningsDisplay = showStatsSections
+    ? `${props.inningsPitchedWhole}回${
+        FRACTION_LABELS[props.inningsPitchedFraction] ?? ""
+      }`
+    : "";
 
   return (
     <ScrollView style={{ flex: 1, padding: 20 }}>
@@ -182,7 +189,14 @@ export function SummaryView(props: Props) {
         }}
       >
         {/* 試合情報 */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+          }}
+        >
           <View
             style={{
               borderWidth: 1,
@@ -196,6 +210,22 @@ export function SummaryView(props: Props) {
               {matchTypeLabel}
             </Text>
           </View>
+          {(() => {
+            const badge = getAppearanceTypeBadgeLabel(props.appearanceType);
+            return badge ? (
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#338EF7",
+                  borderRadius: 16,
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                }}
+              >
+                <Text style={{ fontSize: 12, color: "#338EF7" }}>{badge}</Text>
+              </View>
+            ) : null;
+          })()}
           <Text style={{ fontSize: 14, color: "#F4F4F4" }}>
             {formattedDate}
           </Text>
@@ -247,103 +277,56 @@ export function SummaryView(props: Props) {
           </View>
         </View>
 
-        {/* 打順・守備位置 */}
-        <View style={{ flexDirection: "row", marginTop: 6, gap: 12 }}>
-          <Text style={{ fontSize: 13, color: "#A1A1AA" }}>
-            {BATTING_ORDER_LABELS[props.battingOrder] ?? props.battingOrder}
-          </Text>
-          <Text style={{ fontSize: 13, color: "#A1A1AA" }}>
-            {props.defensivePosition}
-          </Text>
-        </View>
-
-        <Divider />
-
-        {/* 打撃セクション */}
-        <Text style={{ fontSize: 12, color: "#A1A1AA" }}>打撃</Text>
-
-        {plateResults.length > 0 && (
-          <View
-            style={{
-              flexDirection: "row",
-              flexWrap: "wrap",
-              gap: 8,
-              marginTop: 8,
-            }}
-          >
-            {plateResults.map((box, index) => {
-              const text = box.text.replace("-", "");
-              const color = isHitResult(text)
-                ? "#EF4444"
-                : isWalkResult(text)
-                  ? "#60A5FA"
-                  : "#F4F4F4";
-              return (
-                <Text
-                  key={index}
-                  style={{ fontWeight: "bold", color, fontSize: 14 }}
-                >
-                  {text}
-                </Text>
-              );
-            })}
+        {/* 打順・守備位置（両方未指定のときは行ごと非表示） */}
+        {props.battingOrder || props.defensivePosition ? (
+          <View style={{ flexDirection: "row", marginTop: 6, gap: 12 }}>
+            {props.battingOrder ? (
+              <Text style={{ fontSize: 13, color: "#A1A1AA" }}>
+                {BATTING_ORDER_LABELS[props.battingOrder] ?? props.battingOrder}
+              </Text>
+            ) : null}
+            {props.defensivePosition ? (
+              <Text style={{ fontSize: 13, color: "#A1A1AA" }}>
+                {props.defensivePosition}
+              </Text>
+            ) : null}
           </View>
-        )}
+        ) : null}
 
-        <View
-          style={{
-            flexDirection: "row",
-            flexWrap: "wrap",
-            marginTop: 8,
-          }}
-        >
-          <StatItem label="打点" value={props.runsBattedIn} />
-          <StatItem label="得点" value={props.run} />
-          <StatItem label="失策" value={props.battingError} />
-          <StatItem label="盗塁" value={props.stealingBase} />
-          <StatItem label="盗塁死" value={props.caughtStealing} />
-        </View>
-
-        <Divider />
-
-        {/* 投手セクション */}
-        <Text style={{ fontSize: 12, color: "#A1A1AA", marginBottom: 8 }}>
-          投手
-        </Text>
-
-        {props.hasPitching ? (
+        {showStatsSections ? (
           <>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 16 }}
-            >
-              {props.win > 0 ? (
-                <Text
-                  style={{
-                    color: "#EF4444",
-                    fontWeight: "bold",
-                    fontSize: 14,
-                  }}
-                >
-                  勝利投手
-                </Text>
-              ) : props.loss > 0 ? (
-                <Text
-                  style={{
-                    color: "#3B82F6",
-                    fontWeight: "bold",
-                    fontSize: 14,
-                  }}
-                >
-                  敗戦投手
-                </Text>
-              ) : null}
-              <Text style={{ fontSize: 15, color: "#F4F4F4" }}>
-                {inningsDisplay}
-              </Text>
-              <Text style={{ fontSize: 15, color: "#F4F4F4" }}>
-                {props.numberOfPitches}球
-              </Text>
-            </View>
+            <Divider />
+
+            {/* 打撃セクション */}
+            <Text style={{ fontSize: 12, color: "#A1A1AA" }}>打撃</Text>
+
+            {plateResults.length > 0 && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: 8,
+                  marginTop: 8,
+                }}
+              >
+                {plateResults.map((box, index) => {
+                  const text = box.text.replace("-", "");
+                  const color = isHitResult(text)
+                    ? "#EF4444"
+                    : isWalkResult(text)
+                      ? "#60A5FA"
+                      : "#F4F4F4";
+                  return (
+                    <Text
+                      key={index}
+                      style={{ fontWeight: "bold", color, fontSize: 14 }}
+                    >
+                      {text}
+                    </Text>
+                  );
+                })}
+              </View>
+            )}
 
             <View
               style={{
@@ -352,22 +335,83 @@ export function SummaryView(props: Props) {
                 marginTop: 8,
               }}
             >
-              <StatItem label="ホールド" value={props.hold} />
-              <StatItem label="セーブ" value={props.saves} />
-              <StatItem label="失点" value={props.runAllowed} />
-              <StatItem label="自責点" value={props.earnedRun} />
-              <StatItem label="被安打" value={props.hitsAllowed} />
-              <StatItem label="被本塁打" value={props.homeRunsHit} />
-              <StatItem label="奪三振" value={props.strikeouts} />
-              <StatItem label="四球" value={props.pitchingBaseOnBalls} />
-              <StatItem label="死球" value={props.pitchingHitByPitch} />
+              <StatItem label="打点" value={props.runsBattedIn} />
+              <StatItem label="得点" value={props.run} />
+              <StatItem label="失策" value={props.battingError} />
+              <StatItem label="盗塁" value={props.stealingBase} />
+              <StatItem label="盗塁死" value={props.caughtStealing} />
             </View>
+
+            <Divider />
+
+            {/* 投手セクション */}
+            <Text style={{ fontSize: 12, color: "#A1A1AA", marginBottom: 8 }}>
+              投手
+            </Text>
+
+            {props.hasPitching ? (
+              <>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 16,
+                  }}
+                >
+                  {props.win > 0 ? (
+                    <Text
+                      style={{
+                        color: "#EF4444",
+                        fontWeight: "bold",
+                        fontSize: 14,
+                      }}
+                    >
+                      勝利投手
+                    </Text>
+                  ) : props.loss > 0 ? (
+                    <Text
+                      style={{
+                        color: "#3B82F6",
+                        fontWeight: "bold",
+                        fontSize: 14,
+                      }}
+                    >
+                      敗戦投手
+                    </Text>
+                  ) : null}
+                  <Text style={{ fontSize: 15, color: "#F4F4F4" }}>
+                    {inningsDisplay}
+                  </Text>
+                  <Text style={{ fontSize: 15, color: "#F4F4F4" }}>
+                    {props.numberOfPitches}球
+                  </Text>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    marginTop: 8,
+                  }}
+                >
+                  <StatItem label="ホールド" value={props.hold} />
+                  <StatItem label="セーブ" value={props.saves} />
+                  <StatItem label="失点" value={props.runAllowed} />
+                  <StatItem label="自責点" value={props.earnedRun} />
+                  <StatItem label="被安打" value={props.hitsAllowed} />
+                  <StatItem label="被本塁打" value={props.homeRunsHit} />
+                  <StatItem label="奪三振" value={props.strikeouts} />
+                  <StatItem label="四球" value={props.pitchingBaseOnBalls} />
+                  <StatItem label="死球" value={props.pitchingHitByPitch} />
+                </View>
+              </>
+            ) : (
+              <Text style={{ fontSize: 13, color: "#71717A" }}>
+                投手成績はありません。
+              </Text>
+            )}
           </>
-        ) : (
-          <Text style={{ fontSize: 13, color: "#71717A" }}>
-            投手成績はありません。
-          </Text>
-        )}
+        ) : null}
       </View>
 
       {/* MEMO */}

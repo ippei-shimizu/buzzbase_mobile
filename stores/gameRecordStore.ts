@@ -1,4 +1,4 @@
-import type { BattingBox } from "../types/gameRecord";
+import type { AppearanceType, BattingBox } from "../types/gameRecord";
 import type { GameResult } from "../types/gameResult";
 import { create } from "zustand";
 import { getResultText } from "@constants/battingData";
@@ -30,6 +30,7 @@ interface GameRecordState {
   defensivePosition: string;
   memo: string;
   inningFormat: number;
+  appearanceType: AppearanceType;
 
   // Step2: 打撃成績
   battingBoxes: BattingBox[];
@@ -99,6 +100,8 @@ const initialState = {
   memo: "",
   // 試合のイニング制（7 or 9）。新規作成時は form_defaults で直近試合の値に上書きされる。
   inningFormat: 9,
+  // 出場区分。先発・代打のみ・代走のみのいずれか。デフォルトは先発。
+  appearanceType: "starter" as AppearanceType,
 
   battingBoxes: [{ id: 0, position: 0, result: 0, text: "--" }],
   runsBattedIn: 0,
@@ -232,6 +235,7 @@ export const useGameRecordStore = create<GameRecordState>((set, get) => ({
       defensivePosition: mr.defensive_position,
       memo: mr.memo ?? "",
       inningFormat: mr.inning_format ?? 9,
+      appearanceType: mr.appearance_type ?? "starter",
 
       battingBoxes,
       runsBattedIn: ba?.runs_batted_in ?? 0,

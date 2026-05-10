@@ -123,6 +123,7 @@ export default function SummaryScreen() {
       <SummaryView
         date={store.date}
         matchType={store.matchType}
+        appearanceType={store.appearanceType}
         tournamentName={store.tournamentName}
         myTeamName={store.myTeamName}
         opponentTeamName={store.opponentTeamName}

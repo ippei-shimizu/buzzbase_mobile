@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { GameInfoForm } from "@components/game-record/GameInfoForm";
 import { StepIndicator } from "@components/game-record/StepIndicator";
+import { isLineupRequired } from "@constants/appearanceType";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { useProfile } from "@hooks/useProfile";
 import { useMySeasons } from "@hooks/useSeasons";
@@ -96,7 +97,12 @@ export default function Step1GameInfoScreen() {
       validationErrors.push("自チーム名を入力してください");
     if (!store.opponentTeamName)
       validationErrors.push("相手チーム名を入力してください");
-    if (!store.defensivePosition)
+    // 先発／途中出場のときだけ打順・守備位置を必須にする。
+    // 代打／代走／未出場は GameInfoForm 側で自動的に「なし」がセットされるため任意。
+    const lineupRequired = isLineupRequired(store.appearanceType);
+    if (lineupRequired && !store.battingOrder)
+      validationErrors.push("打順を選択してください");
+    if (lineupRequired && !store.defensivePosition)
       validationErrors.push("守備位置を選択してください");
 
     if (validationErrors.length > 0) {
@@ -106,7 +112,12 @@ export default function Step1GameInfoScreen() {
 
     submitStep1.mutate(undefined, {
       onSuccess: () => {
-        router.push("/(game-record)/step2-batting");
+        // 未出場の場合は打撃・投手成績の入力を飛ばして直接サマリー画面へ。
+        const next =
+          store.appearanceType === "no_play"
+            ? "/(game-record)/summary"
+            : "/(game-record)/step2-batting";
+        router.push(next);
       },
       onError: (error) => {
         setErrors([
@@ -158,6 +169,7 @@ export default function Step1GameInfoScreen() {
         teams={teamsQuery.data ?? []}
         positions={positionsQuery.data ?? []}
         inningFormat={store.inningFormat}
+        appearanceType={store.appearanceType}
         isSubmitting={submitStep1.isPending}
         errors={errors}
         onFieldChange={handleFieldChange}
