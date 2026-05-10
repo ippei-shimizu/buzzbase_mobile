@@ -1,7 +1,10 @@
 import type { AppearanceType, BattingBox } from "../types/gameRecord";
 import type { GameResult } from "../types/gameResult";
 import { create } from "zustand";
-import { getResultText } from "@constants/battingData";
+import {
+  getResultText,
+  isHitDirectionDisabledForResult,
+} from "@constants/battingData";
 
 /**
  * バックエンドの match_type 内部表現（regular / open）を
@@ -180,13 +183,29 @@ export const useGameRecordStore = create<GameRecordState>((set, get) => ({
     set({ battingBoxes: boxes });
   },
 
+  /**
+   * 打席の結果を更新する。
+   *
+   * 三振・振り逃げ・四球・死球・打撃妨害・走塁妨害・併殺打のように
+   * 打球方向が伴わない結果が選ばれた場合は、保存されている position も
+   * 0（"-"）にリセットする。これにより:
+   *   - サマリー表示の text が「捕三振」「投四球」のような無意味な組み合わせにならない
+   *   - 後続でユーザーが結果を打球を伴うものに変更し直したとき、誤った打球方向が残らない
+   *
+   * @param index 対象の打席 index
+   * @param resultId `battingResultsList` の id
+   */
   updateBattingBoxResult: (index, resultId) => {
     const boxes = get().battingBoxes.map((box, i) => {
       if (i !== index) return box;
+      const nextPosition = isHitDirectionDisabledForResult(resultId)
+        ? 0
+        : box.position;
       return {
         ...box,
+        position: nextPosition,
         result: resultId,
-        text: getResultText(box.position, resultId),
+        text: getResultText(nextPosition, resultId),
       };
     });
     set({ battingBoxes: boxes });

@@ -5,6 +5,7 @@ import { Select } from "@components/ui/Select";
 import {
   battingResultsPositions,
   battingResultsList,
+  isHitDirectionDisabledForResult,
 } from "@constants/battingData";
 import { NumberInputRow } from "./NumberInputRow";
 
@@ -103,6 +104,10 @@ export function BattingForm({
                   onSelect={(id) => onPositionChange(index, id)}
                   placeholder="方向"
                   style={{ flex: 1 }}
+                  // 打球方向を伴わない結果（三振/振り逃げ/四球/死球/打撃妨害/
+                  // 走塁妨害/併殺打）が選ばれているときは入力不可。
+                  // 結果側の onChange ハンドラで position は 0 にリセット済み。
+                  disabled={isHitDirectionDisabledForResult(box.result)}
                 />
                 <Select
                   options={battingResultsList}

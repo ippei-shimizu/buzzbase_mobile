@@ -1,5 +1,15 @@
 import { buildGameResult } from "../../__tests__/test-utils/factories/gameResult";
+import {
+  battingResultsList,
+} from "../../constants/battingData";
 import { useGameRecordStore } from "../gameRecordStore";
+
+/** ラベルから battingResultsList の id を引く（テスト内のマジックナンバー回避用） */
+const resultId = (label: string): number => {
+  const found = battingResultsList.find((r) => r.label === label);
+  if (!found) throw new Error(`unknown batting result label: ${label}`);
+  return found.id;
+};
 
 const initialSnapshot = useGameRecordStore.getState();
 
@@ -69,6 +79,51 @@ describe("battingBoxes の編集 action", () => {
     const updated = useGameRecordStore.getState().battingBoxes[0];
     expect(updated.result).toBe(2);
     expect(updated.text).toBe("中飛");
+  });
+
+  describe("打球方向を伴わない結果が選ばれた場合", () => {
+    // 13: 三振 / 14: 振り逃げ / 15: 四球 / 16: 死球
+    // 17: 打撃妨害 / 18: 走塁妨害 / 19: 併殺打
+    it.each([
+      [13, "三振"],
+      [14, "振逃"],
+      [15, "四球"],
+      [16, "死球"],
+      [17, "打妨"],
+      [18, "走妨"],
+      [19, "併"],
+    ])(
+      "result=%i のとき position は 0 にリセットされ、text は方向ラベル無しになる",
+      (resultId, shortLabel) => {
+        useGameRecordStore
+          .getState()
+          .setBattingBoxes([{ id: 1, position: 10, result: 0, text: "中--" }]);
+
+        useGameRecordStore.getState().updateBattingBoxResult(0, resultId);
+
+        const updated = useGameRecordStore.getState().battingBoxes[0];
+        expect(updated.position).toBe(0);
+        expect(updated.result).toBe(resultId);
+        // position=0 のラベルは "-" のため、text の先頭は "-" + 結果短縮形
+        expect(updated.text).toBe(`-${shortLabel}`);
+      },
+    );
+
+    it("打球を伴う結果（ヒット）に切り替え直しても position はリセット後のまま（誤った打球方向を残さない）", () => {
+      useGameRecordStore
+        .getState()
+        .setBattingBoxes([{ id: 1, position: 10, result: 0, text: "" }]);
+
+      // 一度「三振」を選び、position が 0 になることを確認
+      useGameRecordStore.getState().updateBattingBoxResult(0, 13);
+      expect(useGameRecordStore.getState().battingBoxes[0].position).toBe(0);
+
+      // 続けて「ヒット」を選んでも position は 0 のまま（過去の "中" を蘇らせない）
+      useGameRecordStore.getState().updateBattingBoxResult(0, 7);
+      const updated = useGameRecordStore.getState().battingBoxes[0];
+      expect(updated.position).toBe(0);
+      expect(updated.result).toBe(7);
+    });
   });
 });
 
