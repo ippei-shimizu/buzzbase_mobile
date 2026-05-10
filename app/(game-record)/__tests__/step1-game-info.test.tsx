@@ -130,8 +130,9 @@ describe("Step1GameInfoScreen / form_defaults 初期値反映", () => {
 
     // 打順: initialState の "1" → "1番" が SelectPicker に表示される
     expect(await findByText("1番")).toBeTruthy();
-    // 守備位置: initialState は ""（未選択）→ プレースホルダー「選択してください」
-    expect(await findByText("選択してください")).toBeTruthy();
+    // 守備位置: initialState は ""（未選択）→ positionItems 先頭の "なし"（value: ""）にマッチして表示される。
+    // 「なし」は代打／代走／未出場のときに守備位置を空にできるようにするための選択肢。
+    expect(await findByText("なし")).toBeTruthy();
   });
 });
 
