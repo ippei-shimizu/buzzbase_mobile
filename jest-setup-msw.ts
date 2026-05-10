@@ -2,9 +2,10 @@
  * MSW v2 を Jest 環境で起動するセットアップ。
  *
  * 方針:
- * - 振る舞いテスト（Issue #299）の土台として、サービス関数を `jest.mock` する代わりに
- *   HTTP 層を MSW でモックする。これにより services/ や hooks/ のリファクタで
- *   テストが壊れにくくなる。
+ * - 振る舞いテストの土台として、サービス関数を `jest.mock` する代わりに HTTP 層を
+ *   MSW でモックする。サービス関数を直接モックするとファイル分割や関数名の変更で
+ *   テストが壊れるが、HTTP 境界をモックすれば services/ や hooks/ のリファクタで
+ *   テストが壊れにくくなる（テスト方針の詳細は .claude/rules/testing.md 参照）。
  * - jest-expo 環境では React Native の fetch / XHR 経路が走らないため、
  *   テスト時のみ axios の adapter を node の `http` に切り替える。これで
  *   `msw/node` の `setupServer` が intercept 可能になる。
