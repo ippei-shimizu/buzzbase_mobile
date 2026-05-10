@@ -43,7 +43,7 @@ export const buildExpoRouterMock = (options: ExpoRouterMockOptions = {}) => {
     useLocalSearchParams: () => searchParams,
     useSegments: () => [] as string[],
     usePathname: () => "/",
-    useFocusEffect: (cb: () => void) => cb(),
+    useFocusEffect: (cb: () => (() => void) | void) => cb(),
     Link: ({ children }: { children: React.ReactNode }) => children,
     Redirect: () => null,
     Stack: Object.assign(

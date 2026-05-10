@@ -51,8 +51,9 @@ const getRouterSpies = (): RouterSpies => {
 };
 
 beforeEach(() => {
+  // jest.clearAllMocks は jest.fn() で生成された全モック（routerSpies を含む）を
+  // 一括でクリアする。
   jest.clearAllMocks();
-  Object.values(getRouterSpies()).forEach((spy) => spy.mockClear());
   useAuthStore.setState({ isLoggedIn: false, isLoading: false });
 });
 
