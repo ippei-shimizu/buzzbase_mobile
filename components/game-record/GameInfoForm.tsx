@@ -34,6 +34,7 @@ interface Props {
   seasons: Season[];
   teams: Team[];
   positions: Position[];
+  inningFormat: number;
   isSubmitting: boolean;
   errors: string[];
   onFieldChange: (field: string, value: string | number | null) => void;
@@ -84,6 +85,7 @@ export function GameInfoForm({
   seasons,
   teams,
   positions,
+  inningFormat,
   isSubmitting,
   errors,
   onFieldChange,
@@ -200,6 +202,31 @@ export function GameInfoForm({
                   {matchType === type && <View style={styles.radioInner} />}
                 </View>
                 <Text style={styles.radioLabel}>{type}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </FormRow>
+
+        <View style={styles.divider} />
+
+        {/* イニング制（7回制 / 9回制） */}
+        <FormRow label="イニング制" required>
+          <View style={styles.radioGroup}>
+            {[
+              { label: "9回制", value: 9 },
+              { label: "7回制", value: 7 },
+            ].map((opt) => (
+              <TouchableOpacity
+                key={opt.value}
+                style={styles.radioOption}
+                onPress={() => onFieldChange("inningFormat", opt.value)}
+              >
+                <View style={styles.radioOuter}>
+                  {inningFormat === opt.value && (
+                    <View style={styles.radioInner} />
+                  )}
+                </View>
+                <Text style={styles.radioLabel}>{opt.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
