@@ -1,6 +1,9 @@
+import * as Sentry from "@sentry/react-native";
 import * as SecureStore from "expo-secure-store";
 import * as StoreReview from "expo-store-review";
 import { useCallback } from "react";
+import { Linking, Platform } from "react-native";
+import { ANDROID_STORE_URL, IOS_REVIEW_URL } from "@constants/appStore";
 
 const KEYS = {
   POSITIVE_EVENT_COUNT: "store_review_positive_event_count",
@@ -95,11 +98,44 @@ export const useStoreReview = () => {
     await StoreReview.requestReview();
   }, []);
 
+  /**
+   * 設定画面の「レビューで応援する」から呼ばれる、ストアのレビュー画面への明示遷移。
+   *
+   * iOS: App Storeのレビュー書き込み画面（`?action=write-review`）を直接開く。
+   * Android: Play Storeのアプリページを開く（書き込み画面への直接スキームは存在しない）。
+   *
+   * `Linking.canOpenURL` で開けない場合は何もしない（Sentryで観測のみ）。
+   * Simulatorでは `itms-apps://` が解決されないことがあるため、このパスはサイレントフェイルする想定。
+   */
+  const openStoreReviewPage = useCallback(async () => {
+    const url =
+      Platform.OS === "ios"
+        ? `${IOS_REVIEW_URL}?action=write-review`
+        : ANDROID_STORE_URL;
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (!canOpen) {
+        Sentry.captureMessage("Store review URL cannot be opened", {
+          level: "warning",
+          extra: { url, platform: Platform.OS },
+        });
+        return;
+      }
+      await Linking.openURL(url);
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { feature: "store-review" },
+        extra: { url, platform: Platform.OS },
+      });
+    }
+  }, []);
+
   return {
     initInstallDate,
     initPositiveEventCount,
     incrementPositiveEvent,
     checkAndShowPrePrompt,
     requestNativeReview,
+    openStoreReviewPage,
   };
 };
