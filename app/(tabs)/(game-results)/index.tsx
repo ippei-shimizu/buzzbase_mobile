@@ -1,6 +1,6 @@
 import type { GameResult } from "../../../types/gameResult";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, Stack } from "expo-router";
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import {
   View,
@@ -18,6 +18,11 @@ import {
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { GameResultSummary } from "@components/stats/GameResultSummary";
+import {
+  GlobalMenuButton,
+  GlobalMenuOverlay,
+  useGlobalMenu,
+} from "@components/ui/GlobalMenu";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useFilteredGameResults } from "@hooks/useGameResults";
 import { useMySeasons } from "@hooks/useSeasons";
@@ -177,6 +182,7 @@ export default function GameResultsScreen() {
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
   const { years: availableYears } = useAvailableYears();
+  const { menuVisible, menuOpacity, openMenu, closeMenu } = useGlobalMenu();
 
   // Screen tab state
   const [screenTab, setScreenTab] = useState<ScreenTab>("summary");
@@ -428,6 +434,12 @@ export default function GameResultsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
+      <Stack.Screen
+        options={{
+          headerRight: () => <GlobalMenuButton onPress={openMenu} />,
+        }}
+      />
+
       {/* Screen Tab Bar */}
       <View style={styles.screenTabBar}>
         <TouchableOpacity
@@ -608,6 +620,12 @@ export default function GameResultsScreen() {
           )}
         </ScrollView>
       )}
+
+      <GlobalMenuOverlay
+        visible={menuVisible}
+        opacity={menuOpacity}
+        onClose={closeMenu}
+      />
     </View>
   );
 }
