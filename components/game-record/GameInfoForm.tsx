@@ -14,7 +14,10 @@ import {
 } from "react-native";
 import { Button } from "@components/ui/Button";
 import { SelectPicker } from "@components/ui/SelectPicker";
-import { APPEARANCE_TYPE_OPTIONS } from "@constants/appearanceType";
+import {
+  APPEARANCE_TYPE_OPTIONS,
+  isLineupRequired,
+} from "@constants/appearanceType";
 
 interface Props {
   date: string;
@@ -107,13 +110,11 @@ export function GameInfoForm({
   // 「先発」「途中出場」のときだけ打順／守備位置を必須にする。
   // 代打／代走／未出場 を選んだ瞬間に打順／守備位置を「なし」（空文字）に自動セットして、
   // 必須ラベルも消す。
-  const lineupRequired =
-    appearanceType === "starter" || appearanceType === "substitute";
+  const lineupRequired = isLineupRequired(appearanceType);
 
   const handleAppearanceTypeChange = (next: AppearanceType) => {
     onFieldChange("appearanceType", next);
-    const nextRequiresLineup = next === "starter" || next === "substitute";
-    if (!nextRequiresLineup) {
+    if (!isLineupRequired(next)) {
       onFieldChange("battingOrder", "");
       onFieldChange("defensivePosition", "");
     }

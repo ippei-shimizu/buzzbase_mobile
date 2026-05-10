@@ -42,3 +42,10 @@ export const getAppearanceTypeBadgeLabel = (
   if (!HIGHLIGHTED_APPEARANCE_TYPES.includes(appearanceType)) return null;
   return APPEARANCE_TYPE_LABELS[appearanceType];
 };
+
+/**
+ * 打順／守備位置の入力を必須とすべき出場区分か（先発・途中出場のみ）。
+ * フォームのバリデーションと必須ラベル表示で同じ判定を使うために集約している。
+ */
+export const isLineupRequired = (appearanceType: AppearanceType): boolean =>
+  appearanceType === "starter" || appearanceType === "substitute";

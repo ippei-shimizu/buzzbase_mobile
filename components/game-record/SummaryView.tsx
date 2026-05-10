@@ -122,16 +122,18 @@ export function SummaryView(props: Props) {
         ? { text: "×", color: "#3B82F6" }
         : { text: "ー", color: "#F4F4F4" };
 
-  const fractionStr = FRACTION_LABELS[props.inningsPitchedFraction] ?? "";
-  const inningsDisplay = `${props.inningsPitchedWhole}回${fractionStr}`;
-
-  // 打席結果のテキストを取得（有効なもののみ）
-  const plateResults = props.battingBoxes.filter(
-    (box) => box.position !== 0 || box.result !== 0,
-  );
-
   // 未出場のときは打撃・投手セクションを丸ごと隠す（試合に出ていないので入力不要）。
   const showStatsSections = props.appearanceType !== "no_play";
+
+  // 出場ありの場合のみ表示用の値を組み立てる（未出場のときは計算自体不要）。
+  const plateResults = showStatsSections
+    ? props.battingBoxes.filter((box) => box.position !== 0 || box.result !== 0)
+    : [];
+  const inningsDisplay = showStatsSections
+    ? `${props.inningsPitchedWhole}回${
+        FRACTION_LABELS[props.inningsPitchedFraction] ?? ""
+      }`
+    : "";
 
   return (
     <ScrollView style={{ flex: 1, padding: 20 }}>
