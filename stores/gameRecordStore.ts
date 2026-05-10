@@ -1,6 +1,6 @@
-import { create } from "zustand";
 import type { BattingBox } from "../types/gameRecord";
 import type { GameResult } from "../types/gameResult";
+import { create } from "zustand";
 import { getResultText } from "@constants/battingData";
 
 interface GameRecordState {
@@ -29,6 +29,7 @@ interface GameRecordState {
   battingOrder: string;
   defensivePosition: string;
   memo: string;
+  inningFormat: number;
 
   // Step2: 打撃成績
   battingBoxes: BattingBox[];
@@ -96,6 +97,8 @@ const initialState = {
   battingOrder: "1",
   defensivePosition: "",
   memo: "",
+  // 試合のイニング制（7 or 9）。新規作成時は form_defaults で直近試合の値に上書きされる。
+  inningFormat: 9,
 
   battingBoxes: [{ id: 0, position: 0, result: 0, text: "--" }],
   runsBattedIn: 0,
@@ -228,6 +231,7 @@ export const useGameRecordStore = create<GameRecordState>((set, get) => ({
       battingOrder: mr.batting_order,
       defensivePosition: mr.defensive_position,
       memo: mr.memo ?? "",
+      inningFormat: mr.inning_format ?? 9,
 
       battingBoxes,
       runsBattedIn: ba?.runs_batted_in ?? 0,

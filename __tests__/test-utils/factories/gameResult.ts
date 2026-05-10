@@ -20,6 +20,7 @@ export const buildMatchResult = (
   defensive_position: "投手",
   tournament_id: null,
   memo: null,
+  inning_format: 9,
   my_team_name: "テストイーグルス",
   opponent_team_name: "テストライオンズ",
   tournament_name: null,
