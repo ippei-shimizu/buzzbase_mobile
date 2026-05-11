@@ -93,7 +93,10 @@ export default function SummaryScreen() {
 
     const shown = await tryShowPrePrompt("complete");
     if (shown) return;
-    router.replace("/(tabs)/(game-results)");
+    router.replace({
+      pathname: "/(tabs)/(game-results)",
+      params: { tab: "list" },
+    });
   };
 
   const handlePrePromptYes = async () => {
@@ -101,7 +104,10 @@ export default function SummaryScreen() {
     setPrePromptVisible(false);
     await requestNativeReview().catch(() => {});
     if (source === "complete") {
-      router.replace("/(tabs)/(game-results)");
+      router.replace({
+        pathname: "/(tabs)/(game-results)",
+        params: { tab: "list" },
+      });
     }
   };
 
