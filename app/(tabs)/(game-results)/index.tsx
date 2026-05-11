@@ -1,6 +1,6 @@
 import type { GameResult } from "../../../types/gameResult";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter, Stack } from "expo-router";
+import { useRouter, Stack, useFocusEffect } from "expo-router";
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import {
   View,
@@ -276,6 +276,14 @@ export default function GameResultsScreen() {
     sort_by: "date",
     sort_order: sortDesc ? "desc" : "asc",
   });
+
+  // 詳細画面での削除・編集後に戻ってきたとき、placeholderDataで残る古いキャッシュを表示しないよう再取得する。
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+      gameSummary.refetch();
+    }, [refetch, gameSummary.refetch]), // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const handlePressItem = (game: GameResult) => {
     router.push({
