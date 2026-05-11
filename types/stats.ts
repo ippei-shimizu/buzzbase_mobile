@@ -114,6 +114,7 @@ export interface Scoring {
 export interface RecentFormGame {
   game_result_id: number;
   date: string;
+  match_type: string | null;
   opponent: string;
   result: "win" | "loss" | "draw";
   my_score: number;
