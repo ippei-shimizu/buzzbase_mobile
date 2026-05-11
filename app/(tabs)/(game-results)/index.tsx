@@ -1,6 +1,11 @@
 import type { GameResult } from "../../../types/gameResult";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter, Stack, useFocusEffect } from "expo-router";
+import {
+  useRouter,
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+} from "expo-router";
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import {
   View,
@@ -179,9 +184,19 @@ export default function GameResultsScreen() {
   const { tournaments } = useTournaments();
   const { years: availableYears } = useAvailableYears();
   const { menuVisible, menuOpacity, openMenu, closeMenu } = useGlobalMenu();
+  const params = useLocalSearchParams<{ tab?: string }>();
 
-  // Screen tab state
-  const [screenTab, setScreenTab] = useState<ScreenTab>("summary");
+  const [screenTab, setScreenTab] = useState<ScreenTab>(
+    params.tab === "list" ? "list" : "summary",
+  );
+
+  // タブ常駐画面のため、反映後は手動切替が上書きされないようパラメータをクリアする。
+  useEffect(() => {
+    if (params.tab === "list" || params.tab === "summary") {
+      setScreenTab(params.tab);
+      router.setParams({ tab: "" });
+    }
+  }, [params.tab, router]);
 
   // Summary tab filters (independent)
   const [summaryYear, setSummaryYear] = useState<string | undefined>(undefined);
