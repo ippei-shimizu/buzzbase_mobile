@@ -10,6 +10,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
+import { formatMatchTypeLabel } from "@utils/matchType";
 
 interface GameResultDetailProps {
   game: GameResult;
@@ -19,12 +20,6 @@ interface GameResultDetailProps {
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
   return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-};
-
-const matchTypeLabel = (type: string): string => {
-  if (type === "regular") return "公式戦";
-  if (type === "open") return "オープン戦";
-  return type;
 };
 
 const POSITION_MAP: Record<string, string> = {
@@ -150,7 +145,7 @@ export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
           >
             <View style={styles.matchTypeBadge}>
               <Text style={styles.matchTypeText}>
-                {matchTypeLabel(match_result.match_type)}
+                {formatMatchTypeLabel(match_result.match_type)}
               </Text>
             </View>
             {(() => {

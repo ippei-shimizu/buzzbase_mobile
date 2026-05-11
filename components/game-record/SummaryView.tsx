@@ -1,6 +1,7 @@
 import type { AppearanceType, BattingBox } from "../../types/gameRecord";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
+import { formatMatchTypeLabel } from "@utils/matchType";
 
 interface Props {
   // 試合情報
@@ -43,12 +44,6 @@ interface Props {
   onComplete: () => void;
   onShare?: () => void;
 }
-
-const MATCH_TYPE_LABELS: Record<string, string> = {
-  regular: "公式戦",
-  open: "オープン戦",
-  練習試合: "練習試合",
-};
 
 const BATTING_ORDER_LABELS: Record<string, string> = {
   "1": "1番",
@@ -115,7 +110,7 @@ export function SummaryView(props: Props) {
     ? new Date(props.date).toLocaleDateString("ja-JP")
     : "";
 
-  const matchTypeLabel = MATCH_TYPE_LABELS[props.matchType] ?? props.matchType;
+  const matchTypeLabel = formatMatchTypeLabel(props.matchType);
 
   // 表示用に null は 0 にフォールバック（実運用上は Step1 のバリデーションで除外される）。
   const myScoreDisplay = props.myTeamScore ?? 0;

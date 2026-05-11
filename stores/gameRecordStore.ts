@@ -5,18 +5,19 @@ import {
   getResultText,
   isHitDirectionDisabledForResult,
 } from "@constants/battingData";
+import { formatMatchTypeLabel } from "@utils/matchType";
 
 /**
  * バックエンドの match_type 内部表現（regular / open）を
  * フォーム表示用の日本語ラベル（公式戦 / オープン戦）に変換する。
  * ラジオの value 比較が表示ラベルベースのため、編集モードで API レスポンスを
  * そのまま入れるとラジオが選択されない問題を防ぐ。
+ *
+ * 共通の {@link formatMatchTypeLabel} に委譲しつつ、本ストア固有の
+ * 「null/undefined はフォーム既定値の "公式戦" にフォールバックする」挙動を維持する。
  */
 function humanizeMatchType(value: string | null | undefined): string {
-  if (value === "regular") return "公式戦";
-  if (value === "open") return "オープン戦";
-  // 既に日本語ラベルや想定外の値はそのまま返す
-  return value ?? "公式戦";
+  return formatMatchTypeLabel(value) ?? "公式戦";
 }
 
 interface GameRecordState {

@@ -159,7 +159,4 @@ export function FilterDropdown({
   );
 }
 
-export const MATCH_TYPE_OPTIONS = [
-  { key: "regular", label: "公式戦" },
-  { key: "open", label: "オープン戦" },
-];
+export { MATCH_TYPE_OPTIONS } from "@utils/matchType";
