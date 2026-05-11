@@ -2,6 +2,7 @@ import type { GameResult } from "../../types/gameResult";
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
+import { formatMatchTypeLabel } from "../../utils/matchType";
 
 interface GameResultListItemProps {
   game: GameResult;
@@ -11,12 +12,6 @@ interface GameResultListItemProps {
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
   return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-};
-
-const matchTypeLabel = (type: string): string => {
-  if (type === "regular") return "公式戦";
-  if (type === "open") return "オープン戦";
-  return type;
 };
 
 const HIT_RESULTS = [
@@ -96,7 +91,7 @@ export const GameResultListItem = ({
         >
           <View style={styles.matchTypeBadge}>
             <Text style={styles.matchTypeText}>
-              {matchTypeLabel(match_result.match_type)}
+              {formatMatchTypeLabel(match_result.match_type)}
             </Text>
           </View>
           {(() => {

@@ -28,13 +28,9 @@ import { useFilteredGameResults } from "@hooks/useGameResults";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useGameSummary } from "@hooks/useStats";
 import { useTournaments } from "@hooks/useTournaments";
+import { MATCH_TYPE_OPTIONS } from "@utils/matchType";
 
 type ScreenTab = "summary" | "list";
-
-const MATCH_TYPE_OPTIONS = [
-  { key: "regular", label: "公式戦" },
-  { key: "open", label: "オープン戦" },
-];
 
 function FilterDropdown({
   label,
