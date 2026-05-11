@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect } from "react";
 import {
   View,
@@ -17,6 +17,7 @@ const APP_STORE_URL = "https://apps.apple.com/jp/app/buzz-base/id6761011816";
 export default function ShareInviteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const groupId = id ? Number(id) : undefined;
+  const router = useRouter();
   const { getOrCreateInviteLink, isPending, isError, data } =
     useGetOrCreateInviteLink();
 
@@ -42,6 +43,11 @@ export default function ShareInviteScreen() {
     const message = `BUZZ BASEで「${data.group_name}」に参加しよう！\n\n招待コード: ${data.code}\n\nアプリをダウンロード\n${APP_STORE_URL}\n\nアプリをインストールして、招待コードを入力してね！`;
 
     await Share.share({ message });
+  };
+
+  const handleViewGroup = () => {
+    if (!groupId) return;
+    router.replace(`/(groups)/${groupId}`);
   };
 
   if (isError) {
@@ -80,6 +86,14 @@ export default function ShareInviteScreen() {
       <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
         <Ionicons name="share-outline" size={18} color="#FFFFFF" />
         <Text style={styles.shareButtonText}>LINEなどで共有</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.viewGroupButton}
+        onPress={handleViewGroup}
+      >
+        <Ionicons name="people-outline" size={18} color="#d08000" />
+        <Text style={styles.viewGroupButtonText}>グループを見る</Text>
       </TouchableOpacity>
 
       <Text style={styles.description}>
@@ -174,10 +188,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     width: "100%",
     justifyContent: "center",
-    marginBottom: 32,
+    marginBottom: 12,
   },
   shareButtonText: {
     color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  viewGroupButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "#d08000",
+    borderRadius: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    width: "100%",
+    justifyContent: "center",
+    marginBottom: 32,
+  },
+  viewGroupButtonText: {
+    color: "#d08000",
     fontSize: 16,
     fontWeight: "600",
   },
