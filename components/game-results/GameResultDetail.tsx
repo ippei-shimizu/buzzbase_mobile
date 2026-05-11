@@ -10,7 +10,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
-import { formatMatchTypeLabel } from "../../utils/matchType";
+import { formatMatchTypeLabel } from "@utils/matchType";
 
 interface GameResultDetailProps {
   game: GameResult;

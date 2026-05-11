@@ -1,7 +1,7 @@
 import type { RecentFormGame } from "../../types/stats";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { formatMatchTypeLabel } from "../../utils/matchType";
+import { formatMatchTypeLabel } from "@utils/matchType";
 
 interface RecentFormProps {
   games: RecentFormGame[];

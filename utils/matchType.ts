@@ -17,12 +17,16 @@ export const MATCH_TYPE_LABELS: Record<string, string> = {
  * @param value `"regular"` / `"open"` / 既に日本語のラベル / `null` / `undefined`
  * @returns 対応する日本語ラベル。未知の値はそのまま返し、`null` / `undefined` の場合は `null`
  */
-export const formatMatchTypeLabel = (
+export function formatMatchTypeLabel(value: string): string;
+export function formatMatchTypeLabel(
   value: string | null | undefined,
-): string | null => {
+): string | null;
+export function formatMatchTypeLabel(
+  value: string | null | undefined,
+): string | null {
   if (value == null) return null;
   return MATCH_TYPE_LABELS[value] ?? value;
-};
+}
 
 /**
  * フィルタ／ピッカー用の選択肢配列。

@@ -5,7 +5,7 @@ import {
   getResultText,
   isHitDirectionDisabledForResult,
 } from "@constants/battingData";
-import { formatMatchTypeLabel } from "../utils/matchType";
+import { formatMatchTypeLabel } from "@utils/matchType";
 
 /**
  * バックエンドの match_type 内部表現（regular / open）を

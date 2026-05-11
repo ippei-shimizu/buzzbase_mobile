@@ -9,6 +9,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { useProfile } from "@hooks/useProfile";
+import { formatMatchTypeLabel } from "@utils/matchType";
 import { EmptyState } from "./EmptyState";
 
 interface RecentGameResultsProps {
@@ -109,11 +110,7 @@ const GameResultCard = ({ game }: { game: RecentGameResult }) => {
       <View style={styles.cardHeader}>
         <Text style={styles.date}>{formatDate(game.date)}</Text>
         <Text style={styles.matchType}>
-          {game.match_type === "regular"
-            ? "公式戦"
-            : game.match_type === "open"
-              ? "オープン戦"
-              : game.match_type}
+          {formatMatchTypeLabel(game.match_type)}
         </Text>
       </View>
 

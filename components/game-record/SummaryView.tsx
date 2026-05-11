@@ -1,7 +1,7 @@
 import type { AppearanceType, BattingBox } from "../../types/gameRecord";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
-import { formatMatchTypeLabel } from "../../utils/matchType";
+import { formatMatchTypeLabel } from "@utils/matchType";
 
 interface Props {
   // 試合情報
@@ -110,7 +110,7 @@ export function SummaryView(props: Props) {
     ? new Date(props.date).toLocaleDateString("ja-JP")
     : "";
 
-  const matchTypeLabel = formatMatchTypeLabel(props.matchType) ?? "";
+  const matchTypeLabel = formatMatchTypeLabel(props.matchType);
 
   // 表示用に null は 0 にフォールバック（実運用上は Step1 のバリデーションで除外される）。
   const myScoreDisplay = props.myTeamScore ?? 0;
