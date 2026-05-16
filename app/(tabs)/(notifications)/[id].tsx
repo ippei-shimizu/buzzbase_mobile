@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   useWindowDimensions,
+  Linking,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { useManagementNotice } from "@hooks/useNotifications";
@@ -99,6 +100,28 @@ export default function NoticeDetailScreen() {
           backgroundColor: "#2E2E2E",
         }}
         scrollEnabled={false}
+        onShouldStartLoadWithRequest={(request) => {
+          // 初回のHTMLロード（about:blank / data: スキーム）はWebView内で許可
+          if (
+            request.url === "about:blank" ||
+            request.url.startsWith("data:")
+          ) {
+            return true;
+          }
+          // 外部リンクはOSのデフォルトハンドラに委譲
+          // X / App Store などのUniversal Links対応アプリは
+          // 対応アプリで開かれる
+          Linking.openURL(request.url).catch((error) => {
+            Sentry.captureException(error, {
+              tags: {
+                source: "notification-detail",
+                action: "open-external-url",
+              },
+              extra: { url: request.url },
+            });
+          });
+          return false;
+        }}
         onMessage={(event) => {
           try {
             const data = JSON.parse(event.nativeEvent.data);
