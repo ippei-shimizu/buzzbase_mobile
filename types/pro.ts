@@ -68,7 +68,7 @@ export interface ProSubscription {
 
 export interface ProStatus {
   subscription: ProSubscription;
-  entitlements: string[];
+  entitlements: Feature[];
 }
 
 export interface EntitlementCheck {
@@ -95,5 +95,5 @@ export const DEFAULT_PRO_STATUS: ProStatus = {
     is_early_subscriber: false,
     has_used_trial: false,
   },
-  entitlements: [...FREE_FEATURES],
+  entitlements: [...FREE_FEATURES] as Feature[],
 };
