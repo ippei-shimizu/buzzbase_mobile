@@ -107,6 +107,7 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
       statusBarTranslucent
       onRequestClose={onClose}
     >
+      {/* RN Modal 自体がモーダルセマンティクスを担うので、カード側に accessibilityRole は付けない。 */}
       <Pressable
         style={styles.backdrop}
         onPress={onClose}
@@ -115,7 +116,7 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
         <Pressable
           style={styles.card}
           onPress={(e) => e.stopPropagation()}
-          accessibilityRole="alert"
+          accessibilityViewIsModal
         >
           <Text style={styles.title}>{copy.title}</Text>
           <Text style={styles.description}>{copy.description}</Text>
