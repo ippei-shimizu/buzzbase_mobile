@@ -5,8 +5,7 @@ import { getAuthToken } from "@utils/authTokenStorage";
 import { TestProviders } from "../../__tests__/test-utils/renderWithProviders";
 import { useAuth } from "../useAuth";
 
-// useAuth は内部で useQueryClient を参照するため、テストでも
-// QueryClientProvider が必要。共通の TestProviders をラッパに使う。
+// useAuth が useQueryClient を参照するため Provider 必須。
 const renderUseAuth = () =>
   renderHook(() => useAuth(), {
     wrapper: ({ children }) => <TestProviders>{children}</TestProviders>,

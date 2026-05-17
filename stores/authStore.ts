@@ -1,14 +1,11 @@
 import { create } from "zustand";
 
 /**
- * 認証ストアの状態定義
+ * 認証ストアの状態定義。ログアウト処理は useAuth.logout に集約しているため、
+ * 本ストアは状態フラグの管理のみを担う。
  *
  * @property isLoggedIn - undefined: 未確認 / true: ログイン済み / false: 未ログイン
  * @property isLoading - トークン検証中かどうか
- *
- * ログアウト処理は useAuth.logout に集約（サーバー sign_out + ローカルストア・
- * クエリキャッシュのクリア + ログイン画面への遷移を一括実行）。本ストアでは
- * 認証状態フラグの管理のみを担当する。
  */
 interface AuthState {
   isLoggedIn: boolean | undefined;
@@ -17,12 +14,7 @@ interface AuthState {
   setIsLoading: (value: boolean) => void;
 }
 
-/**
- * Zustand認証ストア
- *
- * Web版のuseAuthContext（React Context）に相当する状態管理。
- * Zustandにより不要な再レンダリングを抑制。
- */
+/** Zustand 認証ストア（Web 版の useAuthContext 相当）。 */
 export const useAuthStore = create<AuthState>((set) => ({
   isLoggedIn: undefined,
   isLoading: true,

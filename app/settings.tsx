@@ -16,14 +16,8 @@ interface SettingsSectionData {
 }
 
 /**
- * 設定画面（ルートレベル配置）。
- *
- * `app/_layout.tsx` の Stack の直下に配置されているため、各タブ（ダッシュボード /
- * 試合結果 / 成績 / グループ / マイページ）から `router.push("/settings")` で
- * push すると、その時点のタブの履歴の上に積まれる。戻るボタンで遷移元のタブに戻る。
- *
- * サブ画面（プロフィール編集・お問い合わせ等）は引き続き `(profile)` 配下に
- * あり、そちらに遷移するとプロフィールタブへジャンプする（現状仕様）。
+ * 設定画面（ルート配置）。各タブから push しても遷移元タブに戻れるよう、
+ * `app/_layout.tsx` の Stack 直下に置いている。
  */
 export default function SettingsScreen() {
   const router = useRouter();
