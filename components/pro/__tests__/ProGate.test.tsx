@@ -41,6 +41,7 @@ const respondPro = () => {
         subscription: {
           ...DEFAULT_PRO_STATUS.subscription,
           status: "active",
+          pro_active: true,
           expires_at: "2026-12-31T00:00:00+09:00",
           days_remaining: 30,
         },

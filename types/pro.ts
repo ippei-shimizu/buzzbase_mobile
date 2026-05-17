@@ -56,6 +56,9 @@ export interface ProSubscription {
   platform: Platform | null;
   started_at: string | null;
   expires_at: string | null;
+  // Server 側で期限と status を合わせて判定した Pro 加入可否。
+  // クライアントはこれを単一の真実として参照する（status からの再計算は不要）。
+  pro_active: boolean;
   in_trial: boolean;
   in_grace_period: boolean;
   days_remaining: number | null;
@@ -85,6 +88,7 @@ export const DEFAULT_PRO_STATUS: ProStatus = {
     platform: null,
     started_at: null,
     expires_at: null,
+    pro_active: false,
     in_trial: false,
     in_grace_period: false,
     days_remaining: null,
