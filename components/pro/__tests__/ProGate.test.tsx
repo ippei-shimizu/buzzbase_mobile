@@ -3,6 +3,7 @@
  *
  * 方針:
  * - HTTP 層を MSW で intercept し、useEntitlement / useProStatus / services は実物を通す。
+ * - expo-router は buildExpoRouterMock を使ってモジュール全体を差し替える。
  * - 表示判定（許可 → children、未許可 → fallback or renderLockedTrigger）を
  *   ユーザーから見える DOM 経由で検証する。
  */
@@ -18,13 +19,14 @@ import { server } from "../../../jest-setup-msw";
 import { DEFAULT_PRO_STATUS, FREE_FEATURES } from "../../../types/pro";
 import { ProGate } from "../ProGate";
 
-jest.mock("expo-router", () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    back: jest.fn(),
-  }),
-}));
+/* eslint-disable @typescript-eslint/no-require-imports */
+jest.mock("expo-router", () => {
+  const {
+    buildExpoRouterMock,
+  } = require("../../../__tests__/test-utils/mockExpoRouter");
+  return buildExpoRouterMock();
+});
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 const respondFree = () => {
   server.use(
@@ -75,6 +77,7 @@ describe("ProGate", () => {
       </ProGate>,
     );
 
+    // 初期ロードが完了するまで待ち、Pro Content が表示されないことを確認
     await waitFor(() => {
       expect(screen.queryByText("Pro Content")).not.toBeOnTheScreen();
     });

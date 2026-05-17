@@ -3,26 +3,33 @@
  *
  * 方針:
  * - feature ごとのコピー表示と、Pro 加入導線 / 閉じる の挙動を確認する。
- * - expo-router の useRouter のみ jest.mock し、それ以外は実物を使う。
+ * - expo-router は buildExpoRouterMock で生成して __routerSpies からアサートする。
  */
+import type { RouterSpies } from "../../../__tests__/test-utils/mockExpoRouter";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { PaywallModal } from "../PaywallModal";
 
-const mockPush = jest.fn();
+/* eslint-disable @typescript-eslint/no-require-imports */
+jest.mock("expo-router", () => {
+  const {
+    buildExpoRouterMock,
+  } = require("../../../__tests__/test-utils/mockExpoRouter");
+  return buildExpoRouterMock();
+});
+/* eslint-enable @typescript-eslint/no-require-imports */
 
-jest.mock("expo-router", () => ({
-  useRouter: () => ({
-    push: (...args: unknown[]) => mockPush(...args),
-    replace: jest.fn(),
-    back: jest.fn(),
-  }),
-}));
+const getRouterSpies = (): RouterSpies => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const m = require("expo-router") as { __routerSpies: RouterSpies };
+  return m.__routerSpies;
+};
 
 describe("PaywallModal", () => {
   const mockOnClose = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
+    Object.values(getRouterSpies()).forEach((spy) => spy.mockClear());
   });
 
   it("Pro 機能を渡すと、その機能に対応したコピーが表示される", () => {
@@ -69,7 +76,7 @@ describe("PaywallModal", () => {
     fireEvent.press(screen.getByLabelText("Pro プランを見る"));
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
-    expect(mockPush).toHaveBeenCalledWith("/(profile)/pro");
+    expect(getRouterSpies().push).toHaveBeenCalledWith("/(profile)/pro");
   });
 
   it("「閉じる」ボタンで onClose が呼ばれる", () => {

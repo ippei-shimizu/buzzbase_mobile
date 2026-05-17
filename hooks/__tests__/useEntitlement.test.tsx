@@ -7,13 +7,14 @@
  *   公開 API（hasEntitlement / isPro / inTrial / inGracePeriod）から検証する。
  */
 import type { ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react-native";
 import {
   apiUrl,
   http,
   HttpResponse,
 } from "../../__tests__/test-utils/handlers";
+import { createTestQueryClient } from "../../__tests__/test-utils/renderWithProviders";
 import { server } from "../../jest-setup-msw";
 import {
   DEFAULT_PRO_STATUS,
@@ -23,9 +24,7 @@ import {
 import { useEntitlement } from "../useEntitlement";
 
 const createWrapper = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
+  const queryClient = createTestQueryClient();
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
