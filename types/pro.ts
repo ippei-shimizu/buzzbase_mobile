@@ -38,6 +38,15 @@ export type FreeFeature = (typeof FREE_FEATURES)[number];
 export type ProFeature = (typeof PRO_FEATURES)[number];
 export type Feature = FreeFeature | ProFeature;
 
+// 各 status の意味:
+// - free:          一度も加入していない、または完全期限切れ後
+// - trial:         トライアル期間中（期限内なら pro_active=true）
+// - active:        通常課金中（期限内なら pro_active=true）
+// - cancelled:     解約申請済み・期限まで利用可（期限内なら pro_active=true）
+// - billing_issue: 課金失敗中の Grace Period（期限内なら pro_active=true）
+// - expired:       期限切れ・Pro 機能不可（pro_active=false）
+// - pending:       課金処理中の遷移状態・Pro 機能はまだ不可（pro_active=false）
+// クライアントは status を直接見ず、サーバー算出済みの pro_active を真実とする。
 export type SubscriptionStatus =
   | "free"
   | "trial"
