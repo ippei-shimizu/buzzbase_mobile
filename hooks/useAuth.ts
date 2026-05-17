@@ -1,5 +1,8 @@
 import type { SignInData, SignUpData } from "../types/auth";
+import * as Sentry from "@sentry/react-native";
+import { useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
+import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { appleSignIn } from "@services/appleAuthService";
 import {
@@ -11,20 +14,21 @@ import {
 } from "@services/authService";
 import { googleSignIn } from "@services/googleAuthService";
 import { useAuthStore } from "@stores/authStore";
-import { getAuthToken } from "@utils/authTokenStorage";
+import { useGameRecordStore } from "@stores/gameRecordStore";
+import { getAuthToken, clearAllAuthTokens } from "@utils/authTokenStorage";
 
 /**
- * 認証カスタムフック
- *
- * TanStack Query + Zustandを組み合わせた認証操作を提供。
- * マウント時にSecureStoreのトークンを検証し、認証状態を自動判定する。
+ * 認証カスタムフック。マウント時に SecureStore のトークンを検証し
+ * 認証状態を判定する。
  *
  * @returns isLoggedIn - 認証状態（undefined: 確認中）
  * @returns isLoading - トークン検証中フラグ
  * @returns login - ログイン関数
- * @returns logout - ログアウト関数
+ * @returns logout - ログアウト関数（サーバー sign_out + ローカル状態リセット + 画面遷移）
  */
 export const useAuth = () => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const { isLoggedIn, isLoading, setIsLoggedIn, setIsLoading } = useAuthStore();
 
   useEffect(() => {
@@ -42,9 +46,8 @@ export const useAuth = () => {
         await validateToken();
         setIsLoggedIn(true);
       } catch (error) {
-        // ネットワーク到達不可は「認証無効」ではないため、トークンを保持したまま
-        // 楽観的にログイン継続。後続APIで401が返った場合は axiosInstance の
-        // レスポンスインターセプタが clearAllAuthTokens を実行する。
+        // ネットワーク到達不可は認証無効ではないためログイン継続。401 時は
+        // axiosInstance のインターセプタ側で clearAllAuthTokens が走る。
         if (isAxiosError(error) && !error.response) {
           setIsLoggedIn(true);
           return;
@@ -64,9 +67,23 @@ export const useAuth = () => {
     return response;
   };
 
+  /**
+   * ログアウト処理（サーバー sign_out + ローカル状態リセット + 画面遷移）。
+   * サーバーエラー時もローカルトークンは確実に削除する。
+   */
   const logout = async () => {
-    await signOut();
+    try {
+      await signOut();
+    } catch {
+      // signOut 失敗時のトークン残留を防ぐため冪等に削除する。
+      await clearAllAuthTokens();
+      Sentry.setUser(null);
+    }
+
     setIsLoggedIn(false);
+    useGameRecordStore.getState().reset();
+    queryClient.clear();
+    router.replace("/(auth)/sign-in");
   };
 
   const signUp = async (data: SignUpData) => {

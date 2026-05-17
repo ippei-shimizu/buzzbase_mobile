@@ -2,7 +2,14 @@ import { act, renderHook, waitFor } from "@testing-library/react-native";
 import { validateToken } from "@services/authService";
 import { useAuthStore } from "@stores/authStore";
 import { getAuthToken } from "@utils/authTokenStorage";
+import { TestProviders } from "../../__tests__/test-utils/renderWithProviders";
 import { useAuth } from "../useAuth";
+
+// useAuth が useQueryClient を参照するため Provider 必須。
+const renderUseAuth = () =>
+  renderHook(() => useAuth(), {
+    wrapper: ({ children }) => <TestProviders>{children}</TestProviders>,
+  });
 
 // expo の URL/URLSearchParams 遅延polyfillと axios の browser エントリが
 // jest 環境で衝突するため、テストでは axios の最小スタブだけ提供する。
@@ -64,7 +71,7 @@ describe("useAuth checkAuth", () => {
   it("アクセストークンが無い場合は isLoggedIn=false になる", async () => {
     mockedGetAuthToken.mockResolvedValue(null);
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderUseAuth();
 
     await waitFor(() => expect(result.current.isLoggedIn).toBe(false));
     expect(mockedValidateToken).not.toHaveBeenCalled();
@@ -74,7 +81,7 @@ describe("useAuth checkAuth", () => {
     mockedGetAuthToken.mockResolvedValue("valid-token");
     mockedValidateToken.mockResolvedValue({ data: { id: 1 } } as never);
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderUseAuth();
 
     await waitFor(() => expect(result.current.isLoggedIn).toBe(true));
     expect(mockedValidateToken).toHaveBeenCalledTimes(1);
@@ -85,7 +92,7 @@ describe("useAuth checkAuth", () => {
     // axios の ERR_NETWORK 相当: AxiosError かつ response が無い
     mockedValidateToken.mockRejectedValue(buildAxiosError());
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderUseAuth();
 
     await waitFor(() => expect(result.current.isLoggedIn).toBe(true));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -97,7 +104,7 @@ describe("useAuth checkAuth", () => {
       buildAxiosError({ response: { status: 401, data: {} } }),
     );
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderUseAuth();
 
     await waitFor(() => expect(result.current.isLoggedIn).toBe(false));
   });
