@@ -6,9 +6,11 @@ import { FREE_FEATURES, type Feature } from "../types/pro";
  * 機能アクセス権（Entitlement）を判定するフック。
  * 無料機能は常に true、Pro 機能は subscription.entitlements に含まれていれば true。
  * back の Entitlement#has_entitlement? と同じロジックを表現する。
+ *
+ * isLoading は「Pro 状態の初回取得中」を表す。ProGate のフラッシュ抑止に使う。
  */
 export const useEntitlement = () => {
-  const { proStatus, isPro } = useProStatus();
+  const { proStatus, isPro, isLoading } = useProStatus();
 
   const hasEntitlement = useCallback(
     (feature: Feature): boolean => {
@@ -22,6 +24,7 @@ export const useEntitlement = () => {
     isPro,
     inTrial: proStatus.subscription.in_trial,
     inGracePeriod: proStatus.subscription.in_grace_period,
+    isLoading,
     hasEntitlement,
   };
 };

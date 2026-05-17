@@ -28,8 +28,12 @@ export function ProGate({
   fallback,
   renderLockedTrigger,
 }: ProGateProps) {
-  const { hasEntitlement } = useEntitlement();
+  const { hasEntitlement, isLoading } = useEntitlement();
   const [isPaywallOpen, setPaywallOpen] = useState(false);
+
+  // Pro 状態の初回取得中は判定不能なので、locked UI を一瞬出さないために何も描画しない。
+  // 認可済み children も locked fallback も誤って表示しないことを優先する。
+  if (isLoading) return null;
 
   if (hasEntitlement(feature)) return <>{children}</>;
 
