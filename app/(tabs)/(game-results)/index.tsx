@@ -12,6 +12,7 @@ import {
   Text,
   TextInput,
   ScrollView,
+  FlatList,
   RefreshControl,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -179,7 +180,7 @@ const filterStyles = StyleSheet.create({
 
 export default function GameResultsScreen() {
   const router = useRouter();
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<FlatList<GameResult>>(null);
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
   const { years: availableYears } = useAvailableYears();
@@ -312,7 +313,7 @@ export default function GameResultsScreen() {
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-    scrollRef.current?.scrollTo({ y: 0, animated: true });
+    scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, []);
 
   if (isLoading) {
@@ -426,7 +427,7 @@ export default function GameResultsScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             onFocus={() =>
-              scrollRef.current?.scrollTo({ y: 0, animated: true })
+              scrollRef.current?.scrollToOffset({ offset: 0, animated: true })
             }
           />
         </View>
@@ -590,7 +591,7 @@ export default function GameResultsScreen() {
 
       {/* List Tab */}
       {screenTab === "list" && (
-        <ScrollView
+        <FlatList
           ref={scrollRef}
           style={{ flex: 1 }}
           contentContainerStyle={[
@@ -602,6 +603,18 @@ export default function GameResultsScreen() {
             },
             keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
           ]}
+          data={gameResults}
+          keyExtractor={(item) => String(item.game_result_id)}
+          renderItem={({ item }) => (
+            <View
+              style={[
+                styles.cardContainer,
+                isFetching && !isLoading && { opacity: 0.5 },
+              ]}
+            >
+              <GameResultListItem game={item} onPress={handlePressItem} />
+            </View>
+          )}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="interactive"
           refreshControl={
@@ -611,33 +624,22 @@ export default function GameResultsScreen() {
               tintColor="#d08000"
             />
           }
-        >
-          {listFilterHeader}
-          {gameResults.length === 0 ? (
+          ListHeaderComponent={listFilterHeader}
+          ListEmptyComponent={
             <Text style={styles.emptyText}>試合結果がありません</Text>
-          ) : (
-            gameResults.map((item) => (
-              <View
-                key={item.game_result_id}
-                style={[
-                  styles.cardContainer,
-                  isFetching && !isLoading && { opacity: 0.5 },
-                ]}
-              >
-                <GameResultListItem game={item} onPress={handlePressItem} />
-              </View>
-            ))
-          )}
-          {pagination && (
-            <GamePagination
-              currentPage={pagination.current_page}
-              totalPages={pagination.total_pages}
-              totalCount={pagination.total_count}
-              perPage={pagination.per_page}
-              onPageChange={handlePageChange}
-            />
-          )}
-        </ScrollView>
+          }
+          ListFooterComponent={
+            pagination ? (
+              <GamePagination
+                currentPage={pagination.current_page}
+                totalPages={pagination.total_pages}
+                totalCount={pagination.total_count}
+                perPage={pagination.per_page}
+                onPageChange={handlePageChange}
+              />
+            ) : null
+          }
+        />
       )}
 
       <GlobalMenuOverlay
