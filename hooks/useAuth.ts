@@ -1,5 +1,8 @@
 import type { SignInData, SignUpData } from "../types/auth";
+import * as Sentry from "@sentry/react-native";
+import { useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
+import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { appleSignIn } from "@services/appleAuthService";
 import {
@@ -11,7 +14,8 @@ import {
 } from "@services/authService";
 import { googleSignIn } from "@services/googleAuthService";
 import { useAuthStore } from "@stores/authStore";
-import { getAuthToken } from "@utils/authTokenStorage";
+import { useGameRecordStore } from "@stores/gameRecordStore";
+import { getAuthToken, clearAllAuthTokens } from "@utils/authTokenStorage";
 
 /**
  * 認証カスタムフック
@@ -22,9 +26,11 @@ import { getAuthToken } from "@utils/authTokenStorage";
  * @returns isLoggedIn - 認証状態（undefined: 確認中）
  * @returns isLoading - トークン検証中フラグ
  * @returns login - ログイン関数
- * @returns logout - ログアウト関数
+ * @returns logout - ログアウト関数（サーバー sign_out + ローカルストア・クエリキャッシュクリア + 画面遷移）
  */
 export const useAuth = () => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const { isLoggedIn, isLoading, setIsLoggedIn, setIsLoading } = useAuthStore();
 
   useEffect(() => {
@@ -64,9 +70,33 @@ export const useAuth = () => {
     return response;
   };
 
+  /**
+   * ログアウト処理。
+   * - サーバー側 sign_out API を呼ぶ
+   * - サーバーが unreachable / エラー時もローカルトークンは確実に削除する
+   * - Zustand ストア（authStore / gameRecordStore）をリセット
+   * - TanStack Query のキャッシュをクリア
+   * - Sentry のユーザー識別をクリア
+   * - ログイン画面に置き換え遷移する
+   */
   const logout = async () => {
-    await signOut();
+    try {
+      await signOut();
+    } catch {
+      // サーバーへのリクエストが失敗してもローカルログアウトは続行する。
+      // signOut 内で clearAllAuthTokens が呼ばれる前に失敗した可能性もあるため、
+      // ここで冪等に呼び直しトークン残留を防ぐ。
+      await clearAllAuthTokens();
+      Sentry.setUser(null);
+    }
+
+    // 画面・データのキャッシュをクリア
     setIsLoggedIn(false);
+    useGameRecordStore.getState().reset();
+    queryClient.clear();
+
+    // ログイン画面に置き換え遷移（戻る操作で元の画面に戻れないようにする）
+    router.replace("/(auth)/sign-in");
   };
 
   const signUp = async (data: SignUpData) => {

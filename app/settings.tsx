@@ -7,8 +7,8 @@ import {
   SettingsSection,
   type SettingsItem,
 } from "@components/profile/SettingsSection";
+import { useAuth } from "@hooks/useAuth";
 import { useStoreReview } from "@hooks/useStoreReview";
-import { useAuthStore } from "@stores/authStore";
 
 interface SettingsSectionData {
   title: string;
@@ -27,7 +27,7 @@ interface SettingsSectionData {
  */
 export default function SettingsScreen() {
   const router = useRouter();
-  const logout = useAuthStore((s) => s.logout);
+  const { logout } = useAuth();
   const { openStoreReviewPage } = useStoreReview();
 
   const handleLogout = () => {
