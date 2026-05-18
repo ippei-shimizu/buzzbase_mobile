@@ -6,6 +6,7 @@
  * services 関数を介さず直接検証する。
  */
 import * as SecureStore from "expo-secure-store";
+import { delay } from "msw";
 import {
   http,
   HttpResponse,
@@ -161,5 +162,45 @@ describe("レスポンスインターセプタ: 401 時の挙動", () => {
     });
 
     expect(mockedSecureStore.deleteItemAsync).not.toHaveBeenCalled();
+  });
+});
+
+describe("タイムアウト設定", () => {
+  // 本番の timeout は 15000ms。テストでは時間短縮のため毎回上書き / 復元する。
+  const originalTimeout = axiosInstance.defaults.timeout;
+
+  beforeEach(() => {
+    mockedSecureStore.getItemAsync.mockResolvedValue(null);
+    axiosInstance.defaults.timeout = 50;
+  });
+
+  afterEach(() => {
+    axiosInstance.defaults.timeout = originalTimeout;
+  });
+
+  it("timeout を超えたリクエストは ECONNABORTED で reject される", async () => {
+    server.use(
+      http.get(apiUrl("/ping"), async () => {
+        await delay(200);
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    await expect(axiosInstance.get("/ping")).rejects.toMatchObject({
+      code: "ECONNABORTED",
+    });
+  });
+
+  it("timeout 内に応答が返れば成功する", async () => {
+    server.use(
+      http.get(apiUrl("/ping"), async () => {
+        await delay(10);
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await axiosInstance.get("/ping");
+
+    expect(response.data).toEqual({ ok: true });
   });
 });
