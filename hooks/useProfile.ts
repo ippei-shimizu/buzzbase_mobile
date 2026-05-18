@@ -13,6 +13,7 @@ export const useProfile = () => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching,
+    // 初回ロード中の isRefetching は RefreshControl と二重表示になるため抑制する（issue #341）
+    isRefreshing: isRefetching && !isLoading,
   };
 };

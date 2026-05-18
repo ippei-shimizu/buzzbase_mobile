@@ -1,3 +1,4 @@
+import type { StatsFilters } from "../types/profile";
 import { useQuery } from "@tanstack/react-query";
 import {
   getProfileBattingStats,
@@ -5,7 +6,6 @@ import {
   getUserBattingStats,
   getUserPitchingStats,
 } from "../services/profileService";
-import type { StatsFilters } from "../types/profile";
 
 export const useUserStats = (
   userId: number | undefined,
@@ -32,7 +32,10 @@ export const useUserStats = (
       batting.refetch();
       pitching.refetch();
     },
-    isRefreshing: batting.isRefetching || pitching.isRefetching,
+    // 初回ロード中の isRefetching は RefreshControl と二重表示になるため抑制する（issue #341）
+    isRefreshing:
+      (batting.isRefetching || pitching.isRefetching) &&
+      !(batting.isLoading || pitching.isLoading),
   };
 };
 
@@ -56,6 +59,9 @@ export const useProfileStats = (filters: StatsFilters) => {
       batting.refetch();
       pitching.refetch();
     },
-    isRefreshing: batting.isRefetching || pitching.isRefetching,
+    // 初回ロード中の isRefetching は RefreshControl と二重表示になるため抑制する（issue #341）
+    isRefreshing:
+      (batting.isRefetching || pitching.isRefetching) &&
+      !(batting.isLoading || pitching.isLoading),
   };
 };

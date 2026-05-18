@@ -1,3 +1,5 @@
+import type { GameResultFilterParams } from "../services/gameResultService";
+import type { GameResult } from "../types/gameResult";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   getGameResults,
@@ -5,8 +7,6 @@ import {
   getFilteredGameResults,
   getFilteredUserGameResults,
 } from "../services/gameResultService";
-import type { GameResultFilterParams } from "../services/gameResultService";
-import type { GameResult } from "../types/gameResult";
 
 /** ページネーションキャッシュ混在時の重複排除 */
 const dedupGameResults = (results: GameResult[]): GameResult[] => {
@@ -37,7 +37,7 @@ export const useUserGameResults = (userId: number | undefined) => {
   return {
     gameResults,
     isLoading,
-    isRefreshing: isRefetching,
+    isRefreshing: isRefetching && !isLoading,
     refetch,
   };
 };
@@ -58,7 +58,7 @@ export const useFilteredGameResults = (params: GameResultFilterParams) => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching,
+    isRefreshing: isRefetching && !isLoading,
   };
 };
 
@@ -82,7 +82,7 @@ export const useFilteredUserGameResults = (
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching,
+    isRefreshing: isRefetching && !isLoading,
   };
 };
 
@@ -117,7 +117,7 @@ export const useGameResults = () => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching,
+    isRefreshing: isRefetching && !isLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,

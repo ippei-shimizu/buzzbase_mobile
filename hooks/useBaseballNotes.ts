@@ -16,7 +16,7 @@ export const useBaseballNotes = () => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching,
+    isRefreshing: isRefetching && !isLoading,
   };
 };
 
@@ -33,6 +33,6 @@ export const useBaseballNote = (id: number | undefined) => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching,
+    isRefreshing: isRefetching && !isLoading,
   };
 };

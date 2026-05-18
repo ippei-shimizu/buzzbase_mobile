@@ -18,7 +18,7 @@ export const useGroups = () => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching,
+    isRefreshing: isRefetching && !isLoading,
   };
 };
 
@@ -40,7 +40,7 @@ export const useGroupDetail = (
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching,
+    isRefreshing: isRefetching && !isLoading,
   };
 };
 
@@ -57,7 +57,7 @@ export const useGroupMembers = (id: number | undefined) => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching,
+    isRefreshing: isRefetching && !isLoading,
   };
 };
 
