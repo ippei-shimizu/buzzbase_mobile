@@ -83,6 +83,12 @@ export const useAuth = () => {
     setIsLoggedIn(false);
     useGameRecordStore.getState().reset();
     queryClient.clear();
+
+    // (tabs) 上に push されている画面（settings 等）を畳んでから replace する。
+    // 畳まないと (tabs)/_layout の認証ガードが再評価されず、設定画面に留まる。
+    if (router.canDismiss()) {
+      router.dismissAll();
+    }
     router.replace("/(auth)/sign-in");
   };
 

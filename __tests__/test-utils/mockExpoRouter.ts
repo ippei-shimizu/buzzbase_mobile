@@ -17,6 +17,7 @@ export interface RouterSpies {
   navigate: jest.Mock;
   dismiss: jest.Mock;
   dismissAll: jest.Mock;
+  canDismiss: jest.Mock;
 }
 
 export const createRouterSpies = (): RouterSpies => ({
@@ -26,6 +27,8 @@ export const createRouterSpies = (): RouterSpies => ({
   navigate: jest.fn(),
   dismiss: jest.fn(),
   dismissAll: jest.fn(),
+  // 既定で「畳めるスタックあり」を返す。テスト側で mockReturnValue で上書き可能。
+  canDismiss: jest.fn(() => true),
 });
 
 export interface ExpoRouterMockOptions {
