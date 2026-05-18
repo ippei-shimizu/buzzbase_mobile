@@ -361,6 +361,14 @@ export default function GameResultsScreen() {
 
   const listFilterHeader = (
     <View style={styles.filterSection}>
+      {/* 試合記録ボタン */}
+      <TouchableOpacity
+        style={styles.recordButton}
+        onPress={() => router.push("/(game-record)/step1-game-info")}
+      >
+        <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
+        <Text style={styles.recordButtonText}>試合結果を記録する</Text>
+      </TouchableOpacity>
       {/* フィルター */}
       <View
         style={{
