@@ -23,13 +23,17 @@ export const useProfile = () => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching,
+    // 初回ロード中は <ActivityIndicator/> 側を出すため、RefreshControl 用の
+    // isRefreshing は isLoading 中は false にして二重表示を防ぐ（issue #341）
+    isRefreshing: isRefetching && !isLoading,
   };
 };
 ```
 
 - `data`を意味のある名前にrename（`profile`, `gameResults`等）
 - `isRefetching`は`isRefreshing`にrename（RefreshControl向け）
+- **初回ロード中の二重表示を避けるため `&& !isLoading` を付与する**。`if (isLoading) return <ActivityIndicator />` で全画面ローディングを出している間に、RefreshControl のスピナーが上から重ねて出ると不自然なちらつきになる
+- 複数 query を OR で組み合わせる場合は `(a.isRefetching || b.isRefetching) && !(a.isLoading || b.isLoading)` の形にする
 - 条件付きクエリ: `enabled: !!userId`
 
 ### Mutation系フック（`hooks/useXxxMutations.ts`）
