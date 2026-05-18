@@ -591,55 +591,62 @@ export default function GameResultsScreen() {
 
       {/* List Tab */}
       {screenTab === "list" && (
-        <FlatList
-          ref={scrollRef}
-          style={{ flex: 1 }}
-          contentContainerStyle={[
-            {
-              paddingHorizontal: 16,
-              paddingTop: 16,
-              paddingBottom: 32,
-              flexGrow: 1,
-            },
-            keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
-          ]}
-          data={gameResults}
-          keyExtractor={(item) => String(item.game_result_id)}
-          renderItem={({ item }) => (
-            <View
-              style={[
-                styles.cardContainer,
-                isFetching && !isLoading && { opacity: 0.5 },
+        <View style={styles.listContainer}>
+          {/* フィルター UI は FlatList の外側に固定配置。
+              FlatList の ListHeaderComponent 内に絶対配置のドロップダウンを
+              入れると、後続の行カードが独立した stacking context として描画
+              されドロップダウンが裏に隠れるため、外側で zIndex を確保する。 */}
+          <View style={styles.listFilterContainer}>{listFilterHeader}</View>
+          <View
+            style={[
+              styles.listBody,
+              isFetching && !isLoading && styles.listBodyFetching,
+            ]}
+          >
+            <FlatList
+              ref={scrollRef}
+              style={{ flex: 1 }}
+              contentContainerStyle={[
+                {
+                  paddingHorizontal: 16,
+                  paddingBottom: 32,
+                  flexGrow: 1,
+                },
+                keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
               ]}
-            >
-              <GameResultListItem game={item} onPress={handlePressItem} />
-            </View>
-          )}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={refetch}
-              tintColor="#d08000"
+              data={gameResults}
+              keyExtractor={(item) => String(item.game_result_id)}
+              renderItem={({ item }) => (
+                <View style={styles.cardContainer}>
+                  <GameResultListItem game={item} onPress={handlePressItem} />
+                </View>
+              )}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefreshing}
+                  onRefresh={refetch}
+                  tintColor="#d08000"
+                />
+              }
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>試合結果がありません</Text>
+              }
+              ListFooterComponent={
+                pagination ? (
+                  <GamePagination
+                    currentPage={pagination.current_page}
+                    totalPages={pagination.total_pages}
+                    totalCount={pagination.total_count}
+                    perPage={pagination.per_page}
+                    onPageChange={handlePageChange}
+                  />
+                ) : null
+              }
             />
-          }
-          ListHeaderComponent={listFilterHeader}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>試合結果がありません</Text>
-          }
-          ListFooterComponent={
-            pagination ? (
-              <GamePagination
-                currentPage={pagination.current_page}
-                totalPages={pagination.total_pages}
-                totalCount={pagination.total_count}
-                perPage={pagination.per_page}
-                onPageChange={handlePageChange}
-              />
-            ) : null
-          }
-        />
+          </View>
+        </View>
       )}
 
       <GlobalMenuOverlay
@@ -727,6 +734,22 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   cardContainer: {},
+  listContainer: {
+    flex: 1,
+  },
+  // フィルター UI を FlatList の上に被せるための土台。
+  // zIndex を高めにし、後段の listBody より手前で stacking context を作る。
+  listFilterContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    zIndex: 10,
+  },
+  listBody: {
+    flex: 1,
+  },
+  listBodyFetching: {
+    opacity: 0.5,
+  },
   emptyText: {
     color: "#A1A1AA",
     fontSize: 14,
