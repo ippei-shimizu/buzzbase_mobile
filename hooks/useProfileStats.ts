@@ -32,7 +32,7 @@ export const useUserStats = (
       batting.refetch();
       pitching.refetch();
     },
-    // 初回ロード中の isRefetching は RefreshControl と二重表示になるため抑制する（issue #341）
+    // 初回ロードは ActivityIndicator 側に任せ、RefreshControl との二重表示を避ける
     isRefreshing:
       (batting.isRefetching || pitching.isRefetching) &&
       !(batting.isLoading || pitching.isLoading),
@@ -59,7 +59,7 @@ export const useProfileStats = (filters: StatsFilters) => {
       batting.refetch();
       pitching.refetch();
     },
-    // 初回ロード中の isRefetching は RefreshControl と二重表示になるため抑制する（issue #341）
+    // 初回ロードは ActivityIndicator 側に任せ、RefreshControl との二重表示を避ける
     isRefreshing:
       (batting.isRefetching || pitching.isRefetching) &&
       !(batting.isLoading || pitching.isLoading),

@@ -5,9 +5,7 @@ import { AppState, type AppStateStatus } from "react-native";
 /**
  * TanStack Queryのグローバルクライアント設定
  *
- * - retry: 4xx / タイムアウトはリトライ無し、5xx・ネットワーク断のみ 1 回だけリトライ。
- *   元の `retry: 2` だと axios timeout 未設定と相まって最大 45 秒級の「無限ロード」を
- *   引き起こしていた（issue #341）。
+ * - retry: 4xx / タイムアウトはリトライ無し、5xx・ネットワーク断のみ 1 回だけリトライ
  * - staleTime: 5分間はキャッシュを新鮮とみなす
  * - gcTime: 10分間未使用のキャッシュをガベージコレクション
  */

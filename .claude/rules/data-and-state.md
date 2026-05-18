@@ -24,7 +24,7 @@ export const useProfile = () => {
     error,
     refetch,
     // 初回ロード中は <ActivityIndicator/> 側を出すため、RefreshControl 用の
-    // isRefreshing は isLoading 中は false にして二重表示を防ぐ（issue #341）
+    // isRefreshing は isLoading 中は false にして二重表示を防ぐ
     isRefreshing: isRefetching && !isLoading,
   };
 };
