@@ -8,10 +8,10 @@ import {
   ActivityIndicator,
   StyleSheet,
   useWindowDimensions,
-  Linking,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { useManagementNotice } from "@hooks/useNotifications";
+import { openExternalUrlPreferringNativeApp } from "@utils/externalAppLinks";
 import { markdownToHtml } from "@utils/markdownToHtml";
 
 export default function NoticeDetailScreen() {
@@ -108,17 +108,9 @@ export default function NoticeDetailScreen() {
           ) {
             return true;
           }
-          // 外部リンクはOSのデフォルトハンドラに委譲
-          // X / App Store などのUniversal Links対応アプリは
-          // 対応アプリで開かれる
-          Linking.openURL(request.url).catch((error) => {
-            Sentry.captureException(error, {
-              tags: {
-                source: "notification-detail",
-                action: "open-external-url",
-              },
-              extra: { url: request.url },
-            });
+          // 外部リンクはutil経由でOSに委譲。X URLは可能ならXアプリで開く。
+          openExternalUrlPreferringNativeApp(request.url, {
+            source: "notification-detail",
           });
           return false;
         }}
