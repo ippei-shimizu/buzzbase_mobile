@@ -13,7 +13,6 @@ export const useDashboard = () => {
     isError,
     error,
     refetch,
-    // 初回ロードは ActivityIndicator 側に任せ、RefreshControl との二重表示を避ける
-    isRefreshing: isRefetching && !isLoading,
+    isRefreshing: isRefetching,
   };
 };

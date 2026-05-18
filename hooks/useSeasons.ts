@@ -14,7 +14,7 @@ export const useSeasons = (userId?: number) => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching && !isLoading,
+    isRefreshing: isRefetching,
   };
 };
 
@@ -30,6 +30,6 @@ export const useMySeasons = () => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching && !isLoading,
+    isRefreshing: isRefetching,
   };
 };

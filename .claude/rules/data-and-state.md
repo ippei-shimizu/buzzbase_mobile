@@ -23,17 +23,13 @@ export const useProfile = () => {
     isError,
     error,
     refetch,
-    // 初回ロード中は <ActivityIndicator/> 側を出すため、RefreshControl 用の
-    // isRefreshing は isLoading 中は false にして二重表示を防ぐ
-    isRefreshing: isRefetching && !isLoading,
+    isRefreshing: isRefetching,
   };
 };
 ```
 
 - `data`を意味のある名前にrename（`profile`, `gameResults`等）
-- `isRefetching`は`isRefreshing`にrename（RefreshControl向け）
-- **初回ロード中の二重表示を避けるため `&& !isLoading` を付与する**。`if (isLoading) return <ActivityIndicator />` で全画面ローディングを出している間に、RefreshControl のスピナーが上から重ねて出ると不自然なちらつきになる
-- 複数 query を OR で組み合わせる場合は `(a.isRefetching || b.isRefetching) && !(a.isLoading || b.isLoading)` の形にする
+- `isRefetching`は`isRefreshing`にrename（RefreshControl向け）。TanStack Query v5 では `isRefetching = isFetching && !isLoading` と内部定義されており、初回ロード中は自動的に false になる
 - 条件付きクエリ: `enabled: !!userId`
 
 ### Mutation系フック（`hooks/useXxxMutations.ts`）

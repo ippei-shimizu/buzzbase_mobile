@@ -32,10 +32,7 @@ export const useUserStats = (
       batting.refetch();
       pitching.refetch();
     },
-    // 初回ロードは ActivityIndicator 側に任せ、RefreshControl との二重表示を避ける
-    isRefreshing:
-      (batting.isRefetching || pitching.isRefetching) &&
-      !(batting.isLoading || pitching.isLoading),
+    isRefreshing: batting.isRefetching || pitching.isRefetching,
   };
 };
 
@@ -59,9 +56,6 @@ export const useProfileStats = (filters: StatsFilters) => {
       batting.refetch();
       pitching.refetch();
     },
-    // 初回ロードは ActivityIndicator 側に任せ、RefreshControl との二重表示を避ける
-    isRefreshing:
-      (batting.isRefetching || pitching.isRefetching) &&
-      !(batting.isLoading || pitching.isLoading),
+    isRefreshing: batting.isRefetching || pitching.isRefetching,
   };
 };

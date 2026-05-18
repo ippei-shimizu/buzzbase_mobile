@@ -13,6 +13,7 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
+        // queryFn のプログラマーエラーや非 HTTP 例外はリトライしても結果が変わらない
         if (!axios.isAxiosError(error)) return false;
         // タイムアウト: 同じ条件でリトライしても無駄。即座にエラー表示へ。
         if (error.code === "ECONNABORTED") return false;

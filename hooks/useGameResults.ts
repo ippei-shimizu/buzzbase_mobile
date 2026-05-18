@@ -37,7 +37,7 @@ export const useUserGameResults = (userId: number | undefined) => {
   return {
     gameResults,
     isLoading,
-    isRefreshing: isRefetching && !isLoading,
+    isRefreshing: isRefetching,
     refetch,
   };
 };
@@ -58,7 +58,7 @@ export const useFilteredGameResults = (params: GameResultFilterParams) => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching && !isLoading,
+    isRefreshing: isRefetching,
   };
 };
 
@@ -82,7 +82,7 @@ export const useFilteredUserGameResults = (
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching && !isLoading,
+    isRefreshing: isRefetching,
   };
 };
 
@@ -117,7 +117,7 @@ export const useGameResults = () => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching && !isLoading,
+    isRefreshing: isRefetching,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,

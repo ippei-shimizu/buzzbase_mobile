@@ -20,7 +20,7 @@ export const useManagementNotices = () => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching && !isLoading,
+    isRefreshing: isRefetching,
   };
 };
 
@@ -37,7 +37,7 @@ export const useManagementNotice = (id: number | undefined) => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching && !isLoading,
+    isRefreshing: isRefetching,
   };
 };
 
@@ -78,7 +78,7 @@ export const useNotifications = (userId: string | undefined) => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching && !isLoading,
+    isRefreshing: isRefetching,
   };
 };
 

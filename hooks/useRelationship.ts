@@ -21,7 +21,7 @@ export const useUserProfileDetail = (userId: string | undefined) => {
     isError,
     error,
     refetch,
-    isRefreshing: isRefetching && !isLoading,
+    isRefreshing: isRefetching,
   };
 };
 
