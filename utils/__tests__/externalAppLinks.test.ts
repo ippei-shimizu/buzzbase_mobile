@@ -24,6 +24,9 @@ describe("resolveXAppUrl", () => {
       ["https://x.com/foo?ref=bar", "twitter://user?screen_name=foo"],
       ["https://x.com/foo#hash", "twitter://user?screen_name=foo"],
       ["https://X.com/Foo", "twitter://user?screen_name=Foo"],
+      // `@` プレフィックス付きユーザー名は剥がして変換する
+      ["https://x.com/@foo", "twitter://user?screen_name=foo"],
+      ["https://x.com/@@foo", "twitter://user?screen_name=foo"],
     ])("%s -> %s", (input, expected) => {
       expect(resolveXAppUrl(input)).toBe(expected);
     });
@@ -63,6 +66,9 @@ describe("resolveXAppUrl", () => {
       "https://x.com/foo/status/abc",
       "https://x.com/",
       "https://x.com",
+      // `@` だけ・`@home` 等の予約パスを @ で偽装したケースも null
+      "https://x.com/@",
+      "https://x.com/@home",
       "https://example.com/foo",
       "https://t.co/abcd",
       "https://buzzbase.jp/contact",
@@ -138,6 +144,33 @@ describe("openExternalUrlPreferringNativeApp", () => {
 
       expect(canOpenSpy).not.toHaveBeenCalled();
       expect(openSpy).toHaveBeenCalledWith("https://buzzbase.jp/contact");
+    });
+
+    it("canOpenURL=true でも openURL 自体が失敗した場合は https にフォールバックし Sentry に通知する", async () => {
+      canOpenSpy.mockResolvedValue(true);
+      openSpy
+        .mockRejectedValueOnce(new Error("scheme open failed"))
+        .mockResolvedValueOnce(true);
+
+      openExternalUrlPreferringNativeApp("https://x.com/foo", {
+        source: "notification-detail",
+      });
+      await flushPromises();
+
+      expect(openSpy).toHaveBeenNthCalledWith(
+        1,
+        "twitter://user?screen_name=foo",
+      );
+      expect(openSpy).toHaveBeenNthCalledWith(2, "https://x.com/foo");
+      expect(sentrySpy).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({
+          tags: expect.objectContaining({
+            source: "notification-detail",
+            action: "open-x-app-url",
+          }),
+        }),
+      );
     });
   });
 

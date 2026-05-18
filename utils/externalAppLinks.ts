@@ -63,8 +63,9 @@ export function resolveXAppUrl(url: string): string | null {
     return null;
   }
 
-  const username = segments[0];
-  if (RESERVED_PATHS.has(username.toLowerCase())) {
+  // `https://x.com/@foo` のような @ プレフィックスは剥がしてからユーザー名扱いする
+  const username = segments[0].replace(/^@+/, "");
+  if (!username || RESERVED_PATHS.has(username.toLowerCase())) {
     return null;
   }
 
@@ -102,27 +103,39 @@ export function openExternalUrlPreferringNativeApp(
   options: { source: string },
 ): void {
   const appUrl = resolveXAppUrl(url);
+  const { source } = options;
 
   if (!appUrl) {
-    openHttpsWithSentry(url, options.source);
+    openHttpsDirectly(url, source);
     return;
   }
 
   if (Platform.OS === "ios") {
     Linking.canOpenURL(appUrl)
-      .then((supported) => Linking.openURL(supported ? appUrl : url))
-      .catch((error) => captureAndFallback(error, url, appUrl, options.source));
+      .then((supported) => {
+        if (supported) {
+          Linking.openURL(appUrl).catch((error) =>
+            handleAppSchemeFailure(error, url, appUrl, source),
+          );
+        } else {
+          openHttpsDirectly(url, source);
+        }
+      })
+      .catch((error) => handleAppSchemeFailure(error, url, appUrl, source));
     return;
   }
 
   // Android: canOpenURL が <queries> 未設定時に false を返すため使わない。
   // 直接 openURL を試し、失敗時にのみ https URL にフォールバックする。
   Linking.openURL(appUrl).catch((error) =>
-    captureAndFallback(error, url, appUrl, options.source),
+    handleAppSchemeFailure(error, url, appUrl, source),
   );
 }
 
-function openHttpsWithSentry(url: string, source: string): void {
+/**
+ * https URL を直接開く。失敗時はSentryに通知するだけで再試行はしない。
+ */
+function openHttpsDirectly(url: string, source: string): void {
   Linking.openURL(url).catch((error) => {
     Sentry.captureException(error, {
       tags: { source, action: "open-external-url" },
@@ -131,7 +144,11 @@ function openHttpsWithSentry(url: string, source: string): void {
   });
 }
 
-function captureAndFallback(
+/**
+ * Xアプリスキームでの起動失敗時の処理。Sentry通知後にhttpsへフォールバックする。
+ * https側も失敗した場合はさらにSentry通知する（再試行はしない）。
+ */
+function handleAppSchemeFailure(
   error: unknown,
   url: string,
   appUrl: string,
