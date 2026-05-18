@@ -38,6 +38,33 @@ import { MATCH_TYPE_OPTIONS } from "@utils/matchType";
 
 type ScreenTab = "summary" | "list";
 
+/**
+ * FlatList の各行セルを ListHeader より低い zIndex で描画するための
+ * CellRendererComponent。ListHeader 内の絶対配置されたフィルター
+ * ドロップダウンが後続の行カードの裏に隠れる問題を回避する。
+ * `index` の昇順にさらに低く設定することで、上の行ほど手前、下の行ほど
+ * 奥の順序を保つ。Android では `elevation` も併せて 0 にする。
+ */
+const CellRendererWithLowZIndex = ({
+  index,
+  style,
+  children,
+  ...props
+}: {
+  index: number;
+  // FlatList の CellRendererProps.style は StyleProp<ViewStyle>（null を含む）。
+  // ここでは中身を弄らずそのまま下層 View へ渡すだけなので unknown で受ける。
+  style?: unknown;
+  children?: React.ReactNode;
+}) => (
+  <View
+    style={[style as object, { zIndex: -index - 1, elevation: 0 }]}
+    {...props}
+  >
+    {children}
+  </View>
+);
+
 function FilterDropdown({
   label,
   value,
@@ -583,61 +610,63 @@ export default function GameResultsScreen() {
 
       {/* List Tab */}
       {screenTab === "list" && (
-        <View style={styles.listContainer}>
-          {/* フィルター UI は FlatList の外側に固定配置。
-              FlatList の ListHeaderComponent 内に絶対配置のドロップダウンを
-              入れると、後続の行カードが独立した stacking context として描画
-              されドロップダウンが裏に隠れるため、外側で zIndex を確保する。 */}
-          <View style={styles.listFilterContainer}>{listFilterHeader}</View>
-          <View
-            style={[
-              styles.listBody,
-              isFetching && !isLoading && styles.listBodyFetching,
+        <View
+          style={[
+            styles.listBody,
+            isFetching && !isLoading && styles.listBodyFetching,
+          ]}
+        >
+          <FlatList
+            ref={scrollRef}
+            style={{ flex: 1 }}
+            contentContainerStyle={[
+              {
+                paddingHorizontal: 16,
+                paddingTop: 16,
+                paddingBottom: 32,
+                flexGrow: 1,
+              },
+              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
             ]}
-          >
-            <FlatList
-              ref={scrollRef}
-              style={{ flex: 1 }}
-              contentContainerStyle={[
-                {
-                  paddingHorizontal: 16,
-                  paddingBottom: 32,
-                  flexGrow: 1,
-                },
-                keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
-              ]}
-              data={gameResults}
-              keyExtractor={(item) => String(item.game_result_id)}
-              renderItem={({ item }) => (
-                <View style={styles.cardContainer}>
-                  <GameResultListItem game={item} onPress={handlePressItem} />
-                </View>
-              )}
-              keyboardShouldPersistTaps="handled"
-              keyboardDismissMode="interactive"
-              refreshControl={
-                <RefreshControl
-                  refreshing={isRefreshing}
-                  onRefresh={refetch}
-                  tintColor="#d08000"
+            data={gameResults}
+            keyExtractor={(item) => String(item.game_result_id)}
+            renderItem={({ item }) => (
+              <View style={styles.cardContainer}>
+                <GameResultListItem game={item} onPress={handlePressItem} />
+              </View>
+            )}
+            // 各行セルを ListHeader より低い zIndex で描画し、ListHeader 内の
+            // 絶対配置されたフィルタードロップダウンが行カードの裏に隠れる
+            // 問題を回避する。`index` の昇順にさらに低く設定することで、
+            // 上の行ほど手前、下の行ほど奥の順序で stacking context を維持する。
+            CellRendererComponent={CellRendererWithLowZIndex}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={refetch}
+                tintColor="#d08000"
+              />
+            }
+            ListHeaderComponent={
+              <View style={styles.listHeader}>{listFilterHeader}</View>
+            }
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>試合結果がありません</Text>
+            }
+            ListFooterComponent={
+              pagination ? (
+                <GamePagination
+                  currentPage={pagination.current_page}
+                  totalPages={pagination.total_pages}
+                  totalCount={pagination.total_count}
+                  perPage={pagination.per_page}
+                  onPageChange={handlePageChange}
                 />
-              }
-              ListEmptyComponent={
-                <Text style={styles.emptyText}>試合結果がありません</Text>
-              }
-              ListFooterComponent={
-                pagination ? (
-                  <GamePagination
-                    currentPage={pagination.current_page}
-                    totalPages={pagination.total_pages}
-                    totalCount={pagination.total_count}
-                    perPage={pagination.per_page}
-                    onPageChange={handlePageChange}
-                  />
-                ) : null
-              }
-            />
-          </View>
+              ) : null
+            }
+          />
         </View>
       )}
 
@@ -726,15 +755,12 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   cardContainer: {},
-  listContainer: {
-    flex: 1,
-  },
-  // フィルター UI を FlatList の上に被せるための土台。
-  // zIndex を高めにし、後段の listBody より手前で stacking context を作る。
-  listFilterContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    zIndex: 10,
+  // ListHeader 内の絶対配置ドロップダウンを行カードより手前で描画させるため、
+  // ListHeader 自体に高い zIndex を付与する。各行は CellRendererWithLowZIndex
+  // で負の zIndex を持つ。
+  listHeader: {
+    zIndex: 1000,
+    elevation: 1000,
   },
   listBody: {
     flex: 1,
