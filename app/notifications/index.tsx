@@ -2,7 +2,7 @@ import type {
   NotificationItem,
   UserNotification,
   ManagementNotification,
-} from "../../../types/notification";
+} from "../../types/notification";
 import { useRouter, useFocusEffect } from "expo-router";
 import React, { useCallback } from "react";
 import {
@@ -37,13 +37,13 @@ export default function NotificationsScreen() {
   const handlePress = (notification: NotificationItem) => {
     if (notification.event_type === "management_notice") {
       const mn = notification as ManagementNotification;
-      router.push(`/(notifications)/${mn.management_notice_id}`);
+      router.push(`/notifications/${mn.management_notice_id}`);
     } else {
       const un = notification as UserNotification;
       if (un.read_at === null) {
         markNotificationRead(un.id);
       }
-      router.push(`/(notifications)/user/${un.actor_user_id}`);
+      router.push(`/notifications/user/${un.actor_user_id}`);
     }
   };
 

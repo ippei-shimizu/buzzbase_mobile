@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-export default function NotificationsTabLayout() {
+export default function NotificationsLayout() {
   return (
     <Stack
       screenOptions={{
@@ -8,6 +8,7 @@ export default function NotificationsTabLayout() {
         headerTintColor: "#F4F4F4",
         headerTitleStyle: { fontSize: 16, fontWeight: "600" },
         contentStyle: { backgroundColor: "#2E2E2E" },
+        headerBackTitle: "戻る",
       }}
     >
       <Stack.Screen name="index" options={{ title: "お知らせ" }} />
