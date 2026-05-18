@@ -57,7 +57,9 @@ export default function GameResultDetailModal() {
         return;
       }
     }
-    invalidateGameResultRelated(queryClient);
+    // 戻り先（ホームタブのダッシュボード等）は useFocusEffect を持たないため、
+    // 削除を即座にUIへ反映するよう active refetch を発火させる。
+    invalidateGameResultRelated(queryClient, "refetch");
     router.back();
   };
 
