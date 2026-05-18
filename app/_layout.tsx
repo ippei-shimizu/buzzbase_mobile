@@ -85,6 +85,7 @@ function RootLayoutInner() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(game-record)" options={{ headerShown: false }} />
+        <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen
           name="game-result-detail"
           options={{ title: "試合詳細", headerBackTitle: "戻る" }}

@@ -48,7 +48,7 @@ export default function NotificationFollowsScreen() {
     activeTab === "following" ? isFollowingError : isFollowersError;
 
   const handleUserPress = (userId: string) => {
-    router.push(`/(notifications)/user/${userId}`);
+    router.push(`/notifications/user/${userId}`);
   };
 
   const handleFollowPress = async (userId: number) => {
