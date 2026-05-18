@@ -1,12 +1,15 @@
 /**
  * queryClient のリトライ戦略テスト。
  *
- * 本物の queryClient（retry 関数つき）を使い、axiosInstance + MSW で
- * 「どのエラーで何回リトライされるか」を実際の HTTP 層経由で検証する。
- * 設計意図: services を mock せず HTTP 境界で振る舞いを担保する
- * （.claude/rules/testing.md）。
+ * 本番 retry 関数（queryClientRetryFn）を注入したテスト専用 QueryClient で検証する。
+ * 本番 singleton を共有すると他のテストとキャッシュ・リスナーが干渉する恐れがあるため、
+ * テストごとに専用 client を都度生成する。HTTP 層は MSW で intercept する。
  */
-import { QueryClientProvider, useQuery } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react-native";
 import { delay } from "msw";
 import React from "react";
@@ -20,12 +23,17 @@ import { server } from "../../jest-setup-msw";
 // jest-setup-msw と同じく、setupFiles 完了後に require する。
 /* eslint-disable @typescript-eslint/no-require-imports */
 const axiosInstance = require("../axiosInstance").default;
-const { queryClient } = require("../queryClient");
+const { queryClientRetryFn } = require("../queryClient");
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const buildWrapper = () => {
+  const client = new QueryClient({
+    defaultOptions: {
+      queries: { retry: queryClientRetryFn, gcTime: 0 },
+    },
+  });
   return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
 };
 
@@ -38,10 +46,6 @@ const runQuery = (key: string) =>
       }),
     { wrapper: buildWrapper() },
   );
-
-beforeEach(() => {
-  queryClient.clear();
-});
 
 describe("queryClient リトライ戦略", () => {
   it("4xx (422) はリトライせず 1 回で確定する", async () => {
