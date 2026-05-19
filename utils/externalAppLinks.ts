@@ -37,9 +37,15 @@ const RESERVED_PATHS = new Set([
  * X / Twitter の Web URL を、Xアプリで開くためのカスタムスキームURLに変換する。
  * 対応外のURL（X以外のドメイン、予約パス、不正URL等）は null を返す。
  *
+ * プロフィールURL (`/<user>`) は変換せず null を返す。
+ * X iOS アプリの `twitter://user?screen_name=` は `_` を含むスクリーン名を
+ * 近い既存アカウントへファジーマッチしてしまう既知の問題があるため、
+ * プロフィールは Universal Link / App Link 経由で開かせる方針にしている。
+ * ステータスURLは数値IDなのでこの問題は発生せず、`twitter://status?id=` を使う。
+ *
  * @example
- * resolveXAppUrl("https://x.com/foo") // => "twitter://user?screen_name=foo"
  * resolveXAppUrl("https://x.com/foo/status/123") // => "twitter://status?id=123"
+ * resolveXAppUrl("https://x.com/foo") // => null (Universal Link に委譲)
  * resolveXAppUrl("https://x.com/home") // => null
  * resolveXAppUrl("https://example.com") // => null
  */
@@ -78,17 +84,13 @@ export function resolveXAppUrl(url: string): string | null {
     return `twitter://status?id=${segments[2]}`;
   }
 
-  // /<user> または /<user>/ のみ（プロフィール）
-  if (segments.length === 1) {
-    return `twitter://user?screen_name=${username}`;
-  }
-
   return null;
 }
 
 /**
- * 外部URLを開く。X (Twitter) URLはアプリで開くことを優先し、
- * 失敗時は元の https URL でフォールバックする。
+ * 外部URLを開く。X (Twitter) のステータスURLはアプリスキームで開くことを優先し、
+ * 失敗時は元の https URL でフォールバックする。プロフィールURLや非XのURLは
+ * 元の https URL をそのまま開き、Universal Link / App Link 経由でのアプリ起動はOSに委ねる。
  *
  * iOS: `LSApplicationQueriesSchemes` に登録済みのスキームのみ
  *      `canOpenURL` で判定できるため、これを前提にcanOpenURLで分岐する。
