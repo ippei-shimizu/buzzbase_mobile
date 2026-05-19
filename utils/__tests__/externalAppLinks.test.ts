@@ -13,25 +13,6 @@ const setPlatformOS = (os: "ios" | "android") => {
 };
 
 describe("resolveXAppUrl", () => {
-  describe("プロフィールURL", () => {
-    it.each([
-      ["https://x.com/foo", "twitter://user?screen_name=foo"],
-      ["https://twitter.com/foo", "twitter://user?screen_name=foo"],
-      ["https://www.x.com/foo", "twitter://user?screen_name=foo"],
-      ["https://mobile.x.com/foo", "twitter://user?screen_name=foo"],
-      ["https://m.x.com/foo", "twitter://user?screen_name=foo"],
-      ["https://x.com/foo/", "twitter://user?screen_name=foo"],
-      ["https://x.com/foo?ref=bar", "twitter://user?screen_name=foo"],
-      ["https://x.com/foo#hash", "twitter://user?screen_name=foo"],
-      ["https://X.com/Foo", "twitter://user?screen_name=Foo"],
-      // `@` プレフィックス付きユーザー名は剥がして変換する
-      ["https://x.com/@foo", "twitter://user?screen_name=foo"],
-      ["https://x.com/@@foo", "twitter://user?screen_name=foo"],
-    ])("%s -> %s", (input, expected) => {
-      expect(resolveXAppUrl(input)).toBe(expected);
-    });
-  });
-
   describe("ステータスURL", () => {
     it.each([
       ["https://x.com/foo/status/1234567890", "twitter://status?id=1234567890"],
@@ -52,6 +33,13 @@ describe("resolveXAppUrl", () => {
 
   describe("変換対象外 (null を返す)", () => {
     it.each([
+      // プロフィールURLは Universal Link / App Link に委ねるため null を返す
+      // (X iOS アプリの screen_name ディープリンクは `_` 含みユーザー名を
+      // 近い既存アカウントへファジーマッチしてしまうため)
+      "https://x.com/foo",
+      "https://twitter.com/foo",
+      "https://x.com/ippei_buzzbase",
+      "https://x.com/@foo",
       "https://x.com/home",
       "https://x.com/explore",
       "https://x.com/notifications",
@@ -105,33 +93,51 @@ describe("openExternalUrlPreferringNativeApp", () => {
   describe("iOS", () => {
     beforeEach(() => setPlatformOS("ios"));
 
-    it("Xアプリで開けるときは twitter:// スキームで openURL を呼ぶ", async () => {
+    it("ステータスURLは Xアプリで開けるとき twitter:// スキームで openURL を呼ぶ", async () => {
       canOpenSpy.mockResolvedValue(true);
       openSpy.mockResolvedValue(true);
 
-      openExternalUrlPreferringNativeApp("https://x.com/foo", {
-        source: "notification-detail",
-      });
+      openExternalUrlPreferringNativeApp(
+        "https://x.com/foo/status/1234567890",
+        { source: "notification-detail" },
+      );
       await flushPromises();
 
-      expect(canOpenSpy).toHaveBeenCalledWith("twitter://user?screen_name=foo");
-      expect(openSpy).toHaveBeenCalledWith("twitter://user?screen_name=foo");
-      expect(openSpy).not.toHaveBeenCalledWith("https://x.com/foo");
+      expect(canOpenSpy).toHaveBeenCalledWith("twitter://status?id=1234567890");
+      expect(openSpy).toHaveBeenCalledWith("twitter://status?id=1234567890");
+      expect(openSpy).not.toHaveBeenCalledWith(
+        "https://x.com/foo/status/1234567890",
+      );
     });
 
-    it("Xアプリ未インストール時は https URL にフォールバックする", async () => {
+    it("ステータスURLでXアプリ未インストール時は https URL にフォールバックする", async () => {
       canOpenSpy.mockResolvedValue(false);
       openSpy.mockResolvedValue(true);
 
-      openExternalUrlPreferringNativeApp("https://x.com/foo", {
+      openExternalUrlPreferringNativeApp(
+        "https://x.com/foo/status/1234567890",
+        { source: "notification-detail" },
+      );
+      await flushPromises();
+
+      expect(openSpy).toHaveBeenCalledWith(
+        "https://x.com/foo/status/1234567890",
+      );
+      expect(openSpy).not.toHaveBeenCalledWith(
+        "twitter://status?id=1234567890",
+      );
+    });
+
+    it("プロフィールURLは canOpenURL を呼ばず https URL を直接 openURL する", async () => {
+      openSpy.mockResolvedValue(true);
+
+      openExternalUrlPreferringNativeApp("https://x.com/ippei_buzzbase", {
         source: "notification-detail",
       });
       await flushPromises();
 
-      expect(openSpy).toHaveBeenCalledWith("https://x.com/foo");
-      expect(openSpy).not.toHaveBeenCalledWith(
-        "twitter://user?screen_name=foo",
-      );
+      expect(canOpenSpy).not.toHaveBeenCalled();
+      expect(openSpy).toHaveBeenCalledWith("https://x.com/ippei_buzzbase");
     });
 
     it("X以外のURLは canOpenURL を呼ばず直接 openURL する", async () => {
@@ -152,16 +158,20 @@ describe("openExternalUrlPreferringNativeApp", () => {
         .mockRejectedValueOnce(new Error("scheme open failed"))
         .mockResolvedValueOnce(true);
 
-      openExternalUrlPreferringNativeApp("https://x.com/foo", {
-        source: "notification-detail",
-      });
+      openExternalUrlPreferringNativeApp(
+        "https://x.com/foo/status/1234567890",
+        { source: "notification-detail" },
+      );
       await flushPromises();
 
       expect(openSpy).toHaveBeenNthCalledWith(
         1,
-        "twitter://user?screen_name=foo",
+        "twitter://status?id=1234567890",
       );
-      expect(openSpy).toHaveBeenNthCalledWith(2, "https://x.com/foo");
+      expect(openSpy).toHaveBeenNthCalledWith(
+        2,
+        "https://x.com/foo/status/1234567890",
+      );
       expect(sentrySpy).toHaveBeenCalledWith(
         expect.any(Error),
         expect.objectContaining({
@@ -177,17 +187,31 @@ describe("openExternalUrlPreferringNativeApp", () => {
   describe("Android", () => {
     beforeEach(() => setPlatformOS("android"));
 
-    it("Xアプリスキームを直接 openURL し、成功時はフォールバックしない", async () => {
+    it("ステータスURLは twitter:// スキームを直接 openURL し、成功時はフォールバックしない", async () => {
       openSpy.mockResolvedValue(true);
 
-      openExternalUrlPreferringNativeApp("https://x.com/foo", {
+      openExternalUrlPreferringNativeApp(
+        "https://x.com/foo/status/1234567890",
+        { source: "notification-detail" },
+      );
+      await flushPromises();
+
+      expect(canOpenSpy).not.toHaveBeenCalled();
+      expect(openSpy).toHaveBeenCalledTimes(1);
+      expect(openSpy).toHaveBeenCalledWith("twitter://status?id=1234567890");
+    });
+
+    it("プロフィールURLは https URL をそのまま openURL する", async () => {
+      openSpy.mockResolvedValue(true);
+
+      openExternalUrlPreferringNativeApp("https://x.com/ippei_buzzbase", {
         source: "notification-detail",
       });
       await flushPromises();
 
       expect(canOpenSpy).not.toHaveBeenCalled();
       expect(openSpy).toHaveBeenCalledTimes(1);
-      expect(openSpy).toHaveBeenCalledWith("twitter://user?screen_name=foo");
+      expect(openSpy).toHaveBeenCalledWith("https://x.com/ippei_buzzbase");
     });
 
     it("twitter:// が失敗したら https URL にフォールバックし Sentry に通知する", async () => {
@@ -195,16 +219,20 @@ describe("openExternalUrlPreferringNativeApp", () => {
         .mockRejectedValueOnce(new Error("no activity"))
         .mockResolvedValueOnce(true);
 
-      openExternalUrlPreferringNativeApp("https://x.com/foo", {
-        source: "notification-detail",
-      });
+      openExternalUrlPreferringNativeApp(
+        "https://x.com/foo/status/1234567890",
+        { source: "notification-detail" },
+      );
       await flushPromises();
 
       expect(openSpy).toHaveBeenNthCalledWith(
         1,
-        "twitter://user?screen_name=foo",
+        "twitter://status?id=1234567890",
       );
-      expect(openSpy).toHaveBeenNthCalledWith(2, "https://x.com/foo");
+      expect(openSpy).toHaveBeenNthCalledWith(
+        2,
+        "https://x.com/foo/status/1234567890",
+      );
       expect(sentrySpy).toHaveBeenCalledWith(
         expect.any(Error),
         expect.objectContaining({
@@ -223,7 +251,7 @@ describe("openExternalUrlPreferringNativeApp", () => {
       .mockRejectedValueOnce(new Error("no activity"))
       .mockRejectedValueOnce(new Error("network"));
 
-    openExternalUrlPreferringNativeApp("https://x.com/foo", {
+    openExternalUrlPreferringNativeApp("https://x.com/foo/status/1234567890", {
       source: "notification-detail",
     });
     await flushPromises();
