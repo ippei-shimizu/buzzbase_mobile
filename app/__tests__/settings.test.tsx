@@ -4,18 +4,27 @@
  * 検証対象:
  * - 「レビューで応援する」タップで OS ごとに正しい store URL で `Linking.openURL` が呼ばれる
  * - 「成績の算出方法」「お問い合わせ」「プロフィール編集」のタップで適切な router.push が呼ばれる
+ * - 「ログアウト」確認で承認した場合に (tabs) スタックを畳んでサインイン画面へ遷移する
  * - バージョン表示が `Constants.expoConfig?.version` から組み立てられる
  *
  * 方針:
- * - `services/*` は MSW で intercept する原則だが、本画面は API を呼ばないため対象外。
+ * - HTTP 境界（ログアウト時の `/auth/sign_out`）は MSW で intercept する。
  * - 環境境界（expo-router, expo-constants, Native Module）は jest.mock OK。
- * - `Linking.openURL` は `jest.spyOn` で局所モック（react-native 標準 API）。
+ * - `Linking.openURL` / `Alert.alert` は `jest.spyOn` で局所モック（react-native 標準 API）。
  */
 import type { RouterSpies } from "../../__tests__/test-utils/mockExpoRouter";
 import { fireEvent, waitFor } from "@testing-library/react-native";
 import React from "react";
-import { Linking, Platform } from "react-native";
+import { Alert, Linking, Platform } from "react-native";
+import {
+  apiUrl,
+  authSuccessHeaders,
+  http,
+  HttpResponse,
+} from "../../__tests__/test-utils/handlers";
 import { renderWithProviders } from "../../__tests__/test-utils/renderWithProviders";
+import { server } from "../../jest-setup-msw";
+import { useAuthStore } from "../../stores/authStore";
 import SettingsScreen from "../settings";
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -54,7 +63,11 @@ describe("SettingsScreen", () => {
     canOpenSpy = jest.spyOn(Linking, "canOpenURL").mockResolvedValue(true);
     openURLSpy = jest.spyOn(Linking, "openURL").mockResolvedValue(true);
     const spies = getRouterSpies();
-    Object.values(spies).forEach((fn) => fn.mockClear());
+    Object.values(spies).forEach((fn) => {
+      if (typeof fn?.mockClear === "function") fn.mockClear();
+    });
+    // canDismiss はデフォルト挙動（true）を維持する
+    getRouterSpies().canDismiss.mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -126,5 +139,76 @@ describe("SettingsScreen", () => {
     expect(getRouterSpies().push).toHaveBeenCalledWith(
       "/(profile)/account-deletion",
     );
+  });
+
+  describe("ログアウト", () => {
+    let alertSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      // useAuth の useEffect 内 validateToken が走らないよう、ログイン済み状態にする。
+      useAuthStore.getState().setIsLoggedIn(true);
+    });
+
+    afterEach(() => {
+      alertSpy?.mockRestore();
+      useAuthStore.setState({ isLoggedIn: undefined, isLoading: false });
+    });
+
+    const pressLogoutConfirm = (
+      buttonText: "ログアウト" | "キャンセル" = "ログアウト",
+    ) => {
+      alertSpy = jest.spyOn(Alert, "alert").mockImplementation(((
+        _title: string,
+        _message?: string,
+        buttons?: { text?: string; onPress?: () => void }[],
+      ) => {
+        buttons?.find((b) => b.text === buttonText)?.onPress?.();
+      }) as unknown as typeof Alert.alert);
+    };
+
+    it("確認ダイアログで「ログアウト」を選ぶと (tabs) スタックを畳んでサインイン画面に遷移する", async () => {
+      server.use(
+        http.delete(apiUrl("/auth/sign_out"), () =>
+          HttpResponse.json({}, { headers: authSuccessHeaders() }),
+        ),
+      );
+      pressLogoutConfirm("ログアウト");
+      const { getByText } = renderWithProviders(<SettingsScreen />);
+      fireEvent.press(getByText("ログアウト"));
+
+      const spies = getRouterSpies();
+      await waitFor(() => {
+        expect(spies.replace).toHaveBeenCalledWith("/(auth)/sign-in");
+      });
+      expect(spies.canDismiss).toHaveBeenCalled();
+      expect(spies.dismissAll).toHaveBeenCalled();
+    });
+
+    it("サーバー sign_out が失敗してもサインイン画面に遷移する", async () => {
+      server.use(
+        http.delete(apiUrl("/auth/sign_out"), () =>
+          HttpResponse.json({ errors: ["server error"] }, { status: 500 }),
+        ),
+      );
+      pressLogoutConfirm("ログアウト");
+      const { getByText } = renderWithProviders(<SettingsScreen />);
+      fireEvent.press(getByText("ログアウト"));
+
+      const spies = getRouterSpies();
+      await waitFor(() => {
+        expect(spies.replace).toHaveBeenCalledWith("/(auth)/sign-in");
+      });
+      expect(spies.dismissAll).toHaveBeenCalled();
+    });
+
+    it("確認ダイアログで「キャンセル」を選ぶと遷移しない", () => {
+      pressLogoutConfirm("キャンセル");
+      const { getByText } = renderWithProviders(<SettingsScreen />);
+      fireEvent.press(getByText("ログアウト"));
+
+      const spies = getRouterSpies();
+      expect(spies.replace).not.toHaveBeenCalled();
+      expect(spies.dismissAll).not.toHaveBeenCalled();
+    });
   });
 });

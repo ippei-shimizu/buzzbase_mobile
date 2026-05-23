@@ -9,12 +9,12 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
+import { useAuth } from "@hooks/useAuth";
 import { deleteAccount } from "@services/profileService";
-import { useAuthStore } from "@stores/authStore";
 
 export default function AccountDeletionScreen() {
   const [isDeleting, setIsDeleting] = useState(false);
-  const logout = useAuthStore((s) => s.logout);
+  const { logout } = useAuth();
 
   const handleDelete = () => {
     Alert.alert(

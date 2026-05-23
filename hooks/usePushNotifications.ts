@@ -38,7 +38,7 @@ export function usePushNotifications() {
 
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener(() => {
-        router.push("/(tabs)/(notifications)");
+        router.push("/notifications");
       });
 
     return () => {

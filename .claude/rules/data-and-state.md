@@ -29,7 +29,7 @@ export const useProfile = () => {
 ```
 
 - `data`を意味のある名前にrename（`profile`, `gameResults`等）
-- `isRefetching`は`isRefreshing`にrename（RefreshControl向け）
+- `isRefetching`は`isRefreshing`にrename（RefreshControl向け）。TanStack Query v5 では `isRefetching = isFetching && !isLoading` と内部定義されており、初回ロード中は自動的に false になる
 - 条件付きクエリ: `enabled: !!userId`
 
 ### Mutation系フック（`hooks/useXxxMutations.ts`）

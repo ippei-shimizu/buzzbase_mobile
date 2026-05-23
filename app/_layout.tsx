@@ -20,6 +20,9 @@ Sentry.init({
     process.env.EXPO_PUBLIC_APP_ENV ?? (__DEV__ ? "development" : "production"),
   release: Constants.expoConfig?.version,
   tracesSampleRate: 0.1,
+  // App Hang などメインスレッドブロック解析用。tracesSampleRate でサンプリングされた
+  // trace に対してのみ profile を取るため、全体の負荷増は tracesSampleRate に律速される。
+  profilesSampleRate: 1.0,
   sendDefaultPii: false,
 });
 
@@ -82,6 +85,7 @@ function RootLayoutInner() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(game-record)" options={{ headerShown: false }} />
+        <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen
           name="game-result-detail"
           options={{ title: "試合詳細", headerBackTitle: "戻る" }}

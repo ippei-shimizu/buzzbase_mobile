@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { useManagementNotice } from "@hooks/useNotifications";
+import { openExternalUrlPreferringNativeApp } from "@utils/externalAppLinks";
 import { markdownToHtml } from "@utils/markdownToHtml";
 
 export default function NoticeDetailScreen() {
@@ -99,6 +100,20 @@ export default function NoticeDetailScreen() {
           backgroundColor: "#2E2E2E",
         }}
         scrollEnabled={false}
+        onShouldStartLoadWithRequest={(request) => {
+          // 初回のHTMLロード（about:blank / data: スキーム）はWebView内で許可
+          if (
+            request.url === "about:blank" ||
+            request.url.startsWith("data:")
+          ) {
+            return true;
+          }
+          // 外部リンクはutil経由でOSに委譲。X URLは可能ならXアプリで開く。
+          openExternalUrlPreferringNativeApp(request.url, {
+            source: "notification-detail",
+          });
+          return false;
+        }}
         onMessage={(event) => {
           try {
             const data = JSON.parse(event.nativeEvent.data);

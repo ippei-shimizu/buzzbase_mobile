@@ -3,7 +3,7 @@
     "name": "BUZZ BASE",
     "slug": "buzzbase",
     "scheme": "buzzbase",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -15,14 +15,15 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "jp.buzzbase.mobile",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "プロフィール画像の撮影に使用します",
         "NSPhotoLibraryUsageDescription": "プロフィール画像の選択に使用します",
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "ja",
-        "UIDesignRequiresCompatibility": true
+        "UIDesignRequiresCompatibility": true,
+        "LSApplicationQueriesSchemes": ["twitter"]
       }
     },
     "android": {

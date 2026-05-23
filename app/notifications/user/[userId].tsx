@@ -1,5 +1,5 @@
-import type { GameResult } from "../../../../types/gameResult";
-import type { StatsFilters } from "../../../../types/profile";
+import type { GameResult } from "../../../types/gameResult";
+import type { StatsFilters } from "../../../types/profile";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState, useCallback } from "react";
@@ -114,7 +114,7 @@ export default function NotificationUserProfileScreen() {
 
   const handlePressGame = (game: GameResult) => {
     router.push({
-      pathname: "/(notifications)/user/game-detail",
+      pathname: "/notifications/user/game-detail",
       params: {
         game: JSON.stringify(game),
       },
@@ -169,13 +169,13 @@ export default function NotificationUserProfileScreen() {
           onFollowPress={handleFollowPress}
           onFollowingCountPress={() => {
             router.push({
-              pathname: "/(notifications)/user/follows",
+              pathname: "/notifications/user/follows",
               params: { id: String(data.user.id), tab: "following" },
             });
           }}
           onFollowersCountPress={() => {
             router.push({
-              pathname: "/(notifications)/user/follows",
+              pathname: "/notifications/user/follows",
               params: { id: String(data.user.id), tab: "followers" },
             });
           }}
