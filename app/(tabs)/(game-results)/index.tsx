@@ -12,6 +12,7 @@ import {
   Text,
   TextInput,
   ScrollView,
+  FlatList,
   RefreshControl,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -36,6 +37,33 @@ import { useTournaments } from "@hooks/useTournaments";
 import { MATCH_TYPE_OPTIONS } from "@utils/matchType";
 
 type ScreenTab = "summary" | "list";
+
+/**
+ * FlatList の各行セルを ListHeader より低い zIndex で描画するための
+ * CellRendererComponent。ListHeader 内の絶対配置されたフィルター
+ * ドロップダウンが後続の行カードの裏に隠れる問題を回避する。
+ * `index` の昇順にさらに低く設定することで、上の行ほど手前、下の行ほど
+ * 奥の順序を保つ。Android では `elevation` も併せて 0 にする。
+ */
+const CellRendererWithLowZIndex = ({
+  index,
+  style,
+  children,
+  ...props
+}: {
+  index: number;
+  // FlatList の CellRendererProps.style は StyleProp<ViewStyle>（null を含む）。
+  // ここでは中身を弄らずそのまま下層 View へ渡すだけなので unknown で受ける。
+  style?: unknown;
+  children?: React.ReactNode;
+}) => (
+  <View
+    style={[style as object, { zIndex: -index - 1, elevation: 0 }]}
+    {...props}
+  >
+    {children}
+  </View>
+);
 
 function FilterDropdown({
   label,
@@ -179,7 +207,7 @@ const filterStyles = StyleSheet.create({
 
 export default function GameResultsScreen() {
   const router = useRouter();
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<FlatList<GameResult>>(null);
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
   const { years: availableYears } = useAvailableYears();
@@ -312,7 +340,7 @@ export default function GameResultsScreen() {
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-    scrollRef.current?.scrollTo({ y: 0, animated: true });
+    scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, []);
 
   if (isLoading) {
@@ -426,7 +454,7 @@ export default function GameResultsScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             onFocus={() =>
-              scrollRef.current?.scrollTo({ y: 0, animated: true })
+              scrollRef.current?.scrollToOffset({ offset: 0, animated: true })
             }
           />
         </View>
@@ -590,54 +618,64 @@ export default function GameResultsScreen() {
 
       {/* List Tab */}
       {screenTab === "list" && (
-        <ScrollView
-          ref={scrollRef}
-          style={{ flex: 1 }}
-          contentContainerStyle={[
-            {
-              paddingHorizontal: 16,
-              paddingTop: 16,
-              paddingBottom: 32,
-              flexGrow: 1,
-            },
-            keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
+        <View
+          style={[
+            styles.listBody,
+            isFetching && !isLoading && styles.listBodyFetching,
           ]}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={refetch}
-              tintColor="#d08000"
-            />
-          }
         >
-          {listFilterHeader}
-          {gameResults.length === 0 ? (
-            <Text style={styles.emptyText}>試合結果がありません</Text>
-          ) : (
-            gameResults.map((item) => (
-              <View
-                key={item.game_result_id}
-                style={[
-                  styles.cardContainer,
-                  isFetching && !isLoading && { opacity: 0.5 },
-                ]}
-              >
+          <FlatList
+            ref={scrollRef}
+            style={{ flex: 1 }}
+            contentContainerStyle={[
+              {
+                paddingHorizontal: 16,
+                paddingTop: 16,
+                paddingBottom: 32,
+                flexGrow: 1,
+              },
+              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
+            ]}
+            data={gameResults}
+            keyExtractor={(item) => String(item.game_result_id)}
+            renderItem={({ item }) => (
+              <View style={styles.cardContainer}>
                 <GameResultListItem game={item} onPress={handlePressItem} />
               </View>
-            ))
-          )}
-          {pagination && (
-            <GamePagination
-              currentPage={pagination.current_page}
-              totalPages={pagination.total_pages}
-              totalCount={pagination.total_count}
-              perPage={pagination.per_page}
-              onPageChange={handlePageChange}
-            />
-          )}
-        </ScrollView>
+            )}
+            // 各行セルを ListHeader より低い zIndex で描画し、ListHeader 内の
+            // 絶対配置されたフィルタードロップダウンが行カードの裏に隠れる
+            // 問題を回避する。`index` の昇順にさらに低く設定することで、
+            // 上の行ほど手前、下の行ほど奥の順序で stacking context を維持する。
+            CellRendererComponent={CellRendererWithLowZIndex}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={refetch}
+                tintColor="#d08000"
+              />
+            }
+            ListHeaderComponent={
+              <View style={styles.listHeader}>{listFilterHeader}</View>
+            }
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>試合結果がありません</Text>
+            }
+            ListFooterComponent={
+              pagination ? (
+                <GamePagination
+                  currentPage={pagination.current_page}
+                  totalPages={pagination.total_pages}
+                  totalCount={pagination.total_count}
+                  perPage={pagination.per_page}
+                  onPageChange={handlePageChange}
+                />
+              ) : null
+            }
+          />
+        </View>
       )}
 
       <GlobalMenuOverlay
@@ -725,6 +763,19 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   cardContainer: {},
+  // ListHeader 内の絶対配置ドロップダウンを行カードより手前で描画させるため、
+  // ListHeader 自体に高い zIndex を付与する。各行は CellRendererWithLowZIndex
+  // で負の zIndex を持つ。
+  listHeader: {
+    zIndex: 1000,
+    elevation: 1000,
+  },
+  listBody: {
+    flex: 1,
+  },
+  listBodyFetching: {
+    opacity: 0.5,
+  },
   emptyText: {
     color: "#A1A1AA",
     fontSize: 14,

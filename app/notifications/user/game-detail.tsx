@@ -1,4 +1,4 @@
-import type { GameResult } from "../../../../types/gameResult";
+import type { GameResult } from "../../../types/gameResult";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, Stack } from "expo-router";
 import React from "react";

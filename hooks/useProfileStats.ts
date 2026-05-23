@@ -1,3 +1,4 @@
+import type { StatsFilters } from "../types/profile";
 import { useQuery } from "@tanstack/react-query";
 import {
   getProfileBattingStats,
@@ -5,7 +6,6 @@ import {
   getUserBattingStats,
   getUserPitchingStats,
 } from "../services/profileService";
-import type { StatsFilters } from "../types/profile";
 
 export const useUserStats = (
   userId: number | undefined,

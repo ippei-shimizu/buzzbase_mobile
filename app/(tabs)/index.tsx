@@ -51,7 +51,7 @@ export default function HomeScreen() {
         <View style={styles.headerRight}>
           <NotificationBell
             count={count}
-            onPress={() => router.push("/(notifications)")}
+            onPress={() => router.push("/notifications")}
           />
           <GlobalMenuButton onPress={openMenu} />
         </View>
