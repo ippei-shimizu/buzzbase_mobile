@@ -8,6 +8,7 @@ import {
   type SettingsItem,
 } from "@components/profile/SettingsSection";
 import { useAuth } from "@hooks/useAuth";
+import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { useStoreReview } from "@hooks/useStoreReview";
 
 interface SettingsSectionData {
@@ -23,6 +24,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { logout } = useAuth();
   const { openStoreReviewPage } = useStoreReview();
+  const proFeatures = useFeatureFlag("pro_features");
 
   const handleLogout = () => {
     Alert.alert("ログアウト", "ログアウトしますか？", [
@@ -37,18 +39,28 @@ export default function SettingsScreen() {
     ]);
   };
 
+  const accountItems: SettingsItem[] = [
+    {
+      icon: "person-outline",
+      title: "プロフィール編集",
+      description: "アカウントの公開設定・名前・チーム・ポジションなどを変更",
+      onPress: () => router.push("/(profile)/edit"),
+    },
+  ];
+
+  if (proFeatures) {
+    accountItems.push({
+      icon: "card-outline",
+      title: "サブスクリプション管理",
+      description: "Pro プランの加入状態・解約方法を確認",
+      onPress: () => router.push("/account/subscription"),
+    });
+  }
+
   const sections: SettingsSectionData[] = [
     {
       title: "アカウント",
-      items: [
-        {
-          icon: "person-outline",
-          title: "プロフィール編集",
-          description:
-            "アカウントの公開設定・名前・チーム・ポジションなどを変更",
-          onPress: () => router.push("/(profile)/edit"),
-        },
-      ],
+      items: accountItems,
     },
     {
       title: "ヘルプ",

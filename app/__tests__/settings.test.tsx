@@ -16,6 +16,7 @@ import type { RouterSpies } from "../../__tests__/test-utils/mockExpoRouter";
 import { fireEvent, waitFor } from "@testing-library/react-native";
 import React from "react";
 import { Alert, Linking, Platform } from "react-native";
+import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import {
   apiUrl,
   authSuccessHeaders,
@@ -41,6 +42,12 @@ jest.mock("expo-constants", () => ({
   default: { expoConfig: { version: "1.0.25" } },
 }));
 
+jest.mock("@hooks/useFeatureFlag", () => ({
+  useFeatureFlag: jest.fn(),
+}));
+
+const useFeatureFlagMock = useFeatureFlag as jest.Mock;
+
 const getRouterSpies = (): RouterSpies => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const m = require("expo-router") as { __routerSpies: RouterSpies };
@@ -60,6 +67,7 @@ describe("SettingsScreen", () => {
   const originalOS = Platform.OS;
 
   beforeEach(() => {
+    useFeatureFlagMock.mockReturnValue(false);
     canOpenSpy = jest.spyOn(Linking, "canOpenURL").mockResolvedValue(true);
     openURLSpy = jest.spyOn(Linking, "openURL").mockResolvedValue(true);
     const spies = getRouterSpies();
@@ -131,6 +139,35 @@ describe("SettingsScreen", () => {
     const { getByText } = renderWithProviders(<SettingsScreen />);
     fireEvent.press(getByText("プロフィール編集"));
     expect(getRouterSpies().push).toHaveBeenCalledWith("/(profile)/edit");
+  });
+
+  describe("Pro サブスクリプション管理リンク", () => {
+    it("pro_features=true のとき「サブスクリプション管理」リンクが表示される", () => {
+      useFeatureFlagMock.mockReturnValue(true);
+
+      const { getByText } = renderWithProviders(<SettingsScreen />);
+
+      expect(getByText("サブスクリプション管理")).toBeTruthy();
+    });
+
+    it("タップで /account/subscription に push する", () => {
+      useFeatureFlagMock.mockReturnValue(true);
+
+      const { getByText } = renderWithProviders(<SettingsScreen />);
+      fireEvent.press(getByText("サブスクリプション管理"));
+
+      expect(getRouterSpies().push).toHaveBeenCalledWith(
+        "/account/subscription",
+      );
+    });
+
+    it("pro_features=false のときはリンクが描画されない", () => {
+      useFeatureFlagMock.mockReturnValue(false);
+
+      const { queryByText } = renderWithProviders(<SettingsScreen />);
+
+      expect(queryByText("サブスクリプション管理")).toBeNull();
+    });
   });
 
   it("「アカウント削除」タップで account-deletion 画面へ遷移する", () => {
