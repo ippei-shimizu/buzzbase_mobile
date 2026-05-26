@@ -1,9 +1,15 @@
 import { fireEvent, waitFor } from "@testing-library/react-native";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
-import { syncProStatus } from "@services/proService";
 import { getOfferings, purchasePackage } from "@services/revenueCatService";
 import { useSnackbarStore } from "@stores/snackbarStore";
+import {
+  apiUrl,
+  http,
+  HttpResponse,
+} from "../../../__tests__/test-utils/handlers";
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
+import { server } from "../../../jest-setup-msw";
+import { DEFAULT_PRO_STATUS } from "../../../types/pro";
 import ProScreen from "../index";
 
 jest.mock("expo-router", () => {
@@ -14,13 +20,10 @@ jest.mock("expo-router", () => {
   return buildExpoRouterMock();
 });
 
+// react-native-purchases はネイティブ Module 境界。services は jest.mock しないルールの例外。
 jest.mock("@services/revenueCatService", () => ({
   getOfferings: jest.fn(),
   purchasePackage: jest.fn(),
-}));
-
-jest.mock("@services/proService", () => ({
-  syncProStatus: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock("@hooks/useFeatureFlag", () => ({
@@ -48,7 +51,6 @@ const useFeatureFlagMock = useFeatureFlag as jest.Mock;
 const useSnackbarStoreMock = useSnackbarStore as unknown as jest.Mock;
 const getOfferingsMock = getOfferings as jest.Mock;
 const purchasePackageMock = purchasePackage as jest.Mock;
-const syncProStatusMock = syncProStatus as jest.Mock;
 
 const mockOffering = {
   identifier: "default",
@@ -70,6 +72,22 @@ const setupSnackbar = () => {
     selector({ show: showMock }),
   );
   return showMock;
+};
+
+// /pro/sync を MSW で intercept する。respond で受信回数を観測する。
+const setupSyncEndpoint = () => {
+  let calledCount = 0;
+  server.use(
+    http.post(apiUrl("/pro/sync"), () => {
+      calledCount += 1;
+      return HttpResponse.json(DEFAULT_PRO_STATUS);
+    }),
+  );
+  return {
+    get callCount() {
+      return calledCount;
+    },
+  };
 };
 
 describe("ProScreen", () => {
@@ -102,6 +120,7 @@ describe("ProScreen", () => {
   it("購入成功で syncProStatus + invalidateQueries + /pro/success へ replace", async () => {
     useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     setupSnackbar();
+    const syncTracker = setupSyncEndpoint();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
     purchasePackageMock.mockResolvedValueOnce(undefined);
 
@@ -114,7 +133,7 @@ describe("ProScreen", () => {
       expect(purchasePackageMock).toHaveBeenCalledTimes(1);
     });
     await waitFor(() => {
-      expect(syncProStatusMock).toHaveBeenCalledTimes(1);
+      expect(syncTracker.callCount).toBe(1);
     });
     await waitFor(() => {
       expect(getRouterSpies().replace).toHaveBeenCalledWith("/pro/success");
@@ -124,6 +143,7 @@ describe("ProScreen", () => {
   it("ユーザーキャンセル（userCancelled=true）では snackbar も画面遷移もしない", async () => {
     useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     const showMock = setupSnackbar();
+    const syncTracker = setupSyncEndpoint();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
     purchasePackageMock.mockRejectedValueOnce(
       Object.assign(new Error("cancelled"), { userCancelled: true }),
@@ -138,7 +158,7 @@ describe("ProScreen", () => {
       expect(purchasePackageMock).toHaveBeenCalledTimes(1);
     });
     expect(showMock).not.toHaveBeenCalled();
-    expect(syncProStatusMock).not.toHaveBeenCalled();
+    expect(syncTracker.callCount).toBe(0);
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });
 
