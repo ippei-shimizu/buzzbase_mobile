@@ -14,7 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { syncProStatus } from "@services/proService";
 import { getOfferings, purchasePackage } from "@services/revenueCatService";
@@ -48,6 +48,9 @@ export default function ProScreen() {
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((s) => s.show);
   const proFeatures = useFeatureFlag("pro_features");
+  // fullScreenModal で表示すると SafeAreaView の top inset が反映されないことがあるため、
+  // useSafeAreaInsets で取得して直接 paddingTop に適用する。
+  const insets = useSafeAreaInsets();
 
   const [offering, setOffering] = useState<PurchasesOffering | null>(null);
   const [loadingOfferings, setLoadingOfferings] = useState(true);
@@ -90,7 +93,7 @@ export default function ProScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -167,7 +170,7 @@ export default function ProScreen() {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
