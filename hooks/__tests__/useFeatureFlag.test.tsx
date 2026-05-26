@@ -20,7 +20,7 @@ const createWrapper = () => {
 };
 
 describe("useFeatureFlag", () => {
-  it("API が true を返したら true", async () => {
+  it("API が true を返したら enabled=true / isLoading=false", async () => {
     server.use(
       http.get(apiUrl("/feature_flags"), () =>
         HttpResponse.json({ pro_features: true }),
@@ -31,10 +31,11 @@ describe("useFeatureFlag", () => {
       wrapper: createWrapper(),
     });
 
-    await waitFor(() => expect(result.current).toBe(true));
+    await waitFor(() => expect(result.current.enabled).toBe(true));
+    expect(result.current.isLoading).toBe(false);
   });
 
-  it("API が false を返したら false", async () => {
+  it("API が false を返したら enabled=false / isLoading=false", async () => {
     server.use(
       http.get(apiUrl("/feature_flags"), () =>
         HttpResponse.json({ pro_features: false }),
@@ -45,23 +46,22 @@ describe("useFeatureFlag", () => {
       wrapper: createWrapper(),
     });
 
-    await waitFor(() => expect(result.current).toBe(false));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.enabled).toBe(false);
   });
 
-  it("API がキーを含めず返したら false（未定義は安全側で false 扱い）", async () => {
+  it("API がキーを含めず返したら enabled=false（未定義は安全側）", async () => {
     server.use(http.get(apiUrl("/feature_flags"), () => HttpResponse.json({})));
 
     const { result } = renderHook(() => useFeatureFlag("pro_features"), {
       wrapper: createWrapper(),
     });
 
-    // 初期は data 未取得で false。取得完了後も {} なので false 維持。
-    await waitFor(() => {
-      expect(result.current).toBe(false);
-    });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.enabled).toBe(false);
   });
 
-  it("API が 500 エラーでも false（取得失敗は安全側で false 扱い）", async () => {
+  it("API が 500 エラーでも enabled=false（取得失敗は安全側）", async () => {
     server.use(
       http.get(apiUrl("/feature_flags"), () =>
         HttpResponse.json({ error: "internal" }, { status: 500 }),
@@ -72,9 +72,22 @@ describe("useFeatureFlag", () => {
       wrapper: createWrapper(),
     });
 
-    // 初期から最後まで false のまま
-    await waitFor(() => {
-      expect(result.current).toBe(false);
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.enabled).toBe(false);
+  });
+
+  it("初回マウント直後は isLoading=true", () => {
+    server.use(
+      http.get(apiUrl("/feature_flags"), () =>
+        HttpResponse.json({ pro_features: true }),
+      ),
+    );
+
+    const { result } = renderHook(() => useFeatureFlag("pro_features"), {
+      wrapper: createWrapper(),
     });
+
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.enabled).toBe(false);
   });
 });
