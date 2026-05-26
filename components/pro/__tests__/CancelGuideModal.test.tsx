@@ -3,8 +3,16 @@ import { Linking } from "react-native";
 import { CancelGuideModal } from "../CancelGuideModal";
 
 describe("CancelGuideModal", () => {
+  let openURLSpy: jest.SpyInstance;
+
   beforeEach(() => {
-    jest.restoreAllMocks();
+    openURLSpy = jest
+      .spyOn(Linking, "openURL")
+      .mockResolvedValue(undefined as unknown as boolean);
+  });
+
+  afterEach(() => {
+    openURLSpy.mockRestore();
   });
 
   it("isOpen=false なら本文を描画しない", () => {
@@ -28,9 +36,6 @@ describe("CancelGuideModal", () => {
   });
 
   it("「設定アプリを開く」で Apple サブスクリプション URL を開き、onClose も呼ぶ", () => {
-    const openURLSpy = jest
-      .spyOn(Linking, "openURL")
-      .mockResolvedValue(undefined as unknown as boolean);
     const onClose = jest.fn();
 
     const { getByLabelText } = render(
@@ -46,9 +51,6 @@ describe("CancelGuideModal", () => {
   });
 
   it("「閉じる」で onClose のみ呼ぶ（外部 URL は開かない）", () => {
-    const openURLSpy = jest
-      .spyOn(Linking, "openURL")
-      .mockResolvedValue(undefined as unknown as boolean);
     const onClose = jest.fn();
 
     const { getByLabelText } = render(
