@@ -24,7 +24,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { logout } = useAuth();
   const { openStoreReviewPage } = useStoreReview();
-  const proFeatures = useFeatureFlag("pro_features");
+  const { enabled: proFeatures } = useFeatureFlag("pro_features");
 
   const handleLogout = () => {
     Alert.alert("ログアウト", "ログアウトしますか？", [

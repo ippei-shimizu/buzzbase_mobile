@@ -92,7 +92,7 @@ interface PaywallModalProps {
  */
 export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
   const router = useRouter();
-  const proFeatures = useFeatureFlag("pro_features");
+  const { enabled: proFeatures } = useFeatureFlag("pro_features");
   const copy =
     (PRO_PAYWALL_COPY as Record<string, PaywallCopy>)[feature] ?? DEFAULT_COPY;
 

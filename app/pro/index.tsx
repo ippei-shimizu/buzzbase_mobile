@@ -47,7 +47,8 @@ export default function ProScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((s) => s.show);
-  const proFeatures = useFeatureFlag("pro_features");
+  const { enabled: proFeatures, isLoading: flagLoading } =
+    useFeatureFlag("pro_features");
   // fullScreenModal で表示すると SafeAreaView の top inset が反映されないことがあるため、
   // useSafeAreaInsets で取得して直接 paddingTop に適用する。
   const insets = useSafeAreaInsets();
@@ -72,6 +73,14 @@ export default function ProScreen() {
     };
   }, [proFeatures]);
 
+  // flag 取得中に false 倒しで redirect すると、Pro ユーザーが初回アクセスで /pro を開けない。
+  if (flagLoading) {
+    return (
+      <View style={[styles.container, styles.centerFull]}>
+        <ActivityIndicator size="large" color="#d08000" />
+      </View>
+    );
+  }
   if (!proFeatures) return <Redirect href="/" />;
 
   const handlePurchase = async (pkg: PurchasesPackage) => {
@@ -178,6 +187,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#2E2E2E",
+  },
+  centerFull: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   header: {
     flexDirection: "row",

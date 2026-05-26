@@ -55,7 +55,7 @@ describe("SubscriptionScreen", () => {
   });
 
   it("pro_features=false なら / にリダイレクト（状態取得しない）", () => {
-    useFeatureFlagMock.mockReturnValue(false);
+    useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: false });
     stubProStatus();
 
     renderWithProviders(<SubscriptionScreen />);
@@ -65,7 +65,7 @@ describe("SubscriptionScreen", () => {
   });
 
   it("free 状態のとき「Pro に加入する」ボタンを表示、タップで /pro に push", () => {
-    useFeatureFlagMock.mockReturnValue(true);
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     stubProStatus();
 
     const { getByLabelText } = renderWithProviders(<SubscriptionScreen />);
@@ -75,7 +75,7 @@ describe("SubscriptionScreen", () => {
   });
 
   it("active 状態のとき「Pro に加入する」CTA は出さず、解約方法を見るボタンが出る", () => {
-    useFeatureFlagMock.mockReturnValue(true);
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     stubProStatus({
       subscription: {
         ...DEFAULT_PRO_STATUS.subscription,
@@ -94,7 +94,7 @@ describe("SubscriptionScreen", () => {
   });
 
   it("解約方法を見る → CancelGuideModal が開く", () => {
-    useFeatureFlagMock.mockReturnValue(true);
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     stubProStatus({
       subscription: {
         ...DEFAULT_PRO_STATUS.subscription,

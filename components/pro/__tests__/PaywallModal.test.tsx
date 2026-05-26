@@ -37,7 +37,7 @@ describe("PaywallModal", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     Object.values(getRouterSpies()).forEach((spy) => spy.mockClear());
-    useFeatureFlagMock.mockReturnValue(true);
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
   });
 
   it("Pro 機能を渡すと、その機能に対応したコピーが表示される", () => {
@@ -79,7 +79,7 @@ describe("PaywallModal", () => {
   });
 
   it("pro_features=false のときは isOpen でも何も描画しない（kill switch）", () => {
-    useFeatureFlagMock.mockReturnValue(false);
+    useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: false });
 
     render(
       <PaywallModal

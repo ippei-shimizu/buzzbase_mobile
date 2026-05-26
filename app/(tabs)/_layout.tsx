@@ -13,7 +13,7 @@ import { useProStatus } from "@hooks/useProStatus";
 
 export default function TabLayout() {
   const { isLoggedIn, isLoading } = useAuth();
-  const proFeatures = useFeatureFlag("pro_features");
+  const { enabled: proFeatures } = useFeatureFlag("pro_features");
   const { proStatus } = useProStatus();
 
   if (isLoading || isLoggedIn === undefined) {

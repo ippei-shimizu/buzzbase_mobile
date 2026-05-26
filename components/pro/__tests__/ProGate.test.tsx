@@ -31,7 +31,7 @@ jest.mock("expo-router", () => {
 // PaywallModal が pro_features フラグで kill switch される設計のため、
 // 既存 ProGate テストでは常時 true を返してフラグ取得の API を経由しないようにする。
 jest.mock("@hooks/useFeatureFlag", () => ({
-  useFeatureFlag: jest.fn(() => true),
+  useFeatureFlag: jest.fn(() => ({ enabled: true, isLoading: false })),
 }));
 
 const respondFree = () => {

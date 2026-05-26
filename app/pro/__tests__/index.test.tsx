@@ -78,7 +78,7 @@ describe("ProScreen", () => {
   });
 
   it("pro_features=false なら / にリダイレクト（API も叩かない）", async () => {
-    useFeatureFlagMock.mockReturnValue(false);
+    useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: false });
     setupSnackbar();
 
     renderWithProviders(<ProScreen />);
@@ -89,7 +89,7 @@ describe("ProScreen", () => {
   });
 
   it("pro_features=true で getOfferings を呼び、availablePackages を表示する", async () => {
-    useFeatureFlagMock.mockReturnValue(true);
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     setupSnackbar();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
 
@@ -100,7 +100,7 @@ describe("ProScreen", () => {
   });
 
   it("購入成功で syncProStatus + invalidateQueries + /pro/success へ replace", async () => {
-    useFeatureFlagMock.mockReturnValue(true);
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     setupSnackbar();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
     purchasePackageMock.mockResolvedValueOnce(undefined);
@@ -122,7 +122,7 @@ describe("ProScreen", () => {
   });
 
   it("ユーザーキャンセル（userCancelled=true）では snackbar も画面遷移もしない", async () => {
-    useFeatureFlagMock.mockReturnValue(true);
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     const showMock = setupSnackbar();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
     purchasePackageMock.mockRejectedValueOnce(
@@ -143,7 +143,7 @@ describe("ProScreen", () => {
   });
 
   it("購入エラー（userCancelled でない）では snackbar を出す", async () => {
-    useFeatureFlagMock.mockReturnValue(true);
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     const showMock = setupSnackbar();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
     purchasePackageMock.mockRejectedValueOnce(new Error("network down"));

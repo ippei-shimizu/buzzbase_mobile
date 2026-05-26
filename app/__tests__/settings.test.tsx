@@ -67,7 +67,7 @@ describe("SettingsScreen", () => {
   const originalOS = Platform.OS;
 
   beforeEach(() => {
-    useFeatureFlagMock.mockReturnValue(false);
+    useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: false });
     canOpenSpy = jest.spyOn(Linking, "canOpenURL").mockResolvedValue(true);
     openURLSpy = jest.spyOn(Linking, "openURL").mockResolvedValue(true);
     const spies = getRouterSpies();
@@ -143,7 +143,7 @@ describe("SettingsScreen", () => {
 
   describe("Pro 動線（仮実装）", () => {
     it("pro_features=true のとき「Pro プランを見る」リンクが表示される", () => {
-      useFeatureFlagMock.mockReturnValue(true);
+      useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
 
       const { getByText } = renderWithProviders(<SettingsScreen />);
 
@@ -151,7 +151,7 @@ describe("SettingsScreen", () => {
     });
 
     it("「Pro プランを見る」タップで /pro に push する", () => {
-      useFeatureFlagMock.mockReturnValue(true);
+      useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
 
       const { getByText } = renderWithProviders(<SettingsScreen />);
       fireEvent.press(getByText("Pro プランを見る"));
@@ -160,7 +160,7 @@ describe("SettingsScreen", () => {
     });
 
     it("pro_features=true のとき「サブスクリプション管理」リンクが表示される", () => {
-      useFeatureFlagMock.mockReturnValue(true);
+      useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
 
       const { getByText } = renderWithProviders(<SettingsScreen />);
 
@@ -168,7 +168,7 @@ describe("SettingsScreen", () => {
     });
 
     it("タップで /account/subscription に push する", () => {
-      useFeatureFlagMock.mockReturnValue(true);
+      useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
 
       const { getByText } = renderWithProviders(<SettingsScreen />);
       fireEvent.press(getByText("サブスクリプション管理"));
@@ -179,7 +179,7 @@ describe("SettingsScreen", () => {
     });
 
     it("pro_features=false のときは Pro 関連リンクが描画されない", () => {
-      useFeatureFlagMock.mockReturnValue(false);
+      useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: false });
 
       const { queryByText } = renderWithProviders(<SettingsScreen />);
 
