@@ -14,7 +14,8 @@ import { useProStatus } from "@hooks/useProStatus";
 export default function TabLayout() {
   const { isLoggedIn, isLoading } = useAuth();
   const { enabled: proFeatures } = useFeatureFlag("pro_features");
-  const { proStatus } = useProStatus();
+  // pro_features=false の環境では Banner/Alert を一切表示しないため、/pro/status も叩かない。
+  const { proStatus } = useProStatus({ enabled: proFeatures });
 
   if (isLoading || isLoggedIn === undefined) {
     return (
