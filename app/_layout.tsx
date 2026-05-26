@@ -6,11 +6,16 @@ import * as Linking from "expo-linking";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import { Snackbar } from "@components/ui/Snackbar";
+import {
+  REVENUECAT_API_KEY_ANDROID,
+  REVENUECAT_API_KEY_IOS,
+} from "@constants/revenueCat";
 import { usePushNotifications } from "@hooks/usePushNotifications";
 import { useStoreReview } from "@hooks/useStoreReview";
 import { configureGoogleSignIn } from "@services/googleAuthService";
+import { configureRevenueCat } from "@services/revenueCatService";
 import { queryClient } from "@utils/queryClient";
 
 Sentry.init({
@@ -27,6 +32,10 @@ Sentry.init({
 });
 
 configureGoogleSignIn();
+
+const revenueCatApiKey =
+  Platform.OS === "ios" ? REVENUECAT_API_KEY_IOS : REVENUECAT_API_KEY_ANDROID;
+if (revenueCatApiKey) configureRevenueCat(revenueCatApiKey);
 
 function RootLayoutInner() {
   usePushNotifications();
@@ -97,6 +106,18 @@ function RootLayoutInner() {
         <Stack.Screen
           name="settings"
           options={{ title: "設定", headerBackTitle: "戻る" }}
+        />
+        <Stack.Screen
+          name="pro"
+          options={{
+            headerShown: false,
+            presentation: "fullScreenModal",
+            animation: "slide_from_bottom",
+          }}
+        />
+        <Stack.Screen
+          name="account/subscription/index"
+          options={{ title: "サブスクリプション管理", headerBackTitle: "戻る" }}
         />
       </Stack>
       <Snackbar />
