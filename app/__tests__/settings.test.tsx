@@ -141,7 +141,24 @@ describe("SettingsScreen", () => {
     expect(getRouterSpies().push).toHaveBeenCalledWith("/(profile)/edit");
   });
 
-  describe("Pro サブスクリプション管理リンク", () => {
+  describe("Pro 動線（仮実装）", () => {
+    it("pro_features=true のとき「Pro プランを見る」リンクが表示される", () => {
+      useFeatureFlagMock.mockReturnValue(true);
+
+      const { getByText } = renderWithProviders(<SettingsScreen />);
+
+      expect(getByText("Pro プランを見る")).toBeTruthy();
+    });
+
+    it("「Pro プランを見る」タップで /pro に push する", () => {
+      useFeatureFlagMock.mockReturnValue(true);
+
+      const { getByText } = renderWithProviders(<SettingsScreen />);
+      fireEvent.press(getByText("Pro プランを見る"));
+
+      expect(getRouterSpies().push).toHaveBeenCalledWith("/pro");
+    });
+
     it("pro_features=true のとき「サブスクリプション管理」リンクが表示される", () => {
       useFeatureFlagMock.mockReturnValue(true);
 
@@ -161,11 +178,12 @@ describe("SettingsScreen", () => {
       );
     });
 
-    it("pro_features=false のときはリンクが描画されない", () => {
+    it("pro_features=false のときは Pro 関連リンクが描画されない", () => {
       useFeatureFlagMock.mockReturnValue(false);
 
       const { queryByText } = renderWithProviders(<SettingsScreen />);
 
+      expect(queryByText("Pro プランを見る")).toBeNull();
       expect(queryByText("サブスクリプション管理")).toBeNull();
     });
   });
