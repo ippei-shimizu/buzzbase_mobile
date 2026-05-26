@@ -107,6 +107,18 @@ function RootLayoutInner() {
           name="settings"
           options={{ title: "設定", headerBackTitle: "戻る" }}
         />
+        <Stack.Screen
+          name="pro"
+          options={{
+            headerShown: false,
+            presentation: "fullScreenModal",
+            animation: "slide_from_bottom",
+          }}
+        />
+        <Stack.Screen
+          name="account/subscription/index"
+          options={{ title: "サブスクリプション管理", headerBackTitle: "戻る" }}
+        />
       </Stack>
       <Snackbar />
     </>
