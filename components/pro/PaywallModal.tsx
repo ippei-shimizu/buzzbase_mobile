@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useFeatureFlag } from "@hooks/useFeatureFlag";
 
 interface PaywallCopy {
   title: string;
@@ -91,12 +92,16 @@ interface PaywallModalProps {
  */
 export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
   const router = useRouter();
+  const proFeatures = useFeatureFlag("pro_features");
   const copy =
     (PRO_PAYWALL_COPY as Record<string, PaywallCopy>)[feature] ?? DEFAULT_COPY;
 
+  // Pro リリース前 / kill switch off では加入導線を完全に隠す。
+  if (!proFeatures) return null;
+
   const handleUpgrade = () => {
     onClose();
-    router.push("/(profile)/pro");
+    router.push("/pro");
   };
 
   return (

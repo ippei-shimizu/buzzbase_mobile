@@ -2,12 +2,14 @@
  * PaywallModal コンポーネントの結合テスト。
  *
  * 方針:
- * - feature ごとのコピー表示と、Pro 加入導線 / 閉じる の挙動を確認する。
+ * - feature ごとのコピー表示、Pro 加入導線、閉じる、feature_flag gate を確認する。
  * - expo-router は buildExpoRouterMock で生成して __routerSpies からアサートする。
  */
 import type { RouterSpies } from "../../../__tests__/test-utils/mockExpoRouter";
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { PaywallModal } from "../PaywallModal";
+
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 jest.mock("expo-router", () => {
@@ -17,6 +19,12 @@ jest.mock("expo-router", () => {
   return buildExpoRouterMock();
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
+
+jest.mock("@hooks/useFeatureFlag", () => ({
+  useFeatureFlag: jest.fn(),
+}));
+
+const useFeatureFlagMock = useFeatureFlag as jest.Mock;
 
 const getRouterSpies = (): RouterSpies => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -30,6 +38,7 @@ describe("PaywallModal", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     Object.values(getRouterSpies()).forEach((spy) => spy.mockClear());
+    useFeatureFlagMock.mockReturnValue(true);
   });
 
   it("Pro 機能を渡すと、その機能に対応したコピーが表示される", () => {
@@ -70,13 +79,29 @@ describe("PaywallModal", () => {
     ).not.toBeOnTheScreen();
   });
 
-  it("「Pro プランを見る」ボタンで /(profile)/pro へ遷移し onClose も呼ばれる", () => {
+  it("pro_features=false のときは isOpen でも何も描画しない（kill switch）", () => {
+    useFeatureFlagMock.mockReturnValue(false);
+
+    render(
+      <PaywallModal
+        isOpen
+        onClose={mockOnClose}
+        feature="season_transition_graph"
+      />,
+    );
+
+    expect(
+      screen.queryByText("シーズンを跨いだ成長を可視化"),
+    ).not.toBeOnTheScreen();
+  });
+
+  it("「Pro プランを見る」ボタンで /pro へ遷移し onClose も呼ばれる", () => {
     render(<PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />);
 
     fireEvent.press(screen.getByLabelText("Pro プランを見る"));
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
-    expect(getRouterSpies().push).toHaveBeenCalledWith("/(profile)/pro");
+    expect(getRouterSpies().push).toHaveBeenCalledWith("/pro");
   });
 
   it("「閉じる」ボタンで onClose が呼ばれる", () => {
