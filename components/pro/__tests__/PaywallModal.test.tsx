@@ -10,7 +10,6 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { PaywallModal } from "../PaywallModal";
 
-
 /* eslint-disable @typescript-eslint/no-require-imports */
 jest.mock("expo-router", () => {
   const {
