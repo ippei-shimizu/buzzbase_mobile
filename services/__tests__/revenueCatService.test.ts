@@ -31,7 +31,7 @@ const loadServiceAndMock = (): {
   jest.resetModules();
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const service = require("../revenueCatService") as RevenueCatService;
-   
+
   const Purchases = (
     require("react-native-purchases") as { default: PurchasesMock }
   ).default;
