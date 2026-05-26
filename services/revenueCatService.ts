@@ -57,11 +57,7 @@ export async function getCustomerInfo(): Promise<CustomerInfo | null> {
 export async function purchasePackage(
   pkg: PurchasesPackage,
 ): Promise<CustomerInfo> {
+  if (!configured) throw new Error("RevenueCat is not configured");
   const { customerInfo } = await Purchases.purchasePackage(pkg);
   return customerInfo;
-}
-
-// テスト用: テスト間で configured 状態をリセットするためだけに export。
-export function __resetConfiguredForTest(): void {
-  configured = false;
 }

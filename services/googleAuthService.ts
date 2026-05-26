@@ -38,7 +38,12 @@ export const googleSignIn = async () => {
   const userId = apiResponse.data?.data?.id;
   if (userId) {
     Sentry.setUser({ id: String(userId) });
-    await loginRevenueCat(String(userId));
+    // RevenueCat の alias 付け失敗で Google サインインを失敗扱いにしない。
+    loginRevenueCat(String(userId)).catch((error: unknown) => {
+      Sentry.captureException(error, {
+        tags: { source: "revenue_cat_login" },
+      });
+    });
   }
 
   return apiResponse.data;
