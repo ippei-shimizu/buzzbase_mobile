@@ -12,6 +12,27 @@ jest.mock("expo-secure-store", () => ({
   deleteItemAsync: jest.fn().mockResolvedValue(undefined),
 }));
 
+// react-native-purchases: テストでは no-op。
+// 10.x 系は ESM 依存（@revenuecat/purchases-js-hybrid-mappings 等）を持ち込み、
+// Jest が transform できず他テスト（_layout 経由する画面テスト）も連鎖失敗するため、
+// グローバルにモックして HTTP / ネイティブ呼び出しを完全に遮断する。
+// 個別テストは jest.mock(..., factory) で上書き可能。
+jest.mock("react-native-purchases", () => ({
+  __esModule: true,
+  default: {
+    configure: jest.fn(),
+    logIn: jest.fn().mockResolvedValue(undefined),
+    logOut: jest.fn().mockResolvedValue(undefined),
+    getOfferings: jest.fn().mockResolvedValue({ current: null }),
+    getCustomerInfo: jest
+      .fn()
+      .mockResolvedValue({ entitlements: { active: {} } }),
+    purchasePackage: jest
+      .fn()
+      .mockResolvedValue({ customerInfo: { entitlements: { active: {} } } }),
+  },
+}));
+
 // @sentry/react-native: テストでは no-op
 jest.mock("@sentry/react-native", () => ({
   init: jest.fn(),
