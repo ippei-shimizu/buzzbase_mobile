@@ -6,15 +6,25 @@ import { DEFAULT_PRO_STATUS, type ProStatus } from "../types/pro";
 // フォーカス復帰や画面遷移のたびに /pro/status を叩かないよう 5 分は stale 扱いにする。
 const PRO_STATUS_STALE_TIME_MS = 5 * 60 * 1000;
 
+interface UseProStatusOptions {
+  /**
+   * false の場合は /pro/status を叩かない。
+   * pro_features kill switch が off のときに無駄な API 呼び出しを避ける用途。
+   * 既定: true（後方互換）。
+   */
+  enabled?: boolean;
+}
+
 /**
  * 現ユーザーの Pro 加入状態を取得するフック。
  * API 失敗時・未認証時は DEFAULT_PRO_STATUS（無料状態）を返す。
  */
-export const useProStatus = () => {
+export const useProStatus = ({ enabled = true }: UseProStatusOptions = {}) => {
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
     queryKey: ["pro", "status"],
     queryFn: fetchProStatus,
     staleTime: PRO_STATUS_STALE_TIME_MS,
+    enabled,
   });
 
   const proStatus: ProStatus = data ?? DEFAULT_PRO_STATUS;
