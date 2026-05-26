@@ -89,6 +89,11 @@ export function SubscriptionStatusCard({
   const showCancelGuide =
     onPressCancelGuide !== undefined &&
     (subscription.status === "trial" || subscription.status === "active");
+  // expired / cancelled は「次回更新」ではなく「利用期限」を示す。
+  const metaLabel =
+    subscription.status === "expired" || subscription.status === "cancelled"
+      ? "利用期限"
+      : "次回更新日";
 
   return (
     <View style={styles.card} accessibilityLabel="サブスクリプション状態">
@@ -105,7 +110,7 @@ export function SubscriptionStatusCard({
       <Text style={styles.description}>{content.description}</Text>
 
       <View style={styles.meta}>
-        <Text style={styles.metaLabel}>次回更新 / 期限</Text>
+        <Text style={styles.metaLabel}>{metaLabel}</Text>
         <Text style={styles.metaValue}>
           {formatDate(subscription.expires_at)}
         </Text>
