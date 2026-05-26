@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
+import { loginRevenueCat } from "@services/revenueCatService";
 import axiosInstance from "@utils/axiosInstance";
 
 const isExpoGo = Constants.appOwnership === "expo";
@@ -53,7 +54,10 @@ export const appleSignIn = async () => {
   });
 
   const userId = apiResponse.data?.data?.id;
-  if (userId) Sentry.setUser({ id: String(userId) });
+  if (userId) {
+    Sentry.setUser({ id: String(userId) });
+    await loginRevenueCat(String(userId));
+  }
 
   return apiResponse.data;
 };
