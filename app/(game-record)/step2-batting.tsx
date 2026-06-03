@@ -22,7 +22,13 @@ export default function Step2BattingScreen() {
     setErrors([]);
     submitStep2.mutate(undefined, {
       onSuccess: () => {
-        router.push("/(game-record)/step3-pitching");
+        // 「打撃のみ」を選んだ場合は投手成績をスキップして直接サマリーへ。
+        // それ以外（両方 / 編集モード）は従来通り Step3 へ。
+        const next =
+          store.recordPattern === "batting"
+            ? "/(game-record)/summary"
+            : "/(game-record)/step3-pitching";
+        router.push(next);
       },
       onError: (error) => {
         setErrors([
