@@ -1,5 +1,5 @@
+import type { RecordPattern } from "../../types/gameRecord";
 import type { GameInfoFieldErrors } from "@components/game-record/GameInfoForm";
-import type { RecordPattern } from "@components/game-record/PatternSelector";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -164,7 +164,11 @@ export default function Step1GameInfoScreen() {
         });
         store.setField("stadiumId", stadium.id);
       } catch {
-        // 新規作成に失敗しても遷移はブロックせず、stadium_id を持たないまま送信する。
+        // 新規作成に失敗しても遷移はブロックしない。stadium_id 未解決のまま送信する。
+        useSnackbarStore.getState().show({
+          type: "error",
+          message: "球場の新規登録に失敗しました。球場なしで保存します。",
+        });
       }
     }
 

@@ -15,6 +15,10 @@ export type AppearanceType =
   | "pinch_runner"
   | "no_play";
 
+// 試合記録のパターン分岐。
+// クライアント状態のみ（DB には保存せず、Step1 → Step2 / Step3 の遷移分岐に使う）。
+export type RecordPattern = "batting" | "pitching" | "both";
+
 export interface MatchResultPayload {
   game_result_id: number;
   date_and_time: string;
