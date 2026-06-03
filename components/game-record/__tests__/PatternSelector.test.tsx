@@ -3,8 +3,9 @@
  * 3 ボタン（打撃のみ / 投手のみ / 両方）をタップした時に onSelect が
  * 期待した record pattern キーで呼ばれることを確認する。
  */
+import type { RecordPattern } from "../../../types/gameRecord";
 import { fireEvent, render } from "@testing-library/react-native";
-import { PatternSelector, type RecordPattern } from "../PatternSelector";
+import { PatternSelector } from "../PatternSelector";
 
 describe("PatternSelector", () => {
   it("「打撃結果のみ入力」をタップすると onSelect が 'batting' で呼ばれる", () => {
