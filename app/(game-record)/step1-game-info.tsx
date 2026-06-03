@@ -14,6 +14,7 @@ import { isLineupRequired } from "@constants/appearanceType";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { useProfile } from "@hooks/useProfile";
 import { useMySeasons } from "@hooks/useSeasons";
+import { useCreateStadium, useStadiumSearch } from "@hooks/useStadiums";
 import { getMatchResultFormDefaults } from "@services/matchResultService";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 import { useSnackbarStore } from "../../stores/snackbarStore";
@@ -30,6 +31,8 @@ export default function Step1GameInfoScreen() {
   const store = useGameRecordStore();
   const { profile } = useProfile();
   const { seasons } = useMySeasons();
+  const { stadiums } = useStadiumSearch(store.stadiumName);
+  const { createStadium } = useCreateStadium();
   const [fieldErrors, setFieldErrors] = useState<GameInfoFieldErrors>({});
   const [isInitializing, setIsInitializing] = useState(false);
   const hasInitialized = useRef(false);
@@ -110,7 +113,7 @@ export default function Step1GameInfoScreen() {
 
   // 編集モードと未出場 (no_play) は「次へ」ボタン経由の固定遷移、
   // 新規作成時は GameInfoForm 下部の PatternSelector からパターンを選んで遷移する。
-  const runSubmit = (pattern: RecordPattern | null) => {
+  const runSubmit = async (pattern: RecordPattern | null) => {
     if (submitStep1.isPending) return;
 
     const errors: GameInfoFieldErrors = {};
@@ -150,6 +153,19 @@ export default function Step1GameInfoScreen() {
     if (pattern) {
       store.setField("recordPattern", pattern);
     }
+
+    // 球場名が入っているのに stadium_id 未解決なら、submit 前に新規球場を作って ID を確定させる。
+    if (store.stadiumName.trim() && store.stadiumId === null) {
+      try {
+        const stadium = await createStadium({
+          name: store.stadiumName.trim(),
+        });
+        store.setField("stadiumId", stadium.id);
+      } catch {
+        // 新規作成に失敗しても遷移はブロックせず、stadium_id を持たないまま送信する。
+      }
+    }
+
     submitStep1.mutate(undefined, {
       onSuccess: () => {
         const next = (() => {
@@ -215,6 +231,7 @@ export default function Step1GameInfoScreen() {
         tournamentId={store.tournamentId}
         tournaments={tournamentsQuery.data ?? []}
         seasonName={store.seasonName}
+        stadiums={stadiums}
         seasons={seasons}
         teams={teamsQuery.data ?? []}
         positions={positionsQuery.data ?? []}

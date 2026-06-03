@@ -24,8 +24,6 @@ interface Props {
   onSelect: (value: string | number, label: string) => void;
   onCustomInput: (text: string) => void;
   placeholder?: string;
-  searchInputPlaceholder?: string;
-  emptyMessageText?: string;
 }
 
 export function SearchablePicker({
@@ -35,8 +33,6 @@ export function SearchablePicker({
   onSelect,
   onCustomInput,
   placeholder = "検索または入力",
-  searchInputPlaceholder = "チーム名を入力",
-  emptyMessageText = "該当するチームがありません",
 }: Props) {
   const [visible, setVisible] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -106,7 +102,7 @@ export function SearchablePicker({
                   style={styles.searchInput}
                   value={searchText}
                   onChangeText={setSearchText}
-                  placeholder={searchInputPlaceholder}
+                  placeholder="チーム名を入力"
                   placeholderTextColor="#71717A"
                   autoFocus
                 />
@@ -126,7 +122,9 @@ export function SearchablePicker({
                 ListEmptyComponent={
                   searchText.trim() ? (
                     <View style={styles.emptyContainer}>
-                      <Text style={styles.emptyText}>{emptyMessageText}</Text>
+                      <Text style={styles.emptyText}>
+                        該当するチームがありません
+                      </Text>
                     </View>
                   ) : null
                 }
