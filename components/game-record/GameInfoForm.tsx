@@ -1,4 +1,4 @@
-import type { AppearanceType, Position, Team } from "../../types/gameRecord";
+import type { AppearanceType, Position, Team , RecordPattern } from "../../types/gameRecord";
 import type { Season } from "../../types/season";
 import type { Stadium } from "../../types/stadium";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,10 +18,7 @@ import {
   Platform,
   Modal,
 } from "react-native";
-import {
-  PatternSelector,
-  type RecordPattern,
-} from "@components/game-record/PatternSelector";
+import { PatternSelector } from "@components/game-record/PatternSelector";
 import { Button } from "@components/ui/Button";
 import { SelectPicker } from "@components/ui/SelectPicker";
 import {
