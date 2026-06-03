@@ -41,6 +41,7 @@ export default function GameRecordLayout() {
           ),
         }}
       />
+      <Stack.Screen name="pattern" options={{ title: "記録パターンの選択" }} />
       <Stack.Screen name="step2-batting" options={{ title: "打撃成績" }} />
       <Stack.Screen name="step3-pitching" options={{ title: "投手成績" }} />
       <Stack.Screen
