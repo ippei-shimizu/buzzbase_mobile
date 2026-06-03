@@ -17,6 +17,10 @@ import {
   Platform,
   Modal,
 } from "react-native";
+import {
+  PatternSelector,
+  type RecordPattern,
+} from "@components/game-record/PatternSelector";
 import { StadiumSelect } from "@components/game-record/StadiumSelect";
 import { Button } from "@components/ui/Button";
 import { SelectPicker } from "@components/ui/SelectPicker";
@@ -71,6 +75,9 @@ interface Props {
   fieldErrors: GameInfoFieldErrors;
   onFieldChange: (field: string, value: string | number | null) => void;
   onSubmit: () => void;
+  // appearanceType !== "no_play" の場合に末尾へ表示する記録パターン選択 UI のハンドラ。
+  // 編集モードでは未指定にして既存の onSubmit Button を表示する。
+  onPatternSelect?: (pattern: RecordPattern) => void;
 }
 
 // 打順の選択肢。1〜9番／DH に加え、代打・代走・途中出場・未出場ケース向けに「なし」を先頭に追加。
@@ -158,6 +165,7 @@ export function GameInfoForm({
   fieldErrors,
   onFieldChange,
   onSubmit,
+  onPatternSelect,
 }: Props) {
   const [showMyTeamSuggestions, setShowMyTeamSuggestions] = useState(false);
   const [showOpponentTeamSuggestions, setShowOpponentTeamSuggestions] =
@@ -711,15 +719,19 @@ export function GameInfoForm({
         />
       </View>
 
-      <Button
-        title={
-          appearanceType === "no_play" ? "試合結果まとめへ" : "打撃成績入力へ"
-        }
-        onPress={onSubmit}
-        loading={isSubmitting}
-        disabled={isSubmitting}
-        style={{ marginBottom: 40 }}
-      />
+      {appearanceType === "no_play" || !onPatternSelect ? (
+        <Button
+          title={
+            appearanceType === "no_play" ? "試合結果まとめへ" : "打撃成績入力へ"
+          }
+          onPress={onSubmit}
+          loading={isSubmitting}
+          disabled={isSubmitting}
+          style={{ marginBottom: 40 }}
+        />
+      ) : (
+        <PatternSelector onSelect={onPatternSelect} disabled={isSubmitting} />
+      )}
     </ScrollView>
   );
 }
