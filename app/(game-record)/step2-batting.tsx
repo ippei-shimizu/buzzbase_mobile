@@ -21,6 +21,12 @@ export default function Step2BattingScreen() {
     store.setField(field as keyof typeof store, value as never);
   };
 
+  const handleError = (error: unknown) => {
+    setErrors([
+      error instanceof Error ? error.message : "エラーが発生しました",
+    ]);
+  };
+
   const handleSubmit = () => {
     if (submitStep2.isPending) return;
 
@@ -35,11 +41,7 @@ export default function Step2BattingScreen() {
             : "/(game-record)/step3-pitching";
         router.push(next);
       },
-      onError: (error) => {
-        setErrors([
-          error instanceof Error ? error.message : "エラーが発生しました",
-        ]);
-      },
+      onError: handleError,
     });
   };
 
@@ -51,11 +53,7 @@ export default function Step2BattingScreen() {
       onSuccess: () => {
         router.push("/(game-record)/summary");
       },
-      onError: (error) => {
-        setErrors([
-          error instanceof Error ? error.message : "エラーが発生しました",
-        ]);
-      },
+      onError: handleError,
     });
   };
 
