@@ -149,10 +149,14 @@ export default function Step1GameInfoScreen() {
     submitStep1.mutate(undefined, {
       onSuccess: () => {
         // 未出場の場合は打撃・投手成績の入力を飛ばして直接サマリー画面へ。
-        const next =
-          store.appearanceType === "no_play"
-            ? "/(game-record)/summary"
-            : "/(game-record)/step2-batting";
+        // それ以外は 3 パターン分岐画面へ進ませ、ユーザーに記録対象を選ばせる。
+        // 編集モードでは分岐選択を求めず、既存の打撃成績画面へ直接進む（recordPattern は null のまま）。
+        const next = (() => {
+          if (store.appearanceType === "no_play")
+            return "/(game-record)/summary";
+          if (store.isEditMode) return "/(game-record)/step2-batting";
+          return "/(game-record)/pattern";
+        })();
         router.push(next);
       },
       onError: (error) => {
@@ -211,6 +215,8 @@ export default function Step1GameInfoScreen() {
         positions={positionsQuery.data ?? []}
         inningFormat={store.inningFormat}
         appearanceType={store.appearanceType}
+        stadiumId={store.stadiumId}
+        stadiumName={store.stadiumName}
         isSubmitting={submitStep1.isPending}
         fieldErrors={fieldErrors}
         onFieldChange={handleFieldChange}
