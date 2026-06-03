@@ -79,6 +79,12 @@ export default function Step2BattingScreen() {
         onFieldChange={handleFieldChange}
         onSubmit={handleSubmit}
         onSkipPitching={handleSkipPitching}
+        submitLabel={
+          store.recordPattern === "batting"
+            ? "試合結果まとめへ"
+            : "投手結果入力へ"
+        }
+        showSkipButton={store.recordPattern !== "batting"}
       />
     </KeyboardAvoidingView>
   );
