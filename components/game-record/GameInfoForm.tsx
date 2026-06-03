@@ -438,7 +438,11 @@ export function GameInfoForm({
             >
               <View style={styles.suggestionsOverlay} />
             </TouchableWithoutFeedback>
-            <View style={styles.suggestions}>
+            <ScrollView
+              style={styles.suggestions}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+            >
               {filteredTournaments.map((item) => (
                 <TouchableOpacity
                   key={item.id}
@@ -453,7 +457,7 @@ export function GameInfoForm({
                   <Text style={styles.suggestionText}>{item.name}</Text>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
           </>
         )}
 
@@ -809,6 +813,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     maxHeight: 200,
     zIndex: 10,
+    // iOS の View はデフォルト overflow: visible で、ScrollView 化していても
+    // 角丸を効かせるため明示的に切る。
+    overflow: "hidden",
   },
   suggestionItem: {
     paddingVertical: 10,
