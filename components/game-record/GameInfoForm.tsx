@@ -17,6 +17,7 @@ import {
   Platform,
   Modal,
 } from "react-native";
+import { StadiumSelect } from "@components/game-record/StadiumSelect";
 import { Button } from "@components/ui/Button";
 import { SelectPicker } from "@components/ui/SelectPicker";
 import {
@@ -63,6 +64,9 @@ interface Props {
   positions: Position[];
   inningFormat: number;
   appearanceType: AppearanceType;
+  // 球場は任意項目。
+  stadiumId: number | null;
+  stadiumName: string;
   isSubmitting: boolean;
   fieldErrors: GameInfoFieldErrors;
   onFieldChange: (field: string, value: string | number | null) => void;
@@ -148,6 +152,8 @@ export function GameInfoForm({
   positions,
   inningFormat,
   appearanceType,
+  stadiumId: _stadiumId,
+  stadiumName,
   isSubmitting,
   fieldErrors,
   onFieldChange,
@@ -543,6 +549,18 @@ export function GameInfoForm({
           },
           showOpponentTeamSuggestions,
         )}
+
+        <View style={styles.divider} />
+
+        {/* 球場（任意項目）。検索 → 既存マスタから選択 or 新規追加。 */}
+        <StadiumSelect
+          stadiumId={_stadiumId}
+          stadiumName={stadiumName}
+          onSelect={({ id, name }) => {
+            onFieldChange("stadiumId", id);
+            onFieldChange("stadiumName", name);
+          }}
+        />
 
         <View style={styles.divider} />
 

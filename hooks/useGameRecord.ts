@@ -116,6 +116,8 @@ export const useGameRecord = () => {
         memo: store.memo,
         inning_format: store.inningFormat,
         appearance_type: store.appearanceType,
+        // 球場は任意項目。未選択時は null を送って明示的に外す（編集モードで解除可能にする）。
+        stadium_id: store.stadiumId,
         ...(tournamentId ? { tournament_id: tournamentId } : {}),
       };
 

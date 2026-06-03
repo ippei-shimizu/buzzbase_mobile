@@ -25,6 +25,8 @@ export const buildMatchResult = (
   my_team_name: "テストイーグルス",
   opponent_team_name: "テストライオンズ",
   tournament_name: null,
+  stadium_id: null,
+  stadium_name: null,
   ...overrides,
 });
 
