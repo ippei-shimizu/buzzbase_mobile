@@ -1,5 +1,6 @@
 import type { AppearanceType, Position, Team } from "../../types/gameRecord";
 import type { Season } from "../../types/season";
+import type { Stadium } from "../../types/stadium";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, {
   type DateTimePickerEvent,
@@ -21,7 +22,6 @@ import {
   PatternSelector,
   type RecordPattern,
 } from "@components/game-record/PatternSelector";
-import { StadiumSelect } from "@components/game-record/StadiumSelect";
 import { Button } from "@components/ui/Button";
 import { SelectPicker } from "@components/ui/SelectPicker";
 import {
@@ -63,6 +63,7 @@ interface Props {
   tournamentId: number | null;
   tournaments: { id: number; name: string }[];
   seasonName: string;
+  stadiums: Stadium[];
   seasons: Season[];
   teams: Team[];
   positions: Position[];
@@ -154,6 +155,7 @@ export function GameInfoForm({
   tournamentId: _tournamentId,
   tournaments,
   seasonName,
+  stadiums,
   seasons,
   teams,
   positions,
@@ -173,6 +175,7 @@ export function GameInfoForm({
   const [showTournamentSuggestions, setShowTournamentSuggestions] =
     useState(false);
   const [showSeasonSuggestions, setShowSeasonSuggestions] = useState(false);
+  const [showStadiumSuggestions, setShowStadiumSuggestions] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -244,6 +247,10 @@ export function GameInfoForm({
         : [],
     [seasonName, seasons],
   );
+
+  // 球場サジェスト。stadiums は親 (useStadiumSearch) が stadiumName を q として
+  // 既にサーバ側で絞り込んだ結果が渡されるため、ここでは表示件数のみ制御する。
+  const filteredStadiums = useMemo(() => stadiums.slice(0, 5), [stadiums]);
 
   // 代打／代走／途中出場／未出場のときに守備位置を「なし」（未選択）にできるよう、
   // 先頭に空値の選択肢を入れる。先発の必須バリデーションは Step1 画面側で値の有無を見て行う。
@@ -427,6 +434,58 @@ export function GameInfoForm({
 
         <View style={styles.divider} />
 
+        {/* 球場 */}
+        <FormRow label="球場">
+          <View style={styles.comboBox}>
+            <RNTextInput
+              style={styles.comboInput}
+              value={stadiumName}
+              onChangeText={(v) => {
+                onFieldChange("stadiumName", v);
+                onFieldChange("stadiumId", null);
+                setShowStadiumSuggestions(true);
+              }}
+              onFocus={() => setShowStadiumSuggestions(true)}
+              onBlur={() =>
+                setTimeout(() => setShowStadiumSuggestions(false), 200)
+              }
+              placeholder="球場名を入力"
+              placeholderTextColor="#71717A"
+            />
+            <Ionicons name="chevron-down" size={16} color="#A1A1AA" />
+          </View>
+        </FormRow>
+        {showStadiumSuggestions && filteredStadiums.length > 0 && (
+          <>
+            <TouchableWithoutFeedback
+              onPress={() => {
+                setShowStadiumSuggestions(false);
+                Keyboard.dismiss();
+              }}
+            >
+              <View style={styles.suggestionsOverlay} />
+            </TouchableWithoutFeedback>
+            <View style={styles.suggestions}>
+              {filteredStadiums.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.suggestionItem}
+                  onPress={() => {
+                    onFieldChange("stadiumName", item.name);
+                    onFieldChange("stadiumId", item.id);
+                    setShowStadiumSuggestions(false);
+                    Keyboard.dismiss();
+                  }}
+                >
+                  <Text style={styles.suggestionText}>{item.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
+
+        <View style={styles.divider} />
+
         {/* 大会名 */}
         <FormRow label="大会名">
           <View style={styles.comboBox}>
@@ -604,18 +663,6 @@ export function GameInfoForm({
           },
           showOpponentTeamSuggestions,
         )}
-
-        <View style={styles.divider} />
-
-        {/* 球場（任意項目）。検索 → 既存マスタから選択 or 新規追加。 */}
-        <StadiumSelect
-          stadiumId={_stadiumId}
-          stadiumName={stadiumName}
-          onSelect={({ id, name }) => {
-            onFieldChange("stadiumId", id);
-            onFieldChange("stadiumName", name);
-          }}
-        />
 
         <View style={styles.divider} />
 
