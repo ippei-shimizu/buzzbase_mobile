@@ -29,6 +29,8 @@ export interface MatchResultPayload {
   tournament_id?: number;
   inning_format: number;
   appearance_type: AppearanceType;
+  // 球場は任意項目。未選択時は null を送信して明示的に外せる。
+  stadium_id: number | null;
 }
 
 export interface BattingAveragePayload {
