@@ -1,4 +1,5 @@
 import type { GameInfoFieldErrors } from "@components/game-record/GameInfoForm";
+import type { RecordPattern } from "@components/game-record/PatternSelector";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -107,7 +108,9 @@ export default function Step1GameInfoScreen() {
     }
   };
 
-  const handleSubmit = () => {
+  // 編集モードと未出場 (no_play) は「次へ」ボタン経由の固定遷移、
+  // 新規作成時は GameInfoForm 下部の PatternSelector からパターンを選んで遷移する。
+  const runSubmit = (pattern: RecordPattern | null) => {
     if (submitStep1.isPending) return;
 
     const errors: GameInfoFieldErrors = {};
@@ -144,16 +147,16 @@ export default function Step1GameInfoScreen() {
     }
 
     setFieldErrors({});
+    if (pattern) {
+      store.setField("recordPattern", pattern);
+    }
     submitStep1.mutate(undefined, {
       onSuccess: () => {
-        // 未出場の場合は打撃・投手成績の入力を飛ばして直接サマリー画面へ。
-        // それ以外は 3 パターン分岐画面へ進ませ、ユーザーに記録対象を選ばせる。
-        // 編集モードでは分岐選択を求めず、既存の打撃成績画面へ直接進む（recordPattern は null のまま）。
         const next = (() => {
           if (store.appearanceType === "no_play")
             return "/(game-record)/summary";
-          if (store.isEditMode) return "/(game-record)/step2-batting";
-          return "/(game-record)/pattern";
+          if (pattern === "pitching") return "/(game-record)/step3-pitching";
+          return "/(game-record)/step2-batting";
         })();
         router.push(next);
       },
@@ -166,6 +169,10 @@ export default function Step1GameInfoScreen() {
       },
     });
   };
+
+  // no_play / 編集モードでは GameInfoForm 下部に従来の Button が出る。
+  const handleSubmit = () => runSubmit(null);
+  const handlePatternSelect = (pattern: RecordPattern) => runSubmit(pattern);
 
   if (isInitializing || createGameResultMutation.isPending) {
     return (
@@ -219,6 +226,7 @@ export default function Step1GameInfoScreen() {
         fieldErrors={fieldErrors}
         onFieldChange={handleFieldChange}
         onSubmit={handleSubmit}
+        onPatternSelect={store.isEditMode ? undefined : handlePatternSelect}
       />
     </KeyboardAvoidingView>
   );
