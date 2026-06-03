@@ -23,6 +23,8 @@ export const useStadiumSearch = (q: string, prefectureId?: number) => {
       { q: params.q ?? "", prefectureId: prefectureId ?? null },
     ],
     queryFn: () => searchStadiums(params),
+    // 入力前に全件取得 API を叩かないよう、検索語があるときだけ発火させる。
+    enabled: !!params.q,
   });
 
   return {

@@ -1,4 +1,8 @@
-import type { AppearanceType, BattingBox } from "../types/gameRecord";
+import type {
+  AppearanceType,
+  BattingBox,
+  RecordPattern,
+} from "../types/gameRecord";
 import type { GameResult } from "../types/gameResult";
 import { create } from "zustand";
 import {
@@ -55,7 +59,7 @@ interface GameRecordState {
   stadiumId: number | null;
   stadiumName: string;
   // 記録パターン分岐は DB に保存せずクライアント状態のみで保持する。
-  recordPattern: "batting" | "pitching" | "both" | null;
+  recordPattern: RecordPattern | null;
 
   // Step2: 打撃成績
   battingBoxes: BattingBox[];
@@ -133,7 +137,7 @@ const initialState = {
 
   stadiumId: null,
   stadiumName: "",
-  recordPattern: null as "batting" | "pitching" | "both" | null,
+  recordPattern: null as RecordPattern | null,
 
   battingBoxes: [{ id: 0, position: 0, result: 0, text: "--" }],
   runsBattedIn: 0,

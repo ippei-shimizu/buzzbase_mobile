@@ -1,7 +1,6 @@
+import type { RecordPattern } from "../../types/gameRecord";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
-export type RecordPattern = "batting" | "pitching" | "both";
 
 interface Props {
   onSelect: (pattern: RecordPattern) => void;
