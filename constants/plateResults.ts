@@ -47,6 +47,10 @@ export interface NoDirectionOption {
   plate_result_id: PlateResultId;
 }
 
+// TODO: 空振り三振と見逃し三振の API 上の区別を導入する。
+// 現状は plate_results マスタが両者を同一 id (=13) で持つため、ボタンを分けても
+// 保存値が同一になり、分析（見逃し率など）で振り分けられない。バックエンドに
+// swing_type 相当のカラムが追加されたら、この配列と PlateAppearanceV2Input を更新する。
 export const NO_DIRECTION_RESULT_OPTIONS: readonly NoDirectionOption[] = [
   { label: "空振り三振", plate_result_id: PLATE_RESULT_IDS.STRIKEOUT },
   { label: "見逃し三振", plate_result_id: PLATE_RESULT_IDS.STRIKEOUT },
