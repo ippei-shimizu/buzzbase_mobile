@@ -181,6 +181,10 @@ export default function Step1GameInfoScreen() {
           if (store.appearanceType === "no_play")
             return "/(game-record)/summary";
           if (pattern === "pitching") return "/(game-record)/step3-pitching";
+          // 新規モードで打撃を含むパターン（batting / both）は v2 ステップ式ウィザードへ。
+          // 編集モード（pattern=null）と未確定パターンは既存 v1 BattingForm にフォールバック。
+          if (pattern === "batting" || pattern === "both")
+            return "/(game-record)/plate-appearances";
           return "/(game-record)/step2-batting";
         })();
         router.push(next);
