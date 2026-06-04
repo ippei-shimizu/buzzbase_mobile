@@ -33,6 +33,7 @@ interface GameRecordState {
 
   // Step1: 試合情報
   seasonId: number | null;
+  seasonName: string;
   tournamentId: number | null;
   tournamentName: string;
   date: string;
@@ -101,6 +102,7 @@ const initialState = {
   pitchingResultId: null,
 
   seasonId: null,
+  seasonName: "",
   tournamentId: null,
   tournamentName: "",
   date: (() => {
@@ -257,6 +259,7 @@ export const useGameRecordStore = create<GameRecordState>((set, get) => ({
       battingAverageId: ba?.id ?? null,
       pitchingResultId: pr?.id ?? null,
       seasonId: game.season_id,
+      seasonName: game.season_name ?? "",
 
       tournamentId: mr.tournament_id,
       tournamentName: mr.tournament_name ?? "",

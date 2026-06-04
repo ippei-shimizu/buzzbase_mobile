@@ -205,7 +205,7 @@ export default function Step1GameInfoScreen() {
         tournamentName={store.tournamentName}
         tournamentId={store.tournamentId}
         tournaments={tournamentsQuery.data ?? []}
-        seasonId={store.seasonId}
+        seasonName={store.seasonName}
         seasons={seasons}
         teams={teamsQuery.data ?? []}
         positions={positionsQuery.data ?? []}

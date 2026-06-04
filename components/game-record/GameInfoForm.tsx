@@ -57,7 +57,7 @@ interface Props {
   tournamentName: string;
   tournamentId: number | null;
   tournaments: { id: number; name: string }[];
-  seasonId: number | null;
+  seasonName: string;
   seasons: Season[];
   teams: Team[];
   positions: Position[];
@@ -142,7 +142,7 @@ export function GameInfoForm({
   tournamentName,
   tournamentId: _tournamentId,
   tournaments,
-  seasonId,
+  seasonName,
   seasons,
   teams,
   positions,
@@ -158,6 +158,7 @@ export function GameInfoForm({
     useState(false);
   const [showTournamentSuggestions, setShowTournamentSuggestions] =
     useState(false);
+  const [showSeasonSuggestions, setShowSeasonSuggestions] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -220,19 +221,21 @@ export function GameInfoForm({
     [tournamentName, tournaments],
   );
 
+  const filteredSeasons = useMemo(
+    () =>
+      seasonName.length > 0
+        ? seasons.filter((s) =>
+            s.name.toLowerCase().includes(seasonName.toLowerCase()),
+          )
+        : [],
+    [seasonName, seasons],
+  );
+
   // 代打／代走／途中出場／未出場のときに守備位置を「なし」（未選択）にできるよう、
   // 先頭に空値の選択肢を入れる。先発の必須バリデーションは Step1 画面側で値の有無を見て行う。
   const positionItems = [
     { label: "なし", value: "" },
     ...positions.map((p) => ({ label: p.name, value: p.name })),
-  ];
-
-  const seasonItems = [
-    { label: "シーズン名を入力", value: "" },
-    ...seasons.map((s) => ({
-      label: s.name,
-      value: String(s.id),
-    })),
   ];
 
   const renderTeamSuggestions = (
@@ -463,22 +466,62 @@ export function GameInfoForm({
 
         <View style={styles.divider} />
 
-        {/* シーズン */}
-        {seasons.length > 0 && (
+        {/* シーズン: 既存選択 / 新規入力どちらにも対応するコンボボックス。
+            未選択かつ入力ありの場合は Step1 送信時に新規シーズンを作成する。 */}
+        <FormRow label="シーズン">
+          <View style={styles.comboBox}>
+            <RNTextInput
+              style={styles.comboInput}
+              value={seasonName}
+              onChangeText={(v) => {
+                onFieldChange("seasonName", v);
+                onFieldChange("seasonId", null);
+                setShowSeasonSuggestions(true);
+              }}
+              onFocus={() => setShowSeasonSuggestions(true)}
+              onBlur={() =>
+                setTimeout(() => setShowSeasonSuggestions(false), 200)
+              }
+              placeholder="シーズン名を入力"
+              placeholderTextColor="#71717A"
+            />
+            <Ionicons name="chevron-down" size={16} color="#A1A1AA" />
+          </View>
+        </FormRow>
+        {showSeasonSuggestions && filteredSeasons.length > 0 && (
           <>
-            <FormRow label="シーズン">
-              <SelectPicker
-                items={seasonItems}
-                selectedValue={seasonId ? String(seasonId) : ""}
-                onSelect={(v) =>
-                  onFieldChange("seasonId", v ? Number(v) : null)
-                }
-                compact
-              />
-            </FormRow>
-            <View style={styles.divider} />
+            <TouchableWithoutFeedback
+              onPress={() => {
+                setShowSeasonSuggestions(false);
+                Keyboard.dismiss();
+              }}
+            >
+              <View style={styles.suggestionsOverlay} />
+            </TouchableWithoutFeedback>
+            <ScrollView
+              style={styles.suggestions}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+            >
+              {filteredSeasons.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.suggestionItem}
+                  onPress={() => {
+                    onFieldChange("seasonName", item.name);
+                    onFieldChange("seasonId", item.id);
+                    setShowSeasonSuggestions(false);
+                    Keyboard.dismiss();
+                  }}
+                >
+                  <Text style={styles.suggestionText}>{item.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </>
         )}
+
+        <View style={styles.divider} />
 
         {/* 自チーム */}
         <FormRow label="自チーム" required error={fieldErrors.myTeamName}>
