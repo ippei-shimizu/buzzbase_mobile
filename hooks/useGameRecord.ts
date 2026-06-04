@@ -131,6 +131,11 @@ export const useGameRecord = () => {
 
       if (store.matchResultId) {
         await updateMatchResult(store.matchResultId, matchResultPayload);
+        // updateMatchResult は match_result テーブルのみ更新するため、
+        // game_result.season_id は別途明示的に更新する必要がある。
+        await updateGameResult(store.gameResultId!, {
+          season_id: seasonId,
+        });
       } else {
         const matchResult = await createMatchResult(matchResultPayload);
         store.setField("matchResultId", matchResult.id);
