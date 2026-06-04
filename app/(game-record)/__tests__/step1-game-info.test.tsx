@@ -149,12 +149,15 @@ describe("Step1GameInfoScreen / バリデーション", () => {
       ),
     );
 
-    const { getByText, findByText } = renderWithProviders(
+    const { getByText, findByRole } = renderWithProviders(
       <Step1GameInfoScreen />,
     );
 
-    // 初期化完了を待つ（ボタン文言が表示されたら描画OK）
-    const submitButton = await findByText("打撃成績入力へ");
+    // 新規入力モードでは下部に PatternSelector が表示されるため、3 ボタンのうち
+    // 「打撃結果のみ入力」を押下して送信フロー（runSubmit）に入る。
+    const submitButton = await findByRole("button", {
+      name: "打撃結果のみ入力",
+    });
 
     fireEvent.press(submitButton);
 
