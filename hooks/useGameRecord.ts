@@ -26,6 +26,7 @@ import {
   updatePlateAppearance,
 } from "../services/plateAppearanceService";
 import { getCurrentUserProfile } from "../services/profileService";
+import { createSeason } from "../services/seasonService";
 import { useGameRecordStore } from "../stores/gameRecordStore";
 
 export const useGameRecord = () => {
@@ -101,6 +102,15 @@ export const useGameRecord = () => {
         store.setField("tournamentId", tournament.id);
       }
 
+      // シーズン名の処理: 既存選択（seasonId 有）はそのまま、未選択で名前のみ入力されていれば新規作成する
+      let seasonId = store.seasonId;
+      if (!seasonId && store.seasonName.trim()) {
+        const season = await createSeason({ name: store.seasonName.trim() });
+        seasonId = season.id;
+        store.setField("seasonId", season.id);
+        queryClient.invalidateQueries({ queryKey: ["seasons"] });
+      }
+
       const matchResultPayload = {
         game_result_id: store.gameResultId!,
         date_and_time: `${store.date}T00:00:00`,
@@ -127,7 +137,7 @@ export const useGameRecord = () => {
 
         await updateGameResult(store.gameResultId!, {
           match_result_id: matchResult.id,
-          season_id: store.seasonId,
+          season_id: seasonId,
         });
       }
     },
