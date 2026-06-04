@@ -104,6 +104,9 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
     set({ [key]: next } as Pick<BattingRecordState, CounterKey>);
   },
 
+  // 呼び出し前に必ず `isBattingRecordReadyToSubmit` でガードする。React のイベント
+  // ハンドラ内で throw された Error は Error Boundary に届かないため、UI 側は
+  // 完了ボタンの disabled 制御と二重チェックで未確定状態のリクエストを防ぐ。
   toCreatePayload: (gameResultId) => {
     const state = get();
     if (state.batterBoxNumber === null || state.plateResultId === null) {
@@ -131,3 +134,12 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
 
   reset: () => set({ ...initialState }),
 }));
+
+/**
+ * 入力が API 送信可能な状態か（`batterBoxNumber` と `plateResultId` が確定しているか）を判定する。
+ * UI 側はこれを「この打席を完了」ボタンの `disabled` 制御に使い、
+ * `toCreatePayload` が throw する条件に到達しないようにする。
+ */
+export const isBattingRecordReadyToSubmit = (
+  state: Pick<BattingRecordState, "batterBoxNumber" | "plateResultId">,
+): boolean => state.batterBoxNumber !== null && state.plateResultId !== null;
