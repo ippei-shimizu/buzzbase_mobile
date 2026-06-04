@@ -481,6 +481,9 @@ export function GameInfoForm({
                 setShowSeasonSuggestions(true);
               }}
               onFocus={() => setShowSeasonSuggestions(true)}
+              onBlur={() =>
+                setTimeout(() => setShowSeasonSuggestions(false), 200)
+              }
               placeholder="シーズン名を入力"
               placeholderTextColor="#71717A"
             />
