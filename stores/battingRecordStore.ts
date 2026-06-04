@@ -1,7 +1,7 @@
 import type {
   HitType,
   OutType,
-  PlateAppearanceV2CreatePayload,
+  PlateAppearanceV2Payload,
   PlateAppearanceV2Input,
 } from "../types/plateAppearance";
 import { create } from "zustand";
@@ -45,7 +45,7 @@ interface BattingRecordState {
     options?: { outType?: OutType | null; hitType?: HitType | null },
   ) => void;
   setCounter: (key: CounterKey, value: number) => void;
-  toCreatePayload: (gameResultId: number) => PlateAppearanceV2CreatePayload;
+  toCreatePayload: (gameResultId: number) => PlateAppearanceV2Payload;
   reset: () => void;
 }
 

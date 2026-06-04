@@ -1,7 +1,7 @@
 import type {
   PlateAppearanceListResponse,
   PlateAppearanceV2,
-  PlateAppearanceV2CreatePayload,
+  PlateAppearanceV2Payload,
 } from "../types/plateAppearance";
 import { API_BASE_URL } from "@constants/api";
 import axiosInstance from "@utils/axiosInstance";
@@ -16,7 +16,7 @@ const V2_PLATE_APPEARANCES_URL = `${API_BASE_URL}/api/v2/plate_appearances`;
  * @returns 作成された打席（マスタオブジェクトを include した形）
  */
 export const createPlateAppearanceV2 = async (
-  payload: PlateAppearanceV2CreatePayload,
+  payload: PlateAppearanceV2Payload,
 ): Promise<PlateAppearanceV2> => {
   const response = await axiosInstance.post<PlateAppearanceV2>(
     V2_PLATE_APPEARANCES_URL,
@@ -33,7 +33,7 @@ export const createPlateAppearanceV2 = async (
  */
 export const updatePlateAppearanceV2 = async (
   id: number,
-  payload: PlateAppearanceV2CreatePayload,
+  payload: PlateAppearanceV2Payload,
 ): Promise<PlateAppearanceV2> => {
   const response = await axiosInstance.patch<PlateAppearanceV2>(
     `${V2_PLATE_APPEARANCES_URL}/${id}`,
