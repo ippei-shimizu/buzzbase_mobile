@@ -216,7 +216,7 @@ export function GameInfoForm({
         ? tournaments.filter((t) =>
             t.name.toLowerCase().includes(tournamentName.toLowerCase()),
           )
-        : tournaments,
+        : [],
     [tournamentName, tournaments],
   );
 
