@@ -16,7 +16,7 @@ export const usePlateAppearancesByGame = (gameResultId: number | null) => {
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
     queryKey: ["plateAppearancesV2", gameResultId],
     queryFn: () => getPlateAppearancesByGame(gameResultId as number),
-    enabled: gameResultId !== null && gameResultId !== undefined,
+    enabled: gameResultId !== null,
   });
 
   return {
