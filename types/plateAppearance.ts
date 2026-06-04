@@ -103,7 +103,11 @@ export interface PlateAppearanceV2Input {
   opponent_memo?: string | null;
 }
 
-export interface PlateAppearanceV2CreatePayload {
+/**
+ * POST/PATCH /api/v2/plate_appearances のリクエスト本体型。
+ * 新規作成・部分更新の両方で同じ形を使う（PATCH 時もネストキーは `plate_appearance`）。
+ */
+export interface PlateAppearanceV2Payload {
   plate_appearance: PlateAppearanceV2Input;
 }
 

@@ -1,4 +1,4 @@
-import type { PlateAppearanceV2CreatePayload } from "../types/plateAppearance";
+import type { PlateAppearanceV2Payload } from "../types/plateAppearance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createPlateAppearanceV2,
@@ -36,7 +36,7 @@ export const usePlateAppearancesByGame = (gameResultId: number | null) => {
 export const useCreatePlateAppearance = () => {
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (payload: PlateAppearanceV2CreatePayload) =>
+    mutationFn: (payload: PlateAppearanceV2Payload) =>
       createPlateAppearanceV2(payload),
     onSuccess: (created) => {
       queryClient.invalidateQueries({
@@ -65,7 +65,7 @@ export const useUpdatePlateAppearance = () => {
       payload,
     }: {
       id: number;
-      payload: PlateAppearanceV2CreatePayload;
+      payload: PlateAppearanceV2Payload;
     }) => updatePlateAppearanceV2(id, payload),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({
