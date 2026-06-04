@@ -1,4 +1,9 @@
-import type { AppearanceType, Position, Team , RecordPattern } from "../../types/gameRecord";
+import type {
+  AppearanceType,
+  Position,
+  Team,
+  RecordPattern,
+} from "../../types/gameRecord";
 import type { Season } from "../../types/season";
 import type { Stadium } from "../../types/stadium";
 import { Ionicons } from "@expo/vector-icons";
