@@ -57,7 +57,6 @@ interface Props {
   tournamentName: string;
   tournamentId: number | null;
   tournaments: { id: number; name: string }[];
-  seasonId: number | null;
   seasonName: string;
   seasons: Season[];
   teams: Team[];
@@ -143,7 +142,6 @@ export function GameInfoForm({
   tournamentName,
   tournamentId: _tournamentId,
   tournaments,
-  seasonId: _seasonId,
   seasonName,
   seasons,
   teams,
