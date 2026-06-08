@@ -1,12 +1,23 @@
 import type { HitDirectionWithZones, Point } from "../../../types/hitDirection";
+import { useMemo } from "react";
 import {
   Pressable,
   StyleSheet,
   View,
   type GestureResponderEvent,
 } from "react-native";
-import Svg, { Circle, Line, Path, Polygon, Rect } from "react-native-svg";
+import Svg, {
+  Circle,
+  G,
+  Line,
+  Path,
+  Polygon,
+  Rect,
+  Text as SvgText,
+} from "react-native-svg";
 import {
+  DIRECTION_LABEL_POSITIONS,
+  DIRECTION_LABELS,
   GROUND_CANVAS_HEIGHT,
   GROUND_CANVAS_WIDTH,
 } from "@constants/groundCanvas";
@@ -23,23 +34,60 @@ interface Props {
   }) => void;
 }
 
-const HOME = { x: 210, y: 295 };
-const FIRST = { x: 268, y: 238 };
-const SECOND = { x: 210, y: 185 };
-const THIRD = { x: 152, y: 238 };
-const OUTFIELD_R = 250;
+// ホームをキャンバス下端付近に置き、外野円弧がほぼキャンバス上端まで広がる比率にする。
+const HOME = { x: 210, y: 315 };
+// 内野ダイヤモンドは HOME→SECOND の対角線 150px を中心に、
+// 一辺が約 106px の正方形を 45° 回転した正菱形。
+const FIRST = { x: 285, y: 240 };
+const SECOND = { x: 210, y: 165 };
+const THIRD = { x: 135, y: 240 };
+// 外野フェンスは楕円弧で描く。target 画像（鳥瞰イラスト）に合わせて
+// 縦長やや浅めの楕円にし、ファウルライン端からセンター方向に滑らかに膨らむ形にする。
+const OUTFIELD_RX = 235;
+const OUTFIELD_RY = 295;
+// HOME を通る ±45° のファウルライン上で楕円と交わる点までの距離。
+// (x-cx)² / rx² + (y-cy)² / ry² = 1 を y = x の傾きの直線で解いて求める。
+const FAUL_LINE_DIST = Math.sqrt(
+  (OUTFIELD_RX ** 2 * OUTFIELD_RY ** 2) / (OUTFIELD_RX ** 2 + OUTFIELD_RY ** 2),
+);
 const LEFT_END = {
-  x: HOME.x + OUTFIELD_R * Math.cos((135 * Math.PI) / 180),
-  y: HOME.y - OUTFIELD_R * Math.sin((135 * Math.PI) / 180),
+  x: HOME.x - FAUL_LINE_DIST,
+  y: HOME.y - FAUL_LINE_DIST,
 };
 const RIGHT_END = {
-  x: HOME.x + OUTFIELD_R * Math.cos((45 * Math.PI) / 180),
-  y: HOME.y - OUTFIELD_R * Math.sin((45 * Math.PI) / 180),
+  x: HOME.x + FAUL_LINE_DIST,
+  y: HOME.y - FAUL_LINE_DIST,
 };
 const MOUND = { x: HOME.x, y: (HOME.y + SECOND.y) / 2 + 5 };
+// 内野ダート（茶色）はダイヤモンド中心の円を、左右のファウルラインで切った形にする。
+// これによりファウルライン外側（ファウルゾーン側）にはダート（茶色）が出なくなる。
+const DIRT_CENTER = { x: HOME.x, y: (HOME.y + SECOND.y) / 2 };
+const DIRT_R = 95;
+// HOME を通る ±45° のファウルラインと円の交点（ダイヤモンド側）を計算する。
+// ファウルラインへの中心からの垂線最寄り点 (HOME.x - dy/2, HOME.y - dy/2) から
+// ライン方向に半弦 (chordHalf) ずつ離れた点が交点になる。
+const DIRT_DY = HOME.y - DIRT_CENTER.y;
+const DIRT_LINE_CHORD = Math.sqrt(DIRT_R ** 2 - DIRT_DY ** 2 / 2);
+const DIRT_FOUL_LEFT = {
+  x: HOME.x - DIRT_DY / 2 - DIRT_LINE_CHORD / Math.SQRT2,
+  y: HOME.y - DIRT_DY / 2 - DIRT_LINE_CHORD / Math.SQRT2,
+};
+const DIRT_FOUL_RIGHT = {
+  x: HOME.x + DIRT_DY / 2 + DIRT_LINE_CHORD / Math.SQRT2,
+  y: HOME.y - DIRT_DY / 2 - DIRT_LINE_CHORD / Math.SQRT2,
+};
+
+const CHIP_HEIGHT = 18;
+const CHIP_PADDING_X = 6;
+const CHIP_FONT_SIZE = 11;
+const CHIP_TEXT_BASELINE_OFFSET = 4;
 
 const clampNormalized = (value: number): number =>
   Math.max(0, Math.min(1, value));
+
+/** 1 文字あたりの想定幅（fontSize に合わせた近似値）。 */
+const estimateChipWidth = (label: string): number =>
+  CHIP_PADDING_X * 2 + label.length * 12;
 
 /**
  * 打席記録ステップ式 UI のグラウンドイラスト。
@@ -47,7 +95,8 @@ const clampNormalized = (value: number): number =>
  * `detectZone` で `hit_direction_id` / `hit_depth_id` を導出する。
  *
  * 描画は SprayChart の簡略版（フェンス・ダイヤモンド・マウンド・ベース）に絞り、
- * 集計バブル等は持たない。タップ位置にはマーカー（オレンジの円）を 1 つ重ねる。
+ * 13 方向それぞれのラベル chip を重ねる。タップ済みでゾーン判定が成立している
+ * 方向の chip は primary 色でハイライトし、どの方向で記録されるかをユーザーに明示する。
  */
 export function GroundTapField({ hitDirections, hitLocation, onTap }: Props) {
   const handlePress = (event: GestureResponderEvent) => {
@@ -71,6 +120,12 @@ export function GroundTapField({ hitDirections, hitLocation, onTap }: Props) {
   const markerY =
     hitLocation !== null ? hitLocation.y * GROUND_CANVAS_HEIGHT : null;
 
+  const selectedDirectionId = useMemo(() => {
+    if (!hitLocation) return null;
+    const zone = detectZone(hitLocation, hitDirections);
+    return zone?.direction_id ?? null;
+  }, [hitLocation, hitDirections]);
+
   return (
     <View style={styles.container}>
       <Pressable
@@ -86,10 +141,14 @@ export function GroundTapField({ hitDirections, hitLocation, onTap }: Props) {
           viewBox={`0 0 ${GROUND_CANVAS_WIDTH} ${GROUND_CANVAS_HEIGHT}`}
         >
           <Path
-            d={`M ${HOME.x},${HOME.y} L ${LEFT_END.x},${LEFT_END.y} A ${OUTFIELD_R},${OUTFIELD_R} 0 0,1 ${RIGHT_END.x},${RIGHT_END.y} Z`}
+            d={`M ${HOME.x},${HOME.y} L ${LEFT_END.x},${LEFT_END.y} A ${OUTFIELD_RX},${OUTFIELD_RY} 0 0,1 ${RIGHT_END.x},${RIGHT_END.y} Z`}
             fill="#4a8e32"
             stroke="#3a7a28"
             strokeWidth={2}
+          />
+          <Path
+            d={`M ${HOME.x},${HOME.y} L ${DIRT_FOUL_LEFT.x},${DIRT_FOUL_LEFT.y} A ${DIRT_R},${DIRT_R} 0 0,1 ${DIRT_FOUL_RIGHT.x},${DIRT_FOUL_RIGHT.y} Z`}
+            fill="#b07840"
           />
           <Path
             d={`M ${HOME.x},${HOME.y - 15} L ${FIRST.x - 5},${FIRST.y + 2} L ${SECOND.x},${SECOND.y + 8} L ${THIRD.x + 5},${THIRD.y + 2} Z`}
@@ -172,6 +231,35 @@ export function GroundTapField({ hitDirections, hitLocation, onTap }: Props) {
             fill="white"
             transform={`rotate(45, ${THIRD.x}, ${THIRD.y})`}
           />
+          {Object.entries(DIRECTION_LABELS).map(([idKey, label]) => {
+            const id = Number(idKey);
+            const position = DIRECTION_LABEL_POSITIONS[id];
+            if (!position) return null;
+            const chipWidth = estimateChipWidth(label);
+            const isSelected = selectedDirectionId === id;
+            return (
+              <G key={`dir-${id}`}>
+                <Rect
+                  x={position.x - chipWidth / 2}
+                  y={position.y - CHIP_HEIGHT / 2}
+                  width={chipWidth}
+                  height={CHIP_HEIGHT}
+                  rx={4}
+                  fill={isSelected ? "#d08000" : "rgba(0,0,0,0.65)"}
+                />
+                <SvgText
+                  x={position.x}
+                  y={position.y + CHIP_TEXT_BASELINE_OFFSET}
+                  fill="#F4F4F4"
+                  fontSize={CHIP_FONT_SIZE}
+                  fontWeight="700"
+                  textAnchor="middle"
+                >
+                  {label}
+                </SvgText>
+              </G>
+            );
+          })}
           {markerX !== null && markerY !== null && (
             <>
               <Circle
