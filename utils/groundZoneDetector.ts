@@ -3,6 +3,38 @@ import type {
   Point,
   Polygon,
 } from "../types/hitDirection";
+import {
+  DIRECTION_LABEL_POSITIONS,
+  GROUND_CANVAS_HEIGHT,
+  GROUND_CANVAS_WIDTH,
+} from "@constants/groundCanvas";
+
+/**
+ * タップ位置（正規化座標）に最も近い `DIRECTION_LABEL_POSITIONS` のラベル ID を返す。
+ * `hit_directions` マスタの `zone_polygon` に依存せず、画面上のラベル chip の
+ * pixel 座標と距離比較するだけなので、ラベル位置と完全に連動する。
+ *
+ * `hit_depth_id` は本関数では判定できないため、呼び出し側で別途扱う（本 PR では null 固定）。
+ *
+ * @param point タップ位置の正規化座標 (x: 0..1, y: 0..1)
+ * @returns 最寄りラベルの id。`DIRECTION_LABEL_POSITIONS` が空のときのみ null
+ */
+export function detectClosestDirection(point: Point): number | null {
+  const pixelX = point.x * GROUND_CANVAS_WIDTH;
+  const pixelY = point.y * GROUND_CANVAS_HEIGHT;
+  let closestId: number | null = null;
+  let closestDistSq = Infinity;
+  for (const [idKey, pos] of Object.entries(DIRECTION_LABEL_POSITIONS)) {
+    const dx = pos.x - pixelX;
+    const dy = pos.y - pixelY;
+    const distSq = dx * dx + dy * dy;
+    if (distSq < closestDistSq) {
+      closestDistSq = distSq;
+      closestId = Number(idKey);
+    }
+  }
+  return closestId;
+}
 
 /**
  * 点が多角形内部に含まれるかを Ray-casting アルゴリズムで判定する。

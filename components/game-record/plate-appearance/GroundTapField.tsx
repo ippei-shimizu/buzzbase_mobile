@@ -21,7 +21,7 @@ import {
   GROUND_CANVAS_HEIGHT,
   GROUND_CANVAS_WIDTH,
 } from "@constants/groundCanvas";
-import { detectZone } from "@utils/groundZoneDetector";
+import { detectClosestDirection } from "@utils/groundZoneDetector";
 
 interface Props {
   hitDirections: HitDirectionWithZones[];
@@ -106,12 +106,12 @@ export function GroundTapField({ hitDirections, hitLocation, onTap }: Props) {
     const yNorm = clampNormalized(
       event.nativeEvent.locationY / GROUND_CANVAS_HEIGHT,
     );
-    const zone = detectZone({ x: xNorm, y: yNorm }, hitDirections);
+    const directionId = detectClosestDirection({ x: xNorm, y: yNorm });
     onTap({
       x: xNorm,
       y: yNorm,
-      directionId: zone?.direction_id ?? null,
-      depthId: zone?.depth_id ?? null,
+      directionId,
+      depthId: null,
     });
   };
 
@@ -122,9 +122,8 @@ export function GroundTapField({ hitDirections, hitLocation, onTap }: Props) {
 
   const selectedDirectionId = useMemo(() => {
     if (!hitLocation) return null;
-    const zone = detectZone(hitLocation, hitDirections);
-    return zone?.direction_id ?? null;
-  }, [hitLocation, hitDirections]);
+    return detectClosestDirection(hitLocation);
+  }, [hitLocation]);
 
   return (
     <View style={styles.container}>

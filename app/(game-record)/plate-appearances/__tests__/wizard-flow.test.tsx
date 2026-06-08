@@ -147,7 +147,7 @@ describe("打席ステップ式ウィザードのフロー", () => {
       hit_type: "single",
       out_type: null,
       hit_direction_id: 10,
-      hit_depth_id: 2,
+      hit_depth_id: null,
       rbi: 1,
     });
     expect(capturedPayload!.plate_appearance.hit_location_x).toBeCloseTo(0.5);
