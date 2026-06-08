@@ -90,7 +90,8 @@ export default function PlateAppearancesListScreen() {
             <>
               {plateAppearances.length === 0 && (
                 <Text style={styles.emptyHint}>
-                  「結果を入力」ボタンをタップして、打席ごとの結果を入力してください
+                  「結果を入力」ボタンをタップして、{"\n"}
+                  打席ごとの結果を入力してください
                 </Text>
               )}
               <AddPlateAppearanceCard
