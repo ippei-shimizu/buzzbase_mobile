@@ -151,7 +151,7 @@ export function GroundTapField({ hitDirections, hitLocation, onTap }: Props) {
             fill="#b07840"
           />
           <Path
-            d={`M ${HOME.x},${HOME.y - 15} L ${FIRST.x - 5},${FIRST.y + 2} L ${SECOND.x},${SECOND.y + 8} L ${THIRD.x + 5},${THIRD.y + 2} Z`}
+            d={`M ${HOME.x},${HOME.y} L ${FIRST.x},${FIRST.y} L ${SECOND.x},${SECOND.y} L ${THIRD.x},${THIRD.y} Z`}
             fill="#5fa341"
           />
           <Line
