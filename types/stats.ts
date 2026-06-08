@@ -69,6 +69,7 @@ export interface PitchingStatsRow {
   hit_by_pitch: number;
   run_allowed: number;
   earned_run: number;
+  number_of_pitches: number;
   era: number;
   whip: number;
   k_per_nine: number;

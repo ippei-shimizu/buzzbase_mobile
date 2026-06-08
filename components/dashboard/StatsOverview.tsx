@@ -227,7 +227,12 @@ const PitchingSection = ({
                 "BB/9",
                 formatStat(pCalc.bb_per_nine, 2),
               ],
-              ["K/BB", formatStat(pCalc.k_bb, 2), "", ""],
+              [
+                "K/BB",
+                formatStat(pCalc.k_bb, 2),
+                "総投球数",
+                pAgg.number_of_pitches ?? "-",
+              ],
             ]}
           />
         </>
