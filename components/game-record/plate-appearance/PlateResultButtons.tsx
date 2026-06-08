@@ -86,7 +86,7 @@ export function PlateResultButtons({
               <ResultButton
                 key={`${option.plate_result_id}-${option.label}-${idx}`}
                 label={option.label}
-                disabled={false}
+                disabled={hasHitLocation}
                 onPress={() => onSelectNoDirection(option.plate_result_id)}
               />
             ))}
