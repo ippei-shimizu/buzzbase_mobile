@@ -3,6 +3,7 @@ import type {
   OutTypeOption,
   PlateResultId,
 } from "@constants/plateResults";
+import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -51,6 +52,7 @@ export function PlateAppearanceWizard({
 }: Props) {
   const initializeForNew = useBattingRecordStore((s) => s.initializeForNew);
   const setHitLocation = useBattingRecordStore((s) => s.setHitLocation);
+  const clearHitLocation = useBattingRecordStore((s) => s.clearHitLocation);
   const setPlateResult = useBattingRecordStore((s) => s.setPlateResult);
   const setCounter = useBattingRecordStore((s) => s.setCounter);
   const resetStore = useBattingRecordStore((s) => s.reset);
@@ -179,6 +181,19 @@ export function PlateAppearanceWizard({
         hitLocation={hitLocation}
         onTap={handleTap}
       />
+      <View style={styles.clearLocationSlot}>
+        {hitLocation !== null && (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="打球方向をクリア"
+            onPress={clearHitLocation}
+            style={styles.clearLocationButton}
+          >
+            <Ionicons name="close-circle" size={16} color="#A1A1AA" />
+            <Text style={styles.clearLocationLabel}>打球方向をクリア</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       <View style={styles.buttonsSection}>
         <PlateResultButtons
           hasHitLocation={hitLocation !== null}
@@ -247,6 +262,23 @@ const styles = StyleSheet.create({
   },
   buttonsSection: {
     marginTop: 16,
+  },
+  clearLocationSlot: {
+    minHeight: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 4,
+  },
+  clearLocationButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  clearLocationLabel: {
+    color: "#A1A1AA",
+    fontSize: 13,
   },
   cancelButton: {
     marginTop: 16,
