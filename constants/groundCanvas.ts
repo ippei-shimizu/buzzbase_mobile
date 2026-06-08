@@ -13,3 +13,44 @@ export const GROUND_CANVAS_HEIGHT = 340;
  * 送信前に `Number(value.toFixed(NORMALIZED_LOCATION_PRECISION))` で丸める。
  */
 export const NORMALIZED_LOCATION_PRECISION = 4;
+
+/**
+ * グラウンド SVG 上の打球方向ラベル表示位置（pixel 座標、`GROUND_CANVAS_WIDTH/HEIGHT` 基準）。
+ * 内野ダイヤモンドを大きく取り、外野ラベルは円弧の少し内側 + 左中/右中を中央寄りに配置する。
+ * `hit_directions` マスタの id（1=投 〜 13=右線）に対応。
+ */
+export const DIRECTION_LABEL_POSITIONS: Record<
+  number,
+  { x: number; y: number }
+> = {
+  1: { x: 210, y: 258 },
+  2: { x: 210, y: 332 },
+  3: { x: 285, y: 240 },
+  4: { x: 245, y: 210 },
+  5: { x: 135, y: 240 },
+  6: { x: 175, y: 210 },
+  7: { x: 65, y: 140 },
+  8: { x: 105, y: 105 },
+  9: { x: 152, y: 70 },
+  10: { x: 210, y: 38 },
+  11: { x: 268, y: 70 },
+  12: { x: 315, y: 105 },
+  13: { x: 355, y: 140 },
+};
+
+/** `hit_directions` マスタの id → 日本語短縮ラベル。SVG chip の表示文言として使う。 */
+export const DIRECTION_LABELS: Record<number, string> = {
+  1: "投",
+  2: "捕",
+  3: "一",
+  4: "二",
+  5: "三",
+  6: "遊",
+  7: "左線",
+  8: "左",
+  9: "左中",
+  10: "中",
+  11: "右中",
+  12: "右",
+  13: "右線",
+};
