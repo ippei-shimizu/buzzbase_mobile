@@ -64,7 +64,7 @@ describe("PlateResultButtons", () => {
     );
   });
 
-  it("「四球」タップ → onSelectNoDirection が WALK(15) で呼ばれる（タップ不要グループは常時活性）", () => {
+  it("hasHitLocation=false で「四球」タップ → onSelectNoDirection が WALK(15) で呼ばれる", () => {
     const props = buildProps({ hasHitLocation: false });
     const { getByRole } = render(<PlateResultButtons {...props} />);
 
@@ -73,6 +73,18 @@ describe("PlateResultButtons", () => {
     expect(props.onSelectNoDirection).toHaveBeenCalledWith(
       PLATE_RESULT_IDS.WALK,
     );
+  });
+
+  it("hasHitLocation=true のときタップ不要グループ（四球 / 空振り三振）が disabled になる", () => {
+    const props = buildProps({ hasHitLocation: true });
+    const { getByRole } = render(<PlateResultButtons {...props} />);
+
+    expect(
+      getByRole("button", { name: "四球" }).props.accessibilityState,
+    ).toMatchObject({ disabled: true });
+    expect(
+      getByRole("button", { name: "空振り三振" }).props.accessibilityState,
+    ).toMatchObject({ disabled: true });
   });
 
   it("「空振り三振」タップ → onSelectNoDirection が STRIKEOUT(13) で呼ばれる", () => {
