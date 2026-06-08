@@ -1,11 +1,19 @@
 import type { HitDirectionWithZones, Point } from "../../../types/hitDirection";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import {
   Pressable,
   StyleSheet,
   View,
   type GestureResponderEvent,
 } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedProps,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import Svg, {
   Circle,
   G,
@@ -22,6 +30,60 @@ import {
   GROUND_CANVAS_WIDTH,
 } from "@constants/groundCanvas";
 import { detectClosestDirection } from "@utils/groundZoneDetector";
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+const PULSE_DURATION_MS = 2800;
+const PULSE_START_RADIUS = 10;
+const PULSE_END_RADIUS = 42;
+
+/**
+ * 選択中ラベル位置にパルス（波紋）を 1 つ描画する Circle。
+ * `delay` をずらした複数を重ねることで、中心から波形が広がる視覚を作る。
+ */
+function PulseCircle({
+  cx,
+  cy,
+  delay,
+}: {
+  cx: number;
+  cy: number;
+  delay: number;
+}) {
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = withDelay(
+      delay,
+      withRepeat(
+        withTiming(1, {
+          duration: PULSE_DURATION_MS,
+          easing: Easing.out(Easing.quad),
+        }),
+        -1,
+        false,
+      ),
+    );
+  }, [progress, delay]);
+
+  const animatedProps = useAnimatedProps(() => ({
+    r:
+      PULSE_START_RADIUS +
+      (PULSE_END_RADIUS - PULSE_START_RADIUS) * progress.value,
+    opacity: 0.7 * (1 - progress.value),
+  }));
+
+  return (
+    <AnimatedCircle
+      cx={cx}
+      cy={cy}
+      fill="none"
+      stroke="#d08000"
+      strokeWidth={2}
+      animatedProps={animatedProps}
+    />
+  );
+}
 
 interface Props {
   hitDirections: HitDirectionWithZones[];
@@ -230,6 +292,26 @@ export function GroundTapField({ hitDirections, hitLocation, onTap }: Props) {
             fill="white"
             transform={`rotate(45, ${THIRD.x}, ${THIRD.y})`}
           />
+          {selectedDirectionId !== null &&
+            DIRECTION_LABEL_POSITIONS[selectedDirectionId] && (
+              <G key={`pulse-${selectedDirectionId}`} pointerEvents="none">
+                <PulseCircle
+                  cx={DIRECTION_LABEL_POSITIONS[selectedDirectionId].x}
+                  cy={DIRECTION_LABEL_POSITIONS[selectedDirectionId].y}
+                  delay={0}
+                />
+                <PulseCircle
+                  cx={DIRECTION_LABEL_POSITIONS[selectedDirectionId].x}
+                  cy={DIRECTION_LABEL_POSITIONS[selectedDirectionId].y}
+                  delay={PULSE_DURATION_MS / 3}
+                />
+                <PulseCircle
+                  cx={DIRECTION_LABEL_POSITIONS[selectedDirectionId].x}
+                  cy={DIRECTION_LABEL_POSITIONS[selectedDirectionId].y}
+                  delay={(PULSE_DURATION_MS / 3) * 2}
+                />
+              </G>
+            )}
           {Object.entries(DIRECTION_LABELS).map(([idKey, label]) => {
             const id = Number(idKey);
             const position = DIRECTION_LABEL_POSITIONS[id];
