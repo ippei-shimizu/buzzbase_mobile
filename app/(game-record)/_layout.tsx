@@ -45,7 +45,14 @@ export default function GameRecordLayout() {
         }}
       />
       <Stack.Screen name="step2-batting" options={{ title: "打撃成績" }} />
-      <Stack.Screen name="plate-appearances" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="plate-appearances/index"
+        options={{ title: "打席一覧" }}
+      />
+      <Stack.Screen
+        name="plate-appearances/new"
+        options={{ title: "打席記録" }}
+      />
       <Stack.Screen name="step3-pitching" options={{ title: "投手成績" }} />
       <Stack.Screen
         name="summary"
