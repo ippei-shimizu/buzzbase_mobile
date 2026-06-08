@@ -122,12 +122,10 @@ export default function Step1GameInfoScreen() {
     if (store.opponentTeamScore === null) {
       errors.opponentTeamScore = "相手チームの点数を入力してください";
     }
-    // 先発／途中出場のときだけ打順・守備位置を必須にする。
+    // 先発／途中出場のときだけ守備位置を必須にする。
+    // 打順は DH 制で投手として出場する場合「なし」を許容するため任意。
     // 代打／代走／未出場は GameInfoForm 側で自動的に「なし」がセットされるため任意。
     const lineupRequired = isLineupRequired(store.appearanceType);
-    if (lineupRequired && !store.battingOrder) {
-      errors.battingOrder = "打順を選択してください";
-    }
     if (lineupRequired && !store.defensivePosition) {
       errors.defensivePosition = "守備位置を選択してください";
     }

@@ -167,6 +167,8 @@ describe("Step1GameInfoScreen / バリデーション", () => {
       expect(s.message).toContain("相手チーム名を入力してください");
       expect(s.message).toContain("自チームの点数を入力してください");
       expect(s.message).toContain("相手チームの点数を入力してください");
+      // DH 制で投手として出場するケースに備えて、先発でも打順「なし」を許容する。
+      expect(s.message).not.toContain("打順を選択してください");
     });
 
     // フィールド近傍のエラー（自チーム / 相手チーム は必須）
