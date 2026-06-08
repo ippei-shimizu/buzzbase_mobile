@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
@@ -8,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { AddPlateAppearanceCard } from "@components/game-record/plate-appearance/AddPlateAppearanceCard";
 import { PlateAppearanceCard } from "@components/game-record/plate-appearance/PlateAppearanceCard";
 import { StepIndicator } from "@components/game-record/StepIndicator";
 import { usePlateAppearancesByGame } from "@hooks/usePlateAppearances";
@@ -15,11 +15,12 @@ import { useGameRecordStore } from "../../../stores/gameRecordStore";
 
 /**
  * 打席リスト画面。
- * 「+ 打席を追加」でウィザード（`./new`）に遷移し、右上「完了」で
- * `recordPattern` に応じて投手成績 or サマリーに進む。
+ * 既存カードと並んで末尾に「第N打席 / 結果を入力」プレースホルダを常に表示し、
+ * タップでウィザード（`./new`）に遷移する。右上「完了」で `recordPattern`
+ * に応じて投手成績 or サマリーへ。
  *
- * 編集モード／打席カードの編集起動は別 Issue（ippei-shimizu/buzzbase#335）で対応するため、
- * 本画面ではカードを TouchableOpacity だが onPress は持たない（タップ不可状態）にしておく。
+ * 打席カードの編集起動は別 Issue（ippei-shimizu/buzzbase#335）で対応するため、
+ * 本画面ではカードを TouchableOpacity だが onPress は持たない（タップ不可状態）。
  */
 export default function PlateAppearancesListScreen() {
   const router = useRouter();
@@ -45,6 +46,10 @@ export default function PlateAppearancesListScreen() {
       router.replace("/(game-record)/summary");
     }
   };
+
+  const handleAdd = () => router.push("/(game-record)/plate-appearances/new");
+
+  const nextBatterBoxNumber = plateAppearances.length + 1;
 
   return (
     <View style={styles.container}>
@@ -81,24 +86,21 @@ export default function PlateAppearancesListScreen() {
           renderItem={({ item }) => (
             <PlateAppearanceCard plateAppearance={item} />
           )}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>
-              まだ打席が記録されていません。{"\n"}
-              「+ 打席を追加」から記録してください。
-            </Text>
+          ListFooterComponent={
+            <>
+              {plateAppearances.length === 0 && (
+                <Text style={styles.emptyHint}>
+                  「結果を入力」ボタンをタップして、打席ごとの結果を入力してください
+                </Text>
+              )}
+              <AddPlateAppearanceCard
+                batterBoxNumber={nextBatterBoxNumber}
+                onPress={handleAdd}
+              />
+            </>
           }
         />
       )}
-
-      <TouchableOpacity
-        accessibilityRole="button"
-        accessibilityLabel="打席を追加"
-        style={styles.addButton}
-        onPress={() => router.push("/(game-record)/plate-appearances/new")}
-      >
-        <Ionicons name="add" size={20} color="#F4F4F4" />
-        <Text style={styles.addLabel}>打席を追加</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -135,14 +137,15 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 80,
+    paddingBottom: 32,
   },
-  emptyText: {
+  emptyHint: {
     color: "#A1A1AA",
     fontSize: 13,
     textAlign: "center",
-    marginTop: 32,
+    marginBottom: 12,
     lineHeight: 20,
+    paddingHorizontal: 8,
   },
   loading: {
     flex: 1,
@@ -159,27 +162,5 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 14,
     textAlign: "center",
-  },
-  addButton: {
-    position: "absolute",
-    right: 16,
-    bottom: 24,
-    backgroundColor: "#d08000",
-    borderRadius: 999,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  addLabel: {
-    color: "#F4F4F4",
-    fontSize: 14,
-    fontWeight: "bold",
   },
 });
