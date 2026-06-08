@@ -23,7 +23,7 @@ export function AddPlateAppearanceCard({ batterBoxNumber, onPress }: Props) {
         style={styles.button}
         activeOpacity={0.85}
       >
-        <Ionicons name="add" size={20} color="#F4F4F4" />
+        <Ionicons name="add" size={16} color="#F4F4F4" />
         <Text style={styles.buttonLabel}>結果を入力</Text>
       </TouchableOpacity>
     </View>
@@ -35,9 +35,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     marginBottom: 8,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: "#d08000",
   },
   boxNumber: {
     color: "#F4F4F4",
@@ -47,20 +51,20 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: "#d08000",
     borderRadius: 999,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    elevation: 4,
+    elevation: 2,
     shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
   },
   buttonLabel: {
     color: "#F4F4F4",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "bold",
   },
 });
