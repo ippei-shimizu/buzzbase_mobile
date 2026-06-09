@@ -88,7 +88,7 @@ export function MasterChipSelector({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 20,
+    marginBottom: 0,
   },
   label: {
     color: "#F4F4F4",
