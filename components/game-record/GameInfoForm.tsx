@@ -1,4 +1,9 @@
-import type { AppearanceType, Position, Team , RecordPattern } from "../../types/gameRecord";
+import type {
+  AppearanceType,
+  Position,
+  Team,
+  RecordPattern,
+} from "../../types/gameRecord";
 import type { Season } from "../../types/season";
 import type { Stadium } from "../../types/stadium";
 import { Ionicons } from "@expo/vector-icons";
@@ -670,42 +675,18 @@ export function GameInfoForm({
           error={fieldErrors.myTeamScore || fieldErrors.opponentTeamScore}
         >
           <View style={styles.scoreRow}>
-            <RNTextInput
-              style={styles.scoreInput}
-              value={myTeamScore !== null ? String(myTeamScore) : ""}
-              onChangeText={(v) => {
-                if (v === "") {
-                  onFieldChange("myTeamScore", null);
-                  return;
-                }
-                const parsed = parseInt(v, 10);
-                if (!Number.isNaN(parsed)) {
-                  onFieldChange("myTeamScore", parsed);
-                }
-              }}
+            <ScoreStepper
+              value={myTeamScore}
+              onChange={(v) => onFieldChange("myTeamScore", v)}
+              accessibilityLabel="自チームの点数"
               placeholder="自分"
-              placeholderTextColor="#71717A"
-              keyboardType="number-pad"
             />
             <Text style={styles.scoreSeparator}>対</Text>
-            <RNTextInput
-              style={styles.scoreInput}
-              value={
-                opponentTeamScore !== null ? String(opponentTeamScore) : ""
-              }
-              onChangeText={(v) => {
-                if (v === "") {
-                  onFieldChange("opponentTeamScore", null);
-                  return;
-                }
-                const parsed = parseInt(v, 10);
-                if (!Number.isNaN(parsed)) {
-                  onFieldChange("opponentTeamScore", parsed);
-                }
-              }}
+            <ScoreStepper
+              value={opponentTeamScore}
+              onChange={(v) => onFieldChange("opponentTeamScore", v)}
+              accessibilityLabel="相手チームの点数"
               placeholder="相手"
-              placeholderTextColor="#71717A"
-              keyboardType="number-pad"
             />
           </View>
         </FormRow>
@@ -777,6 +758,70 @@ export function GameInfoForm({
         <PatternSelector onSelect={onPatternSelect} disabled={isSubmitting} />
       )}
     </ScrollView>
+  );
+}
+
+interface ScoreStepperProps {
+  value: number | null;
+  onChange: (next: number | null) => void;
+  accessibilityLabel: string;
+  placeholder?: string;
+}
+
+/**
+ * 試合スコア用の +/- ステッパー付き入力。
+ * 0-0（完封）も有効値のため、空入力は null として未入力と区別する。
+ * 「-」は value が null か 0 以下のとき disabled、「+」は常時活性。
+ */
+function ScoreStepper({
+  value,
+  onChange,
+  accessibilityLabel,
+  placeholder,
+}: ScoreStepperProps) {
+  const decrementDisabled = value === null || value <= 0;
+  return (
+    <View style={styles.scoreStepper}>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={`${accessibilityLabel}を減らす`}
+        accessibilityState={{ disabled: decrementDisabled }}
+        disabled={decrementDisabled}
+        onPress={() => onChange(Math.max(0, (value ?? 0) - 1))}
+        hitSlop={6}
+      >
+        <Ionicons
+          name="remove-circle"
+          size={26}
+          color={decrementDisabled ? "#52525B" : "#d08000"}
+        />
+      </TouchableOpacity>
+      <RNTextInput
+        style={styles.scoreInput}
+        value={value !== null ? String(value) : ""}
+        onChangeText={(v) => {
+          if (v === "") {
+            onChange(null);
+            return;
+          }
+          const parsed = parseInt(v, 10);
+          if (!Number.isNaN(parsed)) {
+            onChange(Math.max(0, parsed));
+          }
+        }}
+        placeholder={placeholder}
+        placeholderTextColor="#71717A"
+        keyboardType="number-pad"
+      />
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={`${accessibilityLabel}を増やす`}
+        onPress={() => onChange((value ?? 0) + 1)}
+        hitSlop={6}
+      >
+        <Ionicons name="add-circle" size={26} color="#d08000" />
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -900,15 +945,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
+  scoreStepper: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   scoreInput: {
     flex: 1,
     backgroundColor: "#3A3A3A",
     borderRadius: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 10,
     color: "#F4F4F4",
     fontSize: 15,
     textAlign: "center",
+    minWidth: 40,
   },
   scoreSeparator: {
     color: "#A1A1AA",
