@@ -4,20 +4,20 @@ import {
   FlatList,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { AddPlateAppearanceCard } from "@components/game-record/plate-appearance/AddPlateAppearanceCard";
 import { PlateAppearanceCard } from "@components/game-record/plate-appearance/PlateAppearanceCard";
 import { StepIndicator } from "@components/game-record/StepIndicator";
+import { Button } from "@components/ui/Button";
 import { usePlateAppearancesByGame } from "@hooks/usePlateAppearances";
 import { useGameRecordStore } from "../../../stores/gameRecordStore";
 
 /**
  * 打席リスト画面。
  * 既存カードと並んで末尾に「第N打席 / 結果を入力」プレースホルダを常に表示し、
- * タップでウィザード（`./new`）に遷移する。右上「完了」で `recordPattern`
- * に応じて投手成績 or サマリーへ。
+ * タップでウィザード（`./new`）に遷移する。画面下部の primary ボタンで
+ * `recordPattern` に応じて投手成績 or サマリーへ進む。
  *
  * 打席カードの編集起動は別 Issue（ippei-shimizu/buzzbase#335）で対応するため、
  * 本画面ではカードを TouchableOpacity だが onPress は持たない（タップ不可状態）。
@@ -39,8 +39,13 @@ export default function PlateAppearancesListScreen() {
     );
   }
 
+  const isPitchingNext = recordPattern === "both";
+  const finishButtonLabel = isPitchingNext
+    ? "投手成績入力へ"
+    : "試合結果まとめへ";
+
   const handleFinish = () => {
-    if (recordPattern === "both") {
+    if (isPitchingNext) {
       router.push("/(game-record)/step3-pitching");
     } else {
       router.replace("/(game-record)/summary");
@@ -54,25 +59,7 @@ export default function PlateAppearancesListScreen() {
   return (
     <View style={styles.container}>
       <StepIndicator currentStep={2} />
-      <View style={styles.headerActions}>
-        <Text style={styles.heading}>打席一覧</Text>
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel="打席記録を完了する"
-          onPress={handleFinish}
-          style={styles.completeButton}
-          disabled={plateAppearances.length === 0}
-        >
-          <Text
-            style={[
-              styles.completeLabel,
-              plateAppearances.length === 0 && styles.completeLabelDisabled,
-            ]}
-          >
-            完了
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <Text style={styles.heading}>打席一覧</Text>
 
       {isLoading ? (
         <View style={styles.loading}>
@@ -102,6 +89,14 @@ export default function PlateAppearancesListScreen() {
           }
         />
       )}
+
+      <View style={styles.footer}>
+        <Button
+          title={finishButtonLabel}
+          onPress={handleFinish}
+          disabled={plateAppearances.length === 0}
+        />
+      </View>
     </View>
   );
 }
@@ -111,34 +106,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#2E2E2E",
   },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
   heading: {
     color: "#F4F4F4",
     fontSize: 16,
     fontWeight: "bold",
-  },
-  completeButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  completeLabel: {
-    color: "#d08000",
-    fontSize: 15,
-    fontWeight: "bold",
-  },
-  completeLabelDisabled: {
-    color: "#52525B",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   listContent: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 32,
+    paddingBottom: 16,
   },
   emptyHint: {
     color: "#A1A1AA",
@@ -163,5 +142,13 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 14,
     textAlign: "center",
+  },
+  footer: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 24,
+    borderTopWidth: 1,
+    borderTopColor: "#3a3a3a",
+    backgroundColor: "#2E2E2E",
   },
 });
