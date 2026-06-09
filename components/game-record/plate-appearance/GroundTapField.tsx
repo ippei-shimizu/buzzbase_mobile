@@ -1,4 +1,4 @@
-import type { HitDirectionWithZones, Point } from "../../../types/hitDirection";
+import type { Point } from "../../../types/hitDirection";
 import { useEffect, useMemo } from "react";
 import {
   Pressable,
@@ -86,7 +86,6 @@ function PulseCircle({
 }
 
 interface Props {
-  hitDirections: HitDirectionWithZones[];
   hitLocation: Point | null;
   onTap: (args: {
     x: number;
@@ -160,7 +159,7 @@ const estimateChipWidth = (label: string): number =>
  * 13 方向それぞれのラベル chip を重ねる。タップ済みでゾーン判定が成立している
  * 方向の chip は primary 色でハイライトし、どの方向で記録されるかをユーザーに明示する。
  */
-export function GroundTapField({ hitDirections, hitLocation, onTap }: Props) {
+export function GroundTapField({ hitLocation, onTap }: Props) {
   const handlePress = (event: GestureResponderEvent) => {
     const xNorm = clampNormalized(
       event.nativeEvent.locationX / GROUND_CANVAS_WIDTH,
