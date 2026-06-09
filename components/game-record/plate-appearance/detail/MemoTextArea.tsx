@@ -1,4 +1,5 @@
-import { StyleSheet, Text, TextInput as RNTextInput, View } from "react-native";
+import { StyleSheet, TextInput as RNTextInput, View } from "react-native";
+import { SectionHeader } from "./SectionHeader";
 
 interface Props {
   label: string;
@@ -6,6 +7,7 @@ interface Props {
   onChange: (text: string) => void;
   placeholder?: string;
   maxLength?: number;
+  description?: string;
 }
 
 const DEFAULT_MAX_LENGTH = 1000;
@@ -20,10 +22,11 @@ export function MemoTextArea({
   onChange,
   placeholder,
   maxLength = DEFAULT_MAX_LENGTH,
+  description,
 }: Props) {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      <SectionHeader label={label} description={description} />
       <RNTextInput
         style={styles.input}
         value={value ?? ""}
@@ -43,12 +46,6 @@ export function MemoTextArea({
 const styles = StyleSheet.create({
   container: {
     marginBottom: 0,
-  },
-  label: {
-    color: "#F4F4F4",
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 8,
   },
   input: {
     borderRadius: 8,

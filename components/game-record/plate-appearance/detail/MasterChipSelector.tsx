@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SectionHeader } from "./SectionHeader";
 
 interface Option {
   id: number;
@@ -24,6 +25,8 @@ interface Props {
   isLoading?: boolean;
   /** マスタ取得失敗時は disabled 表示にし、操作を抑止する。 */
   isError?: boolean;
+  /** 初めて使うユーザー向けの 1〜2 文の説明。 */
+  description?: string;
 }
 
 /**
@@ -37,11 +40,12 @@ export function MasterChipSelector({
   onChange,
   isLoading,
   isError,
+  description,
 }: Props) {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.label}>{label}</Text>
+        <SectionHeader label={label} description={description} />
         <View style={styles.loadingRow}>
           <ActivityIndicator color="#d08000" />
         </View>
@@ -52,7 +56,7 @@ export function MasterChipSelector({
   if (isError) {
     return (
       <View style={styles.container}>
-        <Text style={styles.label}>{label}</Text>
+        <SectionHeader label={label} description={description} />
         <Text style={styles.errorText}>マスタの取得に失敗しました</Text>
       </View>
     );
@@ -60,7 +64,7 @@ export function MasterChipSelector({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      <SectionHeader label={label} description={description} />
       <View style={styles.chipRow}>
         {options.map((option) => {
           const selected = value === option.id;
@@ -89,12 +93,6 @@ export function MasterChipSelector({
 const styles = StyleSheet.create({
   container: {
     marginBottom: 0,
-  },
-  label: {
-    color: "#F4F4F4",
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 8,
   },
   loadingRow: {
     paddingVertical: 12,

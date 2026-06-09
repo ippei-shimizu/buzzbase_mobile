@@ -1,20 +1,22 @@
 import type { RunnersState } from "../../../../types/plateAppearance";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { RUNNERS_STATE_OPTIONS } from "@constants/runnersState";
+import { SectionHeader } from "./SectionHeader";
 
 interface Props {
   value: RunnersState | null;
   onChange: (value: RunnersState | null) => void;
+  description?: string;
 }
 
 /**
  * ランナー状況 8 択（無走者 〜 満塁）。
  * 同じチップを再選択すると未入力 (null) に戻る。
  */
-export function RunnersStateSelector({ value, onChange }: Props) {
+export function RunnersStateSelector({ value, onChange, description }: Props) {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>ランナー状況</Text>
+      <SectionHeader label="ランナー状況" description={description} />
       <View style={styles.chipRow}>
         {RUNNERS_STATE_OPTIONS.map((option) => {
           const selected = value === option.key;
@@ -43,12 +45,6 @@ export function RunnersStateSelector({ value, onChange }: Props) {
 const styles = StyleSheet.create({
   container: {
     marginBottom: 0,
-  },
-  label: {
-    color: "#F4F4F4",
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 8,
   },
   chipRow: {
     flexDirection: "row",
