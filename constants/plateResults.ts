@@ -135,10 +135,7 @@ export interface DirectionOnlyOption {
 
 export const DIRECTION_ONLY_RESULT_OPTIONS: readonly DirectionOnlyOption[] = [
   { label: "失策", plate_result_id: PLATE_RESULT_IDS.ERROR },
-  {
-    label: "フィルダースチョイス",
-    plate_result_id: PLATE_RESULT_IDS.FIELDERS_CHOICE,
-  },
+  { label: "野選", plate_result_id: PLATE_RESULT_IDS.FIELDERS_CHOICE },
   { label: "犠打", plate_result_id: PLATE_RESULT_IDS.SACRIFICE_HIT },
   { label: "犠飛", plate_result_id: PLATE_RESULT_IDS.SACRIFICE_FLY },
 ] as const;
