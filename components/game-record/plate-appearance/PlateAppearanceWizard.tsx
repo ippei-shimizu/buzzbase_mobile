@@ -24,6 +24,7 @@ import {
   useBattingRecordStore,
 } from "@stores/battingRecordStore";
 import { useSnackbarStore } from "@stores/snackbarStore";
+import { DetailDataForm } from "./detail/DetailDataForm";
 import { GroundTapField } from "./GroundTapField";
 import { HitTypeModal } from "./HitTypeModal";
 import { OutTypeModal } from "./OutTypeModal";
@@ -44,13 +45,14 @@ interface Props {
   onClose: () => void;
 }
 
-type WizardStep = "tap_and_select" | "counter";
+type WizardStep = "tap_and_select" | "counter" | "detail";
 
 /**
  * v2 打席記録のステップ式ウィザード本体（新規 / 編集 兼用）。
  *
  * - Step1 (`tap_and_select`): グラウンドタップ + 打席結果選択（必要に応じてサブモーダル）
- * - Step2 (`counter`): 打点 / 得点 / 盗塁 / 盗塁死を +/- で入力し、完了で API 送信
+ * - Step2 (`counter`): 打点 / 得点 / 盗塁 / 盗塁死を +/- で入力
+ * - Step3 (`detail`): 任意の詳細データ（カウント / ランナー / 球質 / 球種 / メモ等）
  *
  * 編集モードでは `editingPlateAppearance` を `initializeFromExisting` で store に流し込み、
  * 完了時に `updatePlateAppearance(id, payload)` を呼ぶ。
@@ -169,6 +171,56 @@ export function PlateAppearanceWizard({
   const completeLabel = isEditMode ? "この打席を更新" : "この打席を完了";
   const cancelLabel = isEditMode ? "編集を中断する" : "入力を中断する";
 
+  if (step === "detail") {
+    return (
+      <ScrollView style={styles.container} contentContainerStyle={styles.body}>
+        <View style={styles.detailHeaderRow}>
+          <Text style={styles.stepHeader}>
+            {headerTitle}の詳細（すべて任意）
+          </Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="詳細入力をスキップして完了"
+            onPress={handleSubmit}
+            disabled={isSubmitting}
+            hitSlop={6}
+          >
+            <Text style={styles.skipLabel}>スキップして完了</Text>
+          </TouchableOpacity>
+        </View>
+        <DetailDataForm />
+        <View style={styles.counterActions}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="打点・得点の入力に戻る"
+            style={styles.secondaryButton}
+            onPress={() => setStep("counter")}
+            disabled={isSubmitting}
+          >
+            <Text style={styles.secondaryLabel}>得点入力に戻る</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={completeLabel}
+            accessibilityState={{ disabled: isSubmitting }}
+            style={[
+              styles.primaryButton,
+              isSubmitting && styles.buttonDisabled,
+            ]}
+            onPress={handleSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color="#F4F4F4" />
+            ) : (
+              <Text style={styles.primaryLabel}>{completeLabel}</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    );
+  }
+
   if (step === "counter") {
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.body}>
@@ -192,19 +244,28 @@ export function PlateAppearanceWizard({
           </TouchableOpacity>
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel={completeLabel}
+            accessibilityLabel="詳細を入力する"
+            style={styles.primaryButton}
+            onPress={() => setStep("detail")}
+            disabled={isSubmitting}
+          >
+            <Text style={styles.primaryLabel}>詳細を入力する</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="詳細入力をスキップして完了"
             accessibilityState={{ disabled: isSubmitting }}
             style={[
-              styles.primaryButton,
+              styles.skipFinishButton,
               isSubmitting && styles.buttonDisabled,
             ]}
             onPress={handleSubmit}
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#F4F4F4" />
+              <ActivityIndicator color="#d08000" />
             ) : (
-              <Text style={styles.primaryLabel}>{completeLabel}</Text>
+              <Text style={styles.skipFinishLabel}>スキップして完了</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -303,6 +364,17 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 12,
   },
+  detailHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  skipLabel: {
+    color: "#A1A1AA",
+    fontSize: 13,
+    textDecorationLine: "underline",
+  },
   buttonsSection: {
     marginTop: 16,
   },
@@ -358,6 +430,16 @@ const styles = StyleSheet.create({
     color: "#d08000",
     fontSize: 14,
     fontWeight: "bold",
+  },
+  skipFinishButton: {
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  skipFinishLabel: {
+    color: "#d08000",
+    fontSize: 14,
+    fontWeight: "bold",
+    textDecorationLine: "underline",
   },
   buttonDisabled: {
     opacity: 0.5,
