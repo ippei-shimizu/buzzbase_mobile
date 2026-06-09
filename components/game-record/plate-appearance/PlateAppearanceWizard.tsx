@@ -417,8 +417,10 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   headerBack: {
-    paddingHorizontal: 8,
+    paddingLeft: 0,
+    paddingRight: 12,
     paddingVertical: 4,
+    marginLeft: -8,
   },
   buttonsSection: {
     marginTop: 16,
