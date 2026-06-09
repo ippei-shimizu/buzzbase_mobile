@@ -42,7 +42,7 @@ export function RunnersStateSelector({ value, onChange }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 20,
+    marginBottom: 0,
   },
   label: {
     color: "#F4F4F4",
