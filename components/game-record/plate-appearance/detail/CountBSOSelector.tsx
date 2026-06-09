@@ -91,7 +91,7 @@ function SegmentRow({ label, max, value, onChange }: SegmentRowProps) {
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 20,
+    marginBottom: 0,
   },
   sectionLabel: {
     color: "#F4F4F4",
