@@ -13,9 +13,9 @@ import type {
 
 /** アウト種別（`plate_appearances.out_type` enum）。サーバーから文字列で返る。 */
 export type OutType =
-  | "ground_out"
-  | "fly_out"
-  | "line_out"
+  | "ground_ball"
+  | "fly_ball"
+  | "line_drive"
   | "double_play"
   | "foul_fly";
 
