@@ -5,7 +5,7 @@ import type {
   PlateResultId,
 } from "@constants/plateResults";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -84,16 +84,22 @@ export function PlateAppearanceWizard({
   const [step, setStep] = useState<WizardStep>("tap_and_select");
   const [outModalVisible, setOutModalVisible] = useState(false);
   const [hitModalVisible, setHitModalVisible] = useState(false);
-  const [hasInitialized, setHasInitialized] = useState(false);
 
-  if (!hasInitialized) {
+  // 初期化はマウント時に 1 回だけ。レンダー中の setState を避けるため useEffect で実行。
+  // アンマウント時（システムスワイプバック / 戻るジェスチャー / 完了後の router.back いずれも）に
+  // store をリセットして、次回ウィザード起動時に前回の入力値が残らないようにする。
+  // 完了経路では handleSubmit 内でも resetStore を呼ぶが、reset は冪等なので二重実行しても問題ない。
+
+  useEffect(() => {
     if (editingPlateAppearance) {
       initializeFromExisting(editingPlateAppearance);
     } else {
       initializeForNew(batterBoxNumber);
     }
-    setHasInitialized(true);
-  }
+    return () => {
+      resetStore();
+    };
+  }, []);
 
   const { createPlateAppearance, isCreating } = useCreatePlateAppearance();
   const { updatePlateAppearance, isUpdating } = useUpdatePlateAppearance();
