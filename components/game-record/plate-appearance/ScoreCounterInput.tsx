@@ -91,6 +91,7 @@ function StepperRow({ label, value, onChangeValue }: StepperRowProps) {
           onChangeValue={onChangeValue}
           min={MIN_VALUE}
           style={styles.input}
+          accessibilityLabel={label}
         />
         <TouchableOpacity
           accessibilityRole="button"
