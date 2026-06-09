@@ -16,17 +16,19 @@ interface RowConfig {
   label: string;
   /** 取りうる値の最大（ボール=3 / ストライク=2 / アウト=2）。 */
   max: number;
+  /** 点灯色（球場のカウントボード配色: ボール=緑 / ストライク=黄 / アウト=赤）。 */
+  color: string;
 }
 
 const ROWS: RowConfig[] = [
-  { key: "finalBalls", label: "ボール", max: 3 },
-  { key: "finalStrikes", label: "ストライク", max: 2 },
-  { key: "finalOuts", label: "アウト", max: 2 },
+  { key: "finalBalls", label: "ボール", max: 3, color: "#22c55e" },
+  { key: "finalStrikes", label: "ストライク", max: 2, color: "#eab308" },
+  { key: "finalOuts", label: "アウト", max: 2, color: "#ef4444" },
 ];
 
 /**
- * 最終ボールカウント・ストライク・アウトの 3 行セグメント選択。
- * 各行で「未入力」を許容するため、同じ値を再タップすると null に戻る。
+ * 最終ボールカウント・ストライク・アウトを球場カウントボード風のドット UI で入力する。
+ * ドットをタップすると現在値までが点灯。すでに点灯済みの最後のドットを再タップで 1 段下げる。
  */
 export function CountBSOSelector({
   balls,
@@ -44,51 +46,62 @@ export function CountBSOSelector({
   return (
     <View style={styles.container}>
       <SectionHeader label="最終カウント" description={description} />
-      {ROWS.map((row) => (
-        <SegmentRow
-          key={row.key}
-          label={row.label}
-          max={row.max}
-          value={values[row.key]}
-          onChange={(next) => onChange(row.key, next)}
-        />
-      ))}
+      <View style={styles.board}>
+        {ROWS.map((row) => (
+          <DotRow
+            key={row.key}
+            label={row.label}
+            total={row.max}
+            value={values[row.key]}
+            color={row.color}
+            onChange={(next) => onChange(row.key, next)}
+          />
+        ))}
+      </View>
     </View>
   );
 }
 
-interface SegmentRowProps {
+interface DotRowProps {
   label: string;
-  max: number;
+  total: number;
   value: number | null;
+  color: string;
   onChange: (next: number | null) => void;
 }
 
-function SegmentRow({ label, max, value, onChange }: SegmentRowProps) {
-  const values = Array.from({ length: max + 1 }, (_, index) => index);
+function DotRow({ label, total, value, color, onChange }: DotRowProps) {
+  const dots = Array.from({ length: total }, (_, index) => index + 1);
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <View style={styles.segmentGroup}>
-        {values.map((segmentValue) => {
-          const selected = value === segmentValue;
+      <View style={styles.dotRow}>
+        {dots.map((dotIndex) => {
+          const isOn = value !== null && value >= dotIndex;
           return (
             <TouchableOpacity
-              key={segmentValue}
+              key={dotIndex}
               accessibilityRole="button"
-              accessibilityLabel={`${label} ${segmentValue}`}
-              accessibilityState={{ selected }}
-              style={[styles.segment, selected && styles.segmentSelected]}
-              onPress={() => onChange(selected ? null : segmentValue)}
+              accessibilityLabel={`${label} ${dotIndex}`}
+              accessibilityState={{ selected: isOn }}
+              hitSlop={6}
+              onPress={() => {
+                // 既に点灯している最後のドットを再タップ → 1 段下げる（0 になったら null）。
+                if (value === dotIndex) {
+                  onChange(dotIndex === 1 ? null : dotIndex - 1);
+                } else {
+                  onChange(dotIndex);
+                }
+              }}
             >
-              <Text
+              <View
                 style={[
-                  styles.segmentText,
-                  selected && styles.segmentTextSelected,
+                  styles.dot,
+                  isOn
+                    ? { backgroundColor: color, borderColor: color }
+                    : styles.dotOff,
                 ]}
-              >
-                {segmentValue}
-              </Text>
+              />
             </TouchableOpacity>
           );
         })}
@@ -101,39 +114,35 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 0,
   },
+  board: {
+    backgroundColor: "#1c1c1c",
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    gap: 10,
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 8,
   },
   rowLabel: {
     color: "#F4F4F4",
     fontSize: 13,
-    width: 88,
-  },
-  segmentGroup: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  segment: {
-    minWidth: 38,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#52525B",
-    backgroundColor: "#424242",
-    alignItems: "center",
-  },
-  segmentSelected: {
-    backgroundColor: "#d08000",
-    borderColor: "#d08000",
-  },
-  segmentText: {
-    color: "#F4F4F4",
-    fontSize: 14,
-  },
-  segmentTextSelected: {
     fontWeight: "bold",
+    width: 80,
+  },
+  dotRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  dot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+  },
+  dotOff: {
+    backgroundColor: "transparent",
+    borderColor: "#5a5a5a",
   },
 });
