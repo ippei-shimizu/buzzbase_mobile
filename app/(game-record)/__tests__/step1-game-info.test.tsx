@@ -161,15 +161,15 @@ describe("Step1GameInfoScreen / バリデーション", () => {
 
     fireEvent.press(submitButton);
 
-    // Snackbar には個別バリデーションメッセージを改行連結した詳細を表示する
+    // Snackbar には個別バリデーションメッセージを改行連結した詳細を表示する。
+    // 点数は store 初期値 0 で「有効値」扱いなのでエラーには含まれない。
     await waitFor(() => {
       const s = useSnackbarStore.getState();
       expect(s.visible).toBe(true);
       expect(s.type).toBe("error");
       expect(s.message).toContain("自チーム名を入力してください");
       expect(s.message).toContain("相手チーム名を入力してください");
-      expect(s.message).toContain("自チームの点数を入力してください");
-      expect(s.message).toContain("相手チームの点数を入力してください");
+      expect(s.message).not.toContain("点数を入力してください");
       // DH 制で投手として出場するケースに備えて、先発でも打順「なし」を許容する。
       expect(s.message).not.toContain("打順を選択してください");
     });
@@ -177,7 +177,5 @@ describe("Step1GameInfoScreen / バリデーション", () => {
     // フィールド近傍のエラー（自チーム / 相手チーム は必須）
     expect(getByText("自チーム名を入力してください")).toBeTruthy();
     expect(getByText("相手チーム名を入力してください")).toBeTruthy();
-    // 点数（FormRow は myTeamScore / opponentTeamScore のうちどちらかのメッセージを表示する）
-    expect(getByText(/点数を入力してください/)).toBeTruthy();
   });
 });
