@@ -20,8 +20,8 @@ import { RunnersStateSelector } from "./RunnersStateSelector";
  */
 const SECTION_DESCRIPTIONS = {
   finalCount: "打席が終わった時点のボール・ストライク・アウトのカウント",
-  firstPitchSwing: "ピッチャーが投げた 1 球目に手を出したかどうか",
-  runnersState: "打席に入った瞬間のランナー位置",
+  firstPitchSwing: "1 球目を打って打席結果が決まったかどうか",
+  runnersState: "打席結果が出たタイミングのランナー位置",
   inning: "この打席が何回（イニング）目に発生したか",
   contactQuality: "ボールがバットのどこに当たった感触か",
   timing: "ピッチャーの球に対するスイングのタイミング",
