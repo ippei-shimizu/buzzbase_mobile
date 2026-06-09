@@ -122,9 +122,9 @@ export function PlateResultButtons({
       <View style={styles.section}>
         {chunkPairs(NO_DIRECTION_RESULT_OPTIONS).map((row, rowIndex) => (
           <View key={`no-direction-row-${rowIndex}`} style={styles.row}>
-            {row.map((option, idx) => (
+            {row.map((option) => (
               <ResultButton
-                key={`${option.plate_result_id}-${option.label}-${idx}`}
+                key={`${option.plate_result_id}-${option.label}`}
                 label={option.label}
                 tone={toneForPlateResult(option.plate_result_id)}
                 disabled={hasHitLocation}
