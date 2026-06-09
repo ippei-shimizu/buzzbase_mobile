@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SectionHeader } from "./SectionHeader";
 
 type DetailCountKey = "finalBalls" | "finalStrikes" | "finalOuts";
 
@@ -7,6 +8,7 @@ interface Props {
   strikes: number | null;
   outs: number | null;
   onChange: (key: DetailCountKey, value: number | null) => void;
+  description?: string;
 }
 
 interface RowConfig {
@@ -26,7 +28,13 @@ const ROWS: RowConfig[] = [
  * 最終ボールカウント・ストライク・アウトの 3 行セグメント選択。
  * 各行で「未入力」を許容するため、同じ値を再タップすると null に戻る。
  */
-export function CountBSOSelector({ balls, strikes, outs, onChange }: Props) {
+export function CountBSOSelector({
+  balls,
+  strikes,
+  outs,
+  onChange,
+  description,
+}: Props) {
   const values: Record<DetailCountKey, number | null> = {
     finalBalls: balls,
     finalStrikes: strikes,
@@ -35,7 +43,7 @@ export function CountBSOSelector({ balls, strikes, outs, onChange }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionLabel}>最終カウント</Text>
+      <SectionHeader label="最終カウント" description={description} />
       {ROWS.map((row) => (
         <SegmentRow
           key={row.key}
@@ -92,12 +100,6 @@ function SegmentRow({ label, max, value, onChange }: SegmentRowProps) {
 const styles = StyleSheet.create({
   container: {
     marginBottom: 0,
-  },
-  sectionLabel: {
-    color: "#F4F4F4",
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 8,
   },
   row: {
     flexDirection: "row",

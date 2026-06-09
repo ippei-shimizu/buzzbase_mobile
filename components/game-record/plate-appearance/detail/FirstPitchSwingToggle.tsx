@@ -1,8 +1,10 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SectionHeader } from "./SectionHeader";
 
 interface Props {
   value: boolean | null;
   onChange: (value: boolean | null) => void;
+  description?: string;
 }
 
 interface SegmentOption {
@@ -20,10 +22,10 @@ const SEGMENTS: SegmentOption[] = [
  * 初球打ちフラグの 2 値トグル（null/true/false の 3 状態）。
  * 同じ選択肢を再タップすると未選択 (null) に戻る。
  */
-export function FirstPitchSwingToggle({ value, onChange }: Props) {
+export function FirstPitchSwingToggle({ value, onChange, description }: Props) {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>初球打ち</Text>
+      <SectionHeader label="初球打ち" description={description} />
       <View style={styles.segmentGroup}>
         {SEGMENTS.map((segment) => {
           const selected = value === segment.value;
@@ -55,12 +57,6 @@ export function FirstPitchSwingToggle({ value, onChange }: Props) {
 const styles = StyleSheet.create({
   container: {
     marginBottom: 0,
-  },
-  label: {
-    color: "#F4F4F4",
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 8,
   },
   segmentGroup: {
     flexDirection: "row",

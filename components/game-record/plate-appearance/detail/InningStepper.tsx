@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SectionHeader } from "./SectionHeader";
 
 interface Props {
   value: number | null;
   onChange: (value: number | null) => void;
+  description?: string;
 }
 
 const PRIMARY_COLOR = "#d08000";
@@ -14,7 +16,7 @@ const MIN_INNING = 1;
  * イニング数のステッパー入力（null 許容）。
  * 「-」で 1 を下回ると null（未入力）に戻る。これにより「未入力」と「1 回」を明示的に区別できる。
  */
-export function InningStepper({ value, onChange }: Props) {
+export function InningStepper({ value, onChange, description }: Props) {
   const decrement = () => {
     if (value === null) {
       onChange(null);
@@ -30,7 +32,7 @@ export function InningStepper({ value, onChange }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>イニング</Text>
+      <SectionHeader label="イニング" description={description} />
       <View style={styles.row}>
         <TouchableOpacity
           accessibilityRole="button"
@@ -77,12 +79,6 @@ export function InningStepper({ value, onChange }: Props) {
 const styles = StyleSheet.create({
   container: {
     marginBottom: 0,
-  },
-  label: {
-    color: "#F4F4F4",
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 8,
   },
   row: {
     flexDirection: "row",
