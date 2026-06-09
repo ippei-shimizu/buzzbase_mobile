@@ -14,7 +14,6 @@ import {
   View,
 } from "react-native";
 import { HelpTooltipIcon } from "@components/ui/HelpTooltipIcon";
-import { useHitDirections } from "@hooks/useHitDirections";
 import { useCreatePlateAppearance } from "@hooks/usePlateAppearances";
 import {
   isBattingRecordReadyToSubmit,
@@ -76,7 +75,6 @@ export function PlateAppearanceWizard({
     setHasInitialized(true);
   }
 
-  const { hitDirections, isLoading: isLoadingDirections } = useHitDirections();
   const { createPlateAppearance, isCreating } = useCreatePlateAppearance();
 
   const hitLocation =
@@ -125,14 +123,6 @@ export function PlateAppearanceWizard({
       });
     }
   };
-
-  if (isLoadingDirections) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#d08000" />
-      </View>
-    );
-  }
 
   if (step === "counter") {
     return (
@@ -186,11 +176,7 @@ export function PlateAppearanceWizard({
           }
         />
       </View>
-      <GroundTapField
-        hitDirections={hitDirections}
-        hitLocation={hitLocation}
-        onTap={handleTap}
-      />
+      <GroundTapField hitLocation={hitLocation} onTap={handleTap} />
       <View style={styles.clearLocationSlot}>
         {hitLocation !== null && (
           <TouchableOpacity
