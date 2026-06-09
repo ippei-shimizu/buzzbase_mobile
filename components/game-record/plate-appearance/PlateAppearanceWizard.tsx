@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { HelpTooltipIcon } from "@components/ui/HelpTooltipIcon";
 import { useHitDirections } from "@hooks/useHitDirections";
 import { useCreatePlateAppearance } from "@hooks/usePlateAppearances";
 import {
@@ -175,7 +176,16 @@ export function PlateAppearanceWizard({
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.body}>
-      <Text style={styles.stepHeader}>第{batterBoxNumber}打席</Text>
+      <View style={styles.stepHeaderRow}>
+        <Text style={styles.stepHeader}>第{batterBoxNumber}打席</Text>
+        <HelpTooltipIcon
+          title="入力方法"
+          message={
+            "グラウンドをタップして打球方向を選んでから、下のボタンで結果を選択してください。\n\n" +
+            "三振・四球など打球方向のない結果は、タップせずに「打球方向なし」のボタンから選べます。"
+          }
+        />
+      </View>
       <GroundTapField
         hitDirections={hitDirections}
         hitLocation={hitLocation}
@@ -258,6 +268,11 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  stepHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     marginBottom: 12,
   },
   buttonsSection: {
