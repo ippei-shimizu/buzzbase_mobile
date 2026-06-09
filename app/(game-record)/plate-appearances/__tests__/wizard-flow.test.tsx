@@ -131,8 +131,7 @@ describe("打席ステップ式ウィザードのフロー", () => {
 
     // 3. Step2 (counter) に切り替わり、打点 NumberInput を 1 に書き換え
     await view.findByLabelText("この打席を完了");
-    const inputs = view.UNSAFE_getAllByProps({ keyboardType: "number-pad" });
-    fireEvent.changeText(inputs[0], "1");
+    fireEvent.changeText(view.getByLabelText("打点"), "1");
 
     // 4. 「この打席を完了」を押下 → API リクエスト発火
     fireEvent.press(view.getByLabelText("この打席を完了"));
