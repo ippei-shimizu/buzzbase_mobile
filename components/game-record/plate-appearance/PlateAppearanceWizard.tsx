@@ -99,6 +99,9 @@ export function PlateAppearanceWizard({
     return () => {
       resetStore();
     };
+    // マウント 1 回限りの初期化と、アンマウント時のリセットだけが意図。
+    // 依存配列に setter / props を入れると意味が変わるため敢えて空にする。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const { createPlateAppearance, isCreating } = useCreatePlateAppearance();
