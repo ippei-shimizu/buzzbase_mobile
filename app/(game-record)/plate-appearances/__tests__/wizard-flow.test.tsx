@@ -1,7 +1,7 @@
 /**
  * 打席ステップ式 UI のフロー結合テスト。
  *
- * Step1 (タップ → ヒット → 単打) → Step2 (打点 +1 → この打席を完了)
+ * Step1 (タップ → ヒット → 単打) → Step2 (打点 +1) → Step3 (詳細入力 or スキップ)
  * → POST /api/v2/plate_appearances が期待 payload で発火するまでを 1 本でなぞる。
  *
  * 方針:
@@ -100,11 +100,34 @@ beforeEach(() => {
     http.get(baseUrl("/api/v2/hit_directions"), () =>
       HttpResponse.json({ hit_directions: buildHitDirections() }),
     ),
+    http.get(baseUrl("/api/v2/contact_qualities"), () =>
+      HttpResponse.json({
+        contact_qualities: [
+          { id: 1, name: "真芯", display_order: 1 },
+          { id: 2, name: "先っぽ", display_order: 2 },
+        ],
+      }),
+    ),
+    http.get(baseUrl("/api/v2/timings"), () =>
+      HttpResponse.json({
+        timings: [{ id: 1, name: "ドンピシャ", display_order: 1 }],
+      }),
+    ),
+    http.get(baseUrl("/api/v2/pitch_types"), () =>
+      HttpResponse.json({
+        pitch_types: [{ id: 1, name: "ストレート系", display_order: 1 }],
+      }),
+    ),
+    http.get(baseUrl("/api/v2/hit_depths"), () =>
+      HttpResponse.json({
+        hit_depths: [{ id: 2, name: "外野", display_order: 2 }],
+      }),
+    ),
   );
 });
 
 describe("打席ステップ式ウィザードのフロー", () => {
-  it("タップ → ヒット → 単打 → 打点 1 → 完了 で POST /api/v2/plate_appearances が期待 payload で呼ばれる", async () => {
+  it("Step2 で「スキップして完了」を押すと POST 時の詳細フィールドがすべて null になる", async () => {
     let capturedPayload: {
       plate_appearance: Record<string, unknown>;
     } | null = null;
@@ -116,25 +139,18 @@ describe("打席ステップ式ウィザードのフロー", () => {
     );
 
     const view = renderWithProviders(<NewPlateAppearanceScreen />);
-
-    // ゾーン取得とリスト取得を待つため、グラウンドが表示されるのを起点にする
     const ground = await view.findByLabelText("グラウンド");
 
-    // 1. 中ゾーン（深さ=2, 外野）をタップ
     fireEvent(ground, "press", {
       nativeEvent: { locationX: 420 * 0.5, locationY: 340 * 0.3 },
     });
-
-    // 2. ヒットボタン → サブモーダル → 単打 を選ぶ
     fireEvent.press(view.getByRole("button", { name: "ヒット" }));
     fireEvent.press(view.getByRole("button", { name: "単打" }));
 
-    // 3. Step2 (counter) に切り替わり、打点 NumberInput を 1 に書き換え
-    await view.findByLabelText("この打席を完了");
+    await view.findByLabelText("詳細を入力する");
     fireEvent.changeText(view.getByLabelText("打点"), "1");
 
-    // 4. 「この打席を完了」を押下 → API リクエスト発火
-    fireEvent.press(view.getByLabelText("この打席を完了"));
+    fireEvent.press(view.getByLabelText("詳細入力をスキップして完了"));
 
     await waitFor(() => {
       expect(capturedPayload).not.toBeNull();
@@ -146,11 +162,82 @@ describe("打席ステップ式ウィザードのフロー", () => {
       hit_type: "single",
       out_type: null,
       hit_direction_id: 10,
-      hit_depth_id: null,
+      rbi: 1,
+      final_balls: null,
+      final_strikes: null,
+      final_outs: null,
+      first_pitch_swing: null,
+      runners_state: null,
+      inning: null,
+      contact_quality_id: null,
+      timing_id: null,
+      pitch_type_id: null,
+      self_analysis_memo: null,
+      opponent_memo: null,
+    });
+  });
+
+  it("Step3 で詳細項目を入力して完了すると POST payload に値が乗る", async () => {
+    let capturedPayload: {
+      plate_appearance: Record<string, unknown>;
+    } | null = null;
+    server.use(
+      http.post(baseUrl("/api/v2/plate_appearances"), async ({ request }) => {
+        capturedPayload = (await request.json()) as typeof capturedPayload;
+        return HttpResponse.json(
+          buildCreatedResponse({
+            runners_state: "first",
+            contact_quality: { id: 1, name: "真芯", display_order: 1 },
+            self_analysis_memo: "差し込まれた",
+            has_detail_data: true,
+          }),
+          { status: 201 },
+        );
+      }),
+    );
+
+    const view = renderWithProviders(<NewPlateAppearanceScreen />);
+    const ground = await view.findByLabelText("グラウンド");
+
+    fireEvent(ground, "press", {
+      nativeEvent: { locationX: 420 * 0.5, locationY: 340 * 0.3 },
+    });
+    fireEvent.press(view.getByRole("button", { name: "ヒット" }));
+    fireEvent.press(view.getByRole("button", { name: "単打" }));
+
+    await view.findByLabelText("詳細を入力する");
+    fireEvent.changeText(view.getByLabelText("打点"), "1");
+    fireEvent.press(view.getByLabelText("詳細を入力する"));
+
+    // Step3 のチップが描画されるのを待つ（マスタ取得完了の合図）。
+    const runnerChip = await view.findByLabelText("ランナー状況 一塁");
+    fireEvent.press(runnerChip);
+    fireEvent.press(view.getByLabelText("打球の質 真芯"));
+    fireEvent.changeText(view.getByLabelText("自己分析メモ"), "差し込まれた");
+
+    fireEvent.press(view.getByLabelText("この打席を完了"));
+
+    await waitFor(() => {
+      expect(capturedPayload).not.toBeNull();
+    });
+    expect(capturedPayload!.plate_appearance).toMatchObject({
+      game_result_id: 123,
+      batter_box_number: 1,
+      plate_result_id: 7,
+      hit_type: "single",
+      runners_state: "first",
+      contact_quality_id: 1,
+      self_analysis_memo: "差し込まれた",
       rbi: 1,
     });
-    expect(capturedPayload!.plate_appearance.hit_location_x).toBeCloseTo(0.5);
-    expect(capturedPayload!.plate_appearance.hit_location_y).toBeCloseTo(0.3);
+    // 入力していない他の詳細項目はそのまま null で送信される。
+    expect(capturedPayload!.plate_appearance).toMatchObject({
+      timing_id: null,
+      pitch_type_id: null,
+      first_pitch_swing: null,
+      inning: null,
+      opponent_memo: null,
+    });
   });
 
   it("タップ前は「ヒット」ボタンが disabled、「四球」ボタンは活性のまま", async () => {
