@@ -15,12 +15,9 @@ import { useGameRecordStore } from "../../../stores/gameRecordStore";
 
 /**
  * 打席リスト画面。
- * 既存カードと並んで末尾に「第N打席 / 結果を入力」プレースホルダを常に表示し、
- * タップでウィザード（`./new`）に遷移する。画面下部の primary ボタンで
- * `recordPattern` に応じて投手成績 or サマリーへ進む。
- *
- * 打席カードの編集起動は別 Issue（ippei-shimizu/buzzbase#335）で対応するため、
- * 本画面ではカードを TouchableOpacity だが onPress は持たない（タップ不可状態）。
+ * - リスト末尾の「第N打席 / 結果を入力」プレースホルダタップ → `./new` で新規入力ウィザード
+ * - 既存打席カードタップ → `./[id]/edit` で同じウィザードを編集モードで起動
+ * - 画面下部の primary ボタンで `recordPattern` に応じて投手成績 or サマリーへ進む
  */
 export default function PlateAppearancesListScreen() {
   const router = useRouter();
@@ -71,7 +68,15 @@ export default function PlateAppearancesListScreen() {
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
-            <PlateAppearanceCard plateAppearance={item} />
+            <PlateAppearanceCard
+              plateAppearance={item}
+              onPress={() =>
+                router.push({
+                  pathname: "/(game-record)/plate-appearances/[id]/edit",
+                  params: { id: String(item.id) },
+                })
+              }
+            />
           )}
           ListFooterComponent={
             <>
