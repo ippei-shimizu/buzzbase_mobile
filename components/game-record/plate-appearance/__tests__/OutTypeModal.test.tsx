@@ -15,7 +15,7 @@ describe("OutTypeModal", () => {
     expect(getByRole("button", { name: "ファールフライ" })).toBeTruthy();
   });
 
-  it("「ゴロ」タップで onSelect が ground_out オプション（plate_result_id=1）で呼ばれる", () => {
+  it("「ゴロ」タップで onSelect が ground_ball オプション（plate_result_id=1）で呼ばれる", () => {
     const onSelect = jest.fn();
     const { getByRole } = render(
       <OutTypeModal visible onSelect={onSelect} onCancel={jest.fn()} />,
@@ -26,7 +26,7 @@ describe("OutTypeModal", () => {
     expect(onSelect).toHaveBeenCalledWith({
       label: "ゴロ",
       plate_result_id: PLATE_RESULT_IDS.GROUND_OUT,
-      out_type: "ground_out",
+      out_type: "ground_ball",
     });
   });
 

@@ -71,17 +71,17 @@ export const OUT_TYPE_OPTIONS: readonly OutTypeOption[] = [
   {
     label: "ゴロ",
     plate_result_id: PLATE_RESULT_IDS.GROUND_OUT,
-    out_type: "ground_out",
+    out_type: "ground_ball",
   },
   {
     label: "フライ",
     plate_result_id: PLATE_RESULT_IDS.FLY_OUT,
-    out_type: "fly_out",
+    out_type: "fly_ball",
   },
   {
     label: "ライナー",
     plate_result_id: PLATE_RESULT_IDS.LINE_OUT,
-    out_type: "line_out",
+    out_type: "line_drive",
   },
   {
     label: "併殺打",
