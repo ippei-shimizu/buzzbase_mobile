@@ -58,11 +58,12 @@ describe("GroundTapField", () => {
     expect(UNSAFE_queryAllByType(Circle)).toHaveLength(1);
   });
 
-  it("hitLocation が指定されると追加でタップマーカー Circle が 2 つ（外側の薄い円と中身）描画される", () => {
+  it("hitLocation が指定されるとタップマーカーと選択中ラベルのパルスリングが描画される", () => {
     const { UNSAFE_queryAllByType } = render(
       <GroundTapField hitLocation={{ x: 0.5, y: 0.3 }} onTap={jest.fn()} />,
     );
-    //マウンド 1 + タップマーカー 2 = 3
-    expect(UNSAFE_queryAllByType(Circle)).toHaveLength(3);
+    // マウンド 1 + タップマーカー 2（外側の薄い円 + 中身）
+    // + 選択中ラベルのパルスリング 3（withDelay で時間差展開する波紋）= 6
+    expect(UNSAFE_queryAllByType(Circle)).toHaveLength(6);
   });
 });
