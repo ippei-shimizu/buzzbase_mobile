@@ -46,8 +46,8 @@ interface GameRecordState {
   myTeamId: number | null;
   opponentTeamName: string;
   opponentTeamId: number | null;
-  // 0-0（完封試合）も有効な値のため、未入力を区別する目的で null を許容する。
-  // 必須バリデーションは Step1 画面側で null チェックする。
+  // 初期値は 0（多くの試合で 0 から増えていくため）。ユーザーが手入力で
+  // 空欄にしたときは null として扱い、Step1 のバリデーションでエラーを返す。
   myTeamScore: number | null;
   opponentTeamScore: number | null;
   battingOrder: string;
@@ -125,8 +125,8 @@ const initialState = {
   myTeamId: null,
   opponentTeamName: "",
   opponentTeamId: null,
-  myTeamScore: null,
-  opponentTeamScore: null,
+  myTeamScore: 0,
+  opponentTeamScore: 0,
   battingOrder: "1",
   defensivePosition: "",
   memo: "",
