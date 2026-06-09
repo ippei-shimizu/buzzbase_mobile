@@ -1,11 +1,13 @@
+import type { BattingBox } from "../../types/gameRecord";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Share, View } from "react-native";
 import { SummaryView } from "@components/game-record/SummaryView";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { BottomTabBar } from "@components/ui/BottomTabBar";
 import { useGameRecord } from "@hooks/useGameRecord";
+import { usePlateAppearancesByGame } from "@hooks/usePlateAppearances";
 import { useStoreReview } from "@hooks/useStoreReview";
 import {
   trackGameRecordCompleted,
@@ -30,6 +32,25 @@ export default function SummaryScreen() {
   useEffect(() => {
     trackGameRecordStepViewed("summary");
   }, []);
+
+  // v2 で記録された打席は plate_appearances API から取得する。
+  // v1 経路（store.battingBoxes が埋まる）はサーバから取れない場合のフォールバック。
+  const { plateAppearances } = usePlateAppearancesByGame(store.gameResultId);
+
+  const battingBoxes: BattingBox[] = useMemo(() => {
+    if (plateAppearances.length > 0) {
+      return plateAppearances
+        .slice()
+        .sort((a, b) => a.batter_box_number - b.batter_box_number)
+        .map((pa) => ({
+          id: pa.id,
+          position: pa.hit_direction_id ?? 0,
+          result: pa.plate_result_id ?? 0,
+          text: pa.batting_result || "",
+        }));
+    }
+    return store.battingBoxes;
+  }, [plateAppearances, store.battingBoxes]);
 
   const tryShowPrePrompt = async (source: PrePromptSource) => {
     try {
@@ -58,7 +79,7 @@ export default function SummaryScreen() {
       `${formattedDate} ${store.matchType} vs ${store.opponentTeamName} ${myScore}-${opponentScore}`,
     );
 
-    const filteredBoxes = store.battingBoxes.filter((box) => box.result !== 0);
+    const filteredBoxes = battingBoxes.filter((box) => box.result !== 0);
     if (filteredBoxes.length > 0) {
       const hits = filteredBoxes.filter((box) => {
         const lastChar = box.text[box.text.length - 1];
@@ -159,7 +180,7 @@ export default function SummaryScreen() {
         battingOrder={store.battingOrder}
         defensivePosition={store.defensivePosition}
         memo={store.memo}
-        battingBoxes={store.battingBoxes}
+        battingBoxes={battingBoxes}
         runsBattedIn={store.runsBattedIn}
         run={store.run}
         stealingBase={store.stealingBase}
