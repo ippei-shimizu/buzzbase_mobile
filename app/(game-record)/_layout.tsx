@@ -53,6 +53,10 @@ export default function GameRecordLayout() {
         name="plate-appearances/new"
         options={{ title: "打席記録" }}
       />
+      <Stack.Screen
+        name="plate-appearances/[id]/edit"
+        options={{ title: "打席記録" }}
+      />
       <Stack.Screen name="step3-pitching" options={{ title: "投手成績" }} />
       <Stack.Screen
         name="summary"

@@ -1,8 +1,9 @@
 import type {
   HitType,
   OutType,
-  PlateAppearanceV2Payload,
+  PlateAppearanceV2,
   PlateAppearanceV2Input,
+  PlateAppearanceV2Payload,
 } from "../types/plateAppearance";
 import { create } from "zustand";
 import { NORMALIZED_LOCATION_PRECISION } from "@constants/groundCanvas";
@@ -14,7 +15,7 @@ type CounterKey = "rbi" | "runScored" | "stolenBases" | "caughtStealing";
  * 1 打席分の入力を保持し、`toCreatePayload(gameResultId)` で API リクエスト本体に変換する。
  *
  * 既存の `useGameRecordStore` には触らず、新規記録フローの「打席ウィザード一時状態」だけを
- * このストアに分離する（編集モード／v1 経路は影響を受けない）。
+ * このストアに分離する（v1 経路は影響を受けない）。
  *
  * キャンセル時は `reset()` を呼んで状態を破棄する（API 送信なし）。
  */
@@ -33,6 +34,7 @@ interface BattingRecordState {
   caughtStealing: number;
 
   initializeForNew: (batterBoxNumber: number) => void;
+  initializeFromExisting: (plateAppearance: PlateAppearanceV2) => void;
   setHitLocation: (
     x: number,
     y: number,
@@ -70,11 +72,36 @@ const roundLocation = (value: number | null): number | null => {
   return Number(value.toFixed(NORMALIZED_LOCATION_PRECISION));
 };
 
+/** decimal 文字列（"0.5000" 等）を number に変換する。null/undefined は null。 */
+const parseLocationString = (
+  value: string | null | undefined,
+): number | null => {
+  if (value === null || value === undefined) return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+};
+
 export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
   ...initialState,
 
   initializeForNew: (batterBoxNumber) =>
     set({ ...initialState, batterBoxNumber }),
+
+  initializeFromExisting: (pa) =>
+    set({
+      batterBoxNumber: pa.batter_box_number,
+      plateResultId: pa.plate_result_id,
+      outType: pa.out_type,
+      hitType: pa.hit_type,
+      hitDirectionId: pa.hit_direction_id,
+      hitDepthId: pa.hit_depth?.id ?? null,
+      hitLocationX: parseLocationString(pa.hit_location_x),
+      hitLocationY: parseLocationString(pa.hit_location_y),
+      rbi: pa.rbi ?? 0,
+      runScored: pa.run_scored ?? 0,
+      stolenBases: pa.stolen_bases ?? 0,
+      caughtStealing: pa.caught_stealing ?? 0,
+    }),
 
   setHitLocation: (x, y, directionId, depthId) =>
     set({

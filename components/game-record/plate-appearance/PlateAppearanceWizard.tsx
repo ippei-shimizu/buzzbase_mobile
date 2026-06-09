@@ -1,3 +1,4 @@
+import type { PlateAppearanceV2 } from "../../../types/plateAppearance";
 import type {
   HitTypeOption,
   OutTypeOption,
@@ -14,7 +15,10 @@ import {
   View,
 } from "react-native";
 import { HelpTooltipIcon } from "@components/ui/HelpTooltipIcon";
-import { useCreatePlateAppearance } from "@hooks/usePlateAppearances";
+import {
+  useCreatePlateAppearance,
+  useUpdatePlateAppearance,
+} from "@hooks/usePlateAppearances";
 import {
   isBattingRecordReadyToSubmit,
   useBattingRecordStore,
@@ -29,8 +33,13 @@ import { ScoreCounterInput } from "./ScoreCounterInput";
 interface Props {
   /** API 送信先の試合 ID */
   gameResultId: number;
-  /** 新規打席として採番する batter_box_number（リスト件数 + 1） */
+  /** 新規打席として採番する batter_box_number（リスト件数 + 1）。編集モードでも参考表示用に渡す */
   batterBoxNumber: number;
+  /**
+   * 編集モードのとき渡す既存打席。指定されると store に値を流し込み、
+   * 完了時は PATCH /api/v2/plate_appearances/:id を呼ぶ。
+   */
+  editingPlateAppearance?: PlateAppearanceV2;
   /** 完了 / キャンセル後の遷移処理（典型的には router.back()） */
   onClose: () => void;
 }
@@ -38,19 +47,25 @@ interface Props {
 type WizardStep = "tap_and_select" | "counter";
 
 /**
- * v2 打席記録のステップ式ウィザード本体。
+ * v2 打席記録のステップ式ウィザード本体（新規 / 編集 兼用）。
  *
  * - Step1 (`tap_and_select`): グラウンドタップ + 打席結果選択（必要に応じてサブモーダル）
  * - Step2 (`counter`): 打点 / 得点 / 盗塁 / 盗塁死を +/- で入力し、完了で API 送信
  *
+ * 編集モードでは `editingPlateAppearance` を `initializeFromExisting` で store に流し込み、
+ * 完了時に `updatePlateAppearance(id, payload)` を呼ぶ。
  * キャンセル時は API を呼ばずに `onClose` を呼ぶ（ローカル破棄）。
  */
 export function PlateAppearanceWizard({
   gameResultId,
   batterBoxNumber,
+  editingPlateAppearance,
   onClose,
 }: Props) {
   const initializeForNew = useBattingRecordStore((s) => s.initializeForNew);
+  const initializeFromExisting = useBattingRecordStore(
+    (s) => s.initializeFromExisting,
+  );
   const setHitLocation = useBattingRecordStore((s) => s.setHitLocation);
   const clearHitLocation = useBattingRecordStore((s) => s.clearHitLocation);
   const setPlateResult = useBattingRecordStore((s) => s.setPlateResult);
@@ -65,17 +80,24 @@ export function PlateAppearanceWizard({
   const stolenBases = useBattingRecordStore((s) => s.stolenBases);
   const caughtStealing = useBattingRecordStore((s) => s.caughtStealing);
 
+  const isEditMode = editingPlateAppearance !== undefined;
   const [step, setStep] = useState<WizardStep>("tap_and_select");
   const [outModalVisible, setOutModalVisible] = useState(false);
   const [hitModalVisible, setHitModalVisible] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
 
   if (!hasInitialized) {
-    initializeForNew(batterBoxNumber);
+    if (editingPlateAppearance) {
+      initializeFromExisting(editingPlateAppearance);
+    } else {
+      initializeForNew(batterBoxNumber);
+    }
     setHasInitialized(true);
   }
 
   const { createPlateAppearance, isCreating } = useCreatePlateAppearance();
+  const { updatePlateAppearance, isUpdating } = useUpdatePlateAppearance();
+  const isSubmitting = isCreating || isUpdating;
 
   const hitLocation =
     hitLocationX !== null && hitLocationY !== null
@@ -112,7 +134,15 @@ export function PlateAppearanceWizard({
       return;
     }
     try {
-      await createPlateAppearance(toCreatePayload(gameResultId));
+      const payload = toCreatePayload(gameResultId);
+      if (editingPlateAppearance) {
+        await updatePlateAppearance({
+          id: editingPlateAppearance.id,
+          payload,
+        });
+      } else {
+        await createPlateAppearance(payload);
+      }
       resetStore();
       onClose();
     } catch (error) {
@@ -124,10 +154,16 @@ export function PlateAppearanceWizard({
     }
   };
 
+  const headerTitle = isEditMode
+    ? `第${batterBoxNumber}打席を編集`
+    : `第${batterBoxNumber}打席`;
+  const completeLabel = isEditMode ? "この打席を更新" : "この打席を完了";
+  const cancelLabel = isEditMode ? "編集を中断する" : "入力を中断する";
+
   if (step === "counter") {
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.body}>
-        <Text style={styles.stepHeader}>第{batterBoxNumber}打席の入力</Text>
+        <Text style={styles.stepHeader}>{headerTitle}の入力</Text>
         <ScoreCounterInput
           rbi={rbi}
           runScored={runScored}
@@ -141,22 +177,25 @@ export function PlateAppearanceWizard({
             accessibilityLabel="打席結果の選択に戻る"
             style={styles.secondaryButton}
             onPress={() => setStep("tap_and_select")}
-            disabled={isCreating}
+            disabled={isSubmitting}
           >
             <Text style={styles.secondaryLabel}>結果選択に戻る</Text>
           </TouchableOpacity>
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="この打席を完了"
-            accessibilityState={{ disabled: isCreating }}
-            style={[styles.primaryButton, isCreating && styles.buttonDisabled]}
+            accessibilityLabel={completeLabel}
+            accessibilityState={{ disabled: isSubmitting }}
+            style={[
+              styles.primaryButton,
+              isSubmitting && styles.buttonDisabled,
+            ]}
             onPress={handleSubmit}
-            disabled={isCreating}
+            disabled={isSubmitting}
           >
-            {isCreating ? (
+            {isSubmitting ? (
               <ActivityIndicator color="#F4F4F4" />
             ) : (
-              <Text style={styles.primaryLabel}>この打席を完了</Text>
+              <Text style={styles.primaryLabel}>{completeLabel}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -167,7 +206,7 @@ export function PlateAppearanceWizard({
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.body}>
       <View style={styles.stepHeaderRow}>
-        <Text style={styles.stepHeader}>第{batterBoxNumber}打席</Text>
+        <Text style={styles.stepHeader}>{headerTitle}</Text>
         <HelpTooltipIcon
           title="入力方法"
           message={
@@ -201,14 +240,14 @@ export function PlateAppearanceWizard({
       </View>
       <TouchableOpacity
         accessibilityRole="button"
-        accessibilityLabel="入力を中断する"
+        accessibilityLabel={cancelLabel}
         style={styles.cancelButton}
         onPress={() => {
           resetStore();
           onClose();
         }}
       >
-        <Text style={styles.cancelLabel}>入力を中断する</Text>
+        <Text style={styles.cancelLabel}>{cancelLabel}</Text>
       </TouchableOpacity>
 
       <OutTypeModal
