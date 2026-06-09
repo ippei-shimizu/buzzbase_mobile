@@ -91,6 +91,36 @@ describe("PlateAppearanceCard", () => {
     expect(queryByText(/打点/)).toBeNull();
   });
 
+  it("得点・盗塁・盗塁死も 1 以上ならそれぞれ表示する", () => {
+    const { getByText, queryByText } = render(
+      <PlateAppearanceCard
+        plateAppearance={buildPlateAppearance({
+          rbi: 0,
+          run_scored: 1,
+          stolen_bases: 2,
+          caught_stealing: 0,
+        })}
+      />,
+    );
+    expect(getByText("得点 1")).toBeTruthy();
+    expect(getByText("盗塁 2")).toBeTruthy();
+    expect(queryByText(/盗塁死/)).toBeNull();
+    expect(queryByText(/打点/)).toBeNull();
+  });
+
+  it("ヒット系 batting_result は赤系の色で描画される", () => {
+    const { getByText } = render(
+      <PlateAppearanceCard
+        plateAppearance={buildPlateAppearance({ batting_result: "中安" })}
+      />,
+    );
+    const resultNode = getByText("中安");
+    const style = Array.isArray(resultNode.props.style)
+      ? Object.assign({}, ...resultNode.props.style)
+      : resultNode.props.style;
+    expect(style.color).toBe("#f31260");
+  });
+
   it("カードタップで onPress が呼ばれる", () => {
     const onPress = jest.fn();
     const { getByRole } = render(
