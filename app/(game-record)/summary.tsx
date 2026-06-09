@@ -92,9 +92,18 @@ export default function SummaryScreen() {
           !box.text.includes("犠打") &&
           !box.text.includes("犠飛"),
       ).length;
+      // v2 経路は打点 / 得点を plate_appearances 単位で持つので集計が必要。
+      // v1 経路（plateAppearances 0 件）は従来通り store の試合合計値を使う。
+      const isV2 = plateAppearances.length > 0;
+      const totalRBI = isV2
+        ? plateAppearances.reduce((sum, pa) => sum + (pa.rbi ?? 0), 0)
+        : store.runsBattedIn;
+      const totalRun = isV2
+        ? plateAppearances.reduce((sum, pa) => sum + (pa.run_scored ?? 0), 0)
+        : store.run;
       const parts = [`${atBats}打数${hits}安打`];
-      if (store.runsBattedIn > 0) parts.push(`${store.runsBattedIn}打点`);
-      if (store.run > 0) parts.push(`${store.run}得点`);
+      if (totalRBI > 0) parts.push(`${totalRBI}打点`);
+      if (totalRun > 0) parts.push(`${totalRun}得点`);
       lines.push(`打撃: ${parts.join(" ")}`);
     }
 
