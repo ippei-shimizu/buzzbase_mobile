@@ -289,12 +289,6 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 64,
   },
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#2E2E2E",
-  },
   stepHeader: {
     color: "#F4F4F4",
     fontSize: 16,
