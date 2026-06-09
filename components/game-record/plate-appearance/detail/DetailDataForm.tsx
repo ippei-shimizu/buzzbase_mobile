@@ -15,6 +15,22 @@ import { MemoTextArea } from "./MemoTextArea";
 import { RunnersStateSelector } from "./RunnersStateSelector";
 
 /**
+ * 各セクションの説明文を 1 箇所に集約する。文言調整が UI コンポーネント変更を
+ * 引き起こさないよう、DetailDataForm 側で文言の責務を持つ。
+ */
+const SECTION_DESCRIPTIONS = {
+  finalCount: "打席が終わった時点のボール・ストライク・アウトのカウント",
+  firstPitchSwing: "ピッチャーが投げた 1 球目に手を出したかどうか",
+  runnersState: "打席に入った瞬間のランナー位置",
+  inning: "この打席が何回（イニング）目に発生したか",
+  contactQuality: "ボールがバットのどこに当たった感触か",
+  timing: "ピッチャーの球に対するスイングのタイミング",
+  pitchType: "打席結果が決まった最後の 1 球の球種",
+  selfAnalysisMemo: "打席を振り返って、自分の良かった点・課題を書き残す",
+  opponentMemo: "対戦相手の特徴や配球パターンを書き残す",
+} as const;
+
+/**
  * 打席ステップ式ウィザードの Step3 本体。
  * 関連するセクションを 3 カード（打席の状況 / 打球 / メモ）に分け、
  * 上部に価値訴求バナーを置く。すべて任意入力で、いずれも store 経由で
@@ -58,16 +74,26 @@ export function DetailDataForm() {
           strikes={finalStrikes}
           outs={finalOuts}
           onChange={setDetailCount}
+          description={SECTION_DESCRIPTIONS.finalCount}
         />
         <SectionDivider />
         <FirstPitchSwingToggle
           value={firstPitchSwing}
           onChange={setFirstPitchSwing}
+          description={SECTION_DESCRIPTIONS.firstPitchSwing}
         />
         <SectionDivider />
-        <RunnersStateSelector value={runnersState} onChange={setRunnersState} />
+        <RunnersStateSelector
+          value={runnersState}
+          onChange={setRunnersState}
+          description={SECTION_DESCRIPTIONS.runnersState}
+        />
         <SectionDivider />
-        <InningStepper value={inning} onChange={setInning} />
+        <InningStepper
+          value={inning}
+          onChange={setInning}
+          description={SECTION_DESCRIPTIONS.inning}
+        />
       </DetailGroupCard>
 
       <DetailGroupCard
@@ -82,6 +108,7 @@ export function DetailDataForm() {
           onChange={(id) => setMasterSelection("contactQualityId", id)}
           isLoading={contactQuality.isLoading}
           isError={contactQuality.isError}
+          description={SECTION_DESCRIPTIONS.contactQuality}
         />
         <SectionDivider />
         <MasterChipSelector
@@ -91,6 +118,7 @@ export function DetailDataForm() {
           onChange={(id) => setMasterSelection("timingId", id)}
           isLoading={timing.isLoading}
           isError={timing.isError}
+          description={SECTION_DESCRIPTIONS.timing}
         />
         <SectionDivider />
         <MasterChipSelector
@@ -100,6 +128,7 @@ export function DetailDataForm() {
           onChange={(id) => setMasterSelection("pitchTypeId", id)}
           isLoading={pitchType.isLoading}
           isError={pitchType.isError}
+          description={SECTION_DESCRIPTIONS.pitchType}
         />
       </DetailGroupCard>
 
@@ -113,6 +142,7 @@ export function DetailDataForm() {
           value={selfAnalysisMemo}
           onChange={(text) => setMemo("selfAnalysisMemo", text)}
           placeholder="例: 高めの球に手が出てしまった"
+          description={SECTION_DESCRIPTIONS.selfAnalysisMemo}
         />
         <SectionDivider />
         <MemoTextArea
@@ -120,6 +150,7 @@ export function DetailDataForm() {
           value={opponentMemo}
           onChange={(text) => setMemo("opponentMemo", text)}
           placeholder="例: 初球はストレート / 2 球目以降は変化球中心"
+          description={SECTION_DESCRIPTIONS.opponentMemo}
         />
       </DetailGroupCard>
     </View>
