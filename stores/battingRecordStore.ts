@@ -4,11 +4,22 @@ import type {
   PlateAppearanceV2,
   PlateAppearanceV2Input,
   PlateAppearanceV2Payload,
+  RunnersState,
 } from "../types/plateAppearance";
 import { create } from "zustand";
 import { NORMALIZED_LOCATION_PRECISION } from "@constants/groundCanvas";
 
 type CounterKey = "rbi" | "runScored" | "stolenBases" | "caughtStealing";
+
+type DetailCountKey = "finalBalls" | "finalStrikes" | "finalOuts";
+
+type MasterSelectionKey =
+  | "contactQualityId"
+  | "timingId"
+  | "pitchTypeId"
+  | "hitDepthId";
+
+type MemoKey = "selfAnalysisMemo" | "opponentMemo";
 
 /**
  * v2 打席ステップ式 UI のウィザード状態。
@@ -33,6 +44,18 @@ interface BattingRecordState {
   stolenBases: number;
   caughtStealing: number;
 
+  finalBalls: number | null;
+  finalStrikes: number | null;
+  finalOuts: number | null;
+  firstPitchSwing: boolean | null;
+  runnersState: RunnersState | null;
+  inning: number | null;
+  contactQualityId: number | null;
+  timingId: number | null;
+  pitchTypeId: number | null;
+  selfAnalysisMemo: string | null;
+  opponentMemo: string | null;
+
   initializeForNew: (batterBoxNumber: number) => void;
   initializeFromExisting: (plateAppearance: PlateAppearanceV2) => void;
   setHitLocation: (
@@ -47,6 +70,12 @@ interface BattingRecordState {
     options?: { outType?: OutType | null; hitType?: HitType | null },
   ) => void;
   setCounter: (key: CounterKey, value: number) => void;
+  setDetailCount: (key: DetailCountKey, value: number | null) => void;
+  setFirstPitchSwing: (value: boolean | null) => void;
+  setRunnersState: (value: RunnersState | null) => void;
+  setInning: (value: number | null) => void;
+  setMasterSelection: (key: MasterSelectionKey, id: number | null) => void;
+  setMemo: (key: MemoKey, text: string) => void;
   toCreatePayload: (gameResultId: number) => PlateAppearanceV2Payload;
   reset: () => void;
 }
@@ -64,6 +93,18 @@ const initialState = {
   runScored: 0,
   stolenBases: 0,
   caughtStealing: 0,
+
+  finalBalls: null as number | null,
+  finalStrikes: null as number | null,
+  finalOuts: null as number | null,
+  firstPitchSwing: null as boolean | null,
+  runnersState: null as RunnersState | null,
+  inning: null as number | null,
+  contactQualityId: null as number | null,
+  timingId: null as number | null,
+  pitchTypeId: null as number | null,
+  selfAnalysisMemo: null as string | null,
+  opponentMemo: null as string | null,
 };
 
 /** 正規化座標 (0〜1) を DB の decimal(5,4) に合わせて 4 桁丸めで整形する。 */
@@ -101,6 +142,17 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       runScored: pa.run_scored ?? 0,
       stolenBases: pa.stolen_bases ?? 0,
       caughtStealing: pa.caught_stealing ?? 0,
+      finalBalls: pa.final_balls,
+      finalStrikes: pa.final_strikes,
+      finalOuts: pa.final_outs,
+      firstPitchSwing: pa.first_pitch_swing,
+      runnersState: pa.runners_state,
+      inning: pa.inning,
+      contactQualityId: pa.contact_quality?.id ?? null,
+      timingId: pa.timing?.id ?? null,
+      pitchTypeId: pa.pitch_type?.id ?? null,
+      selfAnalysisMemo: pa.self_analysis_memo,
+      opponentMemo: pa.opponent_memo,
     }),
 
   setHitLocation: (x, y, directionId, depthId) =>
@@ -131,6 +183,39 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
     set({ [key]: next } as Pick<BattingRecordState, CounterKey>);
   },
 
+  setDetailCount: (key, value) => {
+    if (value === null) {
+      set({ [key]: null } as Pick<BattingRecordState, DetailCountKey>);
+      return;
+    }
+    const clamped = Math.max(0, value);
+    set({ [key]: clamped } as Pick<BattingRecordState, DetailCountKey>);
+  },
+
+  setFirstPitchSwing: (value) => set({ firstPitchSwing: value }),
+
+  setRunnersState: (value) => set({ runnersState: value }),
+
+  setInning: (value) => {
+    if (value === null) {
+      set({ inning: null });
+      return;
+    }
+    // 0 や負値は「未入力 (null)」として扱う。表示上の最小は 1。
+    const normalized = value < 1 ? null : value;
+    set({ inning: normalized });
+  },
+
+  setMasterSelection: (key, id) => {
+    set({ [key]: id } as Pick<BattingRecordState, MasterSelectionKey>);
+  },
+
+  setMemo: (key, text) => {
+    // 空文字を null に正規化することで、API 送信時に "" と null の表現ぶれを防ぐ。
+    const normalized = text.length === 0 ? null : text;
+    set({ [key]: normalized } as Pick<BattingRecordState, MemoKey>);
+  },
+
   // 呼び出し前に必ず `isBattingRecordReadyToSubmit` でガードする。React のイベント
   // ハンドラ内で throw された Error は Error Boundary に届かないため、UI 側は
   // 完了ボタンの disabled 制御と二重チェックで未確定状態のリクエストを防ぐ。
@@ -155,6 +240,17 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       run_scored: state.runScored,
       stolen_bases: state.stolenBases,
       caught_stealing: state.caughtStealing,
+      final_balls: state.finalBalls,
+      final_strikes: state.finalStrikes,
+      final_outs: state.finalOuts,
+      first_pitch_swing: state.firstPitchSwing,
+      runners_state: state.runnersState,
+      inning: state.inning,
+      contact_quality_id: state.contactQualityId,
+      timing_id: state.timingId,
+      pitch_type_id: state.pitchTypeId,
+      self_analysis_memo: state.selfAnalysisMemo,
+      opponent_memo: state.opponentMemo,
     };
     return { plate_appearance };
   },
