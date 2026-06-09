@@ -59,4 +59,54 @@ describe("ScoreCounterInput", () => {
 
     expect(onChange).toHaveBeenCalledWith("runScored", 1);
   });
+
+  it("「打点を増やす」ボタンで onChange('rbi', value + 1) が呼ばれる", () => {
+    const onChange = jest.fn();
+    const { getByRole } = render(
+      <ScoreCounterInput
+        rbi={2}
+        runScored={0}
+        stolenBases={0}
+        caughtStealing={0}
+        onChange={onChange}
+      />,
+    );
+
+    fireEvent.press(getByRole("button", { name: "打点を増やす" }));
+
+    expect(onChange).toHaveBeenCalledWith("rbi", 3);
+  });
+
+  it("「盗塁を減らす」ボタンで onChange('stolenBases', value - 1) が呼ばれる", () => {
+    const onChange = jest.fn();
+    const { getByRole } = render(
+      <ScoreCounterInput
+        rbi={0}
+        runScored={0}
+        stolenBases={2}
+        caughtStealing={0}
+        onChange={onChange}
+      />,
+    );
+
+    fireEvent.press(getByRole("button", { name: "盗塁を減らす" }));
+
+    expect(onChange).toHaveBeenCalledWith("stolenBases", 1);
+  });
+
+  it("値が 0 のときの「減らす」ボタンは disabled になる", () => {
+    const { getByRole } = render(
+      <ScoreCounterInput
+        rbi={0}
+        runScored={0}
+        stolenBases={0}
+        caughtStealing={0}
+        onChange={jest.fn()}
+      />,
+    );
+
+    expect(
+      getByRole("button", { name: "打点を減らす" }).props.accessibilityState,
+    ).toMatchObject({ disabled: true });
+  });
 });
