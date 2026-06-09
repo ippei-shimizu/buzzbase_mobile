@@ -43,6 +43,24 @@ export default function SummaryScreen() {
     return store.battingBoxes;
   }, [plateAppearances, store.battingBoxes]);
 
+  // v2 経路では打点 / 得点 / 盗塁 / 盗塁死は plate_appearances 単位で保存される。
+  // SummaryView は試合合計値で表示するため、ここで集計してから渡す。
+  // plate_appearances が空（= v1 経路）のときは従来通り store の試合合計値を使う。
+  const isV2 = plateAppearances.length > 0;
+  const aggregate = (
+    selector: (pa: (typeof plateAppearances)[number]) => number | null,
+  ) => plateAppearances.reduce((sum, pa) => sum + (selector(pa) ?? 0), 0);
+  const summaryRunsBattedIn = isV2
+    ? aggregate((pa) => pa.rbi)
+    : store.runsBattedIn;
+  const summaryRun = isV2 ? aggregate((pa) => pa.run_scored) : store.run;
+  const summaryStealingBase = isV2
+    ? aggregate((pa) => pa.stolen_bases)
+    : store.stealingBase;
+  const summaryCaughtStealing = isV2
+    ? aggregate((pa) => pa.caught_stealing)
+    : store.caughtStealing;
+
   const tryShowPrePrompt = async (source: PrePromptSource) => {
     try {
       await incrementPositiveEvent();
@@ -83,18 +101,9 @@ export default function SummaryScreen() {
           !box.text.includes("犠打") &&
           !box.text.includes("犠飛"),
       ).length;
-      // v2 経路は打点 / 得点を plate_appearances 単位で持つので集計が必要。
-      // v1 経路（plateAppearances 0 件）は従来通り store の試合合計値を使う。
-      const isV2 = plateAppearances.length > 0;
-      const totalRBI = isV2
-        ? plateAppearances.reduce((sum, pa) => sum + (pa.rbi ?? 0), 0)
-        : store.runsBattedIn;
-      const totalRun = isV2
-        ? plateAppearances.reduce((sum, pa) => sum + (pa.run_scored ?? 0), 0)
-        : store.run;
       const parts = [`${atBats}打数${hits}安打`];
-      if (totalRBI > 0) parts.push(`${totalRBI}打点`);
-      if (totalRun > 0) parts.push(`${totalRun}得点`);
+      if (summaryRunsBattedIn > 0) parts.push(`${summaryRunsBattedIn}打点`);
+      if (summaryRun > 0) parts.push(`${summaryRun}得点`);
       lines.push(`打撃: ${parts.join(" ")}`);
     }
 
@@ -172,10 +181,10 @@ export default function SummaryScreen() {
         defensivePosition={store.defensivePosition}
         memo={store.memo}
         battingBoxes={battingBoxes}
-        runsBattedIn={store.runsBattedIn}
-        run={store.run}
-        stealingBase={store.stealingBase}
-        caughtStealing={store.caughtStealing}
+        runsBattedIn={summaryRunsBattedIn}
+        run={summaryRun}
+        stealingBase={summaryStealingBase}
+        caughtStealing={summaryCaughtStealing}
         battingError={store.battingError}
         hasPitching={store.pitchingResultId !== null}
         win={store.win}
