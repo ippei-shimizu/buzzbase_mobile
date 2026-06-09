@@ -5,7 +5,8 @@ import type {
   PlateResultId,
 } from "@constants/plateResults";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import { useNavigation } from "expo-router";
+import { useEffect, useLayoutEffect, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -64,6 +65,7 @@ export function PlateAppearanceWizard({
   editingPlateAppearance,
   onClose,
 }: Props) {
+  const navigation = useNavigation();
   const initializeForNew = useBattingRecordStore((s) => s.initializeForNew);
   const initializeFromExisting = useBattingRecordStore(
     (s) => s.initializeFromExisting,
@@ -105,6 +107,42 @@ export function PlateAppearanceWizard({
     // 依存配列に setter / props を入れると意味が変わるため敢えて空にする。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Stack ヘッダーの戻るボタンは、Step2/Step3 では「前のステップに戻る」挙動に差し替える。
+  // Step1 ではデフォルト（Stack の pop → 打席一覧）に戻すため `undefined` で上書きを解除する。
+  useLayoutEffect(() => {
+    if (step === "counter") {
+      navigation.setOptions({
+        headerLeft: () => (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="打席結果の選択に戻る"
+            onPress={() => setStep("tap_and_select")}
+            style={styles.headerBack}
+            hitSlop={6}
+          >
+            <Ionicons name="chevron-back" size={28} color="#F4F4F4" />
+          </TouchableOpacity>
+        ),
+      });
+    } else if (step === "detail") {
+      navigation.setOptions({
+        headerLeft: () => (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="打点・得点の入力に戻る"
+            onPress={() => setStep("counter")}
+            style={styles.headerBack}
+            hitSlop={6}
+          >
+            <Ionicons name="chevron-back" size={28} color="#F4F4F4" />
+          </TouchableOpacity>
+        ),
+      });
+    } else {
+      navigation.setOptions({ headerLeft: undefined });
+    }
+  }, [step, navigation]);
 
   const { createPlateAppearance, isCreating } = useCreatePlateAppearance();
   const { updatePlateAppearance, isUpdating } = useUpdatePlateAppearance();
@@ -249,7 +287,10 @@ export function PlateAppearanceWizard({
             onPress={() => setStep("detail")}
             disabled={isSubmitting}
           >
-            <Text style={styles.primaryLabel}>詳細を入力する</Text>
+            <View style={styles.primaryButtonInner}>
+              <Text style={styles.primaryLabel}>詳細を入力する</Text>
+              <Ionicons name="chevron-forward" size={20} color="#F4F4F4" />
+            </View>
           </TouchableOpacity>
           <TouchableOpacity
             accessibilityRole="button"
@@ -375,6 +416,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textDecorationLine: "underline",
   },
+  headerBack: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
   buttonsSection: {
     marginTop: 16,
   },
@@ -413,6 +458,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: "center",
+  },
+  primaryButtonInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   primaryLabel: {
     color: "#F4F4F4",
