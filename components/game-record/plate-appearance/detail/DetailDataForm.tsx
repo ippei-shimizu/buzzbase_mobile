@@ -1,5 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import {
+  useAppearanceSituations,
   useContactQualities,
   usePitchTypes,
   useTimings,
@@ -12,6 +13,7 @@ import { FirstPitchSwingToggle } from "./FirstPitchSwingToggle";
 import { InningStepper } from "./InningStepper";
 import { MasterChipSelector } from "./MasterChipSelector";
 import { MemoTextArea } from "./MemoTextArea";
+import { PitcherSelector } from "./PitcherSelector";
 import { RunnersStateSelector } from "./RunnersStateSelector";
 
 /**
@@ -28,6 +30,8 @@ const SECTION_DESCRIPTIONS = {
   pitchType: "打席結果が決まった最後の 1 球の球種",
   selfAnalysisMemo: "打席を振り返って、自分の良かった点・課題を書き残す",
   opponentMemo: "対戦相手の特徴や配球パターンを書き残す",
+  pitcher: "対戦した投手を選択 / 新規追加すると、投手別の成績が見られる",
+  appearanceSituation: "投手の登板タイミング（試合終盤の対戦成績の分析に使う）",
 } as const;
 
 /**
@@ -48,6 +52,10 @@ export function DetailDataForm() {
   const pitchTypeId = useBattingRecordStore((s) => s.pitchTypeId);
   const selfAnalysisMemo = useBattingRecordStore((s) => s.selfAnalysisMemo);
   const opponentMemo = useBattingRecordStore((s) => s.opponentMemo);
+  const pitcherId = useBattingRecordStore((s) => s.pitcherId);
+  const appearanceSituationId = useBattingRecordStore(
+    (s) => s.appearanceSituationId,
+  );
 
   const setDetailCount = useBattingRecordStore((s) => s.setDetailCount);
   const setFirstPitchSwing = useBattingRecordStore((s) => s.setFirstPitchSwing);
@@ -55,10 +63,14 @@ export function DetailDataForm() {
   const setInning = useBattingRecordStore((s) => s.setInning);
   const setMasterSelection = useBattingRecordStore((s) => s.setMasterSelection);
   const setMemo = useBattingRecordStore((s) => s.setMemo);
+  const setPitcherSelection = useBattingRecordStore(
+    (s) => s.setPitcherSelection,
+  );
 
   const contactQuality = useContactQualities();
   const timing = useTimings();
   const pitchType = usePitchTypes();
+  const appearanceSituation = useAppearanceSituations();
 
   return (
     <View style={styles.container}>
@@ -129,6 +141,28 @@ export function DetailDataForm() {
           isLoading={pitchType.isLoading}
           isError={pitchType.isError}
           description={SECTION_DESCRIPTIONS.pitchType}
+        />
+      </DetailGroupCard>
+
+      <DetailGroupCard
+        title="相手投手"
+        iconName="person-outline"
+        subtitle="自分が記録した投手のみ表示されます"
+      >
+        <PitcherSelector
+          value={pitcherId}
+          onChange={(id) => setPitcherSelection("pitcherId", id)}
+          description={SECTION_DESCRIPTIONS.pitcher}
+        />
+        <SectionDivider />
+        <MasterChipSelector
+          label="登板状況"
+          options={appearanceSituation.appearanceSituations}
+          value={appearanceSituationId}
+          onChange={(id) => setPitcherSelection("appearanceSituationId", id)}
+          isLoading={appearanceSituation.isLoading}
+          isError={appearanceSituation.isError}
+          description={SECTION_DESCRIPTIONS.appearanceSituation}
         />
       </DetailGroupCard>
 

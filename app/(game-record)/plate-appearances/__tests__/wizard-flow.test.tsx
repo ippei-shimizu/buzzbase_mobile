@@ -82,6 +82,8 @@ const buildCreatedResponse = (
   timing: null,
   pitch_type: null,
   hit_depth: null,
+  pitcher: null,
+  appearance_situation: null,
   created_at: "2026-06-04T10:30:00Z",
   updated_at: "2026-06-04T10:30:00Z",
   ...overrides,
@@ -121,6 +123,41 @@ beforeEach(() => {
     http.get(baseUrl("/api/v2/hit_depths"), () =>
       HttpResponse.json({
         hit_depths: [{ id: 2, name: "外野", display_order: 2 }],
+      }),
+    ),
+    http.get(baseUrl("/api/v2/appearance_situations"), () =>
+      HttpResponse.json({
+        appearance_situations: [
+          { id: 1, name: "先発", display_order: 1 },
+          { id: 2, name: "中継ぎ", display_order: 2 },
+          { id: 3, name: "抑え", display_order: 3 },
+        ],
+      }),
+    ),
+    http.get(baseUrl("/api/v2/arm_angles"), () =>
+      HttpResponse.json({
+        arm_angles: [{ id: 1, name: "オーバースロー", display_order: 1 }],
+      }),
+    ),
+    http.get(baseUrl("/api/v2/velocity_zones"), () =>
+      HttpResponse.json({
+        velocity_zones: [{ id: 1, name: "120km/h未満", display_order: 1 }],
+      }),
+    ),
+    http.get(baseUrl("/api/v2/pitcher_styles"), () =>
+      HttpResponse.json({
+        pitcher_styles: [{ id: 1, name: "本格派", display_order: 1 }],
+      }),
+    ),
+    http.get(baseUrl("/api/v2/pitchers"), () =>
+      HttpResponse.json({
+        data: [],
+        pagination: {
+          current_page: 1,
+          per_page: 20,
+          total_count: 0,
+          total_pages: 0,
+        },
       }),
     ),
   );
