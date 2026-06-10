@@ -15,7 +15,7 @@ export function DetailValueBanner() {
         <Text style={styles.headline}>
           詳細を記録すると、球質別の打率や状況別の分析が見られます
         </Text>
-        <Text style={styles.subline}>気になる項目だけで OK です</Text>
+        <Text style={styles.subline}>あとから追記もできます</Text>
       </View>
     </View>
   );
