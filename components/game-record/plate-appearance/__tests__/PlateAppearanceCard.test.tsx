@@ -35,6 +35,8 @@ const buildPlateAppearance = (
   timing: null,
   pitch_type: null,
   hit_depth: null,
+  pitcher: null,
+  appearance_situation: null,
   created_at: "2026-06-04T10:30:00Z",
   updated_at: "2026-06-04T10:30:00Z",
   ...overrides,

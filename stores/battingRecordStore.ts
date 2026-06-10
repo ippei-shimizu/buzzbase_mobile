@@ -21,6 +21,8 @@ type MasterSelectionKey =
 
 type MemoKey = "selfAnalysisMemo" | "opponentMemo";
 
+type PitcherSelectionKey = "pitcherId" | "appearanceSituationId";
+
 /**
  * v2 打席ステップ式 UI のウィザード状態。
  * 1 打席分の入力を保持し、`toCreatePayload(gameResultId)` で API リクエスト本体に変換する。
@@ -55,6 +57,8 @@ interface BattingRecordState {
   pitchTypeId: number | null;
   selfAnalysisMemo: string | null;
   opponentMemo: string | null;
+  pitcherId: number | null;
+  appearanceSituationId: number | null;
 
   initializeForNew: (batterBoxNumber: number) => void;
   initializeFromExisting: (plateAppearance: PlateAppearanceV2) => void;
@@ -76,6 +80,7 @@ interface BattingRecordState {
   setInning: (value: number | null) => void;
   setMasterSelection: (key: MasterSelectionKey, id: number | null) => void;
   setMemo: (key: MemoKey, text: string) => void;
+  setPitcherSelection: (key: PitcherSelectionKey, id: number | null) => void;
   toCreatePayload: (gameResultId: number) => PlateAppearanceV2Payload;
   reset: () => void;
 }
@@ -105,6 +110,8 @@ const initialState = {
   pitchTypeId: null as number | null,
   selfAnalysisMemo: null as string | null,
   opponentMemo: null as string | null,
+  pitcherId: null as number | null,
+  appearanceSituationId: null as number | null,
 };
 
 /** 正規化座標 (0〜1) を DB の decimal(5,4) に合わせて 4 桁丸めで整形する。 */
@@ -153,6 +160,8 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       pitchTypeId: pa.pitch_type?.id ?? null,
       selfAnalysisMemo: pa.self_analysis_memo,
       opponentMemo: pa.opponent_memo,
+      pitcherId: pa.pitcher?.id ?? null,
+      appearanceSituationId: pa.appearance_situation?.id ?? null,
     }),
 
   setHitLocation: (x, y, directionId, depthId) =>
@@ -216,6 +225,10 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
     set({ [key]: normalized } as Pick<BattingRecordState, MemoKey>);
   },
 
+  setPitcherSelection: (key, id) => {
+    set({ [key]: id } as Pick<BattingRecordState, PitcherSelectionKey>);
+  },
+
   // 呼び出し前に必ず `isBattingRecordReadyToSubmit` でガードする。React のイベント
   // ハンドラ内で throw された Error は Error Boundary に届かないため、UI 側は
   // 完了ボタンの disabled 制御と二重チェックで未確定状態のリクエストを防ぐ。
@@ -251,6 +264,8 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       pitch_type_id: state.pitchTypeId,
       self_analysis_memo: state.selfAnalysisMemo,
       opponent_memo: state.opponentMemo,
+      pitcher_id: state.pitcherId,
+      appearance_situation_id: state.appearanceSituationId,
     };
     return { plate_appearance };
   },

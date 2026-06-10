@@ -4,7 +4,9 @@
  * snake_case はバックエンドの慣習に従う（mobile プロジェクトルール）。
  */
 
+import type { Pitcher } from "./pitcher";
 import type {
+  AppearanceSituationMaster,
   ContactQualityMaster,
   HitDepthMaster,
   PitchTypeMaster,
@@ -68,6 +70,8 @@ export interface PlateAppearanceV2 {
   timing: TimingMaster | null;
   pitch_type: PitchTypeMaster | null;
   hit_depth: HitDepthMaster | null;
+  pitcher: Pitcher | null;
+  appearance_situation: AppearanceSituationMaster | null;
   created_at: string;
   updated_at: string;
 }
@@ -101,6 +105,8 @@ export interface PlateAppearanceV2Input {
   pitch_type_id?: number | null;
   self_analysis_memo?: string | null;
   opponent_memo?: string | null;
+  pitcher_id?: number | null;
+  appearance_situation_id?: number | null;
 }
 
 /**

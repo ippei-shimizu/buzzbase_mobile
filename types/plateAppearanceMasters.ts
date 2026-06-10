@@ -26,3 +26,27 @@ export interface HitDepthMaster {
   name: string;
   display_order: number;
 }
+
+export interface ArmAngleMaster {
+  id: number;
+  name: string;
+  display_order: number;
+}
+
+export interface VelocityZoneMaster {
+  id: number;
+  name: string;
+  display_order: number;
+}
+
+export interface PitcherStyleMaster {
+  id: number;
+  name: string;
+  display_order: number;
+}
+
+export interface AppearanceSituationMaster {
+  id: number;
+  name: string;
+  display_order: number;
+}
