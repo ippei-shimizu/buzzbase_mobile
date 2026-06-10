@@ -130,7 +130,7 @@ export function PlateAppearanceWizard({
         headerLeft: () => (
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="打点・得点の入力に戻る"
+            accessibilityLabel="打点・盗塁の入力に戻る"
             onPress={() => setStep("counter")}
             style={styles.headerBack}
             hitSlop={6}
@@ -230,12 +230,12 @@ export function PlateAppearanceWizard({
         <View style={styles.counterActions}>
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="打点・得点の入力に戻る"
+            accessibilityLabel="打点・盗塁の入力に戻る"
             style={styles.secondaryButton}
             onPress={() => setStep("counter")}
             disabled={isSubmitting}
           >
-            <Text style={styles.secondaryLabel}>得点入力に戻る</Text>
+            <Text style={styles.secondaryLabel}>打点・盗塁の入力に戻る</Text>
           </TouchableOpacity>
           <TouchableOpacity
             accessibilityRole="button"
