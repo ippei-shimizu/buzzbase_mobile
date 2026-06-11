@@ -19,6 +19,8 @@ export interface Pitcher {
   arm_angle: ArmAngleMaster | null;
   velocity_zone: VelocityZoneMaster | null;
   pitcher_style: PitcherStyleMaster | null;
+  /** 対戦相手のメモ（投手単位）。配球傾向・特徴などのフリーテキスト。 */
+  memo: string | null;
 }
 
 /** POST /api/v2/pitchers のリクエスト本体に入る `pitcher` 部分。 */
@@ -29,6 +31,7 @@ export interface PitcherInput {
   arm_angle_id?: number | null;
   velocity_zone_id?: number | null;
   pitcher_style_id?: number | null;
+  memo?: string | null;
 }
 
 /** GET /api/v2/pitchers のラップ形式（paginated_response）。 */

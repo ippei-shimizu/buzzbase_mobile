@@ -29,7 +29,6 @@ const SECTION_DESCRIPTIONS = {
   timing: "ピッチャーの球に対するスイングのタイミング",
   pitchType: "打席結果が決まった最後の 1 球の球種",
   selfAnalysisMemo: "打席を振り返って、自分の良かった点・課題を書き残す",
-  opponentMemo: "対戦相手の特徴や配球パターンを書き残す",
   pitcher: "対戦した投手を選択 / 新規追加すると、投手別の成績が見られる",
   appearanceSituation: "投手の登板タイミング（試合終盤の対戦成績の分析に使う）",
 } as const;
@@ -51,7 +50,6 @@ export function DetailDataForm() {
   const timingId = useBattingRecordStore((s) => s.timingId);
   const pitchTypeId = useBattingRecordStore((s) => s.pitchTypeId);
   const selfAnalysisMemo = useBattingRecordStore((s) => s.selfAnalysisMemo);
-  const opponentMemo = useBattingRecordStore((s) => s.opponentMemo);
   const pitcherId = useBattingRecordStore((s) => s.pitcherId);
   const appearanceSituationId = useBattingRecordStore(
     (s) => s.appearanceSituationId,
@@ -177,14 +175,6 @@ export function DetailDataForm() {
           onChange={(text) => setMemo("selfAnalysisMemo", text)}
           placeholder="例: 高めの球に手が出てしまった"
           description={SECTION_DESCRIPTIONS.selfAnalysisMemo}
-        />
-        <SectionDivider />
-        <MemoTextArea
-          label="対戦相手メモ"
-          value={opponentMemo}
-          onChange={(text) => setMemo("opponentMemo", text)}
-          placeholder="例: 初球はストレート / 2 球目以降は変化球中心"
-          description={SECTION_DESCRIPTIONS.opponentMemo}
         />
       </DetailGroupCard>
     </View>

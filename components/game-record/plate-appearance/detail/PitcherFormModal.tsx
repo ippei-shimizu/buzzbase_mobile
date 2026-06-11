@@ -47,6 +47,7 @@ export function PitcherFormModal({ visible, onCreated, onCancel }: Props) {
   const [armAngleId, setArmAngleId] = useState<number | null>(null);
   const [velocityZoneId, setVelocityZoneId] = useState<number | null>(null);
   const [pitcherStyleId, setPitcherStyleId] = useState<number | null>(null);
+  const [memo, setMemo] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const armAngles = useArmAngles();
@@ -60,6 +61,7 @@ export function PitcherFormModal({ visible, onCreated, onCancel }: Props) {
     setArmAngleId(null);
     setVelocityZoneId(null);
     setPitcherStyleId(null);
+    setMemo("");
     setErrorMessage(null);
   };
 
@@ -81,6 +83,7 @@ export function PitcherFormModal({ visible, onCreated, onCancel }: Props) {
       arm_angle_id: armAngleId,
       velocity_zone_id: velocityZoneId,
       pitcher_style_id: pitcherStyleId,
+      memo: memo.trim().length === 0 ? null : memo.trim(),
     };
 
     try {
@@ -161,6 +164,21 @@ export function PitcherFormModal({ visible, onCreated, onCancel }: Props) {
               onChange={setPitcherStyleId}
               isLoading={pitcherStyles.isLoading}
             />
+
+            <Field label="メモ（配球傾向・特徴など）">
+              <RNTextInput
+                style={[styles.textInput, styles.textArea]}
+                value={memo}
+                onChangeText={setMemo}
+                placeholder="例: 初球はストレート / 決め球は外角スライダー"
+                placeholderTextColor="#71717A"
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+                maxLength={1000}
+                accessibilityLabel="投手メモ"
+              />
+            </Field>
 
             {errorMessage && <Text style={styles.error}>{errorMessage}</Text>}
           </ScrollView>
@@ -314,6 +332,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     color: "#F4F4F4",
     fontSize: 14,
+  },
+  textArea: {
+    minHeight: 88,
   },
   chipRow: {
     flexDirection: "row",
