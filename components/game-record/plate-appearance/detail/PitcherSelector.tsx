@@ -52,6 +52,30 @@ export function PitcherSelector({ value, onChange, description }: Props) {
     setPickerVisible(false);
   };
 
+  // iOS では Modal の dismiss アニメーション中に別の Modal を visible にしても
+  // 表示されない。先に選択モーダルを閉じ、アニメーション完了後に登録モーダルを開く。
+  const openCreateForm = () => {
+    setPickerVisible(false);
+    setTimeout(() => setFormVisible(true), 350);
+  };
+
+  const handleFormCancel = () => {
+    setFormVisible(false);
+    setTimeout(() => setPickerVisible(true), 350);
+  };
+
+  // iOS では Modal を 2 つ重ねると上のモーダルが表示されないことがあるため、
+  // 投手選択モーダルを閉じてから登録モーダルを開く。キャンセル時は選択モーダルに戻す。
+  const openCreateForm = () => {
+    setPickerVisible(false);
+    setFormVisible(true);
+  };
+
+  const handleFormCancel = () => {
+    setFormVisible(false);
+    setPickerVisible(true);
+  };
+
   return (
     <View style={styles.container}>
       <SectionHeader label="相手投手" description={description} />
@@ -157,7 +181,7 @@ export function PitcherSelector({ value, onChange, description }: Props) {
                 accessibilityRole="button"
                 accessibilityLabel="新しい投手を追加"
                 style={styles.addButton}
-                onPress={() => setFormVisible(true)}
+                onPress={openCreateForm}
               >
                 <Ionicons name="add" size={16} color="#F4F4F4" />
                 <Text style={styles.addLabel}>新規追加</Text>
@@ -170,7 +194,7 @@ export function PitcherSelector({ value, onChange, description }: Props) {
       <PitcherFormModal
         visible={formVisible}
         onCreated={handleCreated}
-        onCancel={() => setFormVisible(false)}
+        onCancel={handleFormCancel}
       />
     </View>
   );
