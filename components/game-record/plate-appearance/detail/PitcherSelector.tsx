@@ -64,18 +64,6 @@ export function PitcherSelector({ value, onChange, description }: Props) {
     setTimeout(() => setPickerVisible(true), 350);
   };
 
-  // iOS では Modal を 2 つ重ねると上のモーダルが表示されないことがあるため、
-  // 投手選択モーダルを閉じてから登録モーダルを開く。キャンセル時は選択モーダルに戻す。
-  const openCreateForm = () => {
-    setPickerVisible(false);
-    setFormVisible(true);
-  };
-
-  const handleFormCancel = () => {
-    setFormVisible(false);
-    setPickerVisible(true);
-  };
-
   return (
     <View style={styles.container}>
       <SectionHeader label="相手投手" description={description} />
