@@ -26,6 +26,7 @@ import {
 } from "@stores/battingRecordStore";
 import { useSnackbarStore } from "@stores/snackbarStore";
 import { DetailDataForm } from "./detail/DetailDataForm";
+import { EditTabBar } from "./EditTabBar";
 import { GroundTapField } from "./GroundTapField";
 import { HitTypeModal } from "./HitTypeModal";
 import { OutTypeModal } from "./OutTypeModal";
@@ -83,9 +84,29 @@ export function PlateAppearanceWizard({
   const runScored = useBattingRecordStore((s) => s.runScored);
   const stolenBases = useBattingRecordStore((s) => s.stolenBases);
   const caughtStealing = useBattingRecordStore((s) => s.caughtStealing);
+  // タブの入力済みドット表示用。編集モード時のみ参照する。
+  const plateResultIdValue = useBattingRecordStore((s) => s.plateResultId);
+  const detailInputSnapshot = useBattingRecordStore((s) => ({
+    finalBalls: s.finalBalls,
+    finalStrikes: s.finalStrikes,
+    finalOuts: s.finalOuts,
+    firstPitchSwing: s.firstPitchSwing,
+    runnersState: s.runnersState,
+    inning: s.inning,
+    contactQualityId: s.contactQualityId,
+    timingId: s.timingId,
+    pitchTypeId: s.pitchTypeId,
+    pitcherId: s.pitcherId,
+    appearanceSituationId: s.appearanceSituationId,
+    selfAnalysisMemo: s.selfAnalysisMemo,
+  }));
 
   const isEditMode = editingPlateAppearance !== undefined;
-  const [step, setStep] = useState<WizardStep>("tap_and_select");
+  // 編集モードは「打点・得点」タブから開始する（一番使用頻度が高そうな項目）。
+  // 新規モードは従来どおりタップ → 結果選択から始める。
+  const [step, setStep] = useState<WizardStep>(
+    isEditMode ? "counter" : "tap_and_select",
+  );
   const [outModalVisible, setOutModalVisible] = useState(false);
   const [hitModalVisible, setHitModalVisible] = useState(false);
 
@@ -108,9 +129,16 @@ export function PlateAppearanceWizard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Stack ヘッダーの戻るボタンは、Step2/Step3 では「前のステップに戻る」挙動に差し替える。
-  // Step1 ではデフォルト（Stack の pop → 打席一覧）に戻すため `undefined` で上書きを解除する。
+  // Stack ヘッダーの戻るボタン挙動を制御。
+  // - 新規モードの Step2/Step3: 1 つ前のステップに戻す
+  // - 新規モードの Step1: デフォルト（打席一覧へ pop）
+  // - 編集モード: 常にデフォルト（打席一覧へ pop）。タブで自由に切り替えられるため
+  //   「前ステップに戻る」概念は不要。
   useLayoutEffect(() => {
+    if (isEditMode) {
+      navigation.setOptions({ headerLeft: undefined });
+      return;
+    }
     if (step === "counter") {
       navigation.setOptions({
         headerLeft: () => (
@@ -142,7 +170,7 @@ export function PlateAppearanceWizard({
     } else {
       navigation.setOptions({ headerLeft: undefined });
     }
-  }, [step, navigation]);
+  }, [step, navigation, isEditMode]);
 
   const { createPlateAppearance, isCreating } = useCreatePlateAppearance();
   const { updatePlateAppearance, isUpdating } = useUpdatePlateAppearance();
@@ -170,7 +198,8 @@ export function PlateAppearanceWizard({
     },
   ) => {
     setPlateResult(resultId, options);
-    setStep("counter");
+    // 編集モードはタブで自由に切り替えるため、結果選択での自動遷移は抑制する。
+    if (!isEditMode) setStep("counter");
   };
 
   const handleSubmit = async () => {
@@ -209,52 +238,97 @@ export function PlateAppearanceWizard({
   const completeLabel = isEditMode ? "この打席を更新" : "この打席を完了";
   const cancelLabel = isEditMode ? "編集を中断する" : "入力を中断する";
 
+  const hasResultInput = plateResultIdValue !== null;
+  const hasScoreInput =
+    rbi > 0 || runScored > 0 || stolenBases > 0 || caughtStealing > 0;
+  const hasDetailInput = Object.values(detailInputSnapshot).some(
+    (value) => value !== null && value !== "",
+  );
+
+  const renderEditTabBar = () =>
+    isEditMode ? (
+      <EditTabBar
+        current={step}
+        onChange={setStep}
+        hasResult={hasResultInput}
+        hasScore={hasScoreInput}
+        hasDetail={hasDetailInput}
+      />
+    ) : null;
+
+  const renderEditFooter = () =>
+    isEditMode ? (
+      <View style={styles.counterActions}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={completeLabel}
+          accessibilityState={{ disabled: isSubmitting }}
+          style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}
+          onPress={handleSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator color="#F4F4F4" />
+          ) : (
+            <Text style={styles.primaryLabel}>{completeLabel}</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    ) : null;
+
   if (step === "detail") {
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.body}>
-        <View style={styles.detailHeaderRow}>
-          <Text style={styles.stepHeader}>
-            {headerTitle}の詳細（すべて任意）
-          </Text>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="詳細入力をスキップして完了"
-            onPress={handleSubmit}
-            disabled={isSubmitting}
-            hitSlop={6}
-          >
-            <Text style={styles.skipLabel}>スキップして完了</Text>
-          </TouchableOpacity>
-        </View>
+        {renderEditTabBar()}
+        {!isEditMode && (
+          <View style={styles.detailHeaderRow}>
+            <Text style={styles.stepHeader}>
+              {headerTitle}の詳細（すべて任意）
+            </Text>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="詳細入力をスキップして完了"
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+              hitSlop={6}
+            >
+              <Text style={styles.skipLabel}>スキップして完了</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         <DetailDataForm />
-        <View style={styles.counterActions}>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="打点・盗塁の入力に戻る"
-            style={styles.secondaryButton}
-            onPress={() => setStep("counter")}
-            disabled={isSubmitting}
-          >
-            <Text style={styles.secondaryLabel}>打点・盗塁の入力に戻る</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel={completeLabel}
-            accessibilityState={{ disabled: isSubmitting }}
-            style={[
-              styles.primaryButton,
-              isSubmitting && styles.buttonDisabled,
-            ]}
-            onPress={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color="#F4F4F4" />
-            ) : (
-              <Text style={styles.primaryLabel}>{completeLabel}</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+        {isEditMode ? (
+          renderEditFooter()
+        ) : (
+          <View style={styles.counterActions}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="打点・盗塁の入力に戻る"
+              style={styles.secondaryButton}
+              onPress={() => setStep("counter")}
+              disabled={isSubmitting}
+            >
+              <Text style={styles.secondaryLabel}>打点・盗塁の入力に戻る</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={completeLabel}
+              accessibilityState={{ disabled: isSubmitting }}
+              style={[
+                styles.primaryButton,
+                isSubmitting && styles.buttonDisabled,
+              ]}
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color="#F4F4F4" />
+              ) : (
+                <Text style={styles.primaryLabel}>{completeLabel}</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
     );
   }
@@ -262,7 +336,10 @@ export function PlateAppearanceWizard({
   if (step === "counter") {
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.body}>
-        <Text style={styles.stepHeader}>{headerTitle}の入力</Text>
+        {renderEditTabBar()}
+        {!isEditMode && (
+          <Text style={styles.stepHeader}>{headerTitle}の入力</Text>
+        )}
         <ScoreCounterInput
           rbi={rbi}
           runScored={runScored}
@@ -270,62 +347,69 @@ export function PlateAppearanceWizard({
           caughtStealing={caughtStealing}
           onChange={setCounter}
         />
-        <View style={styles.counterActions}>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="打席結果の選択に戻る"
-            style={styles.secondaryButton}
-            onPress={() => setStep("tap_and_select")}
-            disabled={isSubmitting}
-          >
-            <Text style={styles.secondaryLabel}>結果選択に戻る</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="詳細を入力する"
-            style={styles.primaryButton}
-            onPress={() => setStep("detail")}
-            disabled={isSubmitting}
-          >
-            <View style={styles.primaryButtonInner}>
-              <Text style={styles.primaryLabel}>詳細を入力する</Text>
-              <Ionicons name="chevron-forward" size={20} color="#F4F4F4" />
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="詳細入力をスキップして完了"
-            accessibilityState={{ disabled: isSubmitting }}
-            style={[
-              styles.skipFinishButton,
-              isSubmitting && styles.buttonDisabled,
-            ]}
-            onPress={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color="#d08000" />
-            ) : (
-              <Text style={styles.skipFinishLabel}>スキップして完了</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+        {isEditMode ? (
+          renderEditFooter()
+        ) : (
+          <View style={styles.counterActions}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="打席結果の選択に戻る"
+              style={styles.secondaryButton}
+              onPress={() => setStep("tap_and_select")}
+              disabled={isSubmitting}
+            >
+              <Text style={styles.secondaryLabel}>結果選択に戻る</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="詳細を入力する"
+              style={styles.primaryButton}
+              onPress={() => setStep("detail")}
+              disabled={isSubmitting}
+            >
+              <View style={styles.primaryButtonInner}>
+                <Text style={styles.primaryLabel}>詳細を入力する</Text>
+                <Ionicons name="chevron-forward" size={20} color="#F4F4F4" />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="詳細入力をスキップして完了"
+              accessibilityState={{ disabled: isSubmitting }}
+              style={[
+                styles.skipFinishButton,
+                isSubmitting && styles.buttonDisabled,
+              ]}
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color="#d08000" />
+              ) : (
+                <Text style={styles.skipFinishLabel}>スキップして完了</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
     );
   }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.body}>
-      <View style={styles.stepHeaderRow}>
-        <Text style={styles.stepHeader}>{headerTitle}</Text>
-        <HelpTooltipIcon
-          title="入力方法"
-          message={
-            "グラウンドをタップして打球方向を選んでから、下のボタンで結果を選択してください。\n\n" +
-            "三振・四球など打球方向のない結果は、タップせずに「打球方向なし」のボタンから選べます。"
-          }
-        />
-      </View>
+      {renderEditTabBar()}
+      {!isEditMode && (
+        <View style={styles.stepHeaderRow}>
+          <Text style={styles.stepHeader}>{headerTitle}</Text>
+          <HelpTooltipIcon
+            title="入力方法"
+            message={
+              "グラウンドをタップして打球方向を選んでから、下のボタンで結果を選択してください。\n\n" +
+              "三振・四球など打球方向のない結果は、タップせずに「打球方向なし」のボタンから選べます。"
+            }
+          />
+        </View>
+      )}
       <GroundTapField hitLocation={hitLocation} onTap={handleTap} />
       <View style={styles.clearLocationSlot}>
         {hitLocation !== null && (
@@ -349,17 +433,21 @@ export function PlateAppearanceWizard({
           onSelectDirectionOnly={(resultId) => proceedToCounter(resultId)}
         />
       </View>
-      <TouchableOpacity
-        accessibilityRole="button"
-        accessibilityLabel={cancelLabel}
-        style={styles.cancelButton}
-        onPress={() => {
-          resetStore();
-          onClose();
-        }}
-      >
-        <Text style={styles.cancelLabel}>{cancelLabel}</Text>
-      </TouchableOpacity>
+      {isEditMode ? (
+        renderEditFooter()
+      ) : (
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={cancelLabel}
+          style={styles.cancelButton}
+          onPress={() => {
+            resetStore();
+            onClose();
+          }}
+        >
+          <Text style={styles.cancelLabel}>{cancelLabel}</Text>
+        </TouchableOpacity>
+      )}
 
       <OutTypeModal
         visible={outModalVisible}
