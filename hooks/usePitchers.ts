@@ -1,5 +1,10 @@
+import type { PitcherInput } from "../types/pitcher";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createPitcher, getPitchers } from "@services/pitcherService";
+import {
+  createPitcher,
+  getPitchers,
+  updatePitcher,
+} from "@services/pitcherService";
 
 interface UsePitchersParams {
   q?: string;
@@ -44,5 +49,23 @@ export const useCreatePitcher = () => {
   return {
     createPitcher: mutation.mutateAsync,
     isCreating: mutation.isPending,
+  };
+};
+
+/**
+ * 既存投手の更新。invalidate で一覧を再取得し、選択中の投手表示にも反映される。
+ */
+export const useUpdatePitcher = () => {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: PitcherInput }) =>
+      updatePitcher(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pitchers"] });
+    },
+  });
+  return {
+    updatePitcher: mutation.mutateAsync,
+    isUpdating: mutation.isPending,
   };
 };
