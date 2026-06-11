@@ -77,6 +77,8 @@ export function PitcherFormModal({
   const opponentTeamId = useGameRecordStore(
     (s: GameRecordState) => s.opponentTeamId,
   );
+  const isProcessing = isCreating || isUpdating;
+  const isEditMode = editingPitcher != null;
   // 編集時に所属チームを参照表示するためのチーム一覧。
   // 編集モードかつ team_id が紐付いている場合のみ最終的に表示する。
   const { data: teams } = useTeams();
@@ -84,8 +86,6 @@ export function PitcherFormModal({
     isEditMode && editingPitcher?.team_id
       ? teams?.find((team: TeamDetail) => team.id === editingPitcher.team_id)
       : undefined;
-  const isProcessing = isCreating || isUpdating;
-  const isEditMode = editingPitcher != null;
 
   // 開閉と編集対象に応じて初期値を入れ直す。
   // visible が立ち上がるたびにフォーム状態をリセットすることで、前回の入力が残らない。
