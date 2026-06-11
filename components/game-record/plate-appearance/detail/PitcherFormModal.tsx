@@ -3,6 +3,7 @@ import type {
   PitcherInput,
   ThrowHand,
 } from "../../../../types/pitcher";
+import type { TeamDetail } from "../../../../types/profile";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -15,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTeams } from "@hooks/useMasterData";
 import { useCreatePitcher, useUpdatePitcher } from "@hooks/usePitchers";
 import {
   useArmAngles,
