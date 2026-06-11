@@ -84,22 +84,24 @@ export function PlateAppearanceWizard({
   const runScored = useBattingRecordStore((s) => s.runScored);
   const stolenBases = useBattingRecordStore((s) => s.stolenBases);
   const caughtStealing = useBattingRecordStore((s) => s.caughtStealing);
-  // タブの入力済みドット表示用。編集モード時のみ参照する。
+  // タブの入力済みドット表示用。zustand セレクタは毎レンダーで新規オブジェクトを
+  // 返すと無限ループになるため、boolean に集約してから取得する。
   const plateResultIdValue = useBattingRecordStore((s) => s.plateResultId);
-  const detailInputSnapshot = useBattingRecordStore((s) => ({
-    finalBalls: s.finalBalls,
-    finalStrikes: s.finalStrikes,
-    finalOuts: s.finalOuts,
-    firstPitchSwing: s.firstPitchSwing,
-    runnersState: s.runnersState,
-    inning: s.inning,
-    contactQualityId: s.contactQualityId,
-    timingId: s.timingId,
-    pitchTypeId: s.pitchTypeId,
-    pitcherId: s.pitcherId,
-    appearanceSituationId: s.appearanceSituationId,
-    selfAnalysisMemo: s.selfAnalysisMemo,
-  }));
+  const hasDetailInputFromStore = useBattingRecordStore(
+    (s) =>
+      s.finalBalls !== null ||
+      s.finalStrikes !== null ||
+      s.finalOuts !== null ||
+      s.firstPitchSwing !== null ||
+      s.runnersState !== null ||
+      s.inning !== null ||
+      s.contactQualityId !== null ||
+      s.timingId !== null ||
+      s.pitchTypeId !== null ||
+      s.pitcherId !== null ||
+      s.appearanceSituationId !== null ||
+      (s.selfAnalysisMemo !== null && s.selfAnalysisMemo !== ""),
+  );
 
   const isEditMode = editingPlateAppearance !== undefined;
   // 編集モードは「打点・得点」タブから開始する（一番使用頻度が高そうな項目）。
@@ -241,9 +243,7 @@ export function PlateAppearanceWizard({
   const hasResultInput = plateResultIdValue !== null;
   const hasScoreInput =
     rbi > 0 || runScored > 0 || stolenBases > 0 || caughtStealing > 0;
-  const hasDetailInput = Object.values(detailInputSnapshot).some(
-    (value) => value !== null && value !== "",
-  );
+  const hasDetailInput = hasDetailInputFromStore;
 
   const renderEditTabBar = () =>
     isEditMode ? (
