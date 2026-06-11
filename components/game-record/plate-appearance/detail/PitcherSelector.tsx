@@ -39,6 +39,17 @@ export function PitcherSelector({ value, onChange, description }: Props) {
   const [editingPitcher, setEditingPitcher] = useState<Pitcher | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const { pitchers, isLoading } = usePitchers({ q: searchQuery || undefined });
+  const { data: teams } = useTeams();
+  // team_id 解決用の Map。投手数 × チーム数の find ループを避ける。
+  const teamNameById = new Map<number, string>(
+    teams?.map((team: { id: number; name: string }) => [team.id, team.name]) ??
+      [],
+  );
+  const summarize = (pitcher: Pitcher) =>
+    formatSummary(
+      pitcher,
+      pitcher.team_id ? teamNameById.get(pitcher.team_id) : undefined,
+    );
 
   const selectedPitcher = pitchers.find((pitcher) => pitcher.id === value);
 
@@ -160,9 +171,7 @@ export function PitcherSelector({ value, onChange, description }: Props) {
                       onPress={() => handleSelect(pitcher)}
                     >
                       <Text style={styles.optionName}>{pitcher.name}</Text>
-                      <Text style={styles.optionSub}>
-                        {formatSummary(pitcher)}
-                      </Text>
+                      <Text style={styles.optionSub}>{summarize(pitcher)}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       accessibilityRole="button"
@@ -214,8 +223,9 @@ export function PitcherSelector({ value, onChange, description }: Props) {
   );
 }
 
-function formatSummary(pitcher: Pitcher): string {
+function formatSummary(pitcher: Pitcher, teamName?: string): string {
   const parts: string[] = [];
+  if (teamName) parts.push(teamName);
   if (pitcher.throw_hand) {
     parts.push(THROW_HAND_LABELS[pitcher.throw_hand] ?? pitcher.throw_hand);
   }
