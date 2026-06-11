@@ -43,3 +43,17 @@ export const createPitcher = async (
   });
   return response.data;
 };
+
+/**
+ * 既存投手の属性を更新する。他ユーザーが作成した投手 ID を指定するとサーバ側で 404 が返る。
+ */
+export const updatePitcher = async (
+  id: number,
+  payload: PitcherInput,
+): Promise<Pitcher> => {
+  const response = await axiosInstance.patch<Pitcher>(
+    `${V2_PITCHERS_URL}/${id}`,
+    { pitcher: payload },
+  );
+  return response.data;
+};

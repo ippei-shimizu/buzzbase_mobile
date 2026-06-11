@@ -9,7 +9,7 @@ export const RUNNERS_STATE_OPTIONS: readonly {
   key: RunnersState;
   label: string;
 }[] = [
-  { key: "bases_empty", label: "無走者" },
+  { key: "no_runner", label: "無走者" },
   { key: "first", label: "一塁" },
   { key: "second", label: "二塁" },
   { key: "third", label: "三塁" },
