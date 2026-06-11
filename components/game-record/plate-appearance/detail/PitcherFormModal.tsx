@@ -66,6 +66,9 @@ export function PitcherFormModal({
   const pitcherStyles = usePitcherStyles();
   const { createPitcher, isCreating } = useCreatePitcher();
   const { updatePitcher, isUpdating } = useUpdatePitcher();
+  // 試合記録の流れで投手登録される想定のため、相手チームと同じ team_id を自動セットする。
+  // 編集時は既存の team_id を尊重し、勝手に書き換えない。
+  const opponentTeamId = useGameRecordStore((s) => s.opponentTeamId);
   const isProcessing = isCreating || isUpdating;
   const isEditMode = editingPitcher != null;
 
@@ -120,6 +123,7 @@ export function PitcherFormModal({
       velocity_zone_id: velocityZoneId,
       pitcher_style_id: pitcherStyleId,
       memo: memo.trim().length === 0 ? null : memo.trim(),
+      team_id: editingPitcher ? editingPitcher.team_id : opponentTeamId,
     };
 
     try {
