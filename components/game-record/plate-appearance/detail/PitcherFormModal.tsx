@@ -1,5 +1,9 @@
-import type { PitcherInput, ThrowHand } from "../../../../types/pitcher";
-import { useState } from "react";
+import type {
+  Pitcher,
+  PitcherInput,
+  ThrowHand,
+} from "../../../../types/pitcher";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -11,7 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useCreatePitcher } from "@hooks/usePitchers";
+import { useCreatePitcher, useUpdatePitcher } from "@hooks/usePitchers";
 import {
   useArmAngles,
   usePitcherStyles,
@@ -20,7 +24,9 @@ import {
 
 interface Props {
   visible: boolean;
-  onCreated: (pitcherId: number) => void;
+  /** 編集対象。指定するとフォームを既存値で初期化し、送信時は PATCH を呼ぶ。 */
+  editingPitcher?: Pitcher | null;
+  onSubmitted: (pitcherId: number) => void;
   onCancel: () => void;
 }
 
@@ -35,13 +41,18 @@ const THROW_HAND_OPTIONS: ThrowHandOption[] = [
 ];
 
 /**
- * 相手投手を新規登録するモーダル。
- * 必須は投手名のみ。利き手・腕の角度・球速帯・投手タイプは任意。
+ * 相手投手を新規登録 / 編集するモーダル。
+ * `editingPitcher` を渡すと既存値で初期化され、送信時に PATCH を呼ぶ。
+ * 必須は投手名のみ。利き手・腕の角度・球速帯・投手タイプ・メモは任意。
  *
- * 作成成功時は新規投手 ID を `onCreated` に渡す。呼び出し側は
- * その ID を store の `pitcherId` に流して打席に紐付ける。
+ * 作成 / 更新成功時に投手 ID を `onSubmitted` に渡す。
  */
-export function PitcherFormModal({ visible, onCreated, onCancel }: Props) {
+export function PitcherFormModal({
+  visible,
+  editingPitcher,
+  onSubmitted,
+  onCancel,
+}: Props) {
   const [name, setName] = useState("");
   const [throwHand, setThrowHand] = useState<ThrowHand | null>(null);
   const [armAngleId, setArmAngleId] = useState<number | null>(null);
@@ -54,6 +65,31 @@ export function PitcherFormModal({ visible, onCreated, onCancel }: Props) {
   const velocityZones = useVelocityZones();
   const pitcherStyles = usePitcherStyles();
   const { createPitcher, isCreating } = useCreatePitcher();
+  const { updatePitcher, isUpdating } = useUpdatePitcher();
+  const isProcessing = isCreating || isUpdating;
+  const isEditMode = editingPitcher != null;
+
+  // 開閉と編集対象に応じて初期値を入れ直す。
+  // visible が立ち上がるたびにフォーム状態をリセットすることで、前回の入力が残らない。
+  useEffect(() => {
+    if (!visible) return;
+    if (editingPitcher) {
+      setName(editingPitcher.name);
+      setThrowHand(editingPitcher.throw_hand);
+      setArmAngleId(editingPitcher.arm_angle?.id ?? null);
+      setVelocityZoneId(editingPitcher.velocity_zone?.id ?? null);
+      setPitcherStyleId(editingPitcher.pitcher_style?.id ?? null);
+      setMemo(editingPitcher.memo ?? "");
+    } else {
+      setName("");
+      setThrowHand(null);
+      setArmAngleId(null);
+      setVelocityZoneId(null);
+      setPitcherStyleId(null);
+      setMemo("");
+    }
+    setErrorMessage(null);
+  }, [visible, editingPitcher]);
 
   const reset = () => {
     setName("");
@@ -87,11 +123,20 @@ export function PitcherFormModal({ visible, onCreated, onCancel }: Props) {
     };
 
     try {
-      const created = await createPitcher(payload);
-      reset();
-      onCreated(created.id);
+      if (editingPitcher) {
+        const updated = await updatePitcher({ id: editingPitcher.id, payload });
+        onSubmitted(updated.id);
+      } else {
+        const created = await createPitcher(payload);
+        reset();
+        onSubmitted(created.id);
+      }
     } catch {
-      setErrorMessage("投手の登録に失敗しました。時間を置いて試してください");
+      setErrorMessage(
+        isEditMode
+          ? "投手の更新に失敗しました。時間を置いて試してください"
+          : "投手の登録に失敗しました。時間を置いて試してください",
+      );
     }
   };
 
@@ -112,7 +157,9 @@ export function PitcherFormModal({ visible, onCreated, onCancel }: Props) {
           onPress={(event) => event.stopPropagation()}
           accessible={false}
         >
-          <Text style={styles.title}>相手投手を追加</Text>
+          <Text style={styles.title}>
+            {isEditMode ? "投手を編集" : "相手投手を追加"}
+          </Text>
           <ScrollView contentContainerStyle={styles.body}>
             <Field label="投手名（必須）">
               <RNTextInput
@@ -189,22 +236,24 @@ export function PitcherFormModal({ visible, onCreated, onCancel }: Props) {
               accessibilityLabel="投手登録をキャンセル"
               style={styles.cancelButton}
               onPress={handleCancel}
-              disabled={isCreating}
+              disabled={isProcessing}
             >
               <Text style={styles.cancelLabel}>キャンセル</Text>
             </TouchableOpacity>
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityLabel="投手を登録"
-              accessibilityState={{ disabled: isCreating }}
-              style={[styles.submitButton, isCreating && styles.disabled]}
+              accessibilityState={{ disabled: isProcessing }}
+              style={[styles.submitButton, isProcessing && styles.disabled]}
               onPress={handleSubmit}
-              disabled={isCreating}
+              disabled={isProcessing}
             >
-              {isCreating ? (
+              {isProcessing ? (
                 <ActivityIndicator color="#F4F4F4" />
               ) : (
-                <Text style={styles.submitLabel}>登録</Text>
+                <Text style={styles.submitLabel}>
+                  {isEditMode ? "更新" : "登録"}
+                </Text>
               )}
             </TouchableOpacity>
           </View>

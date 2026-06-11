@@ -26,7 +26,7 @@ export type HitType = "single" | "double" | "triple" | "home_run";
 
 /** ランナー状況（`plate_appearances.runners_state` enum）。 */
 export type RunnersState =
-  | "bases_empty"
+  | "no_runner"
   | "first"
   | "second"
   | "third"

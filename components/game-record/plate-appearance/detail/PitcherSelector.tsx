@@ -36,6 +36,7 @@ const THROW_HAND_LABELS: Record<string, string> = {
 export function PitcherSelector({ value, onChange, description }: Props) {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [formVisible, setFormVisible] = useState(false);
+  const [editingPitcher, setEditingPitcher] = useState<Pitcher | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const { pitchers, isLoading } = usePitchers({ q: searchQuery || undefined });
 
@@ -46,21 +47,31 @@ export function PitcherSelector({ value, onChange, description }: Props) {
     setPickerVisible(false);
   };
 
-  const handleCreated = (pitcherId: number) => {
-    onChange(pitcherId);
+  const handleSubmitted = (pitcherId: number) => {
+    // 新規作成時のみ自動選択。編集時は元の選択を維持する。
+    if (!editingPitcher) onChange(pitcherId);
+    setEditingPitcher(null);
     setFormVisible(false);
     setPickerVisible(false);
   };
 
   // iOS では Modal の dismiss アニメーション中に別の Modal を visible にしても
-  // 表示されない。先に選択モーダルを閉じ、アニメーション完了後に登録モーダルを開く。
+  // 表示されない。先に選択モーダルを閉じ、アニメーション完了後にフォームモーダルを開く。
   const openCreateForm = () => {
+    setEditingPitcher(null);
+    setPickerVisible(false);
+    setTimeout(() => setFormVisible(true), 350);
+  };
+
+  const openEditForm = (pitcher: Pitcher) => {
+    setEditingPitcher(pitcher);
     setPickerVisible(false);
     setTimeout(() => setFormVisible(true), 350);
   };
 
   const handleFormCancel = () => {
     setFormVisible(false);
+    setEditingPitcher(null);
     setTimeout(() => setPickerVisible(true), 350);
   };
 
@@ -141,18 +152,32 @@ export function PitcherSelector({ value, onChange, description }: Props) {
                 </Text>
               ) : (
                 pitchers.map((pitcher) => (
-                  <TouchableOpacity
-                    key={pitcher.id}
-                    accessibilityRole="button"
-                    accessibilityLabel={`投手 ${pitcher.name} を選択`}
-                    style={styles.option}
-                    onPress={() => handleSelect(pitcher)}
-                  >
-                    <Text style={styles.optionName}>{pitcher.name}</Text>
-                    <Text style={styles.optionSub}>
-                      {formatSummary(pitcher)}
-                    </Text>
-                  </TouchableOpacity>
+                  <View key={pitcher.id} style={styles.optionRow}>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={`投手 ${pitcher.name} を選択`}
+                      style={styles.option}
+                      onPress={() => handleSelect(pitcher)}
+                    >
+                      <Text style={styles.optionName}>{pitcher.name}</Text>
+                      <Text style={styles.optionSub}>
+                        {formatSummary(pitcher)}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={`投手 ${pitcher.name} を編集`}
+                      style={styles.editButton}
+                      onPress={() => openEditForm(pitcher)}
+                      hitSlop={6}
+                    >
+                      <Ionicons
+                        name="create-outline"
+                        size={20}
+                        color="#d08000"
+                      />
+                    </TouchableOpacity>
+                  </View>
                 ))
               )}
             </ScrollView>
@@ -181,7 +206,8 @@ export function PitcherSelector({ value, onChange, description }: Props) {
 
       <PitcherFormModal
         visible={formVisible}
-        onCreated={handleCreated}
+        editingPitcher={editingPitcher}
+        onSubmitted={handleSubmitted}
         onCancel={handleFormCancel}
       />
     </View>
@@ -296,13 +322,27 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     textAlign: "center",
   },
+  optionRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 6,
+    marginBottom: 8,
+  },
   option: {
+    flex: 1,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#52525B",
     paddingVertical: 10,
     paddingHorizontal: 12,
-    marginBottom: 8,
+  },
+  editButton: {
+    width: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#52525B",
+    alignItems: "center",
+    justifyContent: "center",
   },
   optionName: {
     color: "#F4F4F4",
