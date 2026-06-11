@@ -181,6 +181,7 @@ export default function SummaryScreen() {
         defensivePosition={store.defensivePosition}
         memo={store.memo}
         battingBoxes={battingBoxes}
+        plateAppearances={plateAppearances}
         runsBattedIn={summaryRunsBattedIn}
         run={summaryRun}
         stealingBase={summaryStealingBase}
