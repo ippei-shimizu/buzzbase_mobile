@@ -68,7 +68,9 @@ export function PitcherFormModal({
   const { updatePitcher, isUpdating } = useUpdatePitcher();
   // 試合記録の流れで投手登録される想定のため、相手チームと同じ team_id を自動セットする。
   // 編集時は既存の team_id を尊重し、勝手に書き換えない。
-  const opponentTeamId = useGameRecordStore((s) => s.opponentTeamId);
+  const opponentTeamId = useGameRecordStore(
+    (s: GameRecordState) => s.opponentTeamId,
+  );
   const isProcessing = isCreating || isUpdating;
   const isEditMode = editingPitcher != null;
 
