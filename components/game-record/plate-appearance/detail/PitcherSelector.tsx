@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTeams } from "@hooks/useMasterData";
 import { usePitchers } from "@hooks/usePitchers";
 import { PitcherFormModal } from "./PitcherFormModal";
 import { SectionHeader } from "./SectionHeader";
