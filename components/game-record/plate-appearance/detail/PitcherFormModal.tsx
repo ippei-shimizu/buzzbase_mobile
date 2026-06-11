@@ -80,7 +80,7 @@ export function PitcherFormModal({
   const { data: teams } = useTeams();
   const editingTeam =
     isEditMode && editingPitcher?.team_id
-      ? teams?.find((team) => team.id === editingPitcher.team_id)
+      ? teams?.find((team: TeamDetail) => team.id === editingPitcher.team_id)
       : undefined;
   const isProcessing = isCreating || isUpdating;
   const isEditMode = editingPitcher != null;
