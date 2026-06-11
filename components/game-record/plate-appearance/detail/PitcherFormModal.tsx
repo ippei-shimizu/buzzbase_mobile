@@ -21,6 +21,10 @@ import {
   usePitcherStyles,
   useVelocityZones,
 } from "@hooks/usePlateAppearanceMasters";
+import {
+  type GameRecordState,
+  useGameRecordStore,
+} from "@stores/gameRecordStore";
 
 interface Props {
   visible: boolean;
@@ -71,6 +75,13 @@ export function PitcherFormModal({
   const opponentTeamId = useGameRecordStore(
     (s: GameRecordState) => s.opponentTeamId,
   );
+  // 編集時に所属チームを参照表示するためのチーム一覧。
+  // 編集モードかつ team_id が紐付いている場合のみ最終的に表示する。
+  const { data: teams } = useTeams();
+  const editingTeam =
+    isEditMode && editingPitcher?.team_id
+      ? teams?.find((team) => team.id === editingPitcher.team_id)
+      : undefined;
   const isProcessing = isCreating || isUpdating;
   const isEditMode = editingPitcher != null;
 
@@ -167,6 +178,11 @@ export function PitcherFormModal({
             {isEditMode ? "投手を編集" : "相手投手を追加"}
           </Text>
           <ScrollView contentContainerStyle={styles.body}>
+            {editingTeam && (
+              <Field label="所属チーム">
+                <Text style={styles.readonlyText}>{editingTeam.name}</Text>
+              </Field>
+            )}
             <Field label="投手名（必須）">
               <RNTextInput
                 style={styles.textInput}
@@ -390,6 +406,11 @@ const styles = StyleSheet.create({
   },
   textArea: {
     minHeight: 88,
+  },
+  readonlyText: {
+    color: "#D4D4D8",
+    fontSize: 14,
+    paddingVertical: 4,
   },
   chipRow: {
     flexDirection: "row",
