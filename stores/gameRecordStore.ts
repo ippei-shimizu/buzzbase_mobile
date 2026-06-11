@@ -24,7 +24,7 @@ function humanizeMatchType(value: string | null | undefined): string {
   return formatMatchTypeLabel(value) ?? "公式戦";
 }
 
-interface GameRecordState {
+export interface GameRecordState {
   // 編集モード
   isEditMode: boolean;
 
