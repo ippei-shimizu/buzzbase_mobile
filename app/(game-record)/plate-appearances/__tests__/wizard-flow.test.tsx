@@ -210,7 +210,6 @@ describe("打席ステップ式ウィザードのフロー", () => {
       timing_id: null,
       pitch_type_id: null,
       self_analysis_memo: null,
-      opponent_memo: null,
     });
   });
 
@@ -273,7 +272,6 @@ describe("打席ステップ式ウィザードのフロー", () => {
       pitch_type_id: null,
       first_pitch_swing: null,
       inning: null,
-      opponent_memo: null,
     });
   });
 
