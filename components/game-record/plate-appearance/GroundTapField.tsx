@@ -1,4 +1,4 @@
-import type { Point } from "../../../types/hitDirection";
+import type { Point } from "@utils/groundZoneDetector";
 import { useEffect, useMemo } from "react";
 import {
   Pressable,
@@ -87,12 +87,7 @@ function PulseCircle({
 
 interface Props {
   hitLocation: Point | null;
-  onTap: (args: {
-    x: number;
-    y: number;
-    directionId: number | null;
-    depthId: number | null;
-  }) => void;
+  onTap: (args: { x: number; y: number; directionId: number | null }) => void;
 }
 
 // ホームをキャンバス下端付近に置き、外野円弧がほぼキャンバス上端まで広がる比率にする。
@@ -153,10 +148,10 @@ const estimateChipWidth = (label: string): number =>
 /**
  * 打席記録ステップ式 UI のグラウンドイラスト。
  * タップで打球方向の絶対座標を 0〜1 の正規化座標として取得し、
- * `detectZone` で `hit_direction_id` / `hit_depth_id` を導出する。
+ * `detectClosestDirection` でラベル位置との距離から `hit_direction_id` を導出する。
  *
  * 描画は SprayChart の簡略版（フェンス・ダイヤモンド・マウンド・ベース）に絞り、
- * 13 方向それぞれのラベル chip を重ねる。タップ済みでゾーン判定が成立している
+ * 13 方向それぞれのラベル chip を重ねる。タップ済みで最寄りラベルが特定された
  * 方向の chip は primary 色でハイライトし、どの方向で記録されるかをユーザーに明示する。
  */
 export function GroundTapField({ hitLocation, onTap }: Props) {
@@ -168,12 +163,7 @@ export function GroundTapField({ hitLocation, onTap }: Props) {
       event.nativeEvent.locationY / GROUND_CANVAS_HEIGHT,
     );
     const directionId = detectClosestDirection({ x: xNorm, y: yNorm });
-    onTap({
-      x: xNorm,
-      y: yNorm,
-      directionId,
-      depthId: null,
-    });
+    onTap({ x: xNorm, y: yNorm, directionId });
   };
 
   const markerX =

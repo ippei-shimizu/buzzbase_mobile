@@ -39,7 +39,6 @@ const buildPlateAppearance = (
   contact_quality: { id: 1, name: "真芯", display_order: 1 },
   timing: { id: 2, name: "ドンピシャ", display_order: 1 },
   pitch_type: { id: 3, name: "スライダー系", display_order: 5 },
-  hit_depth: { id: 1, name: "外野", display_order: 2 },
   pitcher: null,
   appearance_situation: null,
   created_at: "2026-06-08T10:00:00Z",

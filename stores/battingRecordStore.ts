@@ -13,11 +13,7 @@ type CounterKey = "rbi" | "runScored" | "stolenBases" | "caughtStealing";
 
 type DetailCountKey = "finalBalls" | "finalStrikes" | "finalOuts";
 
-type MasterSelectionKey =
-  | "contactQualityId"
-  | "timingId"
-  | "pitchTypeId"
-  | "hitDepthId";
+type MasterSelectionKey = "contactQualityId" | "timingId" | "pitchTypeId";
 
 type MemoKey = "selfAnalysisMemo";
 
@@ -38,7 +34,6 @@ interface BattingRecordState {
   outType: OutType | null;
   hitType: HitType | null;
   hitDirectionId: number | null;
-  hitDepthId: number | null;
   hitLocationX: number | null;
   hitLocationY: number | null;
   rbi: number;
@@ -61,12 +56,7 @@ interface BattingRecordState {
 
   initializeForNew: (batterBoxNumber: number) => void;
   initializeFromExisting: (plateAppearance: PlateAppearanceV2) => void;
-  setHitLocation: (
-    x: number,
-    y: number,
-    directionId: number | null,
-    depthId: number | null,
-  ) => void;
+  setHitLocation: (x: number, y: number, directionId: number | null) => void;
   clearHitLocation: () => void;
   setPlateResult: (
     plateResultId: number,
@@ -90,7 +80,6 @@ const initialState = {
   outType: null as OutType | null,
   hitType: null as HitType | null,
   hitDirectionId: null as number | null,
-  hitDepthId: null as number | null,
   hitLocationX: null as number | null,
   hitLocationY: null as number | null,
   rbi: 0,
@@ -140,7 +129,6 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       outType: pa.out_type,
       hitType: pa.hit_type,
       hitDirectionId: pa.hit_direction_id,
-      hitDepthId: pa.hit_depth?.id ?? null,
       hitLocationX: parseLocationString(pa.hit_location_x),
       hitLocationY: parseLocationString(pa.hit_location_y),
       rbi: pa.rbi ?? 0,
@@ -161,12 +149,11 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       appearanceSituationId: pa.appearance_situation?.id ?? null,
     }),
 
-  setHitLocation: (x, y, directionId, depthId) =>
+  setHitLocation: (x, y, directionId) =>
     set({
       hitLocationX: x,
       hitLocationY: y,
       hitDirectionId: directionId,
-      hitDepthId: depthId,
     }),
 
   clearHitLocation: () =>
@@ -174,7 +161,6 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       hitLocationX: null,
       hitLocationY: null,
       hitDirectionId: null,
-      hitDepthId: null,
     }),
 
   setPlateResult: (plateResultId, options) =>
@@ -243,7 +229,6 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       out_type: state.outType,
       hit_type: state.hitType,
       hit_direction_id: state.hitDirectionId,
-      hit_depth_id: state.hitDepthId,
       hit_location_x: roundLocation(state.hitLocationX),
       hit_location_y: roundLocation(state.hitLocationY),
       rbi: state.rbi,
