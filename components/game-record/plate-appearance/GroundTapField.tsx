@@ -151,7 +151,7 @@ const estimateChipWidth = (label: string): number =>
  * `detectClosestDirection` でラベル位置との距離から `hit_direction_id` を導出する。
  *
  * 描画は SprayChart の簡略版（フェンス・ダイヤモンド・マウンド・ベース）に絞り、
- * 13 方向それぞれのラベル chip を重ねる。タップ済みでゾーン判定が成立している
+ * 13 方向それぞれのラベル chip を重ねる。タップ済みで最寄りラベルが特定された
  * 方向の chip は primary 色でハイライトし、どの方向で記録されるかをユーザーに明示する。
  */
 export function GroundTapField({ hitLocation, onTap }: Props) {
