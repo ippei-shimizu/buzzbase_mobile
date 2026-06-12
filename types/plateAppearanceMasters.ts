@@ -21,12 +21,6 @@ export interface TimingMaster {
   display_order: number;
 }
 
-export interface HitDepthMaster {
-  id: number;
-  name: string;
-  display_order: number;
-}
-
 export interface ArmAngleMaster {
   id: number;
   name: string;

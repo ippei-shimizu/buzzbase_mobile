@@ -31,24 +31,6 @@ jest.mock("expo-router", () => {
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
 
-const buildHitDirections = () => [
-  {
-    id: 10,
-    name: "中",
-    zone_polygon: [
-      {
-        depth_id: 2,
-        polygon: [
-          { x: 0.4, y: 0.2 },
-          { x: 0.6, y: 0.2 },
-          { x: 0.6, y: 0.4 },
-          { x: 0.4, y: 0.4 },
-        ],
-      },
-    ],
-  },
-];
-
 const buildCreatedResponse = (
   overrides: Partial<PlateAppearanceV2> = {},
 ): PlateAppearanceV2 => ({
@@ -81,7 +63,6 @@ const buildCreatedResponse = (
   contact_quality: null,
   timing: null,
   pitch_type: null,
-  hit_depth: null,
   pitcher: null,
   appearance_situation: null,
   created_at: "2026-06-04T10:30:00Z",
@@ -99,9 +80,6 @@ beforeEach(() => {
     http.get(baseUrl("/api/v2/plate_appearances/by_game/123"), () =>
       HttpResponse.json({ plate_appearances: [] }),
     ),
-    http.get(baseUrl("/api/v2/hit_directions"), () =>
-      HttpResponse.json({ hit_directions: buildHitDirections() }),
-    ),
     http.get(baseUrl("/api/v2/contact_qualities"), () =>
       HttpResponse.json({
         contact_qualities: [
@@ -118,11 +96,6 @@ beforeEach(() => {
     http.get(baseUrl("/api/v2/pitch_types"), () =>
       HttpResponse.json({
         pitch_types: [{ id: 1, name: "ストレート系", display_order: 1 }],
-      }),
-    ),
-    http.get(baseUrl("/api/v2/hit_depths"), () =>
-      HttpResponse.json({
-        hit_depths: [{ id: 2, name: "外野", display_order: 2 }],
       }),
     ),
     http.get(baseUrl("/api/v2/appearance_situations"), () =>

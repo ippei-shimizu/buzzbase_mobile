@@ -1,6 +1,5 @@
 /**
  * グラウンドイラスト（打席記録の打球方向タップ用）のキャンバスサイズ。
- * back の `docs/strategy/product/game-record-update-design/03-ground-zones.md` の固定値に揃える。
  *
  * タップ座標は `pixel / canvas` で 0.0〜1.0 の正規化座標に変換し、
  * `plate_appearances.hit_location_x` / `hit_location_y` (decimal(5,4)) で保存する。
@@ -17,7 +16,7 @@ export const NORMALIZED_LOCATION_PRECISION = 4;
 /**
  * グラウンド SVG 上の打球方向ラベル表示位置（pixel 座標、`GROUND_CANVAS_WIDTH/HEIGHT` 基準）。
  * 内野ダイヤモンドを大きく取り、外野ラベルは円弧の少し内側 + 左中/右中を中央寄りに配置する。
- * `hit_directions` マスタの id（1=投 〜 13=右線）に対応。
+ * key (1〜13) は `plate_appearances.hit_direction_id` と一致させる（1=投 〜 13=右線）。
  */
 export const DIRECTION_LABEL_POSITIONS: Record<
   number,
@@ -38,7 +37,7 @@ export const DIRECTION_LABEL_POSITIONS: Record<
   13: { x: 360, y: 160 },
 };
 
-/** `hit_directions` マスタの id → 日本語短縮ラベル。SVG chip の表示文言として使う。 */
+/** hit_direction_id (1〜13) → 日本語短縮ラベル。SVG chip の表示文言として使う。 */
 export const DIRECTION_LABELS: Record<number, string> = {
   1: "投",
   2: "捕",

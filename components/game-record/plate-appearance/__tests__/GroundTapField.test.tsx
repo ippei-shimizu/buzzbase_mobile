@@ -27,8 +27,6 @@ describe("GroundTapField", () => {
     expect(args.y).toBeCloseTo(0.3);
     // 中ラベル位置 (210, 75) ≒ 正規化 (0.5, 0.22) に最も近いタップなので 10 (中)
     expect(args.directionId).toBe(10);
-    // detectClosestDirection は depth を判定しないため常に null
-    expect(args.depthId).toBeNull();
   });
 
   it("画面端のタップでも最も近いラベルが選ばれる（detectClosestDirection の挙動）", () => {
@@ -47,7 +45,6 @@ describe("GroundTapField", () => {
     const args = onTap.mock.calls[0][0];
     // 画面左上 (0, 0) に最も近いラベル位置の id が選ばれる（null にはならない）
     expect(args.directionId).not.toBeNull();
-    expect(args.depthId).toBeNull();
   });
 
   it("hitLocation が null の場合はタップマーカー（Circle）を描画しない", () => {

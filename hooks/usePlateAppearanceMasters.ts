@@ -3,14 +3,13 @@ import {
   getAppearanceSituations,
   getArmAngles,
   getContactQualities,
-  getHitDepths,
   getPitcherStyles,
   getPitchTypes,
   getTimings,
   getVelocityZones,
 } from "@services/plateAppearanceMasterService";
 
-/** 打席詳細マスタ（球質・球種・タイミング・深さ）はほぼ変化しないため、24 時間キャッシュする。 */
+/** 打席詳細マスタ（球質・球種・タイミング）はほぼ変化しないため、24 時間キャッシュする。 */
 const PLATE_APPEARANCE_MASTER_STALE_TIME = 24 * 60 * 60 * 1000;
 
 /**
@@ -66,26 +65,6 @@ export const useTimings = () => {
 
   return {
     timings: data ?? [],
-    isLoading,
-    isError,
-    error,
-    refetch,
-    isRefreshing: isRefetching,
-  };
-};
-
-/**
- * 打球の深さマスタを取得する。
- */
-export const useHitDepths = () => {
-  const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
-    queryKey: ["hitDepths"],
-    queryFn: getHitDepths,
-    staleTime: PLATE_APPEARANCE_MASTER_STALE_TIME,
-  });
-
-  return {
-    hitDepths: data ?? [],
     isLoading,
     isError,
     error,
