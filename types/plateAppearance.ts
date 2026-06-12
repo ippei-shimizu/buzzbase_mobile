@@ -8,7 +8,6 @@ import type { Pitcher } from "./pitcher";
 import type {
   AppearanceSituationMaster,
   ContactQualityMaster,
-  HitDepthMaster,
   PitchTypeMaster,
   TimingMaster,
 } from "./plateAppearanceMasters";
@@ -69,7 +68,6 @@ export interface PlateAppearanceV2 {
   contact_quality: ContactQualityMaster | null;
   timing: TimingMaster | null;
   pitch_type: PitchTypeMaster | null;
-  hit_depth: HitDepthMaster | null;
   pitcher: Pitcher | null;
   appearance_situation: AppearanceSituationMaster | null;
   created_at: string;
@@ -87,7 +85,6 @@ export interface PlateAppearanceV2Input {
   out_type?: OutType | null;
   hit_type?: HitType | null;
   hit_direction_id?: number | null;
-  hit_depth_id?: number | null;
   hit_location_x?: number | null;
   hit_location_y?: number | null;
   rbi?: number | null;

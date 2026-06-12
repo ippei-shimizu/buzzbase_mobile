@@ -2,7 +2,6 @@ import type {
   AppearanceSituationMaster,
   ArmAngleMaster,
   ContactQualityMaster,
-  HitDepthMaster,
   PitchTypeMaster,
   PitcherStyleMaster,
   TimingMaster,
@@ -14,7 +13,6 @@ import axiosInstance from "@utils/axiosInstance";
 const V2_CONTACT_QUALITIES_URL = `${API_BASE_URL}/api/v2/contact_qualities`;
 const V2_PITCH_TYPES_URL = `${API_BASE_URL}/api/v2/pitch_types`;
 const V2_TIMINGS_URL = `${API_BASE_URL}/api/v2/timings`;
-const V2_HIT_DEPTHS_URL = `${API_BASE_URL}/api/v2/hit_depths`;
 const V2_ARM_ANGLES_URL = `${API_BASE_URL}/api/v2/arm_angles`;
 const V2_VELOCITY_ZONES_URL = `${API_BASE_URL}/api/v2/velocity_zones`;
 const V2_PITCHER_STYLES_URL = `${API_BASE_URL}/api/v2/pitcher_styles`;
@@ -30,10 +28,6 @@ interface PitchTypesResponse {
 
 interface TimingsResponse {
   timings: TimingMaster[];
-}
-
-interface HitDepthsResponse {
-  hit_depths: HitDepthMaster[];
 }
 
 /**
@@ -64,16 +58,6 @@ export const getPitchTypes = async (): Promise<PitchTypeMaster[]> => {
 export const getTimings = async (): Promise<TimingMaster[]> => {
   const response = await axiosInstance.get<TimingsResponse>(V2_TIMINGS_URL);
   return response.data.timings;
-};
-
-/**
- * 打球の深さマスタ（内野 / 外野 / フェンス際）を取得する。
- * Step1 のグラウンドタップで自動算出される `hit_depth_id` の表示確認用としても利用する。
- */
-export const getHitDepths = async (): Promise<HitDepthMaster[]> => {
-  const response =
-    await axiosInstance.get<HitDepthsResponse>(V2_HIT_DEPTHS_URL);
-  return response.data.hit_depths;
 };
 
 interface ArmAnglesResponse {
