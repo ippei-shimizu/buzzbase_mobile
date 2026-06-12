@@ -11,6 +11,10 @@ interface UsePitchersParams {
   teamId?: number | null;
 }
 
+// 投手はユーザー追加分のみで頻繁に変わらない。useCreatePitcher / useUpdatePitcher で
+// invalidate するため、それ以外は数分キャッシュしてリストモーダルを開くたびのリフェッチを抑える。
+const PITCHERS_STALE_TIME = 5 * 60 * 1000;
+
 /**
  * 相手投手マスタの一覧を取得する。
  * サーバ側で current_user 作成分のみ返却されるため、フロントは追加の絞り込み不要。
@@ -22,6 +26,7 @@ export const usePitchers = (params?: UsePitchersParams) => {
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
     queryKey: ["pitchers", queryParams],
     queryFn: () => getPitchers(queryParams),
+    staleTime: PITCHERS_STALE_TIME,
   });
 
   return {
