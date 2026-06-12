@@ -187,9 +187,8 @@ export function PlateAppearanceWizard({
     x: number;
     y: number;
     directionId: number | null;
-    depthId: number | null;
   }) => {
-    setHitLocation(args.x, args.y, args.directionId, args.depthId);
+    setHitLocation(args.x, args.y, args.directionId);
   };
 
   const proceedToCounter = (
