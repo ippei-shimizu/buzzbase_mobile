@@ -39,7 +39,9 @@ export function PitcherSelector({ value, onChange, description }: Props) {
   const [formVisible, setFormVisible] = useState(false);
   const [editingPitcher, setEditingPitcher] = useState<Pitcher | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const { pitchers, isLoading } = usePitchers({ q: searchQuery || undefined });
+  const { pitchers, isLoading, isError } = usePitchers({
+    q: searchQuery || undefined,
+  });
   const { data: teams } = useTeams();
   // team_id 解決用の Map。投手数 × チーム数の find ループを避ける。
   const teamNameById = new Map<number, string>(
@@ -164,6 +166,10 @@ export function PitcherSelector({ value, onChange, description }: Props) {
             >
               {isLoading ? (
                 <ActivityIndicator color="#d08000" style={styles.loading} />
+              ) : isError ? (
+                <Text style={styles.error}>
+                  投手の取得に失敗しました。時間を置いて試してください
+                </Text>
               ) : pitchers.length === 0 ? (
                 <Text style={styles.empty}>
                   {searchQuery
@@ -337,6 +343,12 @@ const styles = StyleSheet.create({
   },
   empty: {
     color: "#A1A1AA",
+    fontSize: 13,
+    paddingVertical: 24,
+    textAlign: "center",
+  },
+  error: {
+    color: "#F08080",
     fontSize: 13,
     paddingVertical: 24,
     textAlign: "center",
