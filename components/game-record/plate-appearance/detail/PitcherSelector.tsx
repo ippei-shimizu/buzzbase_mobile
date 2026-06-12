@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { THROW_HAND_FULL_LABELS } from "@constants/throwHand";
 import { useTeams } from "@hooks/useMasterData";
 import { usePitchers } from "@hooks/usePitchers";
 import { PitcherFormModal } from "./PitcherFormModal";
@@ -23,11 +24,6 @@ interface Props {
   onChange: (pitcherId: number | null) => void;
   description?: string;
 }
-
-const THROW_HAND_LABELS: Record<string, string> = {
-  right: "右投げ",
-  left: "左投げ",
-};
 
 /**
  * 相手投手の選択 UI。
@@ -242,7 +238,9 @@ function formatSummary(pitcher: Pitcher, teamName?: string): string {
   const parts: string[] = [];
   if (teamName) parts.push(teamName);
   if (pitcher.throw_hand) {
-    parts.push(THROW_HAND_LABELS[pitcher.throw_hand] ?? pitcher.throw_hand);
+    parts.push(
+      THROW_HAND_FULL_LABELS[pitcher.throw_hand] ?? pitcher.throw_hand,
+    );
   }
   if (pitcher.arm_angle?.name) parts.push(pitcher.arm_angle.name);
   if (pitcher.velocity_zone?.name) parts.push(pitcher.velocity_zone.name);

@@ -1,10 +1,6 @@
 import type { PlateAppearanceV2 } from "../types/plateAppearance";
 import { RUNNERS_STATE_OPTIONS } from "@constants/runnersState";
-
-const THROW_HAND_LABELS: Record<string, string> = {
-  right: "右",
-  left: "左",
-};
+import { THROW_HAND_SHORT_LABELS } from "@constants/throwHand";
 
 const RUNNERS_STATE_LABELS: Record<string, string> = Object.fromEntries(
   RUNNERS_STATE_OPTIONS.map((option) => [option.key, option.label]),
@@ -50,7 +46,7 @@ export const buildPitchAndPitcherChips = (pa: PlateAppearanceV2): string[] => {
   if (pa.pitch_type?.name) chips.push(pa.pitch_type.name);
   if (pa.pitcher) {
     const hand = pa.pitcher.throw_hand
-      ? `(${THROW_HAND_LABELS[pa.pitcher.throw_hand] ?? pa.pitcher.throw_hand})`
+      ? `(${THROW_HAND_SHORT_LABELS[pa.pitcher.throw_hand] ?? pa.pitcher.throw_hand})`
       : "";
     chips.push(`${pa.pitcher.name}${hand}`);
   }
