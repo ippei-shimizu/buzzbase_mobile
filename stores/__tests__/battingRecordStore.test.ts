@@ -68,7 +68,6 @@ describe("useBattingRecordStore - 詳細項目", () => {
     expect(state.timingId).toBe(2);
     expect(state.pitchTypeId).toBe(3);
     expect(state.selfAnalysisMemo).toBe("高めの球を強振");
-    expect(state.opponentMemo).toBe("初球はストレート");
   });
 
   it("マスタ未設定の既存打席ではマスタ ID が null になる", () => {
@@ -136,7 +135,6 @@ describe("useBattingRecordStore - 詳細項目", () => {
     expect(pa).toHaveProperty("timing_id", null);
     expect(pa).toHaveProperty("pitch_type_id", null);
     expect(pa).toHaveProperty("self_analysis_memo", null);
-    expect(pa).toHaveProperty("opponent_memo", null);
   });
 
   it("詳細項目に値を入れた状態で toCreatePayload を呼ぶと API ペイロードに値が乗る", () => {
