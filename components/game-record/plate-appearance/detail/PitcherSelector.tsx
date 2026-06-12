@@ -54,9 +54,17 @@ export function PitcherSelector({ value, onChange, description }: Props) {
 
   const selectedPitcher = pitchers.find((pitcher) => pitcher.id === value);
 
+  // モーダルを閉じる際は検索クエリもリセットする。
+  // 残してしまうと、次回開いたときに前回の検索結果でフィルタされており、
+  // selectedPitcher が見つからず「投手未選択」に見える表示崩れが起きる。
+  const closePicker = () => {
+    setSearchQuery("");
+    setPickerVisible(false);
+  };
+
   const handleSelect = (pitcher: Pitcher) => {
     onChange(pitcher.id);
-    setPickerVisible(false);
+    closePicker();
   };
 
   const handleSubmitted = (pitcherId: number) => {
@@ -64,7 +72,7 @@ export function PitcherSelector({ value, onChange, description }: Props) {
     if (!editingPitcher) onChange(pitcherId);
     setEditingPitcher(null);
     setFormVisible(false);
-    setPickerVisible(false);
+    closePicker();
   };
 
   // iOS では Modal の dismiss アニメーション中に別の Modal を visible にしても
@@ -129,11 +137,11 @@ export function PitcherSelector({ value, onChange, description }: Props) {
         visible={pickerVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setPickerVisible(false)}
+        onRequestClose={closePicker}
       >
         <Pressable
           style={styles.backdrop}
-          onPress={() => setPickerVisible(false)}
+          onPress={closePicker}
           accessible={false}
         >
           <Pressable
@@ -196,7 +204,7 @@ export function PitcherSelector({ value, onChange, description }: Props) {
                 accessibilityRole="button"
                 accessibilityLabel="投手選択を閉じる"
                 style={styles.modalCancel}
-                onPress={() => setPickerVisible(false)}
+                onPress={closePicker}
               >
                 <Text style={styles.modalCancelLabel}>閉じる</Text>
               </TouchableOpacity>
