@@ -29,7 +29,11 @@ describe("detectClosestDirection", () => {
 
   it("外野方向（中）の近傍をタップすると id=10 を返す", () => {
     const centerPos = DIRECTION_LABEL_POSITIONS[10];
-    expect(detectClosestDirection(toNormalized(centerPos))).toBe(10);
+    expect(
+      detectClosestDirection(
+        toNormalized({ x: centerPos.x + 8, y: centerPos.y + 8 }),
+      ),
+    ).toBe(10);
   });
 
   it("キャンバス左下端近くは捕(2) または三(5) のいずれか、距離の近い方が返る", () => {
