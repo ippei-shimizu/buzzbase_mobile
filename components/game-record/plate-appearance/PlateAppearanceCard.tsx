@@ -2,6 +2,10 @@ import type { PlateAppearanceV2 } from "../../../types/plateAppearance";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { getBattingResultColor } from "@utils/battingResultColor";
+import {
+  buildPitchAndPitcherChips,
+  buildSituationChips,
+} from "@utils/plateAppearanceChips";
 
 interface Props {
   plateAppearance: PlateAppearanceV2;
@@ -29,7 +33,9 @@ const buildMetaItems = (pa: PlateAppearanceV2): MetaItem[] => {
 /**
  * 打席リストに 1 行ずつ並ぶカード UI。
  * 上段: 「第N打席」 + 「batting_result（試合一覧と同色のヒット系赤）」
- * 下段: 打点・得点・盗塁・盗塁死（1 以上のみ）+ 「詳細未入力」バッジ
+ * 下段1: 打点・得点・盗塁・盗塁死（1 以上のみ）+ 「詳細未入力」バッジ
+ * 下段2: 状況チップ（イニング / カウント / ランナー / 初球打ち）
+ * 下段3: 打球・投手チップ（球質 / タイミング / 球種 / 投手 / 登板状況）
  * 右端の chevron は縦中央に配置。
  */
 export function PlateAppearanceCard({
@@ -41,7 +47,9 @@ export function PlateAppearanceCard({
   const resultText = plateAppearance.batting_result || "未入力";
   const resultColor = getBattingResultColor(resultText);
   const metaItems = buildMetaItems(plateAppearance);
-  const showBottomRow = metaItems.length > 0 || !hasDetail;
+  const situationChips = buildSituationChips(plateAppearance);
+  const pitchChips = buildPitchAndPitcherChips(plateAppearance);
+  const showMetaRow = metaItems.length > 0 || !hasDetail;
 
   return (
     <TouchableOpacity
@@ -60,8 +68,8 @@ export function PlateAppearanceCard({
             {resultText}
           </Text>
         </View>
-        {showBottomRow && (
-          <View style={styles.bottomRow}>
+        {showMetaRow && (
+          <View style={styles.metaRow}>
             {metaItems.map((item) => (
               <Text key={item.label} style={styles.metaText}>
                 {item.label} {item.value}
@@ -72,6 +80,26 @@ export function PlateAppearanceCard({
                 <Text style={styles.detailBadgeLabel}>詳細未入力</Text>
               </View>
             )}
+          </View>
+        )}
+        {situationChips.length > 0 && (
+          <View style={styles.chipRow}>
+            {situationChips.map((chip) => (
+              <View key={`s-${chip}`} style={styles.chip}>
+                <Text style={styles.chipText}>{chip}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+        {pitchChips.length > 0 && (
+          <View style={styles.chipRow}>
+            {pitchChips.map((chip) => (
+              <View key={`p-${chip}`} style={[styles.chip, styles.chipAccent]}>
+                <Text style={[styles.chipText, styles.chipTextAccent]}>
+                  {chip}
+                </Text>
+              </View>
+            ))}
           </View>
         )}
       </View>
@@ -100,11 +128,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
-  bottomRow: {
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
     flexWrap: "wrap",
     gap: 8,
+  },
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
   },
   boxNumber: {
     color: "#A1A1AA",
@@ -127,5 +160,23 @@ const styles = StyleSheet.create({
   detailBadgeLabel: {
     color: "#F4F4F4",
     fontSize: 11,
+  },
+  chip: {
+    backgroundColor: "#424242",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  chipText: {
+    color: "#D4D4D8",
+    fontSize: 11,
+  },
+  chipAccent: {
+    backgroundColor: "#3a3024",
+    borderWidth: 1,
+    borderColor: "#d08000",
+  },
+  chipTextAccent: {
+    color: "#F4F4F4",
   },
 });

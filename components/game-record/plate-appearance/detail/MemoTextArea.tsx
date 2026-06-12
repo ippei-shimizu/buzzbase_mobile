@@ -1,0 +1,61 @@
+import { StyleSheet, TextInput as RNTextInput, View } from "react-native";
+import { SectionHeader } from "./SectionHeader";
+
+interface Props {
+  label: string;
+  value: string | null;
+  onChange: (text: string) => void;
+  placeholder?: string;
+  maxLength?: number;
+  description?: string;
+}
+
+const DEFAULT_MAX_LENGTH = 1000;
+
+/**
+ * 自己分析メモ・対戦相手メモ共通の複数行 textarea。
+ * 値は store 側で空文字を null に正規化するため、上位は文字列をそのまま流すだけでよい。
+ */
+export function MemoTextArea({
+  label,
+  value,
+  onChange,
+  placeholder,
+  maxLength = DEFAULT_MAX_LENGTH,
+  description,
+}: Props) {
+  return (
+    <View style={styles.container}>
+      <SectionHeader label={label} description={description} />
+      <RNTextInput
+        style={styles.input}
+        value={value ?? ""}
+        onChangeText={onChange}
+        placeholder={placeholder}
+        placeholderTextColor="#71717A"
+        multiline
+        numberOfLines={4}
+        textAlignVertical="top"
+        maxLength={maxLength}
+        accessibilityLabel={label}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 0,
+  },
+  input: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#52525B",
+    backgroundColor: "#424242",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: "#F4F4F4",
+    fontSize: 14,
+    minHeight: 96,
+  },
+});
