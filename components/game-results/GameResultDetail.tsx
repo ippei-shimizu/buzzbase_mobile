@@ -1,5 +1,7 @@
 import type { GameResult } from "../../types/gameResult";
+import type { PlateAppearanceV2 } from "../../types/plateAppearance";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   View,
@@ -9,7 +11,12 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
+import { PlateAppearanceCard } from "@components/game-record/plate-appearance/PlateAppearanceCard";
 import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
+import {
+  useDeletePlateAppearance,
+  usePlateAppearancesByGame,
+} from "@hooks/usePlateAppearances";
 import { formatMatchTypeLabel } from "@utils/matchType";
 
 interface GameResultDetailProps {
@@ -48,53 +55,6 @@ const battingOrderLabel = (order: string): string => {
   return order;
 };
 
-const HIT_RESULTS = [
-  "左安",
-  "中安",
-  "右安",
-  "遊安",
-  "投安",
-  "一安",
-  "二安",
-  "三安",
-  "左線安",
-  "左中安",
-  "右中安",
-  "右線安",
-  "左二",
-  "中二",
-  "右二",
-  "左線二",
-  "左中二",
-  "右中二",
-  "右線二",
-  "左三",
-  "中三",
-  "右三",
-  "左線三",
-  "左中三",
-  "右中三",
-  "右線三",
-  "左本",
-  "中本",
-  "右本",
-  "左線本",
-  "左中本",
-  "右中本",
-  "右線本",
-  "本塁打",
-  "安打",
-  "二塁打",
-  "三塁打",
-];
-const SACRIFICE_RESULTS = ["犠打", "犠飛", "犠牲"];
-
-const getResultColor = (result: string): string => {
-  if (HIT_RESULTS.some((h) => result.includes(h))) return "#f31260";
-  if (SACRIFICE_RESULTS.some((s) => result.includes(s))) return "#006fee";
-  return "#F4F4F4";
-};
-
 function StatRow({
   items,
 }: {
@@ -113,10 +73,50 @@ function StatRow({
 }
 
 export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
-  const { match_result, plate_appearances, batting_average, pitching_result } =
-    game;
+  const router = useRouter();
+  const { match_result, batting_average, pitching_result } = game;
   const isWin = match_result.my_team_score > match_result.opponent_team_score;
   const isLoss = match_result.my_team_score < match_result.opponent_team_score;
+  // onDelete が渡される＝ページ側で「本人の試合」と判定済みのため、
+  // 打席カードの編集・削除導線も同じ条件で出し分ける。
+  const isOwner = onDelete !== undefined;
+
+  const { plateAppearances } = usePlateAppearancesByGame(game.game_result_id);
+  const { deletePlateAppearance } = useDeletePlateAppearance();
+
+  const sortedPlateAppearances = [...plateAppearances].sort(
+    (a, b) => a.batter_box_number - b.batter_box_number,
+  );
+
+  const handleEditPlateAppearance = (pa: PlateAppearanceV2) => {
+    router.push({
+      pathname: "/(game-record)/plate-appearances/[id]/edit",
+      params: {
+        id: String(pa.id),
+        gameResultId: String(game.game_result_id),
+      },
+    });
+  };
+
+  const handleDeletePlateAppearance = (pa: PlateAppearanceV2) => {
+    Alert.alert("打席の削除", `第${pa.batter_box_number}打席を削除しますか？`, [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "削除",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deletePlateAppearance({
+              id: pa.id,
+              gameResultId: game.game_result_id,
+            });
+          } catch {
+            Alert.alert("エラー", "打席の削除に失敗しました");
+          }
+        },
+      },
+    ]);
+  };
 
   const handleDelete = () => {
     Alert.alert("試合結果の削除", "この試合結果を削除しますか？", [
@@ -222,25 +222,6 @@ export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
         {batting_average && (
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>打撃</Text>
-            {plate_appearances.length > 0 && (
-              <Text style={styles.battingResultText}>
-                {plate_appearances
-                  .sort((a, b) => a.batter_box_number - b.batter_box_number)
-                  .map((pa, i) => (
-                    <Text key={`${pa.id}-${i}`}>
-                      {i > 0 && <Text style={{ color: "#A1A1AA" }}> </Text>}
-                      <Text
-                        style={{
-                          color: getResultColor(pa.batting_result),
-                          fontWeight: "700",
-                        }}
-                      >
-                        {pa.batting_result}
-                      </Text>
-                    </Text>
-                  ))}
-              </Text>
-            )}
             <StatRow
               items={[
                 { label: "打点", value: batting_average.runs_batted_in },
@@ -297,6 +278,25 @@ export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
           </View>
         )}
       </View>
+
+      {/* 打席リスト（カード形式） */}
+      {sortedPlateAppearances.length > 0 && (
+        <View style={styles.plateAppearanceSection}>
+          <Text style={styles.plateAppearanceHeader}>打席</Text>
+          {sortedPlateAppearances.map((pa) => (
+            <PlateAppearanceCard
+              key={pa.id}
+              plateAppearance={pa}
+              onPress={
+                isOwner ? () => handleEditPlateAppearance(pa) : undefined
+              }
+              onLongPress={
+                isOwner ? () => handleDeletePlateAppearance(pa) : undefined
+              }
+            />
+          ))}
+        </View>
+      )}
 
       {/* 削除ボタン */}
       {onDelete && (
@@ -425,11 +425,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 4,
   },
-  battingResultText: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 8,
-  },
   pitchingHeadline: {
     color: "#F4F4F4",
     fontSize: 18,
@@ -457,6 +452,14 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 14,
     lineHeight: 20,
+  },
+  plateAppearanceSection: {
+    marginTop: 16,
+  },
+  plateAppearanceHeader: {
+    color: "#A1A1AA",
+    fontSize: 13,
+    marginBottom: 8,
   },
   deleteButton: {
     flexDirection: "row",
