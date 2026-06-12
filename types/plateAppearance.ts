@@ -104,7 +104,6 @@ export interface PlateAppearanceV2Input {
   timing_id?: number | null;
   pitch_type_id?: number | null;
   self_analysis_memo?: string | null;
-  opponent_memo?: string | null;
   pitcher_id?: number | null;
   appearance_situation_id?: number | null;
 }

@@ -19,7 +19,7 @@ type MasterSelectionKey =
   | "pitchTypeId"
   | "hitDepthId";
 
-type MemoKey = "selfAnalysisMemo" | "opponentMemo";
+type MemoKey = "selfAnalysisMemo";
 
 type PitcherSelectionKey = "pitcherId" | "appearanceSituationId";
 
@@ -56,7 +56,6 @@ interface BattingRecordState {
   timingId: number | null;
   pitchTypeId: number | null;
   selfAnalysisMemo: string | null;
-  opponentMemo: string | null;
   pitcherId: number | null;
   appearanceSituationId: number | null;
 
@@ -109,7 +108,6 @@ const initialState = {
   timingId: null as number | null,
   pitchTypeId: null as number | null,
   selfAnalysisMemo: null as string | null,
-  opponentMemo: null as string | null,
   pitcherId: null as number | null,
   appearanceSituationId: null as number | null,
 };
@@ -159,7 +157,6 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       timingId: pa.timing?.id ?? null,
       pitchTypeId: pa.pitch_type?.id ?? null,
       selfAnalysisMemo: pa.self_analysis_memo,
-      opponentMemo: pa.opponent_memo,
       pitcherId: pa.pitcher?.id ?? null,
       appearanceSituationId: pa.appearance_situation?.id ?? null,
     }),
@@ -263,7 +260,6 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       timing_id: state.timingId,
       pitch_type_id: state.pitchTypeId,
       self_analysis_memo: state.selfAnalysisMemo,
-      opponent_memo: state.opponentMemo,
       pitcher_id: state.pitcherId,
       appearance_situation_id: state.appearanceSituationId,
     };
