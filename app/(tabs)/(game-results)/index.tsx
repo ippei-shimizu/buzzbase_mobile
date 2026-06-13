@@ -341,8 +341,15 @@ export default function GameResultsScreen() {
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-    scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, []);
+
+  // ページ変更時の先頭スクロールは setState と同時実行すると、新しいデータの
+  // 再レンダー後にスクロール位置がリセット・無効化されてしまうため、
+  // currentPage の変化を useEffect で検知して次フレームでスクロールする。
+  // フィルター変更時に setCurrentPage(1) で 1 に戻すケースでも先頭に戻すので意図に合う。
+  useEffect(() => {
+    scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, [currentPage]);
 
   if (isLoading) {
     return (
