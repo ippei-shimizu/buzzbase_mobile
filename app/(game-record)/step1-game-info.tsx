@@ -253,6 +253,7 @@ export default function Step1GameInfoScreen() {
         onFieldChange={handleFieldChange}
         onSubmit={handleSubmit}
         onPatternSelect={store.isEditMode ? undefined : handlePatternSelect}
+        isEditMode={store.isEditMode}
       />
     </KeyboardAvoidingView>
   );
