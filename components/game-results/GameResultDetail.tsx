@@ -2,12 +2,12 @@ import type { GameResult } from "../../types/gameResult";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
   Alert,
+  ScrollView,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { PlateAppearanceCard } from "@components/game-record/plate-appearance/PlateAppearanceCard";
 import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
@@ -72,7 +72,11 @@ export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
   const isWin = match_result.my_team_score > match_result.opponent_team_score;
   const isLoss = match_result.my_team_score < match_result.opponent_team_score;
 
-  const { plateAppearances } = usePlateAppearancesByGame(game.game_result_id);
+  const {
+    plateAppearances,
+    isLoading: isPlateAppearancesLoading,
+    isError: isPlateAppearancesError,
+  } = usePlateAppearancesByGame(game.game_result_id);
   const sortedPlateAppearances = [...plateAppearances].sort(
     (a, b) => a.batter_box_number - b.batter_box_number,
   );
@@ -239,12 +243,26 @@ export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
       </View>
 
       {/* 打席リスト（読み取り専用、編集・削除は鉛筆アイコンの編集フローで実施） */}
-      {sortedPlateAppearances.length > 0 && (
+      {(isPlateAppearancesLoading ||
+        isPlateAppearancesError ||
+        sortedPlateAppearances.length > 0) && (
         <View style={styles.plateAppearanceSection}>
           <Text style={styles.plateAppearanceHeader}>打席</Text>
-          {sortedPlateAppearances.map((pa) => (
-            <PlateAppearanceCard key={pa.id} plateAppearance={pa} />
-          ))}
+          {isPlateAppearancesLoading ? (
+            <View style={styles.plateAppearanceStateBox}>
+              <ActivityIndicator color="#d08000" />
+            </View>
+          ) : isPlateAppearancesError ? (
+            <View style={styles.plateAppearanceStateBox}>
+              <Text style={styles.plateAppearanceErrorText}>
+                打席データの取得に失敗しました
+              </Text>
+            </View>
+          ) : (
+            sortedPlateAppearances.map((pa) => (
+              <PlateAppearanceCard key={pa.id} plateAppearance={pa} />
+            ))
+          )}
         </View>
       )}
 
@@ -410,6 +428,17 @@ const styles = StyleSheet.create({
     color: "#A1A1AA",
     fontSize: 13,
     marginBottom: 8,
+  },
+  plateAppearanceStateBox: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 24,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 12,
+  },
+  plateAppearanceErrorText: {
+    color: "#EF4444",
+    fontSize: 13,
   },
   deleteButton: {
     flexDirection: "row",
