@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { useLayoutEffect } from "react";
+import { useCallback, useLayoutEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -52,7 +52,9 @@ export default function EditPlateAppearanceScreen() {
   const numericId = Number(id);
   const editing = plateAppearances.find((pa) => pa.id === numericId);
 
-  const confirmCancel = () => {
+  // confirmCancel / handleDelete は useLayoutEffect の setOptions コールバック内で
+  // 参照される。useCallback で安定化し依存配列に明示することで stale closure を防ぐ。
+  const confirmCancel = useCallback(() => {
     Alert.alert("編集を中断しますか？", "編集中の内容は破棄されます。", [
       { text: "キャンセル", style: "cancel" },
       {
@@ -61,13 +63,15 @@ export default function EditPlateAppearanceScreen() {
         onPress: () => router.back(),
       },
     ]);
-  };
+  }, [router]);
 
-  const handleDelete = () => {
-    if (!editing || effectiveGameResultId === null) return;
+  const editingId = editing?.id;
+  const editingBatterBoxNumber = editing?.batter_box_number;
+  const handleDelete = useCallback(() => {
+    if (editingId === undefined || effectiveGameResultId === null) return;
     Alert.alert(
       "打席の削除",
-      `第${editing.batter_box_number}打席を削除しますか？`,
+      `第${editingBatterBoxNumber}打席を削除しますか？`,
       [
         { text: "キャンセル", style: "cancel" },
         {
@@ -76,7 +80,7 @@ export default function EditPlateAppearanceScreen() {
           onPress: async () => {
             try {
               await deletePlateAppearance({
-                id: editing.id,
+                id: editingId,
                 gameResultId: effectiveGameResultId,
               });
               router.back();
@@ -87,13 +91,19 @@ export default function EditPlateAppearanceScreen() {
         },
       ],
     );
-  };
+  }, [
+    editingId,
+    editingBatterBoxNumber,
+    effectiveGameResultId,
+    deletePlateAppearance,
+    router,
+  ]);
 
   // 編集対象が存在するときのみヘッダーに「戻る」「削除」アイコンを設置する。
   // PlateAppearanceWizard 側は編集モードで headerLeft/Right を触らないので、
   // ここでの setOptions が最終的な見た目になる。
   useLayoutEffect(() => {
-    if (!editing) {
+    if (editingId === undefined) {
       navigation.setOptions({ headerLeft: undefined, headerRight: undefined });
       return;
     }
@@ -128,10 +138,7 @@ export default function EditPlateAppearanceScreen() {
         </TouchableOpacity>
       ),
     });
-    // editing は plate_appearances から派生する参照値。id が同じなら同じものを指す前提で
-    // editing.id を依存配列に入れる（plateAppearances 配列全体だとレンダー毎に setOptions が走る）。
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigation, editing?.id, isDeleting, effectiveGameResultId]);
+  }, [navigation, editingId, isDeleting, confirmCancel, handleDelete]);
 
   if (effectiveGameResultId === null) {
     return (
