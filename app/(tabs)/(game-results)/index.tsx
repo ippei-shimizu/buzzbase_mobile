@@ -298,6 +298,7 @@ export default function GameResultsScreen() {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
       setCurrentPage(1);
+      scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -343,6 +344,13 @@ export default function GameResultsScreen() {
     setCurrentPage(page);
   }, []);
 
+  // フィルター変更ハンドラから明示的に呼ぶ用。
+  // ページ1で setCurrentPage(1) してもページ番号自体は変化しないため、
+  // 下記 useEffect だけだとフィルター変更時に先頭へ戻らない。
+  const scrollToTop = useCallback(() => {
+    scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, []);
+
   // ページ変更時の先頭スクロール。currentPage state の変化だけを監視すると
   // データ再フェッチ中にスクロールが走ってリスト再描画で無効化されることがある。
   // API レスポンスが反映されて pagination.current_page が更新されたタイミングで
@@ -351,8 +359,8 @@ export default function GameResultsScreen() {
   const paginationCurrentPage = pagination?.current_page;
   useEffect(() => {
     if (paginationCurrentPage === undefined) return;
-    scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
-  }, [paginationCurrentPage]);
+    scrollToTop();
+  }, [paginationCurrentPage, scrollToTop]);
 
   if (isLoading) {
     return (
@@ -405,6 +413,7 @@ export default function GameResultsScreen() {
           onSelect={(v) => {
             setSelectedYear(v === "all" ? undefined : v);
             setCurrentPage(1);
+            scrollToTop();
           }}
           isOpen={activeFilter === "year"}
           onToggle={() => toggleFilter("year")}
@@ -416,6 +425,7 @@ export default function GameResultsScreen() {
           onSelect={(v) => {
             setSelectedMatchType(v);
             setCurrentPage(1);
+            scrollToTop();
           }}
           isOpen={activeFilter === "matchType"}
           onToggle={() => toggleFilter("matchType")}
@@ -430,6 +440,7 @@ export default function GameResultsScreen() {
           onSelect={(v) => {
             setSelectedSeasonId(v);
             setCurrentPage(1);
+            scrollToTop();
           }}
           isOpen={activeFilter === "season"}
           onToggle={() => toggleFilter("season")}
@@ -445,6 +456,7 @@ export default function GameResultsScreen() {
             onSelect={(v) => {
               setSelectedTournamentId(v);
               setCurrentPage(1);
+              scrollToTop();
             }}
             isOpen={activeFilter === "tournament"}
             onToggle={() => toggleFilter("tournament")}
@@ -479,6 +491,7 @@ export default function GameResultsScreen() {
           onPress={() => {
             setSortDesc((p) => !p);
             setCurrentPage(1);
+            scrollToTop();
           }}
         >
           <Text style={filterStyles.buttonText}>
