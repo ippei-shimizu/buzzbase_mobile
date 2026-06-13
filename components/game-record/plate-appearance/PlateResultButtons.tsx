@@ -2,7 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {
   DIRECTION_ONLY_RESULT_OPTIONS,
+  HIT_TYPE_OPTIONS,
   NO_DIRECTION_RESULT_OPTIONS,
+  OUT_TYPE_OPTIONS,
   PLATE_RESULT_IDS,
   type PlateResultId,
 } from "@constants/plateResults";
@@ -10,6 +12,11 @@ import {
 interface Props {
   /** グラウンドタップ済みか（true なら打球方向あり系のボタンを活性にする） */
   hasHitLocation: boolean;
+  /**
+   * 現在選択中の打席結果 ID。編集モードや結果選択後の再表示でハイライト用に使う。
+   * null/undefined のときはどのボタンもハイライトされない。
+   */
+  selectedPlateResultId?: PlateResultId | null;
   /** 三振 / 四球 / 死球 / 打撃妨害 / 振り逃げ を選んだとき */
   onSelectNoDirection: (plateResultId: PlateResultId) => void;
   /** アウトボタンを押したとき。呼び出し側で OutTypeModal を開く */
@@ -19,6 +26,13 @@ interface Props {
   /** 失策 / FC / 犠打 / 犠飛 を選んだとき */
   onSelectDirectionOnly: (plateResultId: PlateResultId) => void;
 }
+
+const OUT_PLATE_RESULT_IDS: readonly PlateResultId[] = OUT_TYPE_OPTIONS.map(
+  (option) => option.plate_result_id,
+);
+const HIT_PLATE_RESULT_IDS: readonly PlateResultId[] = HIT_TYPE_OPTIONS.map(
+  (option) => option.plate_result_id,
+);
 
 const PRIMARY_COLOR = "#d08000";
 const OUT_COLOR = "#ef4444";
@@ -76,11 +90,18 @@ const chunkPairs = <T,>(items: readonly T[]): T[][] => {
  */
 export function PlateResultButtons({
   hasHitLocation,
+  selectedPlateResultId = null,
   onSelectNoDirection,
   onSelectOut,
   onSelectHit,
   onSelectDirectionOnly,
 }: Props) {
+  const isOutSelected =
+    selectedPlateResultId !== null &&
+    OUT_PLATE_RESULT_IDS.includes(selectedPlateResultId);
+  const isHitSelected =
+    selectedPlateResultId !== null &&
+    HIT_PLATE_RESULT_IDS.includes(selectedPlateResultId);
   return (
     <View>
       <View style={styles.section}>
@@ -91,6 +112,7 @@ export function PlateResultButtons({
             disabled={!hasHitLocation}
             onPress={onSelectOut}
             hasChevron
+            isSelected={isOutSelected}
           />
           <ResultButton
             label="ヒット"
@@ -98,6 +120,7 @@ export function PlateResultButtons({
             disabled={!hasHitLocation}
             onPress={onSelectHit}
             hasChevron
+            isSelected={isHitSelected}
           />
         </View>
         <View style={styles.row}>
@@ -108,6 +131,7 @@ export function PlateResultButtons({
               tone={toneForPlateResult(option.plate_result_id)}
               disabled={!hasHitLocation}
               onPress={() => onSelectDirectionOnly(option.plate_result_id)}
+              isSelected={selectedPlateResultId === option.plate_result_id}
             />
           ))}
         </View>
@@ -129,6 +153,7 @@ export function PlateResultButtons({
                 tone={toneForPlateResult(option.plate_result_id)}
                 disabled={hasHitLocation}
                 onPress={() => onSelectNoDirection(option.plate_result_id)}
+                isSelected={selectedPlateResultId === option.plate_result_id}
               />
             ))}
           </View>
@@ -146,6 +171,8 @@ interface ResultButtonProps {
   hasChevron?: boolean;
   /** 配色トーン。出塁系 = primary（オレンジ）、アウト系 = out（赤） */
   tone?: Tone;
+  /** 現在選択中のボタンを背景塗りつぶし + 左にチェックアイコンで強調する */
+  isSelected?: boolean;
 }
 
 function ResultButton({
@@ -154,25 +181,37 @@ function ResultButton({
   onPress,
   hasChevron,
   tone = "primary",
+  isSelected = false,
 }: ResultButtonProps) {
   const color = TONE_COLORS[tone];
+  const labelColor = isSelected ? "#FFFFFF" : color;
   return (
     <TouchableOpacity
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled }}
+      accessibilityState={{ disabled, selected: isSelected }}
       disabled={disabled}
       onPress={onPress}
       style={[
         styles.button,
         { borderColor: color },
+        isSelected && { backgroundColor: color },
         disabled && styles.buttonDisabled,
       ]}
     >
-      <Text style={[styles.buttonLabel, { color }]}>{label}</Text>
+      {isSelected && (
+        <View style={styles.checkmark} pointerEvents="none">
+          <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+        </View>
+      )}
+      <Text style={[styles.buttonLabel, { color: labelColor }]}>{label}</Text>
       {hasChevron && (
         <View style={styles.chevron} pointerEvents="none">
-          <Ionicons name="chevron-forward" size={18} color={color} />
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={isSelected ? "#FFFFFF" : color}
+          />
         </View>
       )}
     </TouchableOpacity>
@@ -206,6 +245,13 @@ const styles = StyleSheet.create({
   chevron: {
     position: "absolute",
     right: 12,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+  },
+  checkmark: {
+    position: "absolute",
+    left: 12,
     top: 0,
     bottom: 0,
     justifyContent: "center",
