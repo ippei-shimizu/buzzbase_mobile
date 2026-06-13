@@ -83,6 +83,8 @@ interface Props {
   onPatternSelect?: (pattern: RecordPattern) => void;
   // 編集モードのときは見出し・ボタン文言を「編集」表現に切り替える。
   isEditMode?: boolean;
+  // 編集モードのとき、試合情報だけ編集して完了するためのサブ動線。
+  onCompleteEdit?: () => void;
 }
 
 // 打順の選択肢。1〜9番／DH に加え、代打・代走・途中出場・未出場ケース向けに「なし」を先頭に追加。
@@ -173,6 +175,7 @@ export function GameInfoForm({
   onSubmit,
   onPatternSelect,
   isEditMode = false,
+  onCompleteEdit,
 }: Props) {
   const [showMyTeamSuggestions, setShowMyTeamSuggestions] = useState(false);
   const [showOpponentTeamSuggestions, setShowOpponentTeamSuggestions] =
@@ -750,18 +753,33 @@ export function GameInfoForm({
       </View>
 
       {appearanceType === "no_play" || !onPatternSelect ? (
-        <Button
-          title={(() => {
-            if (appearanceType === "no_play") {
-              return isEditMode ? "編集を完了する" : "試合結果まとめへ";
+        <>
+          <Button
+            title={(() => {
+              if (appearanceType === "no_play") {
+                return isEditMode ? "編集を完了する" : "試合結果まとめへ";
+              }
+              return isEditMode ? "打撃成績編集へ" : "打撃成績入力へ";
+            })()}
+            onPress={onSubmit}
+            loading={isSubmitting}
+            disabled={isSubmitting}
+            style={
+              isEditMode && onCompleteEdit ? undefined : { marginBottom: 40 }
             }
-            return isEditMode ? "打撃成績編集へ" : "打撃成績入力へ";
-          })()}
-          onPress={onSubmit}
-          loading={isSubmitting}
-          disabled={isSubmitting}
-          style={{ marginBottom: 40 }}
-        />
+          />
+          {isEditMode && onCompleteEdit && appearanceType !== "no_play" && (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="編集を完了する"
+              onPress={onCompleteEdit}
+              disabled={isSubmitting}
+              style={styles.completeEditButton}
+            >
+              <Text style={styles.completeEditLabel}>編集を完了する</Text>
+            </TouchableOpacity>
+          )}
+        </>
       ) : (
         <PatternSelector onSelect={onPatternSelect} disabled={isSubmitting} />
       )}
@@ -837,6 +855,17 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     padding: 16,
+  },
+  completeEditButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    marginBottom: 28,
+  },
+  completeEditLabel: {
+    color: "#A1A1AA",
+    fontSize: 14,
+    fontWeight: "600",
   },
   heading: {
     color: "#F4F4F4",
