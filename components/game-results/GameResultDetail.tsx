@@ -1,7 +1,5 @@
 import type { GameResult } from "../../types/gameResult";
-import type { PlateAppearanceV2 } from "../../types/plateAppearance";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import React from "react";
 import {
   View,
@@ -11,12 +9,7 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
-import { PlateAppearanceCard } from "@components/game-record/plate-appearance/PlateAppearanceCard";
 import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
-import {
-  useDeletePlateAppearance,
-  usePlateAppearancesByGame,
-} from "@hooks/usePlateAppearances";
 import { formatMatchTypeLabel } from "@utils/matchType";
 
 interface GameResultDetailProps {
@@ -73,50 +66,9 @@ function StatRow({
 }
 
 export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
-  const router = useRouter();
   const { match_result, batting_average, pitching_result } = game;
   const isWin = match_result.my_team_score > match_result.opponent_team_score;
   const isLoss = match_result.my_team_score < match_result.opponent_team_score;
-  // onDelete が渡される＝ページ側で「本人の試合」と判定済みのため、
-  // 打席カードの編集・削除導線も同じ条件で出し分ける。
-  const isOwner = onDelete !== undefined;
-
-  const { plateAppearances } = usePlateAppearancesByGame(game.game_result_id);
-  const { deletePlateAppearance } = useDeletePlateAppearance();
-
-  const sortedPlateAppearances = [...plateAppearances].sort(
-    (a, b) => a.batter_box_number - b.batter_box_number,
-  );
-
-  const handleEditPlateAppearance = (pa: PlateAppearanceV2) => {
-    router.push({
-      pathname: "/(game-record)/plate-appearances/[id]/edit",
-      params: {
-        id: String(pa.id),
-        gameResultId: String(game.game_result_id),
-      },
-    });
-  };
-
-  const handleDeletePlateAppearance = (pa: PlateAppearanceV2) => {
-    Alert.alert("打席の削除", `第${pa.batter_box_number}打席を削除しますか？`, [
-      { text: "キャンセル", style: "cancel" },
-      {
-        text: "削除",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deletePlateAppearance({
-              id: pa.id,
-              gameResultId: game.game_result_id,
-            });
-          } catch {
-            Alert.alert("エラー", "打席の削除に失敗しました");
-          }
-        },
-      },
-    ]);
-  };
 
   const handleDelete = () => {
     Alert.alert("試合結果の削除", "この試合結果を削除しますか？", [
@@ -279,25 +231,6 @@ export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
         )}
       </View>
 
-      {/* 打席リスト（カード形式） */}
-      {sortedPlateAppearances.length > 0 && (
-        <View style={styles.plateAppearanceSection}>
-          <Text style={styles.plateAppearanceHeader}>打席</Text>
-          {sortedPlateAppearances.map((pa) => (
-            <PlateAppearanceCard
-              key={pa.id}
-              plateAppearance={pa}
-              onPress={
-                isOwner ? () => handleEditPlateAppearance(pa) : undefined
-              }
-              onLongPress={
-                isOwner ? () => handleDeletePlateAppearance(pa) : undefined
-              }
-            />
-          ))}
-        </View>
-      )}
-
       {/* 削除ボタン */}
       {onDelete && (
         <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
@@ -452,14 +385,6 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 14,
     lineHeight: 20,
-  },
-  plateAppearanceSection: {
-    marginTop: 16,
-  },
-  plateAppearanceHeader: {
-    color: "#A1A1AA",
-    fontSize: 13,
-    marginBottom: 8,
   },
   deleteButton: {
     flexDirection: "row",
