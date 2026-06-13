@@ -81,6 +81,8 @@ interface Props {
   // appearanceType !== "no_play" の場合に末尾へ表示する記録パターン選択 UI のハンドラ。
   // 編集モードでは未指定にして既存の onSubmit Button を表示する。
   onPatternSelect?: (pattern: RecordPattern) => void;
+  // 編集モードのときは見出し・ボタン文言を「編集」表現に切り替える。
+  isEditMode?: boolean;
 }
 
 // 打順の選択肢。1〜9番／DH に加え、代打・代走・途中出場・未出場ケース向けに「なし」を先頭に追加。
@@ -170,6 +172,7 @@ export function GameInfoForm({
   onFieldChange,
   onSubmit,
   onPatternSelect,
+  isEditMode = false,
 }: Props) {
   const [showMyTeamSuggestions, setShowMyTeamSuggestions] = useState(false);
   const [showOpponentTeamSuggestions, setShowOpponentTeamSuggestions] =
@@ -296,7 +299,9 @@ export function GameInfoForm({
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={{ paddingBottom: 40 }}
     >
-      <Text style={styles.heading}>試合結果を入力しよう！</Text>
+      <Text style={styles.heading}>
+        {isEditMode ? "試合結果を編集しよう！" : "試合結果を入力しよう！"}
+      </Text>
 
       <View style={styles.formCard}>
         {/* 試合日付 */}
@@ -746,9 +751,12 @@ export function GameInfoForm({
 
       {appearanceType === "no_play" || !onPatternSelect ? (
         <Button
-          title={
-            appearanceType === "no_play" ? "試合結果まとめへ" : "打撃成績入力へ"
-          }
+          title={(() => {
+            if (appearanceType === "no_play") {
+              return isEditMode ? "編集を完了する" : "試合結果まとめへ";
+            }
+            return isEditMode ? "打撃成績編集へ" : "打撃成績入力へ";
+          })()}
           onPress={onSubmit}
           loading={isSubmitting}
           disabled={isSubmitting}
