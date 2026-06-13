@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { useLayoutEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -26,9 +27,14 @@ import { useGameRecordStore } from "../../../../stores/gameRecordStore";
  *
  * 試合記録フロー中（store に値がある）と試合詳細画面経由（クエリで受ける）の
  * 両方からこのルートを再利用するため。完了 / 中断時は前画面に戻る。
+ *
+ * ヘッダー左の「戻る」は編集破棄の確認ダイアログ付き。ヘッダー右にゴミ箱アイコンを
+ * 出して打席削除を行う。フッターに同種ボタンを並べないのは、画面下部のキー操作と
+ * 隣接して誤タップしやすいため。
  */
 export default function EditPlateAppearanceScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { id, gameResultId: gameResultIdParam } = useLocalSearchParams<{
     id: string;
     gameResultId?: string;
@@ -43,38 +49,22 @@ export default function EditPlateAppearanceScreen() {
   );
   const { deletePlateAppearance, isDeleting } = useDeletePlateAppearance();
 
-  if (effectiveGameResultId === null) {
-    return (
-      <View style={styles.error}>
-        <Text style={styles.errorText}>
-          試合情報が見つかりません。試合記録を最初からやり直してください。
-        </Text>
-      </View>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#d08000" />
-      </View>
-    );
-  }
-
   const numericId = Number(id);
   const editing = plateAppearances.find((pa) => pa.id === numericId);
 
-  if (!editing) {
-    return (
-      <View style={styles.error}>
-        <Text style={styles.errorText}>
-          指定の打席が見つかりません。打席一覧に戻ってください。
-        </Text>
-      </View>
-    );
-  }
+  const confirmCancel = () => {
+    Alert.alert("編集を中断しますか？", "編集中の内容は破棄されます。", [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "中断する",
+        style: "destructive",
+        onPress: () => router.back(),
+      },
+    ]);
+  };
 
   const handleDelete = () => {
+    if (!editing || effectiveGameResultId === null) return;
     Alert.alert(
       "打席の削除",
       `第${editing.batter_box_number}打席を削除しますか？`,
@@ -99,49 +89,90 @@ export default function EditPlateAppearanceScreen() {
     );
   };
 
+  // 編集対象が存在するときのみヘッダーに「戻る」「削除」アイコンを設置する。
+  // PlateAppearanceWizard 側は編集モードで headerLeft/Right を触らないので、
+  // ここでの setOptions が最終的な見た目になる。
+  useLayoutEffect(() => {
+    if (!editing) {
+      navigation.setOptions({ headerLeft: undefined, headerRight: undefined });
+      return;
+    }
+    navigation.setOptions({
+      headerLeft: () => (
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="編集を中断する"
+          onPress={confirmCancel}
+          style={styles.headerLeftButton}
+          hitSlop={8}
+        >
+          <Ionicons name="chevron-back" size={28} color="#F4F4F4" />
+          <Text style={styles.headerLeftLabel}>戻る</Text>
+        </TouchableOpacity>
+      ),
+      headerRight: () => (
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="この打席を削除"
+          accessibilityState={{ disabled: isDeleting }}
+          onPress={handleDelete}
+          disabled={isDeleting}
+          style={styles.headerRightButton}
+          hitSlop={8}
+        >
+          {isDeleting ? (
+            <ActivityIndicator color="#EF4444" />
+          ) : (
+            <Ionicons name="trash-outline" size={22} color="#EF4444" />
+          )}
+        </TouchableOpacity>
+      ),
+    });
+    // editing は plate_appearances から派生する参照値。id が同じなら同じものを指す前提で
+    // editing.id を依存配列に入れる（plateAppearances 配列全体だとレンダー毎に setOptions が走る）。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigation, editing?.id, isDeleting, effectiveGameResultId]);
+
+  if (effectiveGameResultId === null) {
+    return (
+      <View style={styles.error}>
+        <Text style={styles.errorText}>
+          試合情報が見つかりません。試合記録を最初からやり直してください。
+        </Text>
+      </View>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color="#d08000" />
+      </View>
+    );
+  }
+
+  if (!editing) {
+    return (
+      <View style={styles.error}>
+        <Text style={styles.errorText}>
+          指定の打席が見つかりません。打席一覧に戻ってください。
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 96 : 0}
     >
-      <View style={styles.wizardWrapper}>
-        <PlateAppearanceWizard
-          gameResultId={effectiveGameResultId}
-          batterBoxNumber={editing.batter_box_number}
-          editingPlateAppearance={editing}
-          onClose={() => router.back()}
-        />
-      </View>
-      <View style={styles.footerSlot}>
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel="編集を中断する"
-          accessibilityState={{ disabled: isDeleting }}
-          style={[styles.cancelButton, isDeleting && styles.buttonDisabled]}
-          onPress={() => router.back()}
-          disabled={isDeleting}
-        >
-          <Text style={styles.cancelLabel}>編集を中断する</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel="この打席を削除"
-          accessibilityState={{ disabled: isDeleting }}
-          style={[styles.deleteButton, isDeleting && styles.buttonDisabled]}
-          onPress={handleDelete}
-          disabled={isDeleting}
-        >
-          {isDeleting ? (
-            <ActivityIndicator color="#EF4444" />
-          ) : (
-            <>
-              <Ionicons name="trash-outline" size={18} color="#EF4444" />
-              <Text style={styles.deleteLabel}>この打席を削除</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
+      <PlateAppearanceWizard
+        gameResultId={effectiveGameResultId}
+        batterBoxNumber={editing.batter_box_number}
+        editingPlateAppearance={editing}
+        onClose={() => router.back()}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -150,18 +181,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#2E2E2E",
-  },
-  wizardWrapper: {
-    flex: 1,
-  },
-  footerSlot: {
-    backgroundColor: "#2E2E2E",
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 24,
-    borderTopWidth: 1,
-    borderTopColor: "#3A3A3A",
-    gap: 8,
   },
   loading: {
     flex: 1,
@@ -181,35 +200,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
   },
-  cancelButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#A1A1AA",
-    borderRadius: 8,
-    paddingVertical: 12,
-  },
-  cancelLabel: {
-    color: "#A1A1AA",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  deleteButton: {
+  headerLeftButton: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    borderWidth: 1,
-    borderColor: "#EF4444",
-    borderRadius: 8,
-    paddingVertical: 12,
+    paddingLeft: 0,
+    paddingRight: 12,
+    paddingVertical: 4,
+    marginLeft: -8,
   },
-  buttonDisabled: {
-    opacity: 0.5,
+  headerLeftLabel: {
+    color: "#F4F4F4",
+    fontSize: 16,
+    marginLeft: -2,
   },
-  deleteLabel: {
-    color: "#EF4444",
-    fontSize: 14,
-    fontWeight: "600",
+  headerRightButton: {
+    padding: 8,
   },
 });
