@@ -113,7 +113,10 @@ export default function Step1GameInfoScreen() {
 
   // 編集モードと未出場 (no_play) は「次へ」ボタン経由の固定遷移、
   // 新規作成時は GameInfoForm 下部の PatternSelector からパターンを選んで遷移する。
-  const runSubmit = async (pattern: RecordPattern | null) => {
+  const runSubmit = async (
+    pattern: RecordPattern | null,
+    options?: { completeEdit?: boolean },
+  ) => {
     if (submitStep1.isPending) return;
 
     const errors: GameInfoFieldErrors = {};
@@ -172,6 +175,10 @@ export default function Step1GameInfoScreen() {
 
     submitStep1.mutate(undefined, {
       onSuccess: () => {
+        if (options?.completeEdit) {
+          router.replace("/(game-record)/summary");
+          return;
+        }
         const next = (() => {
           if (store.appearanceType === "no_play")
             return "/(game-record)/summary";
@@ -198,6 +205,8 @@ export default function Step1GameInfoScreen() {
   // no_play / 編集モードでは GameInfoForm 下部に従来の Button が出る。
   const handleSubmit = () => runSubmit(null);
   const handlePatternSelect = (pattern: RecordPattern) => runSubmit(pattern);
+  // 編集モードのみ: 試合情報だけ編集して完了したいケース用の動線。
+  const handleCompleteEdit = () => runSubmit(null, { completeEdit: true });
 
   if (isInitializing || createGameResultMutation.isPending) {
     return (
@@ -254,6 +263,7 @@ export default function Step1GameInfoScreen() {
         onSubmit={handleSubmit}
         onPatternSelect={store.isEditMode ? undefined : handlePatternSelect}
         isEditMode={store.isEditMode}
+        onCompleteEdit={store.isEditMode ? handleCompleteEdit : undefined}
       />
     </KeyboardAvoidingView>
   );
