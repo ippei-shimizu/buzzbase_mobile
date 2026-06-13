@@ -425,6 +425,7 @@ export function PlateAppearanceWizard({
       <View style={styles.buttonsSection}>
         <PlateResultButtons
           hasHitLocation={hitLocation !== null}
+          selectedPlateResultId={plateResultIdValue as PlateResultId | null}
           onSelectNoDirection={(resultId) => proceedToCounter(resultId)}
           onSelectOut={() => setOutModalVisible(true)}
           onSelectHit={() => setHitModalVisible(true)}
