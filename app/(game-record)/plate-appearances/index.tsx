@@ -43,9 +43,13 @@ export default function PlateAppearancesListScreen() {
   const isPitchingNext = isEditMode
     ? pitchingResultId !== null
     : recordPattern === "both";
-  const finishButtonLabel = isPitchingNext
-    ? "投手成績入力へ"
-    : "試合結果まとめへ";
+  // 編集モードは「サマリーへ進む」より「編集を完了する」の方が意味が明確なため、文言を分ける。
+  const finishButtonLabel = (() => {
+    if (isEditMode) {
+      return isPitchingNext ? "投手成績を編集する" : "編集を完了する";
+    }
+    return isPitchingNext ? "投手成績入力へ" : "試合結果まとめへ";
+  })();
 
   const handleFinish = () => {
     if (isPitchingNext) {
