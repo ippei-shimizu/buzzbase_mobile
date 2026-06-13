@@ -24,6 +24,8 @@ interface Props {
   errors: string[];
   onFieldChange: (field: string, value: number | boolean) => void;
   onSubmit: () => void;
+  // 編集モードでは「編集を完了する」、新規記録時はデフォルトの「試合結果まとめ」を表示する。
+  submitLabel?: string;
 }
 
 const winOrLossOptions = [
@@ -71,6 +73,7 @@ export function PitchingForm({
   errors,
   onFieldChange,
   onSubmit,
+  submitLabel = "試合結果まとめ",
 }: Props) {
   const winLossSelectedId = win > 0 ? 0 : loss > 0 ? 1 : -1;
 
@@ -300,7 +303,7 @@ export function PitchingForm({
 
       {/* 送信ボタン */}
       <Button
-        title="試合結果まとめ"
+        title={submitLabel}
         onPress={onSubmit}
         loading={isSubmitting}
         disabled={isSubmitting}

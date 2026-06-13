@@ -50,15 +50,13 @@ export function PlateAppearanceCard({
   const situationChips = buildSituationChips(plateAppearance);
   const pitchChips = buildPitchAndPitcherChips(plateAppearance);
   const showMetaRow = metaItems.length > 0 || !hasDetail;
+  // どちらのハンドラも渡されていない場合は読み取り専用カードとして
+  // chevron を非表示にし、タッチ判定も無効化する（試合詳細の情報表示で利用）。
+  const isInteractive = onPress !== undefined || onLongPress !== undefined;
+  const accessibilityLabel = `第${plateAppearance.batter_box_number}打席 ${plateAppearance.batting_result}`;
 
-  return (
-    <TouchableOpacity
-      accessibilityRole="button"
-      accessibilityLabel={`第${plateAppearance.batter_box_number}打席 ${plateAppearance.batting_result}`}
-      onPress={onPress}
-      onLongPress={onLongPress}
-      style={styles.card}
-    >
+  const content = (
+    <>
       <View style={styles.content}>
         <View style={styles.topRow}>
           <Text style={styles.boxNumber}>
@@ -103,7 +101,29 @@ export function PlateAppearanceCard({
           </View>
         )}
       </View>
-      <Ionicons name="chevron-forward" size={20} color="#A1A1AA" />
+      {isInteractive && (
+        <Ionicons name="chevron-forward" size={20} color="#A1A1AA" />
+      )}
+    </>
+  );
+
+  if (!isInteractive) {
+    return (
+      <View accessibilityLabel={accessibilityLabel} style={styles.card}>
+        {content}
+      </View>
+    );
+  }
+
+  return (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      style={styles.card}
+    >
+      {content}
     </TouchableOpacity>
   );
 }

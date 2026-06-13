@@ -134,11 +134,10 @@ export function PlateAppearanceWizard({
   // Stack ヘッダーの戻るボタン挙動を制御。
   // - 新規モードの Step2/Step3: 1 つ前のステップに戻す
   // - 新規モードの Step1: デフォルト（打席一覧へ pop）
-  // - 編集モード: 常にデフォルト（打席一覧へ pop）。タブで自由に切り替えられるため
-  //   「前ステップに戻る」概念は不要。
+  // - 編集モード: 外部の親画面（edit.tsx 等）が headerLeft / headerRight を制御するため
+  //   ここでは触らない。タブで自由に切り替えられるため「前ステップに戻る」概念も不要。
   useLayoutEffect(() => {
     if (isEditMode) {
-      navigation.setOptions({ headerLeft: undefined });
       return;
     }
     if (step === "counter") {
@@ -426,6 +425,7 @@ export function PlateAppearanceWizard({
       <View style={styles.buttonsSection}>
         <PlateResultButtons
           hasHitLocation={hitLocation !== null}
+          selectedPlateResultId={plateResultIdValue as PlateResultId | null}
           onSelectNoDirection={(resultId) => proceedToCounter(resultId)}
           onSelectOut={() => setOutModalVisible(true)}
           onSelectHit={() => setHitModalVisible(true)}

@@ -7,7 +7,12 @@ import type {
   RunnersState,
 } from "../types/plateAppearance";
 import { create } from "zustand";
-import { NORMALIZED_LOCATION_PRECISION } from "@constants/groundCanvas";
+import {
+  DIRECTION_LABEL_POSITIONS,
+  GROUND_CANVAS_HEIGHT,
+  GROUND_CANVAS_WIDTH,
+  NORMALIZED_LOCATION_PRECISION,
+} from "@constants/groundCanvas";
 
 type CounterKey = "rbi" | "runScored" | "stolenBases" | "caughtStealing";
 
@@ -116,21 +121,49 @@ const parseLocationString = (
   return Number.isFinite(num) ? num : null;
 };
 
+/**
+ * hit_direction_id (1〜13) から DIRECTION_LABEL_POSITIONS の中心座標を引いて
+ * 正規化座標 (0〜1) に変換する。旧 PA は hit_location_x/y を持たないが
+ * hit_direction_id は持っているケースがあるため、編集モードでは方向ラベルの
+ * 定位置にマーカーをフォールバック表示してウィザード起動時の体験を整える。
+ */
+const deriveLocationFromDirection = (
+  directionId: number | null,
+): { x: number; y: number } | null => {
+  if (directionId === null) return null;
+  const position = DIRECTION_LABEL_POSITIONS[directionId];
+  if (!position) return null;
+  return {
+    x: position.x / GROUND_CANVAS_WIDTH,
+    y: position.y / GROUND_CANVAS_HEIGHT,
+  };
+};
+
 export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
   ...initialState,
 
   initializeForNew: (batterBoxNumber) =>
     set({ ...initialState, batterBoxNumber }),
 
-  initializeFromExisting: (pa) =>
+  initializeFromExisting: (pa) => {
+    const parsedX = parseLocationString(pa.hit_location_x);
+    const parsedY = parseLocationString(pa.hit_location_y);
+    // 旧 PA は hit_location_x/y が NULL だが hit_direction_id を持つことが多いため、
+    // 方向ラベルの定位置をフォールバック座標として採用する。
+    // x/y の片方だけ NULL だと「DB の値と fallback 定位置の混在」になってしまうので、
+    // 両方 NULL のときだけ fallback を引く（DB の値が部分的にあるなら DB を信頼）。
+    const fallback =
+      parsedX === null && parsedY === null
+        ? deriveLocationFromDirection(pa.hit_direction_id)
+        : null;
     set({
       batterBoxNumber: pa.batter_box_number,
       plateResultId: pa.plate_result_id,
       outType: pa.out_type,
       hitType: pa.hit_type,
       hitDirectionId: pa.hit_direction_id,
-      hitLocationX: parseLocationString(pa.hit_location_x),
-      hitLocationY: parseLocationString(pa.hit_location_y),
+      hitLocationX: parsedX ?? fallback?.x ?? null,
+      hitLocationY: parsedY ?? fallback?.y ?? null,
       rbi: pa.rbi ?? 0,
       runScored: pa.run_scored ?? 0,
       stolenBases: pa.stolen_bases ?? 0,
@@ -147,7 +180,8 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       selfAnalysisMemo: pa.self_analysis_memo,
       pitcherId: pa.pitcher?.id ?? null,
       appearanceSituationId: pa.appearance_situation?.id ?? null,
-    }),
+    });
+  },
 
   setHitLocation: (x, y, directionId) =>
     set({

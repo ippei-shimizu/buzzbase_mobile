@@ -4,6 +4,7 @@ import {
   FlatList,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { AddPlateAppearanceCard } from "@components/game-record/plate-appearance/AddPlateAppearanceCard";
@@ -23,6 +24,8 @@ export default function PlateAppearancesListScreen() {
   const router = useRouter();
   const gameResultId = useGameRecordStore((s) => s.gameResultId);
   const recordPattern = useGameRecordStore((s) => s.recordPattern);
+  const isEditMode = useGameRecordStore((s) => s.isEditMode);
+  const pitchingResultId = useGameRecordStore((s) => s.pitchingResultId);
   const { plateAppearances, isLoading } =
     usePlateAppearancesByGame(gameResultId);
 
@@ -36,10 +39,16 @@ export default function PlateAppearancesListScreen() {
     );
   }
 
-  const isPitchingNext = recordPattern === "both";
-  const finishButtonLabel = isPitchingNext
-    ? "投手成績入力へ"
-    : "試合結果まとめへ";
+  // 編集モードでは投手成績の有無に関わらず Step3 にアクセスできる動線を出し、
+  // 「投手成績を追加 / 編集」と「打席編集だけで完了」のどちらも選べるようにする。
+  // 新規記録時は従来通り「両方」パターンのときだけ投手成績入力へ進む単一ボタン。
+  const isPitchingNext = isEditMode ? true : recordPattern === "both";
+  const finishButtonLabel = (() => {
+    if (isEditMode) {
+      return pitchingResultId !== null ? "投手成績編集へ" : "投手成績を追加";
+    }
+    return isPitchingNext ? "投手成績入力へ" : "試合結果まとめへ";
+  })();
 
   const handleFinish = () => {
     if (isPitchingNext) {
@@ -48,6 +57,8 @@ export default function PlateAppearancesListScreen() {
       router.replace("/(game-record)/summary");
     }
   };
+
+  const handleCompleteEdit = () => router.replace("/(game-record)/summary");
 
   const handleAdd = () => router.push("/(game-record)/plate-appearances/new");
 
@@ -99,8 +110,19 @@ export default function PlateAppearancesListScreen() {
         <Button
           title={finishButtonLabel}
           onPress={handleFinish}
-          disabled={plateAppearances.length === 0}
+          // 編集モードでは打席 0 件でも投手成績の追加・編集動線に進めるようにする。
+          disabled={!isEditMode && plateAppearances.length === 0}
         />
+        {isEditMode && (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="編集を完了する"
+            onPress={handleCompleteEdit}
+            style={styles.completeEditButton}
+          >
+            <Text style={styles.completeEditLabel}>編集を完了する</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -155,5 +177,16 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#3a3a3a",
     backgroundColor: "#2E2E2E",
+    gap: 8,
+  },
+  completeEditButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+  },
+  completeEditLabel: {
+    color: "#A1A1AA",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
