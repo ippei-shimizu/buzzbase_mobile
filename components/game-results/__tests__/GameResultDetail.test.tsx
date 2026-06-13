@@ -152,7 +152,7 @@ describe("GameResultDetail", () => {
     ]);
   });
 
-  it("試合詳細の打席カードはタップしても何も起きない（編集は鉛筆アイコン経由）", async () => {
+  it("試合詳細の打席カードは読み取り専用（タップしてもルーター遷移しない、accessibilityRole=button が無い）", async () => {
     const game = buildGameResult({ game_result_id: 501 });
     stubByGame(501, [
       buildPlateAppearance({
@@ -168,13 +168,14 @@ describe("GameResultDetail", () => {
     };
     __routerSpies.push.mockReset();
 
-    const { findByRole } = renderWithProviders(
+    const { findByLabelText, queryByRole } = renderWithProviders(
       <GameResultDetail game={game} onDelete={() => {}} />,
     );
-    const card = await findByRole("button", { name: "第1打席 中安" });
+    const card = await findByLabelText("第1打席 中安");
     fireEvent.press(card);
     fireEvent(card, "longPress");
 
     expect(__routerSpies.push).not.toHaveBeenCalled();
+    expect(queryByRole("button", { name: "第1打席 中安" })).toBeNull();
   });
 });
