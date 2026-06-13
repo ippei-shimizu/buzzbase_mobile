@@ -2,6 +2,7 @@ import type { GameResult } from "../../types/gameResult";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
