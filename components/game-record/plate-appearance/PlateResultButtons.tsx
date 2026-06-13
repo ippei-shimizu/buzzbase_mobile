@@ -199,12 +199,10 @@ function ResultButton({
         disabled && styles.buttonDisabled,
       ]}
     >
-      {isSelected && (
-        <View style={styles.checkmark} pointerEvents="none">
-          <Ionicons name="checkmark" size={18} color="#FFFFFF" />
-        </View>
-      )}
-      <Text style={[styles.buttonLabel, { color: labelColor }]}>{label}</Text>
+      <View style={styles.labelRow} pointerEvents="none">
+        {isSelected && <Ionicons name="checkmark" size={18} color="#FFFFFF" />}
+        <Text style={[styles.buttonLabel, { color: labelColor }]}>{label}</Text>
+      </View>
       {hasChevron && (
         <View style={styles.chevron} pointerEvents="none">
           <Ionicons
@@ -249,12 +247,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: "center",
   },
-  checkmark: {
-    position: "absolute",
-    left: 12,
-    top: 0,
-    bottom: 0,
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
     justifyContent: "center",
+    gap: 6,
   },
   divider: {
     flexDirection: "row",
