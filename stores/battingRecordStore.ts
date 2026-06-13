@@ -150,8 +150,10 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
     const parsedY = parseLocationString(pa.hit_location_y);
     // 旧 PA は hit_location_x/y が NULL だが hit_direction_id を持つことが多いため、
     // 方向ラベルの定位置をフォールバック座標として採用する。
+    // x/y の片方だけ NULL だと「DB の値と fallback 定位置の混在」になってしまうので、
+    // 両方 NULL のときだけ fallback を引く（DB の値が部分的にあるなら DB を信頼）。
     const fallback =
-      parsedX === null || parsedY === null
+      parsedX === null && parsedY === null
         ? deriveLocationFromDirection(pa.hit_direction_id)
         : null;
     set({
