@@ -343,13 +343,16 @@ export default function GameResultsScreen() {
     setCurrentPage(page);
   }, []);
 
-  // ページ変更時の先頭スクロールは setState と同時実行すると、新しいデータの
-  // 再レンダー後にスクロール位置がリセット・無効化されてしまうため、
-  // currentPage の変化を useEffect で検知して次フレームでスクロールする。
-  // フィルター変更時に setCurrentPage(1) で 1 に戻すケースでも先頭に戻すので意図に合う。
+  // ページ変更時の先頭スクロール。currentPage state の変化だけを監視すると
+  // データ再フェッチ中にスクロールが走ってリスト再描画で無効化されることがある。
+  // API レスポンスが反映されて pagination.current_page が更新されたタイミングで
+  // スクロールするのが最も確実なので、それを監視する。初回マウント時の発火は
+  // 既に先頭にいるため実害なし。
+  const paginationCurrentPage = pagination?.current_page;
   useEffect(() => {
+    if (paginationCurrentPage === undefined) return;
     scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
-  }, [currentPage]);
+  }, [paginationCurrentPage]);
 
   if (isLoading) {
     return (
