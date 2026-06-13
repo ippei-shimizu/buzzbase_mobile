@@ -23,6 +23,8 @@ export default function PlateAppearancesListScreen() {
   const router = useRouter();
   const gameResultId = useGameRecordStore((s) => s.gameResultId);
   const recordPattern = useGameRecordStore((s) => s.recordPattern);
+  const isEditMode = useGameRecordStore((s) => s.isEditMode);
+  const pitchingResultId = useGameRecordStore((s) => s.pitchingResultId);
   const { plateAppearances, isLoading } =
     usePlateAppearancesByGame(gameResultId);
 
@@ -36,7 +38,11 @@ export default function PlateAppearancesListScreen() {
     );
   }
 
-  const isPitchingNext = recordPattern === "both";
+  // 編集モードでは recordPattern が null になるため、投手成績の有無で次画面を決める。
+  // 新規記録時は従来通り「両方」パターンのときだけ投手成績入力へ進む。
+  const isPitchingNext = isEditMode
+    ? pitchingResultId !== null
+    : recordPattern === "both";
   const finishButtonLabel = isPitchingNext
     ? "投手成績入力へ"
     : "試合結果まとめへ";
