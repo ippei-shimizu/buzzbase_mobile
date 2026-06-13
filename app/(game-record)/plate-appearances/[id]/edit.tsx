@@ -113,12 +113,22 @@ export default function EditPlateAppearanceScreen() {
           onClose={() => router.back()}
         />
       </View>
-      <View style={styles.deleteSlot}>
+      <View style={styles.footerSlot}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="編集を中断する"
+          accessibilityState={{ disabled: isDeleting }}
+          style={[styles.cancelButton, isDeleting && styles.buttonDisabled]}
+          onPress={() => router.back()}
+          disabled={isDeleting}
+        >
+          <Text style={styles.cancelLabel}>編集を中断する</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel="この打席を削除"
           accessibilityState={{ disabled: isDeleting }}
-          style={[styles.deleteButton, isDeleting && styles.deleteDisabled]}
+          style={[styles.deleteButton, isDeleting && styles.buttonDisabled]}
           onPress={handleDelete}
           disabled={isDeleting}
         >
@@ -144,13 +154,14 @@ const styles = StyleSheet.create({
   wizardWrapper: {
     flex: 1,
   },
-  deleteSlot: {
+  footerSlot: {
     backgroundColor: "#2E2E2E",
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 24,
     borderTopWidth: 1,
     borderTopColor: "#3A3A3A",
+    gap: 8,
   },
   loading: {
     flex: 1,
@@ -170,6 +181,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
   },
+  cancelButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#A1A1AA",
+    borderRadius: 8,
+    paddingVertical: 12,
+  },
+  cancelLabel: {
+    color: "#A1A1AA",
+    fontSize: 14,
+    fontWeight: "600",
+  },
   deleteButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -180,7 +204,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 12,
   },
-  deleteDisabled: {
+  buttonDisabled: {
     opacity: 0.5,
   },
   deleteLabel: {
