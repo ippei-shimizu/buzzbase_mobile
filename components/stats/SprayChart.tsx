@@ -5,7 +5,13 @@ import type {
 } from "../../types/stats";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TouchableWithoutFeedback,
+} from "react-native";
 import Svg, {
   Path,
   Rect,
@@ -237,50 +243,55 @@ export const SprayChart = ({
           />
         </Pressable>
         {isFilterOpen && (
-          <View style={styles.filterDropdown}>
-            <Pressable
-              onPress={selectAll}
-              style={[
-                styles.filterDropdownItem,
-                allActive && styles.filterDropdownItemActive,
-              ]}
-            >
-              <Text
+          <>
+            <TouchableWithoutFeedback onPress={() => setIsFilterOpen(false)}>
+              <View style={styles.filterOverlayBg} />
+            </TouchableWithoutFeedback>
+            <View style={styles.filterDropdown}>
+              <Pressable
+                onPress={selectAll}
                 style={[
-                  styles.filterDropdownText,
-                  allActive && styles.filterDropdownTextActive,
+                  styles.filterDropdownItem,
+                  allActive && styles.filterDropdownItemActive,
                 ]}
               >
-                全て表示
-              </Text>
-            </Pressable>
-            {LEGEND_CATEGORIES.map((cat) => {
-              const isActive = activeCategories.has(cat);
-              return (
-                <Pressable
-                  key={cat}
-                  onPress={() => toggleCategory(cat)}
-                  style={styles.filterDropdownItem}
+                <Text
+                  style={[
+                    styles.filterDropdownText,
+                    allActive && styles.filterDropdownTextActive,
+                  ]}
                 >
-                  <View
-                    style={[
-                      styles.filterDot,
-                      { backgroundColor: CATEGORY_COLORS[cat] },
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      styles.filterDropdownText,
-                      isActive && styles.filterDropdownTextActive,
-                    ]}
+                  全て表示
+                </Text>
+              </Pressable>
+              {LEGEND_CATEGORIES.map((cat) => {
+                const isActive = activeCategories.has(cat);
+                return (
+                  <Pressable
+                    key={cat}
+                    onPress={() => toggleCategory(cat)}
+                    style={styles.filterDropdownItem}
                   >
-                    {cat}
-                  </Text>
-                  {isActive && <Text style={styles.filterCheck}>✓</Text>}
-                </Pressable>
-              );
-            })}
-          </View>
+                    <View
+                      style={[
+                        styles.filterDot,
+                        { backgroundColor: CATEGORY_COLORS[cat] },
+                      ]}
+                    />
+                    <Text
+                      style={[
+                        styles.filterDropdownText,
+                        isActive && styles.filterDropdownTextActive,
+                      ]}
+                    >
+                      {cat}
+                    </Text>
+                    {isActive && <Text style={styles.filterCheck}>✓</Text>}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
         )}
       </View>
       <View style={styles.chartWrapper}>
@@ -661,6 +672,14 @@ const styles = StyleSheet.create({
   filterCaret: {
     color: "#A1A1AA",
     fontSize: 10,
+  },
+  filterOverlayBg: {
+    position: "absolute",
+    top: -500,
+    left: -500,
+    right: -500,
+    bottom: -500,
+    zIndex: 15,
   },
   filterDropdown: {
     position: "absolute",
