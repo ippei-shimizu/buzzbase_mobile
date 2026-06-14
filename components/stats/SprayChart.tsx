@@ -458,17 +458,19 @@ export const SprayChart = ({
       </View>
 
       <View style={styles.legend}>
-        {["単打", "長打", "本塁打", "ゴロ", "フライ", "三振"].map((cat) => (
-          <View key={cat} style={styles.legendItem}>
-            <View
-              style={[
-                styles.legendDot,
-                { backgroundColor: CATEGORY_COLORS[cat] },
-              ]}
-            />
-            <Text style={styles.legendText}>{cat}</Text>
-          </View>
-        ))}
+        {["単打", "長打", "本塁打", "ゴロ", "フライ", "三振", "その他"].map(
+          (cat) => (
+            <View key={cat} style={styles.legendItem}>
+              <View
+                style={[
+                  styles.legendDot,
+                  { backgroundColor: CATEGORY_COLORS[cat] },
+                ]}
+              />
+              <Text style={styles.legendText}>{cat}</Text>
+            </View>
+          ),
+        )}
       </View>
     </View>
   );
