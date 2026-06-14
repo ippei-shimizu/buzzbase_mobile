@@ -1,5 +1,4 @@
-import axiosInstance from "@utils/axiosInstance";
-import { API_BASE_URL } from "@constants/api";
+import type { StatsFilters } from "../types/profile";
 import type {
   HitDirectionData,
   PlateAppearanceCategory,
@@ -7,9 +6,12 @@ import type {
   PitchingStatsRow,
   EraTrendPoint,
   GameSummary,
+  HeadlineStats,
+  RunnersSituationSummary,
   StatsPeriod,
 } from "../types/stats";
-import type { StatsFilters } from "../types/profile";
+import { API_BASE_URL } from "@constants/api";
+import axiosInstance from "@utils/axiosInstance";
 
 const STATS_URL = `${API_BASE_URL}/api/v2/stats`;
 
@@ -104,6 +106,36 @@ export const getGameSummary = async (
   const query = params.toString();
   const res = await axiosInstance.get(
     `${STATS_URL}/game_summary${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+const buildStatsQuery = (filters: StatsFilters): string => {
+  const params = new URLSearchParams();
+  if (filters.year) params.append("year", filters.year);
+  if (filters.matchType) params.append("match_type", filters.matchType);
+  if (filters.seasonId) params.append("season_id", filters.seasonId);
+  if (filters.tournamentId)
+    params.append("tournament_id", filters.tournamentId);
+  return params.toString();
+};
+
+export const getHeadlineStats = async (
+  filters: StatsFilters,
+): Promise<HeadlineStats> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/headline_stats${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+export const getRunnersSituation = async (
+  filters: StatsFilters,
+): Promise<RunnersSituationSummary> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/runners_situation${query ? `?${query}` : ""}`,
   );
   return res.data;
 };

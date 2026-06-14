@@ -8,6 +8,8 @@ import {
   getPitchingStatsTable,
   getEraTrend,
   getGameSummary,
+  getHeadlineStats,
+  getRunnersSituation,
 } from "../services/statsService";
 
 export const useHitDirections = (filters: StatsFilters) =>
@@ -71,5 +73,19 @@ export const useGameSummary = (
   useQuery({
     queryKey: ["gameSummary", year, matchType, seasonId, tournamentId],
     queryFn: () => getGameSummary(year, matchType, seasonId, tournamentId),
+    placeholderData: keepPreviousData,
+  });
+
+export const useHeadlineStats = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["headlineStats", filters],
+    queryFn: () => getHeadlineStats(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const useRunnersSituation = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["runnersSituation", filters],
+    queryFn: () => getRunnersSituation(filters),
     placeholderData: keepPreviousData,
   });
