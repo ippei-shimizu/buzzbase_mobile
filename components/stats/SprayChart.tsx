@@ -67,9 +67,6 @@ const DIRECTION_POSITIONS = DIRECTION_LABEL_POSITIONS;
 
 // 本塁打バブルは外野フェンス（楕円）の少し外側に配置する。
 const HR_OFFSET = 25;
-// バブル最大半径 + 少しの余白。センター方向は楕円外側に出すと y が
-// マイナスになり画面上端で見切れるため、この値で上端をクランプする。
-const HR_TOP_GUARD = 25;
 const getHrPosition = (dirId: number): { x: number; y: number } | null => {
   const angles: Record<number, number> = {
     7: 135, // 左線
@@ -87,9 +84,14 @@ const getHrPosition = (dirId: number): { x: number; y: number } | null => {
   const ry = OUTFIELD_RY + HR_OFFSET;
   return {
     x: HOME.x + rx * Math.cos(rad),
-    y: Math.max(HR_TOP_GUARD, HOME.y - ry * Math.sin(rad)),
+    y: HOME.y - ry * Math.sin(rad),
   };
 };
+
+// 中（id=10）方向の本塁打バブルが viewBox 上端を超えてマイナス y に
+// 配置されるため、その分の余白を SVG 上に確保する（バブル最大半径も加味）。
+const TOP_PADDING = 30;
+const SVG_VIEWBOX_HEIGHT = HEIGHT + TOP_PADDING;
 
 const getBubbleRadius = (count: number, maxCount: number): number => {
   if (count === 0 || maxCount === 0) return 0;
@@ -173,7 +175,11 @@ export const SprayChart = ({
         )}
       </View>
       <View style={styles.chartWrapper}>
-        <Svg width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
+        <Svg
+          width={WIDTH}
+          height={SVG_VIEWBOX_HEIGHT}
+          viewBox={`0 -${TOP_PADDING} ${WIDTH} ${SVG_VIEWBOX_HEIGHT}`}
+        >
           <Defs>
             {/* 外野形状クリップ（円弧） */}
             <ClipPath id="fieldClip">
