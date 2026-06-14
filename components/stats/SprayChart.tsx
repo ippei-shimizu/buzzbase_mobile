@@ -522,7 +522,8 @@ const styles = StyleSheet.create({
   legend: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 16,
+    flexWrap: "wrap",
+    gap: 10,
     marginTop: 8,
   },
   legendItem: {
