@@ -177,6 +177,17 @@ export const SprayChart = ({
   const dirtCenterY = FIRST.y + 5; // 1塁3塁の少し下
   const dirtRadius = 68;
 
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const allActive = activeCategories.size === LEGEND_CATEGORIES.length;
+  const filterLabel = (() => {
+    if (allActive) return "全て";
+    if (activeCategories.size === 0) return "なし";
+    if (activeCategories.size === 1) return Array.from(activeCategories)[0];
+    return `${activeCategories.size} 件選択`;
+  })();
+  const selectAll = () =>
+    setActiveCategories(new Set<string>(LEGEND_CATEGORIES));
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -209,6 +220,61 @@ export const SprayChart = ({
                 バブル
               </Text>
             </Pressable>
+          </View>
+        )}
+      </View>
+      <View style={styles.filterRow}>
+        <Pressable
+          onPress={() => setIsFilterOpen((prev) => !prev)}
+          style={styles.filterButton}
+        >
+          <Text style={styles.filterButtonText}>絞り込み: {filterLabel}</Text>
+          <Text style={styles.filterCaret}>{isFilterOpen ? "▲" : "▼"}</Text>
+        </Pressable>
+        {isFilterOpen && (
+          <View style={styles.filterDropdown}>
+            <Pressable
+              onPress={selectAll}
+              style={[
+                styles.filterDropdownItem,
+                allActive && styles.filterDropdownItemActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.filterDropdownText,
+                  allActive && styles.filterDropdownTextActive,
+                ]}
+              >
+                全て表示
+              </Text>
+            </Pressable>
+            {LEGEND_CATEGORIES.map((cat) => {
+              const isActive = activeCategories.has(cat);
+              return (
+                <Pressable
+                  key={cat}
+                  onPress={() => toggleCategory(cat)}
+                  style={styles.filterDropdownItem}
+                >
+                  <View
+                    style={[
+                      styles.filterDot,
+                      { backgroundColor: CATEGORY_COLORS[cat] },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.filterDropdownText,
+                      isActive && styles.filterDropdownTextActive,
+                    ]}
+                  >
+                    {cat}
+                  </Text>
+                  {isActive && <Text style={styles.filterCheck}>✓</Text>}
+                </Pressable>
+              );
+            })}
           </View>
         )}
       </View>
@@ -485,35 +551,17 @@ export const SprayChart = ({
       </View>
 
       <View style={styles.legend}>
-        {LEGEND_CATEGORIES.map((cat) => {
-          const isActive = activeCategories.has(cat);
-          return (
-            <Pressable
-              key={cat}
-              onPress={() => toggleCategory(cat)}
-              style={styles.legendItem}
-              hitSlop={6}
-            >
-              <View
-                style={[
-                  styles.legendDot,
-                  {
-                    backgroundColor: CATEGORY_COLORS[cat],
-                    opacity: isActive ? 1 : 0.3,
-                  },
-                ]}
-              />
-              <Text
-                style={[
-                  styles.legendText,
-                  !isActive && styles.legendTextInactive,
-                ]}
-              >
-                {cat}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {LEGEND_CATEGORIES.map((cat) => (
+          <View key={cat} style={styles.legendItem}>
+            <View
+              style={[
+                styles.legendDot,
+                { backgroundColor: CATEGORY_COLORS[cat] },
+              ]}
+            />
+            <Text style={styles.legendText}>{cat}</Text>
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -583,8 +631,74 @@ const styles = StyleSheet.create({
     color: "#A1A1AA",
     fontSize: 11,
   },
-  legendTextInactive: {
-    color: "#52525B",
-    textDecorationLine: "line-through",
+  filterRow: {
+    marginTop: 6,
+    marginBottom: 8,
+    position: "relative",
+    zIndex: 10,
+  },
+  filterButton: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderColor: "#71717b",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  filterButtonText: {
+    color: "#F4F4F4",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  filterCaret: {
+    color: "#A1A1AA",
+    fontSize: 10,
+  },
+  filterDropdown: {
+    position: "absolute",
+    top: 36,
+    left: 0,
+    minWidth: 180,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 10,
+    paddingVertical: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 20,
+  },
+  filterDropdownItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  filterDropdownItemActive: {
+    backgroundColor: "#4A4A4A",
+  },
+  filterDropdownText: {
+    color: "#F4F4F4",
+    fontSize: 13,
+    flex: 1,
+  },
+  filterDropdownTextActive: {
+    color: "#d08000",
+    fontWeight: "600",
+  },
+  filterDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  filterCheck: {
+    color: "#d08000",
+    fontSize: 14,
+    fontWeight: "700",
   },
 });
