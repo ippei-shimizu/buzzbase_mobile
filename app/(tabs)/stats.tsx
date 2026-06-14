@@ -273,6 +273,8 @@ export default function StatsScreen() {
     await Promise.all([
       hitDirections.refetch(),
       paBreakdown.refetch(),
+      headlineStats.refetch(),
+      runnersSituation.refetch(),
       battingTable.refetch(),
       pitchingTable.refetch(),
       eraTrend.refetch(),
@@ -282,6 +284,8 @@ export default function StatsScreen() {
   }, [
     hitDirections.refetch,
     paBreakdown.refetch,
+    headlineStats.refetch,
+    runnersSituation.refetch,
     battingTable.refetch,
     pitchingTable.refetch,
     eraTrend.refetch,
