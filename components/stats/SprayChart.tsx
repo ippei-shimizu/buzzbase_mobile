@@ -3,6 +3,7 @@ import type {
   HitLocationPoint,
   HomeRunDirection,
 } from "../../types/stats";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import Svg, {
@@ -229,7 +230,11 @@ export const SprayChart = ({
           style={styles.filterButton}
         >
           <Text style={styles.filterButtonText}>絞り込み: {filterLabel}</Text>
-          <Text style={styles.filterCaret}>{isFilterOpen ? "▲" : "▼"}</Text>
+          <Ionicons
+            name={isFilterOpen ? "chevron-up" : "chevron-down"}
+            size={14}
+            color="#A1A1AA"
+          />
         </Pressable>
         {isFilterOpen && (
           <View style={styles.filterDropdown}>
@@ -634,14 +639,14 @@ const styles = StyleSheet.create({
   filterRow: {
     marginTop: 6,
     marginBottom: 8,
+    alignItems: "flex-end",
     position: "relative",
     zIndex: 10,
   },
   filterButton: {
-    alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 4,
     borderWidth: 1,
     borderColor: "#71717b",
     borderRadius: 20,
@@ -660,7 +665,7 @@ const styles = StyleSheet.create({
   filterDropdown: {
     position: "absolute",
     top: 36,
-    left: 0,
+    right: 0,
     minWidth: 180,
     backgroundColor: "#3A3A3A",
     borderRadius: 10,
