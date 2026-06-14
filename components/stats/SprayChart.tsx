@@ -40,12 +40,26 @@ interface SprayChartProps {
   points?: HitLocationPoint[];
 }
 
-// 絶対座標プロット時のカテゴリ別カラー
-const SCATTER_COLORS: Record<HitLocationPoint["category"], string> = {
-  hit: "#f31260",
-  out: "#71717A",
-  other: "#d08000",
+// plate_result_id → バブルと同じカテゴリ表示名へのマップ。
+// scatter モードの点を CATEGORY_COLORS で色分けし、バブル凡例と統一する。
+// back の `Stats::HitDirectionAggregator::RESULT_CATEGORIES` と同じ規則。
+const PLATE_RESULT_TO_CATEGORY: Record<number, string> = {
+  7: "単打",
+  8: "長打",
+  9: "長打",
+  10: "本塁打",
+  1: "ゴロ",
+  2: "フライ",
+  3: "フライ",
+  4: "フライ",
+  13: "三振",
+  14: "三振",
+  15: "四死球",
+  16: "四死球",
 };
+
+const getPointCategory = (plateResultId: number): string =>
+  PLATE_RESULT_TO_CATEGORY[plateResultId] || "その他";
 
 const WIDTH = GROUND_CANVAS_WIDTH;
 const HEIGHT = GROUND_CANVAS_HEIGHT;
@@ -426,48 +440,36 @@ export const SprayChart = ({
             })}
 
           {isScatter &&
-            points.map((point, index) => (
-              <Circle
-                key={`point-${index}`}
-                cx={point.x * WIDTH}
-                cy={point.y * HEIGHT}
-                r={4}
-                fill={SCATTER_COLORS[point.category]}
-                opacity={0.85}
-                stroke="white"
-                strokeWidth={0.6}
-              />
-            ))}
+            points.map((point, index) => {
+              const category = getPointCategory(point.plate_result_id);
+              return (
+                <Circle
+                  key={`point-${index}`}
+                  cx={point.x * WIDTH}
+                  cy={point.y * HEIGHT}
+                  r={4}
+                  fill={CATEGORY_COLORS[category] || "#71717A"}
+                  opacity={0.85}
+                  stroke="white"
+                  strokeWidth={0.6}
+                />
+              );
+            })}
         </Svg>
       </View>
 
       <View style={styles.legend}>
-        {isScatter
-          ? (
-              [
-                { key: "hit", label: "安打", color: SCATTER_COLORS.hit },
-                { key: "out", label: "アウト", color: SCATTER_COLORS.out },
-                { key: "other", label: "その他", color: SCATTER_COLORS.other },
-              ] as const
-            ).map((legend) => (
-              <View key={legend.key} style={styles.legendItem}>
-                <View
-                  style={[styles.legendDot, { backgroundColor: legend.color }]}
-                />
-                <Text style={styles.legendText}>{legend.label}</Text>
-              </View>
-            ))
-          : ["単打", "長打", "本塁打", "ゴロ", "フライ", "三振"].map((cat) => (
-              <View key={cat} style={styles.legendItem}>
-                <View
-                  style={[
-                    styles.legendDot,
-                    { backgroundColor: CATEGORY_COLORS[cat] },
-                  ]}
-                />
-                <Text style={styles.legendText}>{cat}</Text>
-              </View>
-            ))}
+        {["単打", "長打", "本塁打", "ゴロ", "フライ", "三振"].map((cat) => (
+          <View key={cat} style={styles.legendItem}>
+            <View
+              style={[
+                styles.legendDot,
+                { backgroundColor: CATEGORY_COLORS[cat] },
+              ]}
+            />
+            <Text style={styles.legendText}>{cat}</Text>
+          </View>
+        ))}
       </View>
     </View>
   );
