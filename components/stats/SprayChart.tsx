@@ -1,6 +1,10 @@
-import type { HitDirection, HomeRunDirection } from "../../types/stats";
+import type {
+  HitDirection,
+  HitLocationPoint,
+  HomeRunDirection,
+} from "../../types/stats";
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import Svg, {
   Path,
   Rect,
@@ -13,10 +17,22 @@ import Svg, {
   G,
 } from "react-native-svg";
 
+export type SprayChartMode = "scatter" | "bubbles";
+
 interface SprayChartProps {
   directions: HitDirection[];
   homeRuns: HomeRunDirection[];
+  mode?: SprayChartMode;
+  onModeChange?: (mode: SprayChartMode) => void;
+  points?: HitLocationPoint[];
 }
+
+// 絶対座標プロット時のカテゴリ別カラー
+const SCATTER_COLORS: Record<HitLocationPoint["category"], string> = {
+  hit: "#f31260",
+  out: "#71717A",
+  other: "#d08000",
+};
 
 // フェンス外の座標（各方向のバブル位置をフェンスの少し外に配置）
 // ホームを中心に、OUTFIELD_R + オフセットの位置
@@ -107,12 +123,20 @@ const getBubbleOpacity = (count: number, maxCount: number): number => {
   return 0.5 + (count / maxCount) * 0.4;
 };
 
-export const SprayChart = ({ directions, homeRuns = [] }: SprayChartProps) => {
+export const SprayChart = ({
+  directions,
+  homeRuns = [],
+  mode = "scatter",
+  onModeChange,
+  points = [],
+}: SprayChartProps) => {
   const allCounts = [
     ...directions.map((d) => d.count),
     ...homeRuns.map((h) => h.count),
   ];
   const maxCount = Math.max(...allCounts, 1);
+
+  const isScatter = mode === "scatter";
 
   // ダート半円の中心とサイズ
   const dirtCenterX = HOME.x;
@@ -121,7 +145,39 @@ export const SprayChart = ({ directions, homeRuns = [] }: SprayChartProps) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>打球分布図</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>打球分布図</Text>
+        {onModeChange && (
+          <View style={styles.toggle}>
+            <Pressable
+              onPress={() => onModeChange("scatter")}
+              style={[styles.toggleButton, isScatter && styles.toggleActive]}
+            >
+              <Text
+                style={[
+                  styles.toggleText,
+                  isScatter && styles.toggleTextActive,
+                ]}
+              >
+                点プロット
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => onModeChange("bubbles")}
+              style={[styles.toggleButton, !isScatter && styles.toggleActive]}
+            >
+              <Text
+                style={[
+                  styles.toggleText,
+                  !isScatter && styles.toggleTextActive,
+                ]}
+              >
+                バブル
+              </Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
       <View style={styles.chartWrapper}>
         <Svg width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
           <Defs>
@@ -296,94 +352,122 @@ export const SprayChart = ({ directions, homeRuns = [] }: SprayChartProps) => {
             strokeWidth={3}
           />
 
-          {/* ===== バブル ===== */}
-          {directions.map((dir) => {
-            const pos = DIRECTION_POSITIONS[dir.id];
-            if (!pos || dir.count === 0) return null;
-            const r = getBubbleRadius(dir.count, maxCount);
-            const color = getBubbleColor(dir.top_category);
-            const opacity = getBubbleOpacity(dir.count, maxCount);
-            return (
-              <React.Fragment key={dir.id}>
-                <Circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={r + 2}
-                  fill="black"
-                  opacity={0.15}
-                />
-                <Circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={r}
-                  fill={color}
-                  opacity={opacity}
-                />
-                <SvgText
-                  x={pos.x}
-                  y={pos.y + 4}
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize={r > 14 ? 12 : 10}
-                  fontWeight="700"
-                >
-                  {dir.count}
-                </SvgText>
-              </React.Fragment>
-            );
-          })}
+          {!isScatter &&
+            directions.map((dir) => {
+              const pos = DIRECTION_POSITIONS[dir.id];
+              if (!pos || dir.count === 0) return null;
+              const r = getBubbleRadius(dir.count, maxCount);
+              const color = getBubbleColor(dir.top_category);
+              const opacity = getBubbleOpacity(dir.count, maxCount);
+              return (
+                <React.Fragment key={dir.id}>
+                  <Circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={r + 2}
+                    fill="black"
+                    opacity={0.15}
+                  />
+                  <Circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={r}
+                    fill={color}
+                    opacity={opacity}
+                  />
+                  <SvgText
+                    x={pos.x}
+                    y={pos.y + 4}
+                    textAnchor="middle"
+                    fill="white"
+                    fontSize={r > 14 ? 12 : 10}
+                    fontWeight="700"
+                  >
+                    {dir.count}
+                  </SvgText>
+                </React.Fragment>
+              );
+            })}
 
-          {/* ===== 本塁打（フェンス外、方向別） ===== */}
-          {homeRuns.map((hr) => {
-            const pos = getHrPosition(hr.id);
-            if (!pos) return null;
-            const r = getBubbleRadius(hr.count, maxCount);
-            const opacity = getBubbleOpacity(hr.count, maxCount);
-            return (
-              <React.Fragment key={`hr-${hr.id}`}>
-                <Circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={r + 2}
-                  fill="black"
-                  opacity={0.15}
-                />
-                <Circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={r}
-                  fill="#FAA0BF"
-                  opacity={opacity}
-                />
-                <SvgText
-                  x={pos.x}
-                  y={pos.y + 4}
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize={r > 14 ? 12 : 10}
-                  fontWeight="700"
-                >
-                  {hr.count}
-                </SvgText>
-              </React.Fragment>
-            );
-          })}
+          {!isScatter &&
+            homeRuns.map((hr) => {
+              const pos = getHrPosition(hr.id);
+              if (!pos) return null;
+              const r = getBubbleRadius(hr.count, maxCount);
+              const opacity = getBubbleOpacity(hr.count, maxCount);
+              return (
+                <React.Fragment key={`hr-${hr.id}`}>
+                  <Circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={r + 2}
+                    fill="black"
+                    opacity={0.15}
+                  />
+                  <Circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={r}
+                    fill="#FAA0BF"
+                    opacity={opacity}
+                  />
+                  <SvgText
+                    x={pos.x}
+                    y={pos.y + 4}
+                    textAnchor="middle"
+                    fill="white"
+                    fontSize={r > 14 ? 12 : 10}
+                    fontWeight="700"
+                  >
+                    {hr.count}
+                  </SvgText>
+                </React.Fragment>
+              );
+            })}
+
+          {isScatter &&
+            points.map((point, index) => (
+              <Circle
+                key={`point-${index}`}
+                cx={point.x * WIDTH}
+                cy={point.y * HEIGHT}
+                r={4}
+                fill={SCATTER_COLORS[point.category]}
+                opacity={0.85}
+                stroke="white"
+                strokeWidth={0.6}
+              />
+            ))}
         </Svg>
       </View>
 
-      {/* 凡例 */}
       <View style={styles.legend}>
-        {["単打", "長打", "本塁打", "ゴロ", "フライ", "三振"].map((cat) => (
-          <View key={cat} style={styles.legendItem}>
-            <View
-              style={[
-                styles.legendDot,
-                { backgroundColor: CATEGORY_COLORS[cat] },
-              ]}
-            />
-            <Text style={styles.legendText}>{cat}</Text>
-          </View>
-        ))}
+        {isScatter
+          ? (
+              [
+                { key: "hit", label: "安打", color: SCATTER_COLORS.hit },
+                { key: "out", label: "アウト", color: SCATTER_COLORS.out },
+                { key: "other", label: "その他", color: SCATTER_COLORS.other },
+              ] as const
+            ).map((legend) => (
+              <View key={legend.key} style={styles.legendItem}>
+                <View
+                  style={[styles.legendDot, { backgroundColor: legend.color }]}
+                />
+                <Text style={styles.legendText}>{legend.label}</Text>
+              </View>
+            ))
+          : ["単打", "長打", "本塁打", "ゴロ", "フライ", "三振"].map((cat) => (
+              <View key={cat} style={styles.legendItem}>
+                <View
+                  style={[
+                    styles.legendDot,
+                    { backgroundColor: CATEGORY_COLORS[cat] },
+                  ]}
+                />
+                <Text style={styles.legendText}>{cat}</Text>
+              </View>
+            ))}
       </View>
     </View>
   );
@@ -396,11 +480,38 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
   },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
   title: {
     color: "#F4F4F4",
     fontSize: 16,
     fontWeight: "700",
-    marginBottom: 0,
+  },
+  toggle: {
+    flexDirection: "row",
+    backgroundColor: "#27272A",
+    borderRadius: 6,
+    padding: 2,
+  },
+  toggleButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  toggleActive: {
+    backgroundColor: "#52525B",
+  },
+  toggleText: {
+    color: "#A1A1AA",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  toggleTextActive: {
+    color: "#F4F4F4",
   },
   chartWrapper: {
     alignItems: "center",
