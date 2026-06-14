@@ -1,7 +1,17 @@
 import type { HitDirection } from "../../types/stats";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import Svg, { Circle, Line, Path, Text as SvgText } from "react-native-svg";
+import Svg, {
+  Circle,
+  ClipPath,
+  Defs,
+  G,
+  Line,
+  Path,
+  Polygon,
+  Rect,
+  Text as SvgText,
+} from "react-native-svg";
 import {
   DIRECTION_LABEL_POSITIONS,
   DIRECTION_LABELS,
@@ -21,24 +31,29 @@ interface HitDirectionTableProps {
   directions: HitDirection[];
 }
 
+const WIDTH = GROUND_CANVAS_WIDTH;
+const HEIGHT = GROUND_CANVAS_HEIGHT;
+const HOME = GROUND_HOME;
+const FIRST = GROUND_FIRST;
+const SECOND = GROUND_SECOND;
+const THIRD = GROUND_THIRD;
+const LEFT_END = GROUND_LEFT_END;
+const RIGHT_END = GROUND_RIGHT_END;
+
 const CIRCLE_RADIUS = 22;
 
-// 捕手 (id=2) は y=332 とキャンバス下端に近いため、円が見切れないよう
-// SVG の viewBox を下方向に拡張して余白を確保する。
+// 捕手 (id=2) のサークルが下端で見切れないよう viewBox を下方向に拡張する。
 const BOTTOM_PADDING = 28;
-const SVG_HEIGHT = GROUND_CANVAS_HEIGHT + BOTTOM_PADDING;
+const SVG_HEIGHT = HEIGHT + BOTTOM_PADDING;
 
-// ブランド色 #d08000 を SSoT とし、打率の高さに応じた濃淡で塗る。
-// 0.000 → 半透明（背景が透けて見える）
-// 0.400+ → 完全不透明
+// ブランド色 #d08000 を SSoT とし、打率の高さに応じた透明度で塗る。
 const HEAT_BASE = { r: 0xd0, g: 0x80, b: 0x00 };
 const HEAT_MAX_AVG = 0.4;
 
 const getHeatColor = (battingAverage: number, atBats: number): string => {
-  if (atBats === 0) return "rgba(82, 82, 91, 0.35)";
+  if (atBats === 0) return "rgba(82, 82, 91, 0.55)";
   const ratio = Math.min(1, Math.max(0, battingAverage / HEAT_MAX_AVG));
-  // 透明度を 0.2 → 1.0 にマップして、低打率も完全透明にはしない。
-  const alpha = 0.2 + 0.8 * ratio;
+  const alpha = 0.35 + 0.65 * ratio;
   return `rgba(${HEAT_BASE.r}, ${HEAT_BASE.g}, ${HEAT_BASE.b}, ${alpha.toFixed(2)})`;
 };
 
@@ -50,71 +65,197 @@ const formatAverage = (hits: number, atBats: number): string => {
 
 /**
  * 方向別の打率を球場図上にヒートマップとして表示する。
- * 13 方向の位置は DIRECTION_LABEL_POSITIONS（GroundTapField と共有）を使い、
- * 色の濃さ = 打率の高さ、中央テキスト = 打率値（0打数は「—」）を示す。
+ * 球場描画は SprayChart と同一のイラストを使い、見た目を統一する。
+ * 円の色濃度 = 打率の高さ、中央テキスト = 打率値（0打数は「—」）。
  */
 export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
+  // ダート半円（SprayChart と同じ算出）
+  const dirtCenterX = HOME.x;
+  const dirtCenterY = FIRST.y + 5;
+  const dirtRadius = 68;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>方向別の打率</Text>
 
       <View style={styles.chartWrapper}>
         <Svg
-          width={GROUND_CANVAS_WIDTH}
+          width={WIDTH}
           height={SVG_HEIGHT}
-          viewBox={`0 0 ${GROUND_CANVAS_WIDTH} ${SVG_HEIGHT}`}
+          viewBox={`0 0 ${WIDTH} ${SVG_HEIGHT}`}
         >
-          {/* 外野（薄い緑のフィル） */}
+          <Defs>
+            <ClipPath id="fieldClipHeat">
+              <Path
+                d={`M ${HOME.x},${HOME.y} L ${LEFT_END.x},${LEFT_END.y} A ${GROUND_OUTFIELD_RX},${GROUND_OUTFIELD_RY} 0 0,1 ${RIGHT_END.x},${RIGHT_END.y} Z`}
+              />
+            </ClipPath>
+          </Defs>
+
+          {/* ===== 外野（緑の芝 + ストライプ） ===== */}
+          <G clipPath="url(#fieldClipHeat)">
+            <Rect x={0} y={0} width={WIDTH} height={HEIGHT} fill="#4a8e32" />
+            {Array.from({ length: 20 }, (_, i) => (
+              <Rect
+                key={`stripe-${i}`}
+                x={-100 + i * 30}
+                y={0}
+                width={15}
+                height={HEIGHT * 2}
+                fill="#56a03c"
+                opacity={0.5}
+                transform="rotate(-45, 210, 160)"
+              />
+            ))}
+          </G>
+
+          {/* 外野の輪郭線 */}
           <Path
-            d={`M ${GROUND_HOME.x},${GROUND_HOME.y} L ${GROUND_LEFT_END.x},${GROUND_LEFT_END.y} A ${GROUND_OUTFIELD_RX},${GROUND_OUTFIELD_RY} 0 0,1 ${GROUND_RIGHT_END.x},${GROUND_RIGHT_END.y} Z`}
-            fill="rgba(74, 142, 50, 0.14)"
-            stroke="rgba(74, 142, 50, 0.55)"
-            strokeWidth={1.2}
+            d={`M ${HOME.x},${HOME.y} L ${LEFT_END.x},${LEFT_END.y} A ${GROUND_OUTFIELD_RX},${GROUND_OUTFIELD_RY} 0 0,1 ${RIGHT_END.x},${RIGHT_END.y} Z`}
+            fill="none"
+            stroke="#3a7a28"
+            strokeWidth={2}
           />
 
-          {/* 内野ダート（薄い茶の円） */}
-          <Circle
-            cx={GROUND_HOME.x}
-            cy={(GROUND_HOME.y + GROUND_SECOND.y) / 2 + 4}
-            r={78}
-            fill="rgba(176, 120, 64, 0.22)"
-          />
-
-          {/* 内野ダイヤモンド（少し濃い緑） */}
+          {/* ===== 内野ダート（半円 + ホームまでの台形） ===== */}
           <Path
-            d={`M ${GROUND_HOME.x},${GROUND_HOME.y} L ${GROUND_FIRST.x},${GROUND_FIRST.y} L ${GROUND_SECOND.x},${GROUND_SECOND.y} L ${GROUND_THIRD.x},${GROUND_THIRD.y} Z`}
-            fill="rgba(74, 142, 50, 0.32)"
-            stroke="rgba(255,255,255,0.18)"
-            strokeWidth={1}
+            d={`M ${dirtCenterX - dirtRadius},${dirtCenterY} A ${dirtRadius},${dirtRadius} 0 0,1 ${dirtCenterX + dirtRadius},${dirtCenterY} L ${HOME.x + 20},${HOME.y + 5} L ${HOME.x - 20},${HOME.y + 5} Z`}
+            fill="#b07840"
           />
 
-          {/* ファウルライン */}
-          <Line
-            x1={GROUND_HOME.x}
-            y1={GROUND_HOME.y}
-            x2={GROUND_LEFT_END.x}
-            y2={GROUND_LEFT_END.y}
-            stroke="rgba(255,255,255,0.28)"
-            strokeWidth={1}
-          />
-          <Line
-            x1={GROUND_HOME.x}
-            y1={GROUND_HOME.y}
-            x2={GROUND_RIGHT_END.x}
-            y2={GROUND_RIGHT_END.y}
-            stroke="rgba(255,255,255,0.28)"
-            strokeWidth={1}
+          {/* ===== 内野の芝（ダイヤモンド内の緑） ===== */}
+          <Path
+            d={`M ${HOME.x},${HOME.y - 15} L ${FIRST.x - 5},${FIRST.y + 2} L ${SECOND.x},${SECOND.y + 8} L ${THIRD.x + 5},${THIRD.y + 2} Z`}
+            fill="#4a8e32"
           />
 
-          {/* マウンド */}
+          {/* ===== ファウルライン ===== */}
+          <Line
+            x1={HOME.x}
+            y1={HOME.y}
+            x2={LEFT_END.x}
+            y2={LEFT_END.y}
+            stroke="rgba(255,255,255,0.6)"
+            strokeWidth={1.5}
+          />
+          <Line
+            x1={HOME.x}
+            y1={HOME.y}
+            x2={RIGHT_END.x}
+            y2={RIGHT_END.y}
+            stroke="rgba(255,255,255,0.6)"
+            strokeWidth={1.5}
+          />
+
+          {/* ===== ベースライン ===== */}
+          <Line
+            x1={HOME.x}
+            y1={HOME.y - 3}
+            x2={FIRST.x}
+            y2={FIRST.y}
+            stroke="rgba(255,255,255,0.7)"
+            strokeWidth={1.5}
+          />
+          <Line
+            x1={FIRST.x}
+            y1={FIRST.y}
+            x2={SECOND.x}
+            y2={SECOND.y}
+            stroke="rgba(255,255,255,0.7)"
+            strokeWidth={1.5}
+          />
+          <Line
+            x1={SECOND.x}
+            y1={SECOND.y}
+            x2={THIRD.x}
+            y2={THIRD.y}
+            stroke="rgba(255,255,255,0.7)"
+            strokeWidth={1.5}
+          />
+          <Line
+            x1={THIRD.x}
+            y1={THIRD.y}
+            x2={HOME.x}
+            y2={HOME.y - 3}
+            stroke="rgba(255,255,255,0.7)"
+            strokeWidth={1.5}
+          />
+
+          {/* ===== マウンド ===== */}
           <Circle
-            cx={GROUND_HOME.x}
-            cy={(GROUND_HOME.y + GROUND_SECOND.y) / 2 + 5}
-            r={7}
-            fill="rgba(176, 120, 64, 0.6)"
+            cx={HOME.x}
+            cy={(HOME.y + SECOND.y) / 2 + 5}
+            r={9}
+            fill="#9a6d3a"
+          />
+          <Rect
+            x={HOME.x - 3}
+            y={(HOME.y + SECOND.y) / 2 + 3}
+            width={6}
+            height={2}
+            rx={1}
+            fill="#c4a070"
           />
 
-          {/* 各方向のヒートサークル */}
+          {/* ===== ベース ===== */}
+          <Polygon
+            points={`${HOME.x},${HOME.y - 8} ${HOME.x - 6},${HOME.y - 3} ${HOME.x - 4},${HOME.y + 2} ${HOME.x + 4},${HOME.y + 2} ${HOME.x + 6},${HOME.y - 3}`}
+            fill="white"
+          />
+          <Rect
+            x={FIRST.x - 4}
+            y={FIRST.y - 4}
+            width={8}
+            height={8}
+            fill="white"
+            transform={`rotate(45, ${FIRST.x}, ${FIRST.y})`}
+          />
+          <Rect
+            x={SECOND.x - 4}
+            y={SECOND.y - 4}
+            width={8}
+            height={8}
+            fill="white"
+            transform={`rotate(45, ${SECOND.x}, ${SECOND.y})`}
+          />
+          <Rect
+            x={THIRD.x - 4}
+            y={THIRD.y - 4}
+            width={8}
+            height={8}
+            fill="white"
+            transform={`rotate(45, ${THIRD.x}, ${THIRD.y})`}
+          />
+
+          {/* ===== バッターボックス ===== */}
+          <Rect
+            x={HOME.x - 15}
+            y={HOME.y - 10}
+            width={8}
+            height={18}
+            fill="none"
+            stroke="rgba(255,255,255,0.5)"
+            strokeWidth={0.8}
+          />
+          <Rect
+            x={HOME.x + 7}
+            y={HOME.y - 10}
+            width={8}
+            height={18}
+            fill="none"
+            stroke="rgba(255,255,255,0.5)"
+            strokeWidth={0.8}
+          />
+
+          {/* ===== キャッチャーエリア ===== */}
+          <Path
+            d={`M ${HOME.x - 12},${HOME.y + 5} Q ${HOME.x},${HOME.y + 18} ${HOME.x + 12},${HOME.y + 5}`}
+            fill="none"
+            stroke="#9a6d3a"
+            strokeWidth={3}
+          />
+
+          {/* ===== 各方向のヒートサークル ===== */}
           {Object.entries(DIRECTION_LABELS).map(([idKey, label]) => {
             const id = Number(idKey);
             const position = DIRECTION_LABEL_POSITIONS[id];
@@ -127,13 +268,21 @@ export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
 
             return (
               <React.Fragment key={id}>
+                {/* 視認性向上のためのドロップシャドウ風 黒円 */}
+                <Circle
+                  cx={position.x}
+                  cy={position.y}
+                  r={CIRCLE_RADIUS + 1}
+                  fill="black"
+                  opacity={0.25}
+                />
                 <Circle
                   cx={position.x}
                   cy={position.y}
                   r={CIRCLE_RADIUS}
                   fill={color}
-                  stroke="rgba(0,0,0,0.4)"
-                  strokeWidth={0.6}
+                  stroke="rgba(255,255,255,0.6)"
+                  strokeWidth={0.8}
                 />
                 <SvgText
                   x={position.x}
@@ -149,9 +298,9 @@ export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
                   x={position.x}
                   y={position.y + 12}
                   textAnchor="middle"
-                  fill="#E4E4E7"
+                  fill="#F4F4F4"
                   fontSize={9}
-                  fontWeight="500"
+                  fontWeight="600"
                 >
                   {label}
                 </SvgText>
@@ -167,7 +316,7 @@ export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
         <View style={styles.legendGradient}>
           {Array.from({ length: 12 }, (_, i) => {
             const t = i / 11;
-            const alpha = 0.2 + 0.8 * t;
+            const alpha = 0.35 + 0.65 * t;
             return (
               <View
                 key={i}
