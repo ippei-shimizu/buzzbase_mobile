@@ -6,6 +6,9 @@ interface RunnersSituationCardProps {
   data: RunnersSituationSummary | undefined;
 }
 
+// 呼び出し側の hasData ガードで at_bats > 0 が保証されているため atBats === 0 分岐は
+// 通常実行されない。将来 hasData ガードを外したり Suspense 切替で props が直接渡る
+// ケースに備えた防衛的フォールバックとして残す。
 const formatBattingAverage = (value: number, atBats: number): string => {
   if (atBats === 0) return "-";
   if (!Number.isFinite(value)) return ".000";
