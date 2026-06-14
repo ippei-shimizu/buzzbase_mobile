@@ -74,6 +74,14 @@ export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
   const dirtCenterY = FIRST.y + 5;
   const dirtRadius = 68;
 
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const selectedDirection = selectedId
+    ? directions.find((d) => d.id === selectedId)
+    : null;
+  const selectedLabel = selectedId ? DIRECTION_LABELS[selectedId] : null;
+  const handleCirclePress = (id: number) =>
+    setSelectedId((prev) => (prev === id ? null : id));
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>方向別の打率</Text>
@@ -265,10 +273,10 @@ export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
             const hits = dir?.hits ?? 0;
             const battingAverage = atBats > 0 ? hits / atBats : 0;
             const color = getHeatColor(battingAverage, atBats);
+            const isSelected = selectedId === id;
 
             return (
               <React.Fragment key={id}>
-                {/* 視認性向上のためのドロップシャドウ風 黒円 */}
                 <Circle
                   cx={position.x}
                   cy={position.y}
@@ -281,8 +289,9 @@ export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
                   cy={position.y}
                   r={CIRCLE_RADIUS}
                   fill={color}
-                  stroke="rgba(255,255,255,0.6)"
-                  strokeWidth={0.8}
+                  stroke={isSelected ? "#FACC15" : "rgba(255,255,255,0.6)"}
+                  strokeWidth={isSelected ? 2.5 : 0.8}
+                  onPress={() => handleCirclePress(id)}
                 />
                 <SvgText
                   x={position.x}
@@ -291,6 +300,7 @@ export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
                   fill="#F4F4F4"
                   fontSize={12}
                   fontWeight="700"
+                  onPress={() => handleCirclePress(id)}
                 >
                   {formatAverage(hits, atBats)}
                 </SvgText>
@@ -301,6 +311,7 @@ export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
                   fill="#F4F4F4"
                   fontSize={9}
                   fontWeight="600"
+                  onPress={() => handleCirclePress(id)}
                 >
                   {label}
                 </SvgText>
@@ -309,6 +320,78 @@ export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
           })}
         </Svg>
       </View>
+
+      {selectedDirection && selectedLabel && (
+        <View style={styles.detailCard}>
+          <View style={styles.detailHeader}>
+            <Text style={styles.detailTitle}>{selectedLabel} 方向</Text>
+            <Pressable
+              onPress={() => setSelectedId(null)}
+              hitSlop={8}
+              style={styles.detailClose}
+            >
+              <Text style={styles.detailCloseText}>✕</Text>
+            </Pressable>
+          </View>
+          <View style={styles.detailRow}>
+            <View style={styles.detailStat}>
+              <Text style={styles.detailLabel}>打数</Text>
+              <Text style={styles.detailValue}>
+                {selectedDirection.at_bats}
+              </Text>
+            </View>
+            <View style={styles.detailStat}>
+              <Text style={styles.detailLabel}>安打</Text>
+              <Text style={styles.detailValue}>{selectedDirection.hits}</Text>
+            </View>
+            <View style={styles.detailStat}>
+              <Text style={styles.detailLabel}>打率</Text>
+              <Text style={styles.detailValueHighlight}>
+                {formatAverage(
+                  selectedDirection.hits,
+                  selectedDirection.at_bats,
+                )}
+              </Text>
+            </View>
+            <View style={styles.detailStat}>
+              <Text style={styles.detailLabel}>長打率</Text>
+              <Text style={styles.detailValueHighlight}>
+                {formatAverage(
+                  selectedDirection.total_bases,
+                  selectedDirection.at_bats,
+                )}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.detailDivider} />
+          <View style={styles.detailRow}>
+            <View style={styles.detailStat}>
+              <Text style={styles.detailLabel}>二塁打</Text>
+              <Text style={styles.detailValue}>
+                {selectedDirection.two_base_hit}
+              </Text>
+            </View>
+            <View style={styles.detailStat}>
+              <Text style={styles.detailLabel}>三塁打</Text>
+              <Text style={styles.detailValue}>
+                {selectedDirection.three_base_hit}
+              </Text>
+            </View>
+            <View style={styles.detailStat}>
+              <Text style={styles.detailLabel}>本塁打</Text>
+              <Text style={styles.detailValue}>
+                {selectedDirection.home_run}
+              </Text>
+            </View>
+            <View style={styles.detailStat}>
+              <Text style={styles.detailLabel}>塁打</Text>
+              <Text style={styles.detailValue}>
+                {selectedDirection.total_bases}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
 
       {/* グラデーション凡例 */}
       <View style={styles.legendRow}>
@@ -381,5 +464,60 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textAlign: "center",
     marginTop: 6,
+  },
+  detailCard: {
+    marginTop: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: "#27272A",
+    borderRadius: 10,
+  },
+  detailHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  detailTitle: {
+    color: "#F4F4F4",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  detailClose: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  detailCloseText: {
+    color: "#A1A1AA",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  detailStat: {
+    flex: 1,
+    alignItems: "center",
+  },
+  detailLabel: {
+    color: "#A1A1AA",
+    fontSize: 10,
+    marginBottom: 2,
+  },
+  detailValue: {
+    color: "#F4F4F4",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  detailValueHighlight: {
+    color: "#d08000",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  detailDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "#3F3F46",
+    marginVertical: 8,
   },
 });
