@@ -119,10 +119,12 @@ const getHrPosition = (dirId: number): { x: number; y: number } | null => {
   };
 };
 
-// 中（id=10）方向の本塁打バブルが viewBox 上端を超えてマイナス y に
-// 配置されるため、その分の余白を SVG 上に確保する（バブル最大半径も加味）。
+// 中（id=10）方向の本塁打バブルが viewBox 上端を超えてマイナス y に、
+// 捕手（id=2, y=332）方向のバブルが下端を超えてプラス y にはみ出すため、
+// 上下双方に余白を確保する（バブル最大半径 22 も加味）。
 const TOP_PADDING = 30;
-const SVG_VIEWBOX_HEIGHT = HEIGHT + TOP_PADDING;
+const BOTTOM_PADDING = 28;
+const SVG_VIEWBOX_HEIGHT = HEIGHT + TOP_PADDING + BOTTOM_PADDING;
 
 const getBubbleRadius = (count: number, maxCount: number): number => {
   if (count === 0 || maxCount === 0) return 0;
