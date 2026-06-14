@@ -71,14 +71,13 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 14,
     fontWeight: "700",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   bigAverage: {
     color: "#F4F4F4",
     fontSize: 22,
     fontWeight: "700",
     textAlign: "center",
-    marginVertical: 4,
   },
   subline: {
     color: "#A1A1AA",
