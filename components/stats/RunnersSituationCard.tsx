@@ -35,6 +35,18 @@ export function RunnersSituationCard({ data }: RunnersSituationCardProps) {
           </Text>
           <View style={styles.chipsRow}>
             <View style={styles.chip}>
+              <Text style={styles.chipLabel}>単打</Text>
+              <Text style={styles.chipValue}>
+                {Math.max(
+                  0,
+                  data.hits -
+                    data.two_base_hit -
+                    data.three_base_hit -
+                    data.home_run,
+                )}
+              </Text>
+            </View>
+            <View style={styles.chip}>
               <Text style={styles.chipLabel}>二塁打</Text>
               <Text style={styles.chipValue}>{data.two_base_hit}</Text>
             </View>
@@ -71,7 +83,7 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 14,
     fontWeight: "700",
-    marginBottom: 12,
+    marginBottom: 6,
   },
   bigAverage: {
     color: "#F4F4F4",
