@@ -46,6 +46,12 @@ const CIRCLE_RADIUS = 22;
 const BOTTOM_PADDING = 28;
 const SVG_HEIGHT = HEIGHT + BOTTOM_PADDING;
 
+// 球場の芝ストライプの x 位置（レンダー毎の再生成を避けて static 定数化）。
+const STRIPE_X_POSITIONS: readonly number[] = Array.from(
+  { length: 20 },
+  (_, i) => -100 + i * 30,
+);
+
 // ブランド色 #d08000 を SSoT とし、打率の高さに応じた透明度で塗る。
 const HEAT_BASE = { r: 0xd0, g: 0x80, b: 0x00 };
 const HEAT_MAX_AVG = 0.4;
@@ -103,10 +109,10 @@ export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
           {/* ===== 外野（緑の芝 + ストライプ） ===== */}
           <G clipPath="url(#fieldClipHeat)">
             <Rect x={0} y={0} width={WIDTH} height={HEIGHT} fill="#4a8e32" />
-            {Array.from({ length: 20 }, (_, i) => (
+            {STRIPE_X_POSITIONS.map((x, i) => (
               <Rect
                 key={`stripe-${i}`}
-                x={-100 + i * 30}
+                x={x}
                 y={0}
                 width={15}
                 height={HEIGHT * 2}

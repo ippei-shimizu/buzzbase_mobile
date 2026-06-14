@@ -119,6 +119,12 @@ const getHrPosition = (dirId: number): { x: number; y: number } | null => {
   };
 };
 
+// 球場の芝ストライプの x 位置（レンダー毎の再生成を避けて static 定数化）。
+const STRIPE_X_POSITIONS: readonly number[] = Array.from(
+  { length: 20 },
+  (_, i) => -100 + i * 30,
+);
+
 // 中（id=10）方向の本塁打バブルが viewBox 上端を超えてマイナス y に、
 // 捕手（id=2, y=332）方向のバブルが下端を超えてプラス y にはみ出すため、
 // 上下双方に余白を確保する（バブル最大半径 22 も加味）。
@@ -313,10 +319,10 @@ export const SprayChart = ({
           <G clipPath="url(#fieldClip)">
             <Rect x={0} y={0} width={WIDTH} height={HEIGHT} fill="#4a8e32" />
             {/* 斜めストライプ */}
-            {Array.from({ length: 20 }, (_, i) => (
+            {STRIPE_X_POSITIONS.map((x, i) => (
               <Rect
                 key={`stripe-${i}`}
-                x={-100 + i * 30}
+                x={x}
                 y={0}
                 width={15}
                 height={HEIGHT * 2}
