@@ -1,6 +1,8 @@
 import type { StatsFilters } from "../types/profile";
 import type {
   HitDirectionData,
+  HitLocationData,
+  OutTypeBreakdownData,
   PlateAppearanceCategory,
   BattingStatsRow,
   PitchingStatsRow,
@@ -124,6 +126,26 @@ export const getRunnersSituation = async (
   const query = buildStatsQuery(filters);
   const res = await axiosInstance.get(
     `${STATS_URL}/runners_situation${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+export const getHitLocations = async (
+  filters: StatsFilters,
+): Promise<HitLocationData> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/hit_locations${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+export const getOutTypeBreakdown = async (
+  filters: StatsFilters,
+): Promise<OutTypeBreakdownData> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/out_type_breakdown${query ? `?${query}` : ""}`,
   );
   return res.data;
 };
