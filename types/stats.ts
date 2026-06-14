@@ -14,7 +14,6 @@ export interface HitDirection {
 export interface HitLocationPoint {
   x: number;
   y: number;
-  category: "hit" | "out" | "other";
   plate_result_id: number;
 }
 
