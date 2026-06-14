@@ -28,6 +28,14 @@ import {
   DIRECTION_LABELS,
   GROUND_CANVAS_HEIGHT,
   GROUND_CANVAS_WIDTH,
+  GROUND_FIRST,
+  GROUND_HOME,
+  GROUND_LEFT_END,
+  GROUND_OUTFIELD_RX,
+  GROUND_OUTFIELD_RY,
+  GROUND_RIGHT_END,
+  GROUND_SECOND,
+  GROUND_THIRD,
 } from "@constants/groundCanvas";
 import { detectClosestDirection } from "@utils/groundZoneDetector";
 
@@ -90,30 +98,16 @@ interface Props {
   onTap: (args: { x: number; y: number; directionId: number | null }) => void;
 }
 
-// ホームをキャンバス下端付近に置き、外野円弧がほぼキャンバス上端まで広がる比率にする。
-const HOME = { x: 210, y: 315 };
-// 内野ダイヤモンドは HOME→SECOND の対角線 150px を中心に、
-// 一辺が約 106px の正方形を 45° 回転した正菱形。
-const FIRST = { x: 285, y: 240 };
-const SECOND = { x: 210, y: 165 };
-const THIRD = { x: 135, y: 240 };
-// 外野フェンスは楕円弧で描く。target 画像（鳥瞰イラスト）に合わせて
-// 縦長やや浅めの楕円にし、ファウルライン端からセンター方向に滑らかに膨らむ形にする。
-const OUTFIELD_RX = 235;
-const OUTFIELD_RY = 295;
-// HOME を通る ±45° のファウルライン上で楕円と交わる点までの距離。
-// (x-cx)² / rx² + (y-cy)² / ry² = 1 を y = x の傾きの直線で解いて求める。
-const FAUL_LINE_DIST = Math.sqrt(
-  (OUTFIELD_RX ** 2 * OUTFIELD_RY ** 2) / (OUTFIELD_RX ** 2 + OUTFIELD_RY ** 2),
-);
-const LEFT_END = {
-  x: HOME.x - FAUL_LINE_DIST,
-  y: HOME.y - FAUL_LINE_DIST,
-};
-const RIGHT_END = {
-  x: HOME.x + FAUL_LINE_DIST,
-  y: HOME.y - FAUL_LINE_DIST,
-};
+// 球場形状（HOME / 塁 / 外野フェンス / ファウルライン端点）は SprayChart と
+// 共有するため `constants/groundCanvas.ts` を SSoT として import する。
+const HOME = GROUND_HOME;
+const FIRST = GROUND_FIRST;
+const SECOND = GROUND_SECOND;
+const THIRD = GROUND_THIRD;
+const OUTFIELD_RX = GROUND_OUTFIELD_RX;
+const OUTFIELD_RY = GROUND_OUTFIELD_RY;
+const LEFT_END = GROUND_LEFT_END;
+const RIGHT_END = GROUND_RIGHT_END;
 const MOUND = { x: HOME.x, y: (HOME.y + SECOND.y) / 2 + 5 };
 // 内野ダート（茶色）はダイヤモンド中心の円を、左右のファウルラインで切った形にする。
 // これによりファウルライン外側（ファウルゾーン側）にはダート（茶色）が出なくなる。
