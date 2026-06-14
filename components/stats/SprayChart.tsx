@@ -16,6 +16,19 @@ import Svg, {
   ClipPath,
   G,
 } from "react-native-svg";
+import {
+  DIRECTION_LABEL_POSITIONS,
+  GROUND_CANVAS_HEIGHT,
+  GROUND_CANVAS_WIDTH,
+  GROUND_FIRST,
+  GROUND_HOME,
+  GROUND_LEFT_END,
+  GROUND_OUTFIELD_RX,
+  GROUND_OUTFIELD_RY,
+  GROUND_RIGHT_END,
+  GROUND_SECOND,
+  GROUND_THIRD,
+} from "@constants/groundCanvas";
 
 export type SprayChartMode = "scatter" | "bubbles";
 
@@ -34,9 +47,26 @@ const SCATTER_COLORS: Record<HitLocationPoint["category"], string> = {
   other: "#d08000",
 };
 
-// フェンス外の座標（各方向のバブル位置をフェンスの少し外に配置）
-// ホームを中心に、OUTFIELD_R + オフセットの位置
-const HR_OFFSET = 30;
+const WIDTH = GROUND_CANVAS_WIDTH;
+const HEIGHT = GROUND_CANVAS_HEIGHT;
+
+// 球場形状は GroundTapField（打席記録 UI）と共通の座標系を使う。
+// 保存済みの hit_location_x/y がタップ時と同じ位置に描画される。
+const HOME = GROUND_HOME;
+const FIRST = GROUND_FIRST;
+const SECOND = GROUND_SECOND;
+const THIRD = GROUND_THIRD;
+const OUTFIELD_RX = GROUND_OUTFIELD_RX;
+const OUTFIELD_RY = GROUND_OUTFIELD_RY;
+const LEFT_END = GROUND_LEFT_END;
+const RIGHT_END = GROUND_RIGHT_END;
+
+// バブル位置は GroundTapField のラベル位置 (DIRECTION_LABEL_POSITIONS) に揃え、
+// 両画面で同じ方向ラベルが同じ場所に置かれるようにする。
+const DIRECTION_POSITIONS = DIRECTION_LABEL_POSITIONS;
+
+// 本塁打バブルは外野フェンス（楕円）の少し外側に配置する。
+const HR_OFFSET = 25;
 const getHrPosition = (dirId: number): { x: number; y: number } | null => {
   const angles: Record<number, number> = {
     7: 135, // 左線
@@ -50,51 +80,13 @@ const getHrPosition = (dirId: number): { x: number; y: number } | null => {
   const deg = angles[dirId];
   if (deg === undefined) return null;
   const rad = (deg * Math.PI) / 180;
-  const r = OUTFIELD_R + HR_OFFSET;
+  // 楕円外野フェンスの少し外側 (rx+offset, ry+offset)
+  const rx = OUTFIELD_RX + HR_OFFSET;
+  const ry = OUTFIELD_RY + HR_OFFSET;
   return {
-    x: HOME.x + r * Math.cos(rad),
-    y: HOME.y - r * Math.sin(rad),
+    x: HOME.x + rx * Math.cos(rad),
+    y: HOME.y - ry * Math.sin(rad),
   };
-};
-
-const WIDTH = 420;
-const HEIGHT = 340;
-
-// ダイヤモンド座標（全体の基準）
-const HOME = { x: 210, y: 295 };
-const FIRST = { x: 268, y: 238 };
-const SECOND = { x: 210, y: 185 };
-const THIRD = { x: 152, y: 238 };
-
-// 外野フェンス: ホームを中心に半径Rの円弧
-const OUTFIELD_R = 250;
-// ファウルライン角度（ホームから左上135度、右上45度）
-const LEFT_ANGLE = (135 * Math.PI) / 180;
-const RIGHT_ANGLE = (45 * Math.PI) / 180;
-const LEFT_END = {
-  x: HOME.x + OUTFIELD_R * Math.cos(LEFT_ANGLE),
-  y: HOME.y - OUTFIELD_R * Math.sin(LEFT_ANGLE),
-};
-const RIGHT_END = {
-  x: HOME.x + OUTFIELD_R * Math.cos(RIGHT_ANGLE),
-  y: HOME.y - OUTFIELD_R * Math.sin(RIGHT_ANGLE),
-};
-
-// バブル座標
-const DIRECTION_POSITIONS: Record<number, { x: number; y: number }> = {
-  1: { x: 210, y: 245 }, // 投
-  2: { x: 210, y: 305 }, // 捕
-  3: { x: FIRST.x, y: FIRST.y }, // 一
-  4: { x: 240, y: 213 }, // 二
-  5: { x: THIRD.x, y: THIRD.y }, // 三
-  6: { x: 180, y: 213 }, // 遊
-  7: { x: 48, y: 155 }, // 左線
-  8: { x: 72, y: 122 }, // 左
-  9: { x: 112, y: 85 }, // 左中
-  10: { x: 210, y: 62 }, // 中
-  11: { x: 308, y: 85 }, // 右中
-  12: { x: 348, y: 122 }, // 右
-  13: { x: 372, y: 155 }, // 右線
 };
 
 const getBubbleRadius = (count: number, maxCount: number): number => {
@@ -184,7 +176,7 @@ export const SprayChart = ({
             {/* 外野形状クリップ（円弧） */}
             <ClipPath id="fieldClip">
               <Path
-                d={`M ${HOME.x},${HOME.y} L ${LEFT_END.x},${LEFT_END.y} A ${OUTFIELD_R},${OUTFIELD_R} 0 0,1 ${RIGHT_END.x},${RIGHT_END.y} Z`}
+                d={`M ${HOME.x},${HOME.y} L ${LEFT_END.x},${LEFT_END.y} A ${OUTFIELD_RX},${OUTFIELD_RY} 0 0,1 ${RIGHT_END.x},${RIGHT_END.y} Z`}
               />
             </ClipPath>
           </Defs>
@@ -209,7 +201,7 @@ export const SprayChart = ({
 
           {/* 外野の輪郭線 */}
           <Path
-            d={`M ${HOME.x},${HOME.y} L ${LEFT_END.x},${LEFT_END.y} A ${OUTFIELD_R},${OUTFIELD_R} 0 0,1 ${RIGHT_END.x},${RIGHT_END.y} Z`}
+            d={`M ${HOME.x},${HOME.y} L ${LEFT_END.x},${LEFT_END.y} A ${OUTFIELD_RX},${OUTFIELD_RY} 0 0,1 ${RIGHT_END.x},${RIGHT_END.y} Z`}
             fill="none"
             stroke="#3a7a28"
             strokeWidth={2}
