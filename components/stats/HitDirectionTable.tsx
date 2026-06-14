@@ -23,6 +23,11 @@ interface HitDirectionTableProps {
 
 const CIRCLE_RADIUS = 22;
 
+// 捕手 (id=2) は y=332 とキャンバス下端に近いため、円が見切れないよう
+// SVG の viewBox を下方向に拡張して余白を確保する。
+const BOTTOM_PADDING = 28;
+const SVG_HEIGHT = GROUND_CANVAS_HEIGHT + BOTTOM_PADDING;
+
 // ブランド色 #d08000 を SSoT とし、打率の高さに応じた濃淡で塗る。
 // 0.000 → 半透明（背景が透けて見える）
 // 0.400+ → 完全不透明
@@ -56,23 +61,31 @@ export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
       <View style={styles.chartWrapper}>
         <Svg
           width={GROUND_CANVAS_WIDTH}
-          height={GROUND_CANVAS_HEIGHT}
-          viewBox={`0 0 ${GROUND_CANVAS_WIDTH} ${GROUND_CANVAS_HEIGHT}`}
+          height={SVG_HEIGHT}
+          viewBox={`0 0 ${GROUND_CANVAS_WIDTH} ${SVG_HEIGHT}`}
         >
-          {/* 外野フェンス輪郭（楕円） */}
+          {/* 外野（薄い緑のフィル） */}
           <Path
             d={`M ${GROUND_HOME.x},${GROUND_HOME.y} L ${GROUND_LEFT_END.x},${GROUND_LEFT_END.y} A ${GROUND_OUTFIELD_RX},${GROUND_OUTFIELD_RY} 0 0,1 ${GROUND_RIGHT_END.x},${GROUND_RIGHT_END.y} Z`}
-            fill="none"
-            stroke="#52525B"
+            fill="rgba(74, 142, 50, 0.14)"
+            stroke="rgba(74, 142, 50, 0.55)"
             strokeWidth={1.2}
           />
 
-          {/* 内野ダイヤモンド */}
+          {/* 内野ダート（薄い茶の円） */}
+          <Circle
+            cx={GROUND_HOME.x}
+            cy={(GROUND_HOME.y + GROUND_SECOND.y) / 2 + 4}
+            r={78}
+            fill="rgba(176, 120, 64, 0.22)"
+          />
+
+          {/* 内野ダイヤモンド（少し濃い緑） */}
           <Path
             d={`M ${GROUND_HOME.x},${GROUND_HOME.y} L ${GROUND_FIRST.x},${GROUND_FIRST.y} L ${GROUND_SECOND.x},${GROUND_SECOND.y} L ${GROUND_THIRD.x},${GROUND_THIRD.y} Z`}
-            fill="none"
-            stroke="#52525B"
-            strokeWidth={1.2}
+            fill="rgba(74, 142, 50, 0.32)"
+            stroke="rgba(255,255,255,0.18)"
+            strokeWidth={1}
           />
 
           {/* ファウルライン */}
@@ -81,7 +94,7 @@ export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
             y1={GROUND_HOME.y}
             x2={GROUND_LEFT_END.x}
             y2={GROUND_LEFT_END.y}
-            stroke="#3F3F46"
+            stroke="rgba(255,255,255,0.28)"
             strokeWidth={1}
           />
           <Line
@@ -89,8 +102,16 @@ export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
             y1={GROUND_HOME.y}
             x2={GROUND_RIGHT_END.x}
             y2={GROUND_RIGHT_END.y}
-            stroke="#3F3F46"
+            stroke="rgba(255,255,255,0.28)"
             strokeWidth={1}
+          />
+
+          {/* マウンド */}
+          <Circle
+            cx={GROUND_HOME.x}
+            cy={(GROUND_HOME.y + GROUND_SECOND.y) / 2 + 5}
+            r={7}
+            fill="rgba(176, 120, 64, 0.6)"
           />
 
           {/* 各方向のヒートサークル */}
