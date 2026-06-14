@@ -67,6 +67,9 @@ const DIRECTION_POSITIONS = DIRECTION_LABEL_POSITIONS;
 
 // 本塁打バブルは外野フェンス（楕円）の少し外側に配置する。
 const HR_OFFSET = 25;
+// バブル最大半径 + 少しの余白。センター方向は楕円外側に出すと y が
+// マイナスになり画面上端で見切れるため、この値で上端をクランプする。
+const HR_TOP_GUARD = 25;
 const getHrPosition = (dirId: number): { x: number; y: number } | null => {
   const angles: Record<number, number> = {
     7: 135, // 左線
@@ -80,12 +83,11 @@ const getHrPosition = (dirId: number): { x: number; y: number } | null => {
   const deg = angles[dirId];
   if (deg === undefined) return null;
   const rad = (deg * Math.PI) / 180;
-  // 楕円外野フェンスの少し外側 (rx+offset, ry+offset)
   const rx = OUTFIELD_RX + HR_OFFSET;
   const ry = OUTFIELD_RY + HR_OFFSET;
   return {
     x: HOME.x + rx * Math.cos(rad),
-    y: HOME.y - ry * Math.sin(rad),
+    y: Math.max(HR_TOP_GUARD, HOME.y - ry * Math.sin(rad)),
   };
 };
 
