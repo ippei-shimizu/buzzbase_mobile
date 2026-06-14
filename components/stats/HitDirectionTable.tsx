@@ -81,6 +81,21 @@ export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
   const dirtRadius = 68;
 
   const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const hasAnyAtBats = directions.some((dir) => dir.at_bats > 0);
+  if (!hasAnyAtBats) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>方向別の打率</Text>
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>打球データなし</Text>
+          <Text style={styles.emptyNote}>
+            新仕様で記録した打席のみが対象です
+          </Text>
+        </View>
+      </View>
+    );
+  }
   const selectedDirection = selectedId
     ? directions.find((d) => d.id === selectedId)
     : null;
@@ -470,6 +485,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textAlign: "center",
     marginTop: 6,
+  },
+  emptyState: {
+    paddingVertical: 32,
+    alignItems: "center",
+  },
+  emptyText: {
+    color: "#A1A1AA",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  emptyNote: {
+    color: "#71717A",
+    fontSize: 11,
   },
   detailCard: {
     marginTop: 12,
