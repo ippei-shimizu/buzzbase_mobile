@@ -74,8 +74,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   bigAverage: {
-    color: "#d08000",
-    fontSize: 40,
+    color: "#F4F4F4",
+    fontSize: 22,
     fontWeight: "700",
     textAlign: "center",
     marginVertical: 4,
