@@ -14,8 +14,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { EraTrendChart } from "@components/stats/EraTrendChart";
+import { HeadlineStatsCard } from "@components/stats/HeadlineStatsCard";
 import { PeriodToggle } from "@components/stats/PeriodToggle";
 import { PlateAppearanceDonut } from "@components/stats/PlateAppearanceDonut";
+import { RunnersSituationCard } from "@components/stats/RunnersSituationCard";
 import { SprayChart } from "@components/stats/SprayChart";
 import { StatsFilters } from "@components/stats/StatsFilters";
 import {
@@ -36,6 +38,8 @@ import {
   useBattingStatsTable,
   usePitchingStatsTable,
   useEraTrend,
+  useHeadlineStats,
+  useRunnersSituation,
 } from "@hooks/useStats";
 import { useTournaments } from "@hooks/useTournaments";
 
@@ -235,6 +239,8 @@ export default function StatsScreen() {
   const { years: availableYears } = useAvailableYears();
   const hitDirections = useHitDirections(filters);
   const paBreakdown = usePlateAppearanceBreakdown(filters);
+  const headlineStats = useHeadlineStats(filters);
+  const runnersSituation = useRunnersSituation(filters);
   const battingTable = useBattingStatsTable(
     battingPeriod,
     tableYear,
@@ -403,6 +409,16 @@ export default function StatsScreen() {
         {/* Batting Tab */}
         {activeTab === "batting" && (
           <View style={styles.content}>
+            {headlineStats.data && (
+              <FetchingOverlay isFetching={headlineStats.isFetching}>
+                <HeadlineStatsCard data={headlineStats.data} />
+              </FetchingOverlay>
+            )}
+            {runnersSituation.data && (
+              <FetchingOverlay isFetching={runnersSituation.isFetching}>
+                <RunnersSituationCard data={runnersSituation.data} />
+              </FetchingOverlay>
+            )}
             {hitDirections.data && (
               <FetchingOverlay isFetching={hitDirections.isFetching}>
                 <SprayChart
