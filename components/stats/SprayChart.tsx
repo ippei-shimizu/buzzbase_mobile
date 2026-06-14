@@ -447,11 +447,10 @@ export const SprayChart = ({
                   key={`point-${index}`}
                   cx={point.x * WIDTH}
                   cy={point.y * HEIGHT}
-                  r={4}
+                  r={5}
                   fill={CATEGORY_COLORS[category] || "#71717A"}
-                  opacity={0.85}
-                  stroke="white"
-                  strokeWidth={0.6}
+                  stroke="rgba(0,0,0,0.5)"
+                  strokeWidth={0.5}
                 />
               );
             })}
