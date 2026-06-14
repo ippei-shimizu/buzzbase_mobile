@@ -49,7 +49,8 @@ interface SprayChartProps {
 
 // plate_result_id → バブルと同じカテゴリ表示名へのマップ。
 // scatter モードの点を CATEGORY_COLORS で色分けし、バブル凡例と統一する。
-// back の `Stats::HitDirectionAggregator::RESULT_CATEGORIES` と同じ規則。
+// 四死球 (15/16) は打球結果ではないため意図的に含めない（hit_location は通常 NULL）。
+// 念のため点として届いても LEGEND_CATEGORIES に無いカテゴリにはマップしない。
 const PLATE_RESULT_TO_CATEGORY: Record<number, string> = {
   7: "単打",
   8: "長打",
@@ -61,8 +62,6 @@ const PLATE_RESULT_TO_CATEGORY: Record<number, string> = {
   4: "フライ",
   13: "三振",
   14: "三振",
-  15: "四死球",
-  16: "四死球",
 };
 
 const getPointCategory = (plateResultId: number): string =>
@@ -130,7 +129,7 @@ const getBubbleRadius = (count: number, maxCount: number): number => {
   return 8 + (count / maxCount) * 14;
 };
 
-// 打席結果内訳と同じカラー
+// 打席結果内訳と同じカラー（点プロットの分類とバブル top_category を共通化）。
 const CATEGORY_COLORS: Record<string, string> = {
   単打: "#f31260",
   長打: "#F54180",
@@ -138,7 +137,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   ゴロ: "#71717A",
   フライ: "#9CA3AF",
   三振: "#d08000",
-  四死球: "#17C964",
   その他: "#8b5cf6",
 };
 
