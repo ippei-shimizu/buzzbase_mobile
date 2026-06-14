@@ -1,5 +1,6 @@
 import type { StatsFilters } from "../types/profile";
 import type {
+  CountSituations,
   HitDirectionData,
   HitLocationData,
   OutTypeBreakdownData,
@@ -146,6 +147,16 @@ export const getOutTypeBreakdown = async (
   const query = buildStatsQuery(filters);
   const res = await axiosInstance.get(
     `${STATS_URL}/out_type_breakdown${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+export const getCountSituations = async (
+  filters: StatsFilters,
+): Promise<CountSituations> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/count_situations${query ? `?${query}` : ""}`,
   );
   return res.data;
 };
