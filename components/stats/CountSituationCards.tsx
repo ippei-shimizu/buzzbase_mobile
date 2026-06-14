@@ -1,7 +1,14 @@
 import type { CountSituation, CountSituations } from "../../types/stats";
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { StatTooltipLabel } from "@components/ui/StatTooltipLabel";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import {
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 
 interface CountSituationCardsProps {
   data: CountSituations;
@@ -43,6 +50,9 @@ const formatAverage = (situation: CountSituation): string => {
 };
 
 export const CountSituationCards = ({ data }: CountSituationCardsProps) => {
+  const [openTooltipKey, setOpenTooltipKey] = useState<string | null>(null);
+  const openCell = CELLS.find((cell) => cell.key === openTooltipKey) ?? null;
+
   if (data.total_target_pa === 0) {
     return (
       <View style={styles.container}>
@@ -68,12 +78,21 @@ export const CountSituationCards = ({ data }: CountSituationCardsProps) => {
           const situation = data[cell.key];
           return (
             <View key={cell.key} style={styles.cell}>
-              <StatTooltipLabel
-                label={cell.label}
-                tooltip={cell.tooltip}
-                textStyle={styles.cellLabel}
-                containerStyle={styles.cellLabelContainer}
-              />
+              <View style={styles.cellLabelRow}>
+                <Text style={styles.cellLabel}>{cell.label}</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${cell.label}の説明を表示`}
+                  onPress={() => setOpenTooltipKey(cell.key)}
+                  hitSlop={6}
+                >
+                  <Ionicons
+                    name="help-circle-outline"
+                    size={14}
+                    color="#A1A1AA"
+                  />
+                </Pressable>
+              </View>
               <Text style={styles.cellAverage}>{formatAverage(situation)}</Text>
               <Text style={styles.cellCount}>
                 {situation.at_bats}打数 {situation.hits}安打
@@ -82,6 +101,22 @@ export const CountSituationCards = ({ data }: CountSituationCardsProps) => {
           );
         })}
       </View>
+
+      <Modal
+        visible={openCell !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOpenTooltipKey(null)}
+      >
+        <TouchableWithoutFeedback onPress={() => setOpenTooltipKey(null)}>
+          <View style={styles.tooltipOverlay}>
+            <View style={styles.tooltipBubble}>
+              <Text style={styles.tooltipTitle}>{openCell?.label}</Text>
+              <Text style={styles.tooltipText}>{openCell?.tooltip}</Text>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 };
@@ -120,13 +155,44 @@ const styles = StyleSheet.create({
     backgroundColor: "#27272A",
     borderRadius: 8,
   },
-  cellLabelContainer: {
+  cellLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
     marginBottom: 4,
   },
   cellLabel: {
     color: "#A1A1AA",
     fontSize: 11,
     fontWeight: "600",
+  },
+  tooltipOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+  },
+  tooltipBubble: {
+    backgroundColor: "#27272a",
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    alignSelf: "center",
+    width: "100%",
+    maxWidth: 320,
+    borderWidth: 1,
+    borderColor: "#3f3f46",
+  },
+  tooltipTitle: {
+    color: "#d08000",
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 6,
+  },
+  tooltipText: {
+    color: "#F4F4F4",
+    fontSize: 13,
+    lineHeight: 19,
   },
   cellAverage: {
     color: "#F4F4F4",
