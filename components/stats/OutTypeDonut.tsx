@@ -127,7 +127,7 @@ export const OutTypeDonut = ({ breakdown, total }: OutTypeDonutProps) => {
                       { color: cat.count > 0 ? "#F4F4F4" : "#52525B" },
                     ]}
                   >
-                    {cat.percentage}%
+                    {cat.percentage.toFixed(1)}%
                   </Text>
                 </View>
                 <View style={styles.barTrack}>
