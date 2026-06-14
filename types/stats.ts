@@ -131,3 +131,32 @@ export interface GameSummary {
 }
 
 export type StatsPeriod = "yearly" | "monthly" | "daily";
+
+/**
+ * stats タブ打撃セクション最上部の主要スタッツカード用レスポンス。
+ * OBP / SLG / OPS はサーバー側で計算済（小数 3 桁）。
+ */
+export interface HeadlineStats {
+  batting_average: number;
+  hit: number;
+  home_run: number;
+  runs_batted_in: number;
+  on_base_percentage: number;
+  slugging_percentage: number;
+  ops: number;
+  at_bats: number;
+}
+
+/**
+ * 得点圏（runners_state IN 2..7）に絞った打撃集計。
+ * 母数 0 のときも nil ではなく 0 / 0.0 が返るので、`at_bats === 0` で
+ * mobile 側を「対象データなし」UI に分岐させる。
+ */
+export interface RunnersSituationSummary {
+  batting_average: number;
+  at_bats: number;
+  hits: number;
+  two_base_hit: number;
+  three_base_hit: number;
+  home_run: number;
+}

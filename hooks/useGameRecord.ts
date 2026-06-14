@@ -28,6 +28,7 @@ import {
 import { getCurrentUserProfile } from "../services/profileService";
 import { createSeason } from "../services/seasonService";
 import { useGameRecordStore } from "../stores/gameRecordStore";
+import { invalidateGameResultRelated } from "../utils/queryInvalidation";
 
 export const useGameRecord = () => {
   const store = useGameRecordStore();
@@ -303,8 +304,7 @@ export const useGameRecord = () => {
 
   const resetFlow = () => {
     store.reset();
-    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    queryClient.invalidateQueries({ queryKey: ["gameResults"] });
+    invalidateGameResultRelated(queryClient);
   };
 
   return {

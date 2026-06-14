@@ -6,6 +6,7 @@ import {
   getPlateAppearancesByGame,
   updatePlateAppearanceV2,
 } from "@services/plateAppearanceV2Service";
+import { invalidateGameResultRelated } from "@utils/queryInvalidation";
 
 /**
  * 試合単位で v2 打席リストを取得する。
@@ -42,8 +43,7 @@ export const useCreatePlateAppearance = () => {
       queryClient.invalidateQueries({
         queryKey: ["plateAppearancesV2", created.game_result_id],
       });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      queryClient.invalidateQueries({ queryKey: ["gameResults"] });
+      invalidateGameResultRelated(queryClient);
     },
   });
   return {
@@ -71,8 +71,7 @@ export const useUpdatePlateAppearance = () => {
       queryClient.invalidateQueries({
         queryKey: ["plateAppearancesV2", updated.game_result_id],
       });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      queryClient.invalidateQueries({ queryKey: ["gameResults"] });
+      invalidateGameResultRelated(queryClient);
     },
   });
   return {
@@ -96,8 +95,7 @@ export const useDeletePlateAppearance = () => {
       queryClient.invalidateQueries({
         queryKey: ["plateAppearancesV2", variables.gameResultId],
       });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      queryClient.invalidateQueries({ queryKey: ["gameResults"] });
+      invalidateGameResultRelated(queryClient);
     },
   });
   return {
