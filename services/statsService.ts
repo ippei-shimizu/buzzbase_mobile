@@ -15,16 +15,20 @@ import axiosInstance from "@utils/axiosInstance";
 
 const STATS_URL = `${API_BASE_URL}/api/v2/stats`;
 
-export const getHitDirections = async (
-  filters: StatsFilters,
-): Promise<HitDirectionData> => {
+const buildStatsQuery = (filters: StatsFilters): string => {
   const params = new URLSearchParams();
   if (filters.year) params.append("year", filters.year);
   if (filters.matchType) params.append("match_type", filters.matchType);
   if (filters.seasonId) params.append("season_id", filters.seasonId);
   if (filters.tournamentId)
     params.append("tournament_id", filters.tournamentId);
-  const query = params.toString();
+  return params.toString();
+};
+
+export const getHitDirections = async (
+  filters: StatsFilters,
+): Promise<HitDirectionData> => {
+  const query = buildStatsQuery(filters);
   const res = await axiosInstance.get(
     `${STATS_URL}/hit_directions${query ? `?${query}` : ""}`,
   );
@@ -34,13 +38,7 @@ export const getHitDirections = async (
 export const getPlateAppearanceBreakdown = async (
   filters: StatsFilters,
 ): Promise<PlateAppearanceCategory[]> => {
-  const params = new URLSearchParams();
-  if (filters.year) params.append("year", filters.year);
-  if (filters.matchType) params.append("match_type", filters.matchType);
-  if (filters.seasonId) params.append("season_id", filters.seasonId);
-  if (filters.tournamentId)
-    params.append("tournament_id", filters.tournamentId);
-  const query = params.toString();
+  const query = buildStatsQuery(filters);
   const res = await axiosInstance.get(
     `${STATS_URL}/plate_appearance_breakdown${query ? `?${query}` : ""}`,
   );
@@ -108,16 +106,6 @@ export const getGameSummary = async (
     `${STATS_URL}/game_summary${query ? `?${query}` : ""}`,
   );
   return res.data;
-};
-
-const buildStatsQuery = (filters: StatsFilters): string => {
-  const params = new URLSearchParams();
-  if (filters.year) params.append("year", filters.year);
-  if (filters.matchType) params.append("match_type", filters.matchType);
-  if (filters.seasonId) params.append("season_id", filters.seasonId);
-  if (filters.tournamentId)
-    params.append("tournament_id", filters.tournamentId);
-  return params.toString();
 };
 
 export const getHeadlineStats = async (
