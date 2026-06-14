@@ -27,25 +27,36 @@ export type InvalidateGameResultMode = "stale-only" | "refetch";
  * - `filteredUserGameResults` — フィルター済みユーザー別試合一覧
  * - `dashboard` — ダッシュボード集計
  * - `profile` — プロフィール（試合数・打率などのサマリー）
+ * - stats タブで使う集計 API 群（試合・打席が変わったら全部最新化する）:
+ *   `headlineStats` / `runnersSituation` / `hitDirections` / `paBreakdown` /
+ *   `battingTable` / `pitchingTable` / `eraTrend` / `gameSummary`
  *
  * @param queryClient - 呼び出し元で `useQueryClient()` で取得した QueryClient
  * @param mode - `"stale-only"`（既定）か `"refetch"`。詳細は {@link InvalidateGameResultMode}
  */
+const RELATED_QUERY_KEYS = [
+  "gameResults",
+  "userGameResults",
+  "filteredGameResults",
+  "filteredUserGameResults",
+  "dashboard",
+  "profile",
+  "headlineStats",
+  "runnersSituation",
+  "hitDirections",
+  "paBreakdown",
+  "battingTable",
+  "pitchingTable",
+  "eraTrend",
+  "gameSummary",
+] as const;
+
 export const invalidateGameResultRelated = (
   queryClient: QueryClient,
   mode: InvalidateGameResultMode = "stale-only",
 ): void => {
   const refetchType = mode === "refetch" ? "active" : "none";
-  queryClient.invalidateQueries({ queryKey: ["gameResults"], refetchType });
-  queryClient.invalidateQueries({ queryKey: ["userGameResults"], refetchType });
-  queryClient.invalidateQueries({
-    queryKey: ["filteredGameResults"],
-    refetchType,
+  RELATED_QUERY_KEYS.forEach((key) => {
+    queryClient.invalidateQueries({ queryKey: [key], refetchType });
   });
-  queryClient.invalidateQueries({
-    queryKey: ["filteredUserGameResults"],
-    refetchType,
-  });
-  queryClient.invalidateQueries({ queryKey: ["dashboard"], refetchType });
-  queryClient.invalidateQueries({ queryKey: ["profile"], refetchType });
 };
