@@ -32,6 +32,26 @@ export interface OutTypeBreakdownData {
   total: number;
 }
 
+/**
+ * カウント別分析カード（初球 / 有利カウント / 追い込み）の 1 セル分。
+ */
+export interface CountSituation {
+  at_bats: number;
+  hits: number;
+  batting_average: number;
+}
+
+/**
+ * stats 打撃のカウント別分析レスポンス。
+ * `first_pitch_swing` / `final_balls` / `final_strikes` の記録がある新仕様 PA のみが対象。
+ */
+export interface CountSituations {
+  first_pitch: CountSituation;
+  favorable_count: CountSituation;
+  pinch_count: CountSituation;
+  total_target_pa: number;
+}
+
 export interface HomeRunDirection {
   id: number;
   label: string;
