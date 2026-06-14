@@ -44,6 +44,8 @@ const RELATED_QUERY_KEYS = [
   "headlineStats",
   "runnersSituation",
   "hitDirections",
+  "hitLocations",
+  "outTypeBreakdown",
   "paBreakdown",
   "battingTable",
   "pitchingTable",

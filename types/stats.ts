@@ -3,6 +3,34 @@ export interface HitDirection {
   label: string;
   count: number;
   top_category: string;
+  at_bats: number;
+  hits: number;
+  two_base_hit: number;
+  three_base_hit: number;
+  home_run: number;
+  total_bases: number;
+}
+
+export interface HitLocationPoint {
+  x: number;
+  y: number;
+  category: "hit" | "out" | "other";
+  plate_result_id: number;
+}
+
+export interface HitLocationData {
+  points: HitLocationPoint[];
+}
+
+export interface OutTypeBreakdownCategory {
+  category: string;
+  count: number;
+  percentage: number;
+}
+
+export interface OutTypeBreakdownData {
+  breakdown: OutTypeBreakdownCategory[];
+  total: number;
 }
 
 export interface HomeRunDirection {
