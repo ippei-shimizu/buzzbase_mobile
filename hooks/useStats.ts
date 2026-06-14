@@ -3,6 +3,8 @@ import type { StatsPeriod } from "../types/stats";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   getHitDirections,
+  getHitLocations,
+  getOutTypeBreakdown,
   getPlateAppearanceBreakdown,
   getBattingStatsTable,
   getPitchingStatsTable,
@@ -87,5 +89,19 @@ export const useRunnersSituation = (filters: StatsFilters) =>
   useQuery({
     queryKey: ["runnersSituation", filters],
     queryFn: () => getRunnersSituation(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const useHitLocations = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["hitLocations", filters],
+    queryFn: () => getHitLocations(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const useOutTypeBreakdown = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["outTypeBreakdown", filters],
+    queryFn: () => getOutTypeBreakdown(filters),
     placeholderData: keepPreviousData,
   });
