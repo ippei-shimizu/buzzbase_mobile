@@ -3,7 +3,7 @@ import type {
   HitLocationPoint,
   HomeRunDirection,
 } from "../../types/stats";
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import Svg, {
   Path,
@@ -60,6 +60,17 @@ const PLATE_RESULT_TO_CATEGORY: Record<number, string> = {
 
 const getPointCategory = (plateResultId: number): string =>
   PLATE_RESULT_TO_CATEGORY[plateResultId] || "その他";
+
+// 凡例に表示するカテゴリ順。タップでオン/オフを切り替えてフィルタする。
+const LEGEND_CATEGORIES = [
+  "単打",
+  "長打",
+  "本塁打",
+  "ゴロ",
+  "フライ",
+  "三振",
+  "その他",
+] as const;
 
 const WIDTH = GROUND_CANVAS_WIDTH;
 const HEIGHT = GROUND_CANVAS_HEIGHT;
@@ -147,6 +158,19 @@ export const SprayChart = ({
   const maxCount = Math.max(...allCounts, 1);
 
   const isScatter = mode === "scatter";
+
+  // 凡例タップで切り替えるカテゴリフィルタ。デフォルトは全カテゴリ ON。
+  const [activeCategories, setActiveCategories] = useState<Set<string>>(
+    () => new Set<string>(LEGEND_CATEGORIES),
+  );
+  const toggleCategory = (cat: string) => {
+    setActiveCategories((prev: Set<string>) => {
+      const next = new Set<string>(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  };
 
   // ダート半円の中心とサイズ
   const dirtCenterX = HOME.x;
@@ -370,6 +394,7 @@ export const SprayChart = ({
             directions.map((dir) => {
               const pos = DIRECTION_POSITIONS[dir.id];
               if (!pos || dir.count === 0) return null;
+              if (!activeCategories.has(dir.top_category)) return null;
               const r = getBubbleRadius(dir.count, maxCount);
               const color = getBubbleColor(dir.top_category);
               const opacity = getBubbleOpacity(dir.count, maxCount);
@@ -404,6 +429,7 @@ export const SprayChart = ({
             })}
 
           {!isScatter &&
+            activeCategories.has("本塁打") &&
             homeRuns.map((hr) => {
               const pos = getHrPosition(hr.id);
               if (!pos) return null;
@@ -442,6 +468,7 @@ export const SprayChart = ({
           {isScatter &&
             points.map((point, index) => {
               const category = getPointCategory(point.plate_result_id);
+              if (!activeCategories.has(category)) return null;
               return (
                 <Circle
                   key={`point-${index}`}
@@ -458,19 +485,35 @@ export const SprayChart = ({
       </View>
 
       <View style={styles.legend}>
-        {["単打", "長打", "本塁打", "ゴロ", "フライ", "三振", "その他"].map(
-          (cat) => (
-            <View key={cat} style={styles.legendItem}>
+        {LEGEND_CATEGORIES.map((cat) => {
+          const isActive = activeCategories.has(cat);
+          return (
+            <Pressable
+              key={cat}
+              onPress={() => toggleCategory(cat)}
+              style={styles.legendItem}
+              hitSlop={6}
+            >
               <View
                 style={[
                   styles.legendDot,
-                  { backgroundColor: CATEGORY_COLORS[cat] },
+                  {
+                    backgroundColor: CATEGORY_COLORS[cat],
+                    opacity: isActive ? 1 : 0.3,
+                  },
                 ]}
               />
-              <Text style={styles.legendText}>{cat}</Text>
-            </View>
-          ),
-        )}
+              <Text
+                style={[
+                  styles.legendText,
+                  !isActive && styles.legendTextInactive,
+                ]}
+              >
+                {cat}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
@@ -539,5 +582,9 @@ const styles = StyleSheet.create({
   legendText: {
     color: "#A1A1AA",
     fontSize: 11,
+  },
+  legendTextInactive: {
+    color: "#52525B",
+    textDecorationLine: "line-through",
   },
 });
