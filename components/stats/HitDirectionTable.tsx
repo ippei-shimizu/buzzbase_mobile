@@ -1,6 +1,6 @@
 import type { HitDirection } from "../../types/stats";
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import Svg, {
   Circle,
   ClipPath,
