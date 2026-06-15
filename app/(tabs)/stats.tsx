@@ -28,11 +28,7 @@ import { PlateAppearanceDonut } from "@components/stats/PlateAppearanceDonut";
 import { RunnersSituationCard } from "@components/stats/RunnersSituationCard";
 import { SprayChart } from "@components/stats/SprayChart";
 import { StatsFilters } from "@components/stats/StatsFilters";
-import {
-  StatsTable,
-  BATTING_COLUMNS,
-  PITCHING_COLUMNS,
-} from "@components/stats/StatsTable";
+import { StatsTable, PITCHING_COLUMNS } from "@components/stats/StatsTable";
 import {
   GlobalMenuButton,
   GlobalMenuOverlay,
@@ -465,56 +461,7 @@ export default function StatsScreen() {
                 <RunnersSituationCard data={runnersSituation.data} />
               </FetchingOverlay>
             )}
-            {/* 3. 打撃成績テーブル */}
-            <View style={styles.tableHeader}>
-              <Text style={styles.tableHeaderLabel}>打撃成績</Text>
-              <PeriodToggle
-                value={battingPeriod}
-                onChange={handleBattingPeriodChange}
-              />
-            </View>
-            {showTableFilters && (
-              <View style={styles.tableFilterRow}>
-                <TableFilterDropdown
-                  label="年度"
-                  value={tableYear}
-                  options={yearOptions}
-                  onSelect={setTableYear}
-                  isOpen={tableActiveFilter === "tableYear"}
-                  onToggle={() => toggleTableFilter("tableYear")}
-                />
-                {seasonOptions.length > 0 && (
-                  <TableFilterDropdown
-                    label="シーズン"
-                    value={tableSeasonId}
-                    options={seasonOptions}
-                    onSelect={setTableSeasonId}
-                    isOpen={tableActiveFilter === "tableSeason"}
-                    onToggle={() => toggleTableFilter("tableSeason")}
-                  />
-                )}
-                {tournamentOptions.length > 0 && (
-                  <TableFilterDropdown
-                    label="大会"
-                    value={tableTournamentId}
-                    options={tournamentOptions}
-                    onSelect={setTableTournamentId}
-                    isOpen={tableActiveFilter === "tableTournament"}
-                    onToggle={() => toggleTableFilter("tableTournament")}
-                  />
-                )}
-              </View>
-            )}
-            {battingTable.data && (
-              <FetchingOverlay isFetching={battingTable.isFetching}>
-                <StatsTable
-                  rows={battingTable.data}
-                  columns={BATTING_COLUMNS}
-                  labelKey="label"
-                />
-              </FetchingOverlay>
-            )}
-            {/* 4. BattingTrendChart */}
+            {/* 3. BattingTrendChart */}
             {battingTrend.data && (
               <FetchingOverlay isFetching={battingTrend.isFetching}>
                 <BattingTrendChart
@@ -589,7 +536,7 @@ export default function StatsScreen() {
                 />
               </FetchingOverlay>
             )}
-            {/* 12. PlateAppearanceDonut */}
+            {/* 11. PlateAppearanceDonut */}
             {paBreakdown.data && (
               <FetchingOverlay isFetching={paBreakdown.isFetching}>
                 <PlateAppearanceDonut
@@ -598,6 +545,55 @@ export default function StatsScreen() {
                     (sum, c) => sum + c.count,
                     0,
                   )}
+                />
+              </FetchingOverlay>
+            )}
+            {/* 12. 打撃成績テーブル（最下部） */}
+            <View style={styles.tableHeader}>
+              <Text style={styles.tableHeaderLabel}>打撃成績</Text>
+              <PeriodToggle
+                value={battingPeriod}
+                onChange={handleBattingPeriodChange}
+              />
+            </View>
+            {showTableFilters && (
+              <View style={styles.tableFilterRow}>
+                <TableFilterDropdown
+                  label="年度"
+                  value={tableYear}
+                  options={yearOptions}
+                  onSelect={setTableYear}
+                  isOpen={tableActiveFilter === "tableYear"}
+                  onToggle={() => toggleTableFilter("tableYear")}
+                />
+                {seasonOptions.length > 0 && (
+                  <TableFilterDropdown
+                    label="シーズン"
+                    value={tableSeasonId}
+                    options={seasonOptions}
+                    onSelect={setTableSeasonId}
+                    isOpen={tableActiveFilter === "tableSeason"}
+                    onToggle={() => toggleTableFilter("tableSeason")}
+                  />
+                )}
+                {tournamentOptions.length > 0 && (
+                  <TableFilterDropdown
+                    label="大会"
+                    value={tableTournamentId}
+                    options={tournamentOptions}
+                    onSelect={setTableTournamentId}
+                    isOpen={tableActiveFilter === "tableTournament"}
+                    onToggle={() => toggleTableFilter("tableTournament")}
+                  />
+                )}
+              </View>
+            )}
+            {battingTable.data && (
+              <FetchingOverlay isFetching={battingTable.isFetching}>
+                <StatsTable
+                  rows={battingTable.data}
+                  columns={BATTING_COLUMNS}
+                  labelKey="label"
                 />
               </FetchingOverlay>
             )}
