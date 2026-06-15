@@ -53,7 +53,6 @@ const formatValue = (value: number, format: CellConfig["format"]): string => {
 
 export const AdditionalStatsCard = ({ data }: AdditionalStatsCardProps) => (
   <View style={styles.container}>
-    <Text style={styles.title}>追加スタッツ</Text>
     <View style={styles.grid}>
       {CELLS.map((cell) => (
         <View key={cell.key} style={styles.cell}>
@@ -69,15 +68,9 @@ export const AdditionalStatsCard = ({ data }: AdditionalStatsCardProps) => (
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#3A3A3A",
+    backgroundColor: "#27272a",
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
-  },
-  title: {
-    color: "#F4F4F4",
-    fontSize: 16,
-    fontWeight: "700",
     marginBottom: 12,
   },
   grid: {
