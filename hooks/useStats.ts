@@ -2,6 +2,7 @@ import type { StatsFilters } from "../types/profile";
 import type { StatsPeriod } from "../types/stats";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
+  getCountSituations,
   getHitDirections,
   getHitLocations,
   getOutTypeBreakdown,
@@ -103,5 +104,12 @@ export const useOutTypeBreakdown = (filters: StatsFilters) =>
   useQuery({
     queryKey: ["outTypeBreakdown", filters],
     queryFn: () => getOutTypeBreakdown(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const useCountSituations = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["countSituations", filters],
+    queryFn: () => getCountSituations(filters),
     placeholderData: keepPreviousData,
   });

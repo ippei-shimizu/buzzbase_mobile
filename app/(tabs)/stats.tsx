@@ -14,6 +14,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import { CountSituationCards } from "@components/stats/CountSituationCards";
 import { EraTrendChart } from "@components/stats/EraTrendChart";
 import { HeadlineStatsCard } from "@components/stats/HeadlineStatsCard";
 import { HitDirectionTable } from "@components/stats/HitDirectionTable";
@@ -36,6 +37,7 @@ import {
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useMySeasons } from "@hooks/useSeasons";
 import {
+  useCountSituations,
   useHitDirections,
   useHitLocations,
   useOutTypeBreakdown,
@@ -245,6 +247,7 @@ export default function StatsScreen() {
   const hitDirections = useHitDirections(filters);
   const hitLocations = useHitLocations(filters);
   const outTypeBreakdown = useOutTypeBreakdown(filters);
+  const countSituations = useCountSituations(filters);
   const paBreakdown = usePlateAppearanceBreakdown(filters);
   const headlineStats = useHeadlineStats(filters);
   const runnersSituation = useRunnersSituation(filters);
@@ -283,6 +286,7 @@ export default function StatsScreen() {
       hitDirections.refetch(),
       hitLocations.refetch(),
       outTypeBreakdown.refetch(),
+      countSituations.refetch(),
       paBreakdown.refetch(),
       headlineStats.refetch(),
       runnersSituation.refetch(),
@@ -296,6 +300,7 @@ export default function StatsScreen() {
     hitDirections.refetch,
     hitLocations.refetch,
     outTypeBreakdown.refetch,
+    countSituations.refetch,
     paBreakdown.refetch,
     headlineStats.refetch,
     runnersSituation.refetch,
@@ -471,6 +476,11 @@ export default function StatsScreen() {
                     0,
                   )}
                 />
+              </FetchingOverlay>
+            )}
+            {countSituations.data && (
+              <FetchingOverlay isFetching={countSituations.isFetching}>
+                <CountSituationCards data={countSituations.data} />
               </FetchingOverlay>
             )}
             <View style={styles.tableHeader}>
