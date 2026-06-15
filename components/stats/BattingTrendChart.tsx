@@ -2,8 +2,15 @@ import type {
   BattingTrendGranularity,
   BattingTrendPoint,
 } from "../../types/stats";
-import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TouchableWithoutFeedback,
+} from "react-native";
 import Svg, { Path, Circle, Line, Text as SvgText } from "react-native-svg";
 
 interface BattingTrendChartProps {
@@ -12,11 +19,14 @@ interface BattingTrendChartProps {
   onGranularityChange?: (granularity: BattingTrendGranularity) => void;
 }
 
+type LineKey =
+  | "batting_average"
+  | "on_base_percentage"
+  | "slugging_percentage"
+  | "ops";
+
 interface LineConfig {
-  key: keyof Pick<
-    BattingTrendPoint,
-    "batting_average" | "on_base_percentage" | "slugging_percentage" | "ops"
-  >;
+  key: LineKey;
   label: string;
   color: string;
 }
@@ -53,6 +63,31 @@ export const BattingTrendChart = ({
   granularity,
   onGranularityChange,
 }: BattingTrendChartProps) => {
+  const [activeLines, setActiveLines] = useState<Set<LineKey>>(
+    () => new Set<LineKey>(LINES.map((line) => line.key)),
+  );
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const allActive = activeLines.size === LINES.length;
+  const filterLabel = (() => {
+    if (allActive) return "全て";
+    if (activeLines.size === 0) return "なし";
+    if (activeLines.size === 1) {
+      const onlyKey = Array.from(activeLines)[0];
+      return LINES.find((line) => line.key === onlyKey)?.label ?? "全て";
+    }
+    return `${activeLines.size} 件選択`;
+  })();
+  const toggleLine = (key: LineKey) =>
+    setActiveLines((prev) => {
+      const next = new Set<LineKey>(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  const selectAll = () =>
+    setActiveLines(new Set<LineKey>(LINES.map((line) => line.key)));
+  const visibleLines = LINES.filter((line) => activeLines.has(line.key));
+
   if (points.length === 0) {
     return (
       <View style={styles.container}>
@@ -75,7 +110,8 @@ export const BattingTrendChart = ({
     );
   }
 
-  // 全 4 指標の最大値から Y 軸スケールを決定（OPS は 1.0 を超えるので余白）
+  // 全 4 指標の最大値から Y 軸スケールを決定（OPS は 1.0 を超えるので余白）。
+  // 絞り込み中も Y 軸スケールが暴れないよう、可視ラインだけでなく全 LINES を見る。
   const allValues = points.flatMap((point) =>
     LINES.map((line) => point[line.key]),
   );
@@ -95,8 +131,8 @@ export const BattingTrendChart = ({
   const getY = (value: number) =>
     PADDING_TOP + PLOT_HEIGHT - ((value - minValue) / valueRange) * PLOT_HEIGHT;
 
-  // 各ライン分のパスを構築。
-  const linePaths = LINES.map((line) => ({
+  // 各ライン分のパスを構築（絞り込みで非アクティブなラインは含めない）。
+  const linePaths = visibleLines.map((line) => ({
     ...line,
     d: points
       .map(
@@ -118,6 +154,71 @@ export const BattingTrendChart = ({
             value={granularity}
             onChange={onGranularityChange}
           />
+        )}
+      </View>
+
+      <View style={styles.filterRow}>
+        <Pressable
+          onPress={() => setIsFilterOpen((prev) => !prev)}
+          style={styles.filterButton}
+        >
+          <Text style={styles.filterButtonText}>絞り込み: {filterLabel}</Text>
+          <Ionicons
+            name={isFilterOpen ? "chevron-up" : "chevron-down"}
+            size={14}
+            color="#A1A1AA"
+          />
+        </Pressable>
+        {isFilterOpen && (
+          <>
+            <TouchableWithoutFeedback onPress={() => setIsFilterOpen(false)}>
+              <View style={styles.filterOverlayBg} />
+            </TouchableWithoutFeedback>
+            <View style={styles.filterDropdown}>
+              <Pressable
+                onPress={selectAll}
+                style={[
+                  styles.filterDropdownItem,
+                  allActive && styles.filterDropdownItemActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.filterDropdownText,
+                    allActive && styles.filterDropdownTextActive,
+                  ]}
+                >
+                  全て表示
+                </Text>
+              </Pressable>
+              {LINES.map((line) => {
+                const isActive = activeLines.has(line.key);
+                return (
+                  <Pressable
+                    key={line.key}
+                    onPress={() => toggleLine(line.key)}
+                    style={styles.filterDropdownItem}
+                  >
+                    <View
+                      style={[
+                        styles.filterDot,
+                        { backgroundColor: line.color },
+                      ]}
+                    />
+                    <Text
+                      style={[
+                        styles.filterDropdownText,
+                        isActive && styles.filterDropdownTextActive,
+                      ]}
+                    >
+                      {line.label}
+                    </Text>
+                    {isActive && <Text style={styles.filterCheck}>✓</Text>}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
         )}
       </View>
 
@@ -161,7 +262,7 @@ export const BattingTrendChart = ({
             />
           ))}
 
-          {LINES.map((line) =>
+          {visibleLines.map((line) =>
             points.map((point, i) => (
               // 累積モードで同じ日に複数試合がある場合 point.key が重複しうるため、
               // 描画上の index を組み合わせて一意化する。
@@ -194,12 +295,30 @@ export const BattingTrendChart = ({
       </View>
 
       <View style={styles.legend}>
-        {LINES.map((line) => (
-          <View key={line.key} style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: line.color }]} />
-            <Text style={styles.legendText}>{line.label}</Text>
-          </View>
-        ))}
+        {LINES.map((line) => {
+          const isActive = activeLines.has(line.key);
+          return (
+            <View key={line.key} style={styles.legendItem}>
+              <View
+                style={[
+                  styles.legendDot,
+                  {
+                    backgroundColor: line.color,
+                    opacity: isActive ? 1 : 0.3,
+                  },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.legendText,
+                  !isActive && styles.legendTextInactive,
+                ]}
+              >
+                {line.label}
+              </Text>
+            </View>
+          );
+        })}
       </View>
     </View>
   );
@@ -297,6 +416,84 @@ const styles = StyleSheet.create({
   legendText: {
     color: "#A1A1AA",
     fontSize: 11,
+  },
+  legendTextInactive: {
+    color: "#52525B",
+    textDecorationLine: "line-through",
+  },
+  filterRow: {
+    marginTop: 6,
+    marginBottom: 8,
+    alignItems: "flex-end",
+    position: "relative",
+    zIndex: 10,
+  },
+  filterButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderWidth: 1,
+    borderColor: "#71717b",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  filterButtonText: {
+    color: "#F4F4F4",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  filterOverlayBg: {
+    position: "absolute",
+    top: -500,
+    left: -500,
+    right: -500,
+    bottom: -500,
+    zIndex: 15,
+  },
+  filterDropdown: {
+    position: "absolute",
+    top: 36,
+    right: 0,
+    minWidth: 180,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 10,
+    paddingVertical: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 20,
+  },
+  filterDropdownItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  filterDropdownItemActive: {
+    backgroundColor: "#4A4A4A",
+  },
+  filterDropdownText: {
+    color: "#F4F4F4",
+    fontSize: 13,
+    flex: 1,
+  },
+  filterDropdownTextActive: {
+    color: "#d08000",
+    fontWeight: "600",
+  },
+  filterDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  filterCheck: {
+    color: "#d08000",
+    fontSize: 14,
+    fontWeight: "700",
   },
   emptyState: {
     paddingVertical: 32,
