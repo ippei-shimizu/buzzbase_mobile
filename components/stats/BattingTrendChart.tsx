@@ -23,8 +23,8 @@ interface LineConfig {
 
 const LINES: readonly LineConfig[] = [
   { key: "batting_average", label: "打率", color: "#d08000" },
-  { key: "on_base_percentage", label: "OBP", color: "#17C964" },
-  { key: "slugging_percentage", label: "SLG", color: "#f31260" },
+  { key: "on_base_percentage", label: "出塁率", color: "#17C964" },
+  { key: "slugging_percentage", label: "長打率", color: "#f31260" },
   { key: "ops", label: "OPS", color: "#8b5cf6" },
 ] as const;
 
