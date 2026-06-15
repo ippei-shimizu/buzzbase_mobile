@@ -703,7 +703,7 @@ export default function StatsScreen() {
           accessibilityRole="button"
           accessibilityLabel="画面のトップに戻る"
         >
-          <Ionicons name="chevron-up" size={26} color="#F4F4F4" />
+          <Ionicons name="chevron-up" size={20} color="#F4F4F4" />
         </Pressable>
       )}
 
@@ -780,9 +780,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 16,
     bottom: 24,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: "#d08000",
     alignItems: "center",
     justifyContent: "center",
