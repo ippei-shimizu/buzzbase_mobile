@@ -11,7 +11,14 @@ import {
   Pressable,
   TouchableWithoutFeedback,
 } from "react-native";
-import Svg, { Path, Circle, Line, Text as SvgText } from "react-native-svg";
+import Svg, {
+  Path,
+  Circle,
+  G,
+  Line,
+  Rect,
+  Text as SvgText,
+} from "react-native-svg";
 
 interface BattingTrendChartProps {
   points: BattingTrendPoint[];
@@ -87,6 +94,18 @@ export const BattingTrendChart = ({
   const selectAll = () =>
     setActiveLines(new Set<LineKey>(LINES.map((line) => line.key)));
   const visibleLines = LINES.filter((line) => activeLines.has(line.key));
+
+  // タップしたデータポイントを記憶してツールチップを描画する。
+  const [selectedDot, setSelectedDot] = useState<{
+    lineKey: LineKey;
+    pointIndex: number;
+  } | null>(null);
+  const handleDotPress = (lineKey: LineKey, pointIndex: number) =>
+    setSelectedDot((prev) =>
+      prev?.lineKey === lineKey && prev?.pointIndex === pointIndex
+        ? null
+        : { lineKey, pointIndex },
+    );
 
   if (points.length === 0) {
     return (
@@ -263,18 +282,86 @@ export const BattingTrendChart = ({
           ))}
 
           {visibleLines.map((line) =>
-            points.map((point, i) => (
-              // 累積モードで同じ日に複数試合がある場合 point.key が重複しうるため、
-              // 描画上の index を組み合わせて一意化する。
-              <Circle
-                key={`pt-${line.key}-${i}`}
-                cx={getX(i)}
-                cy={getY(point[line.key])}
-                r={2.2}
-                fill={line.color}
-              />
-            )),
+            points.map((point, i) => {
+              const isSelected =
+                selectedDot?.lineKey === line.key &&
+                selectedDot?.pointIndex === i;
+              return (
+                // 累積モードで同じ日に複数試合がある場合 point.key が重複しうるため、
+                // 描画上の index を組み合わせて一意化する。
+                <React.Fragment key={`pt-${line.key}-${i}`}>
+                  {/* 透明な大きい円でタップヒット領域を広げる */}
+                  <Circle
+                    cx={getX(i)}
+                    cy={getY(point[line.key])}
+                    r={10}
+                    fill="transparent"
+                    onPress={() => handleDotPress(line.key, i)}
+                  />
+                  <Circle
+                    cx={getX(i)}
+                    cy={getY(point[line.key])}
+                    r={isSelected ? 4 : 2.2}
+                    fill={line.color}
+                    stroke={isSelected ? "#F4F4F4" : "none"}
+                    strokeWidth={isSelected ? 1.5 : 0}
+                  />
+                </React.Fragment>
+              );
+            }),
           )}
+
+          {selectedDot &&
+            (() => {
+              const point = points[selectedDot.pointIndex];
+              const line = LINES.find((ln) => ln.key === selectedDot.lineKey);
+              if (!point || !line) return null;
+              const value = point[selectedDot.lineKey];
+              const cx = getX(selectedDot.pointIndex);
+              const cy = getY(value);
+              const tooltipWidth = 92;
+              const tooltipHeight = 34;
+              // 画面端で見切れないよう x / y を調整。
+              let tx = cx - tooltipWidth / 2;
+              if (tx < 2) tx = 2;
+              if (tx + tooltipWidth > CHART_WIDTH - 2)
+                tx = CHART_WIDTH - tooltipWidth - 2;
+              let ty = cy - tooltipHeight - 8;
+              if (ty < 2) ty = cy + 10;
+              return (
+                <G>
+                  <Rect
+                    x={tx}
+                    y={ty}
+                    width={tooltipWidth}
+                    height={tooltipHeight}
+                    rx={5}
+                    fill="#27272A"
+                    stroke={line.color}
+                    strokeWidth={1}
+                  />
+                  <SvgText
+                    x={tx + tooltipWidth / 2}
+                    y={ty + 14}
+                    textAnchor="middle"
+                    fill="#F4F4F4"
+                    fontSize={11}
+                    fontWeight="700"
+                  >
+                    {`${line.label} ${formatRate(value)}`}
+                  </SvgText>
+                  <SvgText
+                    x={tx + tooltipWidth / 2}
+                    y={ty + 27}
+                    textAnchor="middle"
+                    fill="#A1A1AA"
+                    fontSize={9}
+                  >
+                    {point.label}
+                  </SvgText>
+                </G>
+              );
+            })()}
 
           {points.map((point, i) => {
             if (i % labelStride !== 0 && i !== points.length - 1) return null;
