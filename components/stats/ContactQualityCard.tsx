@@ -66,7 +66,7 @@ export const ContactQualityCard = ({
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>打球の質</Text>
-        <Text style={styles.targetCount}>対象 {total} 打席</Text>
+        <Text style={styles.targetCount}>対象 {total} 打球</Text>
       </View>
 
       <View style={styles.chartRow}>
