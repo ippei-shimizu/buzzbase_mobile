@@ -70,8 +70,9 @@ export const BattingTrendChart = ({
   granularity,
   onGranularityChange,
 }: BattingTrendChartProps) => {
+  // 初期表示は打率のみ。情報過多を避け、必要に応じて絞り込みから他指標を追加する。
   const [activeLines, setActiveLines] = useState<Set<LineKey>>(
-    () => new Set<LineKey>(LINES.map((line) => line.key)),
+    () => new Set<LineKey>(["batting_average"]),
   );
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const allActive = activeLines.size === LINES.length;
@@ -129,13 +130,15 @@ export const BattingTrendChart = ({
     );
   }
 
-  // 全 4 指標の最大値から Y 軸スケールを決定（OPS は 1.0 を超えるので余白）。
-  // 絞り込み中も Y 軸スケールが暴れないよう、可視ラインだけでなく全 LINES を見る。
-  const allValues = points.flatMap((point) =>
-    LINES.map((line) => point[line.key]),
-  );
-  const rawMax = Math.max(...allValues, 0.5);
-  const maxValue = Math.max(rawMax * 1.1, 0.5); // 上端に 10% 余白
+  // 可視ラインの最大値から Y 軸スケールを決定。打率だけ表示するときは
+  // 打率帯（〜.500）に収まるよう自動でズームし、OPS を含めれば自然と
+  // 1.0+ までスケールが広がる。可視ラインが空のときは汎用の 0〜0.5 を使う。
+  const valuesForScale =
+    visibleLines.length > 0
+      ? points.flatMap((point) => visibleLines.map((line) => point[line.key]))
+      : [0.5];
+  const rawMax = Math.max(...valuesForScale, 0.1);
+  const maxValue = Math.max(rawMax * 1.1, 0.1); // 上端に 10% 余白
   const minValue = 0;
   const valueRange = maxValue - minValue || 1;
 
