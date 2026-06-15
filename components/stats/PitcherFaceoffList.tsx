@@ -1,16 +1,12 @@
 import type { PitcherFaceoff } from "../../types/stats";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { formatBattingAverage } from "@utils/formatBattingAverage";
 
 interface PitcherFaceoffListProps {
   rows: PitcherFaceoff[];
   minPlateAppearances: number;
 }
-
-const formatAverage = (row: PitcherFaceoff): string => {
-  if (row.at_bats === 0) return ".---";
-  return row.batting_average.toFixed(3).replace(/^0\./, ".");
-};
 
 export const PitcherFaceoffList = ({
   rows,
@@ -50,7 +46,9 @@ export const PitcherFaceoffList = ({
             </Text>
           </View>
           <View style={styles.rightCol}>
-            <Text style={styles.average}>{formatAverage(row)}</Text>
+            <Text style={styles.average}>
+              {formatBattingAverage(row.batting_average, row.at_bats)}
+            </Text>
             <Text style={styles.subText}>
               {row.at_bats}-{row.hits}
             </Text>
