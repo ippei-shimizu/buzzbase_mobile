@@ -496,37 +496,7 @@ export default function StatsScreen() {
                 <HitDirectionTable directions={hitDirections.data.directions} />
               </FetchingOverlay>
             )}
-            {/* 8. ContactQualityCard */}
-            {contactQualities.data && (
-              <FetchingOverlay isFetching={contactQualities.isFetching}>
-                <ContactQualityCard
-                  breakdown={contactQualities.data.breakdown}
-                  total={contactQualities.data.total}
-                />
-              </FetchingOverlay>
-            )}
-            {/* 9. PitchTypeCard */}
-            {pitchTypes.data && (
-              <FetchingOverlay isFetching={pitchTypes.isFetching}>
-                <PitchTypeCard
-                  rows={pitchTypes.data.rows}
-                  totalTargetPa={pitchTypes.data.total_target_pa}
-                />
-              </FetchingOverlay>
-            )}
-            {/* 10. PitcherFaceoffList */}
-            {pitcherFaceoffs.data && (
-              <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
-                <PitcherFaceoffList
-                  rows={pitcherFaceoffs.data.rows}
-                  minPlateAppearances={
-                    pitcherFaceoffs.data.min_plate_appearances
-                  }
-                  totalTargetPa={pitcherFaceoffs.data.total_target_pa}
-                />
-              </FetchingOverlay>
-            )}
-            {/* 11. PlateAppearanceDonut */}
+            {/* 8. PlateAppearanceDonut（打席結果の内訳） */}
             {paBreakdown.data && (
               <FetchingOverlay isFetching={paBreakdown.isFetching}>
                 <PlateAppearanceDonut
@@ -535,6 +505,36 @@ export default function StatsScreen() {
                     (sum, c) => sum + c.count,
                     0,
                   )}
+                />
+              </FetchingOverlay>
+            )}
+            {/* 9. ContactQualityCard（打球の質） */}
+            {contactQualities.data && (
+              <FetchingOverlay isFetching={contactQualities.isFetching}>
+                <ContactQualityCard
+                  breakdown={contactQualities.data.breakdown}
+                  total={contactQualities.data.total}
+                />
+              </FetchingOverlay>
+            )}
+            {/* 10. PitchTypeCard */}
+            {pitchTypes.data && (
+              <FetchingOverlay isFetching={pitchTypes.isFetching}>
+                <PitchTypeCard
+                  rows={pitchTypes.data.rows}
+                  totalTargetPa={pitchTypes.data.total_target_pa}
+                />
+              </FetchingOverlay>
+            )}
+            {/* 11. PitcherFaceoffList */}
+            {pitcherFaceoffs.data && (
+              <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
+                <PitcherFaceoffList
+                  rows={pitcherFaceoffs.data.rows}
+                  minPlateAppearances={
+                    pitcherFaceoffs.data.min_plate_appearances
+                  }
+                  totalTargetPa={pitcherFaceoffs.data.total_target_pa}
                 />
               </FetchingOverlay>
             )}
