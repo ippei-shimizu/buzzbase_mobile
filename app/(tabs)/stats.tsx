@@ -14,6 +14,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import { AdditionalStatsCard } from "@components/stats/AdditionalStatsCard";
 import { BattingTrendChart } from "@components/stats/BattingTrendChart";
 import { ContactQualityCard } from "@components/stats/ContactQualityCard";
 import { CountSituationCards } from "@components/stats/CountSituationCards";
@@ -40,6 +41,7 @@ import {
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useMySeasons } from "@hooks/useSeasons";
 import {
+  useAdditionalStats,
   useBattingTrend,
   useContactQualities,
   useCountSituations,
@@ -261,6 +263,7 @@ export default function StatsScreen() {
   const battingTrend = useBattingTrend(filters, battingTrendGranularity);
   const paBreakdown = usePlateAppearanceBreakdown(filters);
   const headlineStats = useHeadlineStats(filters);
+  const additionalStats = useAdditionalStats(filters);
   const runnersSituation = useRunnersSituation(filters);
   const [sprayChartMode, setSprayChartMode] =
     useState<SprayChartMode>("scatter");
@@ -303,6 +306,7 @@ export default function StatsScreen() {
       battingTrend.refetch(),
       paBreakdown.refetch(),
       headlineStats.refetch(),
+      additionalStats.refetch(),
       runnersSituation.refetch(),
       battingTable.refetch(),
       pitchingTable.refetch(),
@@ -320,6 +324,7 @@ export default function StatsScreen() {
     battingTrend.refetch,
     paBreakdown.refetch,
     headlineStats.refetch,
+    additionalStats.refetch,
     runnersSituation.refetch,
     battingTable.refetch,
     pitchingTable.refetch,
@@ -460,7 +465,13 @@ export default function StatsScreen() {
                 <RunnersSituationCard data={runnersSituation.data} />
               </FetchingOverlay>
             )}
-            {/* 3. BattingTrendChart */}
+            {/* 3. AdditionalStatsCard（主要スタッツ以外の 16 項目） */}
+            {additionalStats.data && (
+              <FetchingOverlay isFetching={additionalStats.isFetching}>
+                <AdditionalStatsCard data={additionalStats.data} />
+              </FetchingOverlay>
+            )}
+            {/* 4. BattingTrendChart */}
             {battingTrend.data && (
               <FetchingOverlay isFetching={battingTrend.isFetching}>
                 <BattingTrendChart
