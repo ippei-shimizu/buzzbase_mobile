@@ -20,7 +20,6 @@ import { CountSituationCards } from "@components/stats/CountSituationCards";
 import { EraTrendChart } from "@components/stats/EraTrendChart";
 import { HeadlineStatsCard } from "@components/stats/HeadlineStatsCard";
 import { HitDirectionTable } from "@components/stats/HitDirectionTable";
-import { OutTypeDonut } from "@components/stats/OutTypeDonut";
 import { PeriodToggle } from "@components/stats/PeriodToggle";
 import { PitcherFaceoffList } from "@components/stats/PitcherFaceoffList";
 import { PitchTypeCard } from "@components/stats/PitchTypeCard";
@@ -46,7 +45,6 @@ import {
   useCountSituations,
   useHitDirections,
   useHitLocations,
-  useOutTypeBreakdown,
   usePitchTypes,
   usePitcherFaceoffs,
   usePlateAppearanceBreakdown,
@@ -254,7 +252,6 @@ export default function StatsScreen() {
   const { years: availableYears } = useAvailableYears();
   const hitDirections = useHitDirections(filters);
   const hitLocations = useHitLocations(filters);
-  const outTypeBreakdown = useOutTypeBreakdown(filters);
   const countSituations = useCountSituations(filters);
   const contactQualities = useContactQualities(filters);
   const pitchTypes = usePitchTypes(filters);
@@ -299,7 +296,6 @@ export default function StatsScreen() {
     await Promise.all([
       hitDirections.refetch(),
       hitLocations.refetch(),
-      outTypeBreakdown.refetch(),
       countSituations.refetch(),
       contactQualities.refetch(),
       pitchTypes.refetch(),
@@ -317,7 +313,6 @@ export default function StatsScreen() {
   }, [
     hitDirections.refetch,
     hitLocations.refetch,
-    outTypeBreakdown.refetch,
     countSituations.refetch,
     contactQualities.refetch,
     pitchTypes.refetch,
@@ -528,15 +523,6 @@ export default function StatsScreen() {
                     pitcherFaceoffs.data.min_plate_appearances
                   }
                   totalTargetPa={pitcherFaceoffs.data.total_target_pa}
-                />
-              </FetchingOverlay>
-            )}
-            {/* 11. OutTypeDonut */}
-            {outTypeBreakdown.data && (
-              <FetchingOverlay isFetching={outTypeBreakdown.isFetching}>
-                <OutTypeDonut
-                  breakdown={outTypeBreakdown.data.breakdown}
-                  total={outTypeBreakdown.data.total}
                 />
               </FetchingOverlay>
             )}
