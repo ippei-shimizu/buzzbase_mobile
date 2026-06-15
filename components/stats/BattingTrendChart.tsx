@@ -108,6 +108,12 @@ export const BattingTrendChart = ({
         : { lineKey, pointIndex },
     );
 
+  // 粒度切替時は前の粒度の selectedDot が無効になるためリセットする。
+  const handleGranularityChange = (next: BattingTrendGranularity) => {
+    setSelectedDot(null);
+    onGranularityChange?.(next);
+  };
+
   if (points.length === 0) {
     return (
       <View style={styles.container}>
@@ -116,7 +122,7 @@ export const BattingTrendChart = ({
           {onGranularityChange && (
             <GranularityToggle
               value={granularity}
-              onChange={onGranularityChange}
+              onChange={handleGranularityChange}
             />
           )}
         </View>
