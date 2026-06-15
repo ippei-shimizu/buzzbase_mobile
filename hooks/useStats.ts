@@ -2,10 +2,13 @@ import type { StatsFilters } from "../types/profile";
 import type { StatsPeriod } from "../types/stats";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
+  getContactQualities,
   getCountSituations,
   getHitDirections,
   getHitLocations,
   getOutTypeBreakdown,
+  getPitchTypes,
+  getPitcherFaceoffs,
   getPlateAppearanceBreakdown,
   getBattingStatsTable,
   getPitchingStatsTable,
@@ -111,5 +114,26 @@ export const useCountSituations = (filters: StatsFilters) =>
   useQuery({
     queryKey: ["countSituations", filters],
     queryFn: () => getCountSituations(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const useContactQualities = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["contactQualities", filters],
+    queryFn: () => getContactQualities(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const usePitchTypes = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["pitchTypes", filters],
+    queryFn: () => getPitchTypes(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const usePitcherFaceoffs = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["pitcherFaceoffs", filters],
+    queryFn: () => getPitcherFaceoffs(filters),
     placeholderData: keepPreviousData,
   });
