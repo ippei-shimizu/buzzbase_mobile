@@ -12,6 +12,7 @@ import {
   getPitchTypes,
   getPitcherFaceoffs,
   getPlateAppearanceBreakdown,
+  getTimingBreakdown,
   getBattingStatsTable,
   getPitchingStatsTable,
   getEraTrend,
@@ -154,5 +155,12 @@ export const useAdditionalStats = (filters: StatsFilters) =>
   useQuery({
     queryKey: ["additionalStats", filters],
     queryFn: () => getAdditionalStats(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const useTimingBreakdown = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["timingBreakdown", filters],
+    queryFn: () => getTimingBreakdown(filters),
     placeholderData: keepPreviousData,
   });

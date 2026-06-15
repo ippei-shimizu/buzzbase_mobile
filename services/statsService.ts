@@ -11,6 +11,7 @@ import type {
   PitchTypeData,
   PitcherFaceoffData,
   PlateAppearanceCategory,
+  TimingBreakdownData,
   BattingStatsRow,
   PitchingStatsRow,
   EraTrendPoint,
@@ -220,6 +221,16 @@ export const getAdditionalStats = async (
   const query = buildStatsQuery(filters);
   const res = await axiosInstance.get(
     `${STATS_URL}/additional_stats${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+export const getTimingBreakdown = async (
+  filters: StatsFilters,
+): Promise<TimingBreakdownData> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/timing_breakdown${query ? `?${query}` : ""}`,
   );
   return res.data;
 };
