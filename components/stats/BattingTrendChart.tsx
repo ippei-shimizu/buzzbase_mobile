@@ -247,6 +247,17 @@ export const BattingTrendChart = ({
           height={CHART_HEIGHT}
           viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
         >
+          {/* グラフ内の空白部分タップでツールチップを閉じる。
+              react-native-svg は描画順 = z-index なので、後に描画される
+              データポイントの onPress が優先される。 */}
+          <Rect
+            x={0}
+            y={0}
+            width={CHART_WIDTH}
+            height={CHART_HEIGHT}
+            fill="transparent"
+            onPress={() => setSelectedDot(null)}
+          />
           {yTicks.map((tick) => (
             <React.Fragment key={`y-${tick.toFixed(3)}`}>
               <Line
