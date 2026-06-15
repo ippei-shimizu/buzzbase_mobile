@@ -33,6 +33,7 @@ import {
   BATTING_COLUMNS,
   PITCHING_COLUMNS,
 } from "@components/stats/StatsTable";
+import { TimingCard } from "@components/stats/TimingCard";
 import {
   GlobalMenuButton,
   GlobalMenuOverlay,
@@ -55,6 +56,7 @@ import {
   useEraTrend,
   useHeadlineStats,
   useRunnersSituation,
+  useTimingBreakdown,
 } from "@hooks/useStats";
 import { useTournaments } from "@hooks/useTournaments";
 
@@ -256,6 +258,7 @@ export default function StatsScreen() {
   const hitLocations = useHitLocations(filters);
   const countSituations = useCountSituations(filters);
   const contactQualities = useContactQualities(filters);
+  const timingBreakdown = useTimingBreakdown(filters);
   const pitchTypes = usePitchTypes(filters);
   const pitcherFaceoffs = usePitcherFaceoffs(filters);
   const [battingTrendGranularity, setBattingTrendGranularity] =
@@ -301,6 +304,7 @@ export default function StatsScreen() {
       hitLocations.refetch(),
       countSituations.refetch(),
       contactQualities.refetch(),
+      timingBreakdown.refetch(),
       pitchTypes.refetch(),
       pitcherFaceoffs.refetch(),
       battingTrend.refetch(),
@@ -319,6 +323,7 @@ export default function StatsScreen() {
     hitLocations.refetch,
     countSituations.refetch,
     contactQualities.refetch,
+    timingBreakdown.refetch,
     pitchTypes.refetch,
     pitcherFaceoffs.refetch,
     battingTrend.refetch,
@@ -522,7 +527,16 @@ export default function StatsScreen() {
                 />
               </FetchingOverlay>
             )}
-            {/* 8. CountSituationCards（カウント別の打率） */}
+            {/* 8. TimingCard（タイミング別の打席比率） */}
+            {timingBreakdown.data && (
+              <FetchingOverlay isFetching={timingBreakdown.isFetching}>
+                <TimingCard
+                  breakdown={timingBreakdown.data.breakdown}
+                  total={timingBreakdown.data.total}
+                />
+              </FetchingOverlay>
+            )}
+            {/* 9. CountSituationCards（カウント別の打率） */}
             {countSituations.data && (
               <FetchingOverlay isFetching={countSituations.isFetching}>
                 <CountSituationCards data={countSituations.data} />
