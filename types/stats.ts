@@ -246,9 +246,15 @@ export interface PitchTypeData {
 /**
  * 打撃推移グラフの粒度。
  * - `game`: 試合単位で **累積** の打率 / OBP / SLG / OPS
- * - `month`: 月単位で **月単独** の打率 / OBP / SLG / OPS
+ * - `month`: 月単位で **月単独**
+ * - `year`: 年単位で **年単独**（シーズン比較向き）
+ * - `recent_games`: 直近 10 試合の移動平均（hot/cold streak の可視化）
  */
-export type BattingTrendGranularity = "game" | "month";
+export type BattingTrendGranularity =
+  | "game"
+  | "month"
+  | "year"
+  | "recent_games";
 
 /**
  * 推移グラフ 1 点分のデータ。
