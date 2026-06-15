@@ -207,3 +207,58 @@ export interface RunnersSituationSummary {
   three_base_hit: number;
   home_run: number;
 }
+
+/**
+ * 打球の質（contact_qualities マスタ）別の集計レスポンス。
+ * 真芯 / 先っぽ / 詰まり / 擦り / ドライブ の 5 種が display_order 順で返る。
+ */
+export interface ContactQualityCategory {
+  id: number;
+  label: string;
+  count: number;
+  percentage: number;
+}
+
+export interface ContactQualityData {
+  breakdown: ContactQualityCategory[];
+  total: number;
+}
+
+/**
+ * 球種別の打撃集計レスポンス。pitch_types マスタの 10 種すべてが
+ * display_order 順で返り、at_bats=0 の行も含まれる。
+ */
+export interface PitchTypeRow {
+  id: number;
+  label: string;
+  at_bats: number;
+  hits: number;
+  total_bases: number;
+  batting_average: number;
+  slugging_percentage: number;
+}
+
+export interface PitchTypeData {
+  rows: PitchTypeRow[];
+  total_target_pa: number;
+}
+
+/**
+ * 対戦投手別の集計レスポンス。対戦数 min_plate_appearances 未満の投手は
+ * back 側で除外され、rows は対戦数降順 → 投手名昇順で並ぶ。
+ */
+export interface PitcherFaceoff {
+  pitcher_id: number;
+  pitcher_name: string;
+  plate_appearances: number;
+  at_bats: number;
+  hits: number;
+  batting_average: number;
+  top_result: string;
+}
+
+export interface PitcherFaceoffData {
+  rows: PitcherFaceoff[];
+  total_target_pa: number;
+  min_plate_appearances: number;
+}
