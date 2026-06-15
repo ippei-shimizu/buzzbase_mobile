@@ -342,6 +342,8 @@ export const BattingTrendChart = ({
                 tx = CHART_WIDTH - tooltipWidth - 2;
               let ty = cy - tooltipHeight - 8;
               if (ty < 2) ty = cy + 10;
+              if (ty + tooltipHeight > CHART_HEIGHT - 2)
+                ty = CHART_HEIGHT - tooltipHeight - 2;
               return (
                 <G>
                   <Rect
