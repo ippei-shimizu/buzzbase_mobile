@@ -6,11 +6,13 @@ import { formatBattingAverage } from "@utils/formatBattingAverage";
 interface PitcherFaceoffListProps {
   rows: PitcherFaceoff[];
   minPlateAppearances: number;
+  totalTargetPa: number;
 }
 
 export const PitcherFaceoffList = ({
   rows,
   minPlateAppearances,
+  totalTargetPa,
 }: PitcherFaceoffListProps) => {
   if (rows.length === 0) {
     return (
@@ -31,7 +33,8 @@ export const PitcherFaceoffList = ({
       <View style={styles.header}>
         <Text style={styles.title}>対戦投手別</Text>
         <Text style={styles.targetCount}>
-          対戦 {rows.length} 投手 / {minPlateAppearances} 打席以上
+          対戦 {rows.length} 投手 / 対象 {totalTargetPa} 打席（
+          {minPlateAppearances} 打席以上のみ）
         </Text>
       </View>
 
