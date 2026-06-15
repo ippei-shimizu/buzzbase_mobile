@@ -1,5 +1,5 @@
 import type { StatsFilters as StatsFiltersType } from "../../types/profile";
-import type { StatsPeriod } from "../../types/stats";
+import type { BattingTrendGranularity, StatsPeriod } from "../../types/stats";
 import type { SprayChartMode } from "@components/stats/SprayChart";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -14,6 +14,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import { BattingTrendChart } from "@components/stats/BattingTrendChart";
 import { ContactQualityCard } from "@components/stats/ContactQualityCard";
 import { CountSituationCards } from "@components/stats/CountSituationCards";
 import { EraTrendChart } from "@components/stats/EraTrendChart";
@@ -40,6 +41,7 @@ import {
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useMySeasons } from "@hooks/useSeasons";
 import {
+  useBattingTrend,
   useContactQualities,
   useCountSituations,
   useHitDirections,
@@ -257,6 +259,9 @@ export default function StatsScreen() {
   const contactQualities = useContactQualities(filters);
   const pitchTypes = usePitchTypes(filters);
   const pitcherFaceoffs = usePitcherFaceoffs(filters);
+  const [battingTrendGranularity, setBattingTrendGranularity] =
+    useState<BattingTrendGranularity>("game");
+  const battingTrend = useBattingTrend(filters, battingTrendGranularity);
   const paBreakdown = usePlateAppearanceBreakdown(filters);
   const headlineStats = useHeadlineStats(filters);
   const runnersSituation = useRunnersSituation(filters);
@@ -299,6 +304,7 @@ export default function StatsScreen() {
       contactQualities.refetch(),
       pitchTypes.refetch(),
       pitcherFaceoffs.refetch(),
+      battingTrend.refetch(),
       paBreakdown.refetch(),
       headlineStats.refetch(),
       runnersSituation.refetch(),
@@ -316,6 +322,7 @@ export default function StatsScreen() {
     contactQualities.refetch,
     pitchTypes.refetch,
     pitcherFaceoffs.refetch,
+    battingTrend.refetch,
     paBreakdown.refetch,
     headlineStats.refetch,
     runnersSituation.refetch,
@@ -443,88 +450,22 @@ export default function StatsScreen() {
           />
         </View>
 
-        {/* Batting Tab */}
+        {/* Batting Tab (Issue #370 指定の 12 セクション順) */}
         {activeTab === "batting" && (
           <View style={styles.content}>
+            {/* 1. HeadlineStatsCard */}
             {headlineStats.data && (
               <FetchingOverlay isFetching={headlineStats.isFetching}>
                 <HeadlineStatsCard data={headlineStats.data} />
               </FetchingOverlay>
             )}
+            {/* 2. RunnersSituationCard */}
             {runnersSituation.data && (
               <FetchingOverlay isFetching={runnersSituation.isFetching}>
                 <RunnersSituationCard data={runnersSituation.data} />
               </FetchingOverlay>
             )}
-            {hitDirections.data && (
-              <FetchingOverlay
-                isFetching={hitDirections.isFetching || hitLocations.isFetching}
-              >
-                <SprayChart
-                  directions={hitDirections.data.directions}
-                  homeRuns={hitDirections.data.home_runs}
-                  mode={sprayChartMode}
-                  onModeChange={setSprayChartMode}
-                  points={hitLocations.data?.points ?? []}
-                />
-              </FetchingOverlay>
-            )}
-            {hitDirections.data && (
-              <FetchingOverlay isFetching={hitDirections.isFetching}>
-                <HitDirectionTable directions={hitDirections.data.directions} />
-              </FetchingOverlay>
-            )}
-            {outTypeBreakdown.data && (
-              <FetchingOverlay isFetching={outTypeBreakdown.isFetching}>
-                <OutTypeDonut
-                  breakdown={outTypeBreakdown.data.breakdown}
-                  total={outTypeBreakdown.data.total}
-                />
-              </FetchingOverlay>
-            )}
-            {paBreakdown.data && (
-              <FetchingOverlay isFetching={paBreakdown.isFetching}>
-                <PlateAppearanceDonut
-                  breakdown={paBreakdown.data}
-                  totalPlateAppearances={paBreakdown.data.reduce(
-                    (sum, c) => sum + c.count,
-                    0,
-                  )}
-                />
-              </FetchingOverlay>
-            )}
-            {countSituations.data && (
-              <FetchingOverlay isFetching={countSituations.isFetching}>
-                <CountSituationCards data={countSituations.data} />
-              </FetchingOverlay>
-            )}
-            {contactQualities.data && (
-              <FetchingOverlay isFetching={contactQualities.isFetching}>
-                <ContactQualityCard
-                  breakdown={contactQualities.data.breakdown}
-                  total={contactQualities.data.total}
-                />
-              </FetchingOverlay>
-            )}
-            {pitchTypes.data && (
-              <FetchingOverlay isFetching={pitchTypes.isFetching}>
-                <PitchTypeCard
-                  rows={pitchTypes.data.rows}
-                  totalTargetPa={pitchTypes.data.total_target_pa}
-                />
-              </FetchingOverlay>
-            )}
-            {pitcherFaceoffs.data && (
-              <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
-                <PitcherFaceoffList
-                  rows={pitcherFaceoffs.data.rows}
-                  minPlateAppearances={
-                    pitcherFaceoffs.data.min_plate_appearances
-                  }
-                  totalTargetPa={pitcherFaceoffs.data.total_target_pa}
-                />
-              </FetchingOverlay>
-            )}
+            {/* 3. 打撃成績テーブル */}
             <View style={styles.tableHeader}>
               <Text style={styles.tableHeaderLabel}>打撃成績</Text>
               <PeriodToggle
@@ -570,6 +511,93 @@ export default function StatsScreen() {
                   rows={battingTable.data}
                   columns={BATTING_COLUMNS}
                   labelKey="label"
+                />
+              </FetchingOverlay>
+            )}
+            {/* 4. BattingTrendChart */}
+            {battingTrend.data && (
+              <FetchingOverlay isFetching={battingTrend.isFetching}>
+                <BattingTrendChart
+                  points={battingTrend.data.points}
+                  granularity={battingTrendGranularity}
+                  onGranularityChange={setBattingTrendGranularity}
+                />
+              </FetchingOverlay>
+            )}
+            {/* 5. CountSituationCards */}
+            {countSituations.data && (
+              <FetchingOverlay isFetching={countSituations.isFetching}>
+                <CountSituationCards data={countSituations.data} />
+              </FetchingOverlay>
+            )}
+            {/* 6. SprayChart */}
+            {hitDirections.data && (
+              <FetchingOverlay
+                isFetching={hitDirections.isFetching || hitLocations.isFetching}
+              >
+                <SprayChart
+                  directions={hitDirections.data.directions}
+                  homeRuns={hitDirections.data.home_runs}
+                  mode={sprayChartMode}
+                  onModeChange={setSprayChartMode}
+                  points={hitLocations.data?.points ?? []}
+                />
+              </FetchingOverlay>
+            )}
+            {/* 7. HitDirectionTable */}
+            {hitDirections.data && (
+              <FetchingOverlay isFetching={hitDirections.isFetching}>
+                <HitDirectionTable directions={hitDirections.data.directions} />
+              </FetchingOverlay>
+            )}
+            {/* 8. ContactQualityCard */}
+            {contactQualities.data && (
+              <FetchingOverlay isFetching={contactQualities.isFetching}>
+                <ContactQualityCard
+                  breakdown={contactQualities.data.breakdown}
+                  total={contactQualities.data.total}
+                />
+              </FetchingOverlay>
+            )}
+            {/* 9. PitchTypeCard */}
+            {pitchTypes.data && (
+              <FetchingOverlay isFetching={pitchTypes.isFetching}>
+                <PitchTypeCard
+                  rows={pitchTypes.data.rows}
+                  totalTargetPa={pitchTypes.data.total_target_pa}
+                />
+              </FetchingOverlay>
+            )}
+            {/* 10. PitcherFaceoffList */}
+            {pitcherFaceoffs.data && (
+              <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
+                <PitcherFaceoffList
+                  rows={pitcherFaceoffs.data.rows}
+                  minPlateAppearances={
+                    pitcherFaceoffs.data.min_plate_appearances
+                  }
+                  totalTargetPa={pitcherFaceoffs.data.total_target_pa}
+                />
+              </FetchingOverlay>
+            )}
+            {/* 11. OutTypeDonut */}
+            {outTypeBreakdown.data && (
+              <FetchingOverlay isFetching={outTypeBreakdown.isFetching}>
+                <OutTypeDonut
+                  breakdown={outTypeBreakdown.data.breakdown}
+                  total={outTypeBreakdown.data.total}
+                />
+              </FetchingOverlay>
+            )}
+            {/* 12. PlateAppearanceDonut */}
+            {paBreakdown.data && (
+              <FetchingOverlay isFetching={paBreakdown.isFetching}>
+                <PlateAppearanceDonut
+                  breakdown={paBreakdown.data}
+                  totalPlateAppearances={paBreakdown.data.reduce(
+                    (sum, c) => sum + c.count,
+                    0,
+                  )}
                 />
               </FetchingOverlay>
             )}
