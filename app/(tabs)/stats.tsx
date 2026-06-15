@@ -16,7 +16,6 @@ import {
 } from "react-native";
 import { BattingTrendChart } from "@components/stats/BattingTrendChart";
 import { ContactQualityCard } from "@components/stats/ContactQualityCard";
-import { CountSituationCards } from "@components/stats/CountSituationCards";
 import { EraTrendChart } from "@components/stats/EraTrendChart";
 import { HeadlineStatsCard } from "@components/stats/HeadlineStatsCard";
 import { HitDirectionTable } from "@components/stats/HitDirectionTable";
@@ -470,13 +469,7 @@ export default function StatsScreen() {
                 />
               </FetchingOverlay>
             )}
-            {/* 5. CountSituationCards */}
-            {countSituations.data && (
-              <FetchingOverlay isFetching={countSituations.isFetching}>
-                <CountSituationCards data={countSituations.data} />
-              </FetchingOverlay>
-            )}
-            {/* 6. SprayChart */}
+            {/* 4. SprayChart */}
             {hitDirections.data && (
               <FetchingOverlay
                 isFetching={hitDirections.isFetching || hitLocations.isFetching}
@@ -508,7 +501,7 @@ export default function StatsScreen() {
                 />
               </FetchingOverlay>
             )}
-            {/* 9. ContactQualityCard（打球の質） */}
+            {/* 7. ContactQualityCard（打球の質） */}
             {contactQualities.data && (
               <FetchingOverlay isFetching={contactQualities.isFetching}>
                 <ContactQualityCard
@@ -517,7 +510,13 @@ export default function StatsScreen() {
                 />
               </FetchingOverlay>
             )}
-            {/* 10. PitchTypeCard */}
+            {/* 8. CountSituationCards（カウント別の打率） */}
+            {countSituations.data && (
+              <FetchingOverlay isFetching={countSituations.isFetching}>
+                <CountSituationCards data={countSituations.data} />
+              </FetchingOverlay>
+            )}
+            {/* 9. PitchTypeCard（球種別の打率） */}
             {pitchTypes.data && (
               <FetchingOverlay isFetching={pitchTypes.isFetching}>
                 <PitchTypeCard
