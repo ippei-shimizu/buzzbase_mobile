@@ -430,29 +430,36 @@ interface GranularityToggleProps {
   onChange: (value: BattingTrendGranularity) => void;
 }
 
-const GranularityToggle = ({ value, onChange }: GranularityToggleProps) => {
-  const isGame = value === "game";
-  return (
-    <View style={styles.toggle}>
-      <Pressable
-        onPress={() => onChange("game")}
-        style={[styles.toggleButton, isGame && styles.toggleActive]}
-      >
-        <Text style={[styles.toggleText, isGame && styles.toggleTextActive]}>
-          試合
-        </Text>
-      </Pressable>
-      <Pressable
-        onPress={() => onChange("month")}
-        style={[styles.toggleButton, !isGame && styles.toggleActive]}
-      >
-        <Text style={[styles.toggleText, !isGame && styles.toggleTextActive]}>
-          月
-        </Text>
-      </Pressable>
-    </View>
-  );
-};
+const GRANULARITY_OPTIONS: readonly {
+  key: BattingTrendGranularity;
+  label: string;
+}[] = [
+  { key: "game", label: "試合" },
+  { key: "month", label: "月" },
+  { key: "year", label: "年" },
+  { key: "recent_games", label: "直近10" },
+];
+
+const GranularityToggle = ({ value, onChange }: GranularityToggleProps) => (
+  <View style={styles.toggle}>
+    {GRANULARITY_OPTIONS.map((option) => {
+      const isActive = value === option.key;
+      return (
+        <Pressable
+          key={option.key}
+          onPress={() => onChange(option.key)}
+          style={[styles.toggleButton, isActive && styles.toggleActive]}
+        >
+          <Text
+            style={[styles.toggleText, isActive && styles.toggleTextActive]}
+          >
+            {option.label}
+          </Text>
+        </Pressable>
+      );
+    })}
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -479,7 +486,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   toggleButton: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
   },
