@@ -163,8 +163,10 @@ export const BattingTrendChart = ({
 
           {LINES.map((line) =>
             points.map((point, i) => (
+              // 累積モードで同じ日に複数試合がある場合 point.key が重複しうるため、
+              // 描画上の index を組み合わせて一意化する。
               <Circle
-                key={`pt-${line.key}-${point.key}`}
+                key={`pt-${line.key}-${i}`}
                 cx={getX(i)}
                 cy={getY(point[line.key])}
                 r={2.2}
@@ -177,7 +179,7 @@ export const BattingTrendChart = ({
             if (i % labelStride !== 0 && i !== points.length - 1) return null;
             return (
               <SvgText
-                key={`xl-${point.key}`}
+                key={`xl-${i}`}
                 x={getX(i)}
                 y={CHART_HEIGHT - 4}
                 textAnchor="middle"
