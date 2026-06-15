@@ -60,7 +60,14 @@ export const PitchTypeCard = ({ rows, totalTargetPa }: PitchTypeCardProps) => {
   const goodIds = new Set(goodRows.map((row) => row.id));
   const remaining = sortedByAverage.filter((row) => !goodIds.has(row.id));
   // 残りの末尾から SECTION_LIMIT 件を「苦手」として打率の低い順で並べる
-  const badRows = remaining.slice(-SECTION_LIMIT).reverse();
+  const badRowsCandidate = remaining.slice(-SECTION_LIMIT).reverse();
+
+  // 有効球種が SECTION_LIMIT 以下なら「全部得意」と読まれる可能性があるため、
+  // 「得意」が SECTION_LIMIT 件揃って、かつ remaining にも実球種があるときだけ
+  // 「苦手」セクションを出す。サンプルが少ない時の誤読を防ぐためのガード。
+  const showBadSection =
+    goodRows.length >= SECTION_LIMIT && badRowsCandidate.length > 0;
+  const badRows = showBadSection ? badRowsCandidate : [];
 
   const zeroCount = rows.length - activeRows.length;
 
