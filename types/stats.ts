@@ -244,6 +244,29 @@ export interface PitchTypeData {
 }
 
 /**
+ * stats 打撃の追加スタッツ（主要スタッツ以外）。
+ * マイページ / ダッシュボードの SummaryStatsTable と同じ 16 項目。
+ */
+export interface AdditionalStats {
+  games: number;
+  plate_appearances: number;
+  two_base_hit: number;
+  three_base_hit: number;
+  total_bases: number;
+  run: number;
+  strike_out: number;
+  base_on_balls: number;
+  hit_by_pitch: number;
+  sacrifice_hit: number;
+  sacrifice_fly: number;
+  stealing_base: number;
+  caught_stealing: number;
+  iso: number;
+  isod: number;
+  bb_per_k: number;
+}
+
+/**
  * 打撃推移グラフの粒度。
  * - `game`: 試合単位で **累積** の打率 / OBP / SLG / OPS
  * - `month`: 月単位で **月単独**

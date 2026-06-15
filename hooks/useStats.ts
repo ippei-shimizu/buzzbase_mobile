@@ -2,6 +2,7 @@ import type { StatsFilters } from "../types/profile";
 import type { BattingTrendGranularity, StatsPeriod } from "../types/stats";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
+  getAdditionalStats,
   getBattingTrend,
   getContactQualities,
   getCountSituations,
@@ -146,5 +147,12 @@ export const useBattingTrend = (
   useQuery({
     queryKey: ["battingTrend", filters, granularity],
     queryFn: () => getBattingTrend(filters, granularity),
+    placeholderData: keepPreviousData,
+  });
+
+export const useAdditionalStats = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["additionalStats", filters],
+    queryFn: () => getAdditionalStats(filters),
     placeholderData: keepPreviousData,
   });
