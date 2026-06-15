@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { BattingTrendChart } from "@components/stats/BattingTrendChart";
 import { ContactQualityCard } from "@components/stats/ContactQualityCard";
+import { CountSituationCards } from "@components/stats/CountSituationCards";
 import { EraTrendChart } from "@components/stats/EraTrendChart";
 import { HeadlineStatsCard } from "@components/stats/HeadlineStatsCard";
 import { HitDirectionTable } from "@components/stats/HitDirectionTable";
