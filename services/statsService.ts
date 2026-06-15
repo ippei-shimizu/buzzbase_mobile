@@ -202,16 +202,11 @@ export const getBattingTrend = async (
   filters: StatsFilters,
   granularity: BattingTrendGranularity,
 ): Promise<BattingTrendData> => {
-  const params = new URLSearchParams();
-  if (filters.year) params.append("year", filters.year);
-  if (filters.matchType) params.append("match_type", filters.matchType);
-  if (filters.seasonId) params.append("season_id", filters.seasonId);
-  if (filters.tournamentId)
-    params.append("tournament_id", filters.tournamentId);
-  params.append("granularity", granularity);
-  const res = await axiosInstance.get(
-    `${STATS_URL}/batting_trend?${params.toString()}`,
-  );
+  const baseQuery = buildStatsQuery(filters);
+  const query = baseQuery
+    ? `${baseQuery}&granularity=${granularity}`
+    : `granularity=${granularity}`;
+  const res = await axiosInstance.get(`${STATS_URL}/batting_trend?${query}`);
   return res.data;
 };
 
