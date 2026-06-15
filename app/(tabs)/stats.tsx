@@ -28,7 +28,11 @@ import { PlateAppearanceDonut } from "@components/stats/PlateAppearanceDonut";
 import { RunnersSituationCard } from "@components/stats/RunnersSituationCard";
 import { SprayChart } from "@components/stats/SprayChart";
 import { StatsFilters } from "@components/stats/StatsFilters";
-import { StatsTable, PITCHING_COLUMNS } from "@components/stats/StatsTable";
+import {
+  StatsTable,
+  BATTING_COLUMNS,
+  PITCHING_COLUMNS,
+} from "@components/stats/StatsTable";
 import {
   GlobalMenuButton,
   GlobalMenuOverlay,
