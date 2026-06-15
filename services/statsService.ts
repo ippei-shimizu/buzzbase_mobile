@@ -1,5 +1,6 @@
 import type { StatsFilters } from "../types/profile";
 import type {
+  AdditionalStats,
   BattingTrendData,
   BattingTrendGranularity,
   ContactQualityData,
@@ -209,6 +210,16 @@ export const getBattingTrend = async (
   params.append("granularity", granularity);
   const res = await axiosInstance.get(
     `${STATS_URL}/batting_trend?${params.toString()}`,
+  );
+  return res.data;
+};
+
+export const getAdditionalStats = async (
+  filters: StatsFilters,
+): Promise<AdditionalStats> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/additional_stats${query ? `?${query}` : ""}`,
   );
   return res.data;
 };
