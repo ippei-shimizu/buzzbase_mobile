@@ -244,6 +244,32 @@ export interface PitchTypeData {
 }
 
 /**
+ * 打撃推移グラフの粒度。
+ * - `game`: 試合単位で **累積** の打率 / OBP / SLG / OPS
+ * - `month`: 月単位で **月単独** の打率 / OBP / SLG / OPS
+ */
+export type BattingTrendGranularity = "game" | "month";
+
+/**
+ * 推移グラフ 1 点分のデータ。
+ */
+export interface BattingTrendPoint {
+  key: string;
+  label: string;
+  batting_average: number;
+  on_base_percentage: number;
+  slugging_percentage: number;
+  ops: number;
+  at_bats_in_period: number;
+  cumulative_at_bats: number;
+}
+
+export interface BattingTrendData {
+  granularity: BattingTrendGranularity;
+  points: BattingTrendPoint[];
+}
+
+/**
  * 対戦投手別の集計レスポンス。対戦数 min_plate_appearances 未満の投手は
  * back 側で除外され、rows は対戦数降順 → 投手名昇順で並ぶ。
  */
