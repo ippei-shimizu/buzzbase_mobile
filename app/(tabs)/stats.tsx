@@ -14,12 +14,15 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import { ContactQualityCard } from "@components/stats/ContactQualityCard";
 import { CountSituationCards } from "@components/stats/CountSituationCards";
 import { EraTrendChart } from "@components/stats/EraTrendChart";
 import { HeadlineStatsCard } from "@components/stats/HeadlineStatsCard";
 import { HitDirectionTable } from "@components/stats/HitDirectionTable";
 import { OutTypeDonut } from "@components/stats/OutTypeDonut";
 import { PeriodToggle } from "@components/stats/PeriodToggle";
+import { PitcherFaceoffList } from "@components/stats/PitcherFaceoffList";
+import { PitchTypeCard } from "@components/stats/PitchTypeCard";
 import { PlateAppearanceDonut } from "@components/stats/PlateAppearanceDonut";
 import { RunnersSituationCard } from "@components/stats/RunnersSituationCard";
 import { SprayChart } from "@components/stats/SprayChart";
@@ -37,10 +40,13 @@ import {
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useMySeasons } from "@hooks/useSeasons";
 import {
+  useContactQualities,
   useCountSituations,
   useHitDirections,
   useHitLocations,
   useOutTypeBreakdown,
+  usePitchTypes,
+  usePitcherFaceoffs,
   usePlateAppearanceBreakdown,
   useBattingStatsTable,
   usePitchingStatsTable,
@@ -248,6 +254,9 @@ export default function StatsScreen() {
   const hitLocations = useHitLocations(filters);
   const outTypeBreakdown = useOutTypeBreakdown(filters);
   const countSituations = useCountSituations(filters);
+  const contactQualities = useContactQualities(filters);
+  const pitchTypes = usePitchTypes(filters);
+  const pitcherFaceoffs = usePitcherFaceoffs(filters);
   const paBreakdown = usePlateAppearanceBreakdown(filters);
   const headlineStats = useHeadlineStats(filters);
   const runnersSituation = useRunnersSituation(filters);
@@ -287,6 +296,9 @@ export default function StatsScreen() {
       hitLocations.refetch(),
       outTypeBreakdown.refetch(),
       countSituations.refetch(),
+      contactQualities.refetch(),
+      pitchTypes.refetch(),
+      pitcherFaceoffs.refetch(),
       paBreakdown.refetch(),
       headlineStats.refetch(),
       runnersSituation.refetch(),
@@ -301,6 +313,9 @@ export default function StatsScreen() {
     hitLocations.refetch,
     outTypeBreakdown.refetch,
     countSituations.refetch,
+    contactQualities.refetch,
+    pitchTypes.refetch,
+    pitcherFaceoffs.refetch,
     paBreakdown.refetch,
     headlineStats.refetch,
     runnersSituation.refetch,
@@ -481,6 +496,33 @@ export default function StatsScreen() {
             {countSituations.data && (
               <FetchingOverlay isFetching={countSituations.isFetching}>
                 <CountSituationCards data={countSituations.data} />
+              </FetchingOverlay>
+            )}
+            {contactQualities.data && (
+              <FetchingOverlay isFetching={contactQualities.isFetching}>
+                <ContactQualityCard
+                  breakdown={contactQualities.data.breakdown}
+                  total={contactQualities.data.total}
+                />
+              </FetchingOverlay>
+            )}
+            {pitchTypes.data && (
+              <FetchingOverlay isFetching={pitchTypes.isFetching}>
+                <PitchTypeCard
+                  rows={pitchTypes.data.rows}
+                  totalTargetPa={pitchTypes.data.total_target_pa}
+                />
+              </FetchingOverlay>
+            )}
+            {pitcherFaceoffs.data && (
+              <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
+                <PitcherFaceoffList
+                  rows={pitcherFaceoffs.data.rows}
+                  minPlateAppearances={
+                    pitcherFaceoffs.data.min_plate_appearances
+                  }
+                  totalTargetPa={pitcherFaceoffs.data.total_target_pa}
+                />
               </FetchingOverlay>
             )}
             <View style={styles.tableHeader}>

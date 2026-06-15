@@ -1,9 +1,12 @@
 import type { StatsFilters } from "../types/profile";
 import type {
+  ContactQualityData,
   CountSituations,
   HitDirectionData,
   HitLocationData,
   OutTypeBreakdownData,
+  PitchTypeData,
+  PitcherFaceoffData,
   PlateAppearanceCategory,
   BattingStatsRow,
   PitchingStatsRow,
@@ -157,6 +160,36 @@ export const getCountSituations = async (
   const query = buildStatsQuery(filters);
   const res = await axiosInstance.get(
     `${STATS_URL}/count_situations${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+export const getContactQualities = async (
+  filters: StatsFilters,
+): Promise<ContactQualityData> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/contact_qualities${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+export const getPitchTypes = async (
+  filters: StatsFilters,
+): Promise<PitchTypeData> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/pitch_types${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+export const getPitcherFaceoffs = async (
+  filters: StatsFilters,
+): Promise<PitcherFaceoffData> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/pitcher_faceoffs${query ? `?${query}` : ""}`,
   );
   return res.data;
 };

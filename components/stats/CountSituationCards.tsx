@@ -9,6 +9,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { formatBattingAverage } from "@utils/formatBattingAverage";
 
 interface CountSituationCardsProps {
   data: CountSituations;
@@ -44,10 +45,8 @@ const CELLS: readonly CellConfig[] = [
   },
 ] as const;
 
-const formatAverage = (situation: CountSituation): string => {
-  if (situation.at_bats === 0) return ".---";
-  return situation.batting_average.toFixed(3).replace(/^0\./, ".");
-};
+const formatAverage = (situation: CountSituation): string =>
+  formatBattingAverage(situation.batting_average, situation.at_bats);
 
 export const CountSituationCards = ({ data }: CountSituationCardsProps) => {
   const [openTooltipKey, setOpenTooltipKey] = useState<string | null>(null);
