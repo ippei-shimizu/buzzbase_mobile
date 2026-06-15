@@ -53,6 +53,7 @@ const RELATED_QUERY_KEYS = [
   "contactQualities",
   "pitchTypes",
   "pitcherFaceoffs",
+  "timingBreakdown",
   "battingTrend",
   "paBreakdown",
   "battingTable",

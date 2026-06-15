@@ -225,6 +225,21 @@ export interface ContactQualityData {
 }
 
 /**
+ * タイミング別の打席比率（timings マスタの 3 種: ドンピシャ / 泳ぎ気味 / 遅れ気味）。
+ */
+export interface TimingBreakdownCategory {
+  id: number;
+  label: string;
+  count: number;
+  percentage: number;
+}
+
+export interface TimingBreakdownData {
+  breakdown: TimingBreakdownCategory[];
+  total: number;
+}
+
+/**
  * 球種別の打撃集計レスポンス。pitch_types マスタの 10 種すべてが
  * display_order 順で返り、at_bats=0 の行も含まれる。
  */
