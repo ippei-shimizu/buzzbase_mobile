@@ -225,6 +225,21 @@ export interface ContactQualityData {
 }
 
 /**
+ * タイミング別の打席比率（timings マスタの 3 種: ドンピシャ / 泳ぎ気味 / 遅れ気味）。
+ */
+export interface TimingBreakdownCategory {
+  id: number;
+  label: string;
+  count: number;
+  percentage: number;
+}
+
+export interface TimingBreakdownData {
+  breakdown: TimingBreakdownCategory[];
+  total: number;
+}
+
+/**
  * 球種別の打撃集計レスポンス。pitch_types マスタの 10 種すべてが
  * display_order 順で返り、at_bats=0 の行も含まれる。
  */
@@ -241,6 +256,61 @@ export interface PitchTypeRow {
 export interface PitchTypeData {
   rows: PitchTypeRow[];
   total_target_pa: number;
+}
+
+/**
+ * stats 打撃の追加スタッツ（主要スタッツ以外）。
+ * マイページ / ダッシュボードの SummaryStatsTable と同じ 16 項目。
+ */
+export interface AdditionalStats {
+  games: number;
+  plate_appearances: number;
+  two_base_hit: number;
+  three_base_hit: number;
+  total_bases: number;
+  run: number;
+  strike_out: number;
+  base_on_balls: number;
+  hit_by_pitch: number;
+  sacrifice_hit: number;
+  sacrifice_fly: number;
+  stealing_base: number;
+  caught_stealing: number;
+  iso: number;
+  isod: number;
+  bb_per_k: number;
+}
+
+/**
+ * 打撃推移グラフの粒度。
+ * - `game`: 試合単位で **累積** の打率 / OBP / SLG / OPS
+ * - `month`: 月単位で **月単独**
+ * - `year`: 年単位で **年単独**（シーズン比較向き）
+ * - `recent_games`: 直近 10 試合の移動平均（hot/cold streak の可視化）
+ */
+export type BattingTrendGranularity =
+  | "game"
+  | "month"
+  | "year"
+  | "recent_games";
+
+/**
+ * 推移グラフ 1 点分のデータ。
+ */
+export interface BattingTrendPoint {
+  key: string;
+  label: string;
+  batting_average: number;
+  on_base_percentage: number;
+  slugging_percentage: number;
+  ops: number;
+  at_bats_in_period: number;
+  cumulative_at_bats: number;
+}
+
+export interface BattingTrendData {
+  granularity: BattingTrendGranularity;
+  points: BattingTrendPoint[];
 }
 
 /**

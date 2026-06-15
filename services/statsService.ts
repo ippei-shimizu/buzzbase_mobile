@@ -1,5 +1,8 @@
 import type { StatsFilters } from "../types/profile";
 import type {
+  AdditionalStats,
+  BattingTrendData,
+  BattingTrendGranularity,
   ContactQualityData,
   CountSituations,
   HitDirectionData,
@@ -8,6 +11,7 @@ import type {
   PitchTypeData,
   PitcherFaceoffData,
   PlateAppearanceCategory,
+  TimingBreakdownData,
   BattingStatsRow,
   PitchingStatsRow,
   EraTrendPoint,
@@ -190,6 +194,38 @@ export const getPitcherFaceoffs = async (
   const query = buildStatsQuery(filters);
   const res = await axiosInstance.get(
     `${STATS_URL}/pitcher_faceoffs${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+export const getBattingTrend = async (
+  filters: StatsFilters,
+  granularity: BattingTrendGranularity,
+): Promise<BattingTrendData> => {
+  const baseQuery = buildStatsQuery(filters);
+  const query = baseQuery
+    ? `${baseQuery}&granularity=${granularity}`
+    : `granularity=${granularity}`;
+  const res = await axiosInstance.get(`${STATS_URL}/batting_trend?${query}`);
+  return res.data;
+};
+
+export const getAdditionalStats = async (
+  filters: StatsFilters,
+): Promise<AdditionalStats> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/additional_stats${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+export const getTimingBreakdown = async (
+  filters: StatsFilters,
+): Promise<TimingBreakdownData> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/timing_breakdown${query ? `?${query}` : ""}`,
   );
   return res.data;
 };

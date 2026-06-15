@@ -1,7 +1,9 @@
 import type { StatsFilters } from "../types/profile";
-import type { StatsPeriod } from "../types/stats";
+import type { BattingTrendGranularity, StatsPeriod } from "../types/stats";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
+  getAdditionalStats,
+  getBattingTrend,
   getContactQualities,
   getCountSituations,
   getHitDirections,
@@ -10,6 +12,7 @@ import {
   getPitchTypes,
   getPitcherFaceoffs,
   getPlateAppearanceBreakdown,
+  getTimingBreakdown,
   getBattingStatsTable,
   getPitchingStatsTable,
   getEraTrend,
@@ -135,5 +138,29 @@ export const usePitcherFaceoffs = (filters: StatsFilters) =>
   useQuery({
     queryKey: ["pitcherFaceoffs", filters],
     queryFn: () => getPitcherFaceoffs(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const useBattingTrend = (
+  filters: StatsFilters,
+  granularity: BattingTrendGranularity,
+) =>
+  useQuery({
+    queryKey: ["battingTrend", filters, granularity],
+    queryFn: () => getBattingTrend(filters, granularity),
+    placeholderData: keepPreviousData,
+  });
+
+export const useAdditionalStats = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["additionalStats", filters],
+    queryFn: () => getAdditionalStats(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const useTimingBreakdown = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["timingBreakdown", filters],
+    queryFn: () => getTimingBreakdown(filters),
     placeholderData: keepPreviousData,
   });
