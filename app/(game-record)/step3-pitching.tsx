@@ -59,6 +59,7 @@ export default function Step3PitchingScreen() {
         errors={errors}
         onFieldChange={handleFieldChange}
         onSubmit={handleSubmit}
+        submitLabel={store.isEditMode ? "編集を完了する" : "試合結果まとめ"}
       />
     </KeyboardAvoidingView>
   );

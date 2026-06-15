@@ -21,6 +21,7 @@ import {
 import { useDashboard } from "@hooks/useDashboard";
 import { useNotificationCount } from "@hooks/useNotifications";
 import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
+import { useGameRecordStore } from "../../stores/gameRecordStore";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -92,7 +93,12 @@ export default function HomeScreen() {
         headerComponent={
           <TouchableOpacity
             style={styles.recordButton}
-            onPress={() => router.push("/(game-record)/step1-game-info")}
+            onPress={() => {
+              // 直前の編集モードフラグが残っていると Step1 が編集モードのまま起動するため、
+              // 新規記録の入口では store を必ず初期化する。
+              useGameRecordStore.getState().reset();
+              router.push("/(game-record)/step1-game-info");
+            }}
           >
             <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
             <Text style={styles.recordButtonText}>試合結果を記録する</Text>

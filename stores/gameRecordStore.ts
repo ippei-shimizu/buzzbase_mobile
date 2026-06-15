@@ -1,4 +1,8 @@
-import type { AppearanceType, BattingBox } from "../types/gameRecord";
+import type {
+  AppearanceType,
+  BattingBox,
+  RecordPattern,
+} from "../types/gameRecord";
 import type { GameResult } from "../types/gameResult";
 import { create } from "zustand";
 import {
@@ -20,7 +24,7 @@ function humanizeMatchType(value: string | null | undefined): string {
   return formatMatchTypeLabel(value) ?? "公式戦";
 }
 
-interface GameRecordState {
+export interface GameRecordState {
   // 編集モード
   isEditMode: boolean;
 
@@ -42,8 +46,8 @@ interface GameRecordState {
   myTeamId: number | null;
   opponentTeamName: string;
   opponentTeamId: number | null;
-  // 0-0（完封試合）も有効な値のため、未入力を区別する目的で null を許容する。
-  // 必須バリデーションは Step1 画面側で null チェックする。
+  // 初期値は 0（多くの試合で 0 から増えていくため）。ユーザーが手入力で
+  // 空欄にしたときは null として扱い、Step1 のバリデーションでエラーを返す。
   myTeamScore: number | null;
   opponentTeamScore: number | null;
   battingOrder: string;
@@ -51,6 +55,11 @@ interface GameRecordState {
   memo: string;
   inningFormat: number;
   appearanceType: AppearanceType;
+  // 球場は任意項目。stadiumId は match_results.stadium_id として送信される。
+  stadiumId: number | null;
+  stadiumName: string;
+  // 記録パターン分岐は DB に保存せずクライアント状態のみで保持する。
+  recordPattern: RecordPattern | null;
 
   // Step2: 打撃成績
   battingBoxes: BattingBox[];
@@ -116,8 +125,8 @@ const initialState = {
   myTeamId: null,
   opponentTeamName: "",
   opponentTeamId: null,
-  myTeamScore: null,
-  opponentTeamScore: null,
+  myTeamScore: 0,
+  opponentTeamScore: 0,
   battingOrder: "1",
   defensivePosition: "",
   memo: "",
@@ -125,6 +134,10 @@ const initialState = {
   inningFormat: 9,
   // 出場区分。先発・代打のみ・代走のみのいずれか。デフォルトは先発。
   appearanceType: "starter" as AppearanceType,
+
+  stadiumId: null,
+  stadiumName: "",
+  recordPattern: null as RecordPattern | null,
 
   battingBoxes: [{ id: 0, position: 0, result: 0, text: "--" }],
   runsBattedIn: 0,
@@ -276,6 +289,10 @@ export const useGameRecordStore = create<GameRecordState>((set, get) => ({
       memo: mr.memo ?? "",
       inningFormat: mr.inning_format ?? 9,
       appearanceType: mr.appearance_type ?? "starter",
+      stadiumId: mr.stadium_id ?? null,
+      stadiumName: mr.stadium_name ?? "",
+      // 編集モードでは記録パターンを明示的に選ばせず、Step2/Step3 をすべて表示する。
+      recordPattern: null,
 
       battingBoxes,
       runsBattedIn: ba?.runs_batted_in ?? 0,

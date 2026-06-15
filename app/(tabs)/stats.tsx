@@ -1,5 +1,6 @@
 import type { StatsFilters as StatsFiltersType } from "../../types/profile";
 import type { StatsPeriod } from "../../types/stats";
+import type { SprayChartMode } from "@components/stats/SprayChart";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import React, { useState, useCallback, useLayoutEffect } from "react";
@@ -13,9 +14,14 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import { CountSituationCards } from "@components/stats/CountSituationCards";
 import { EraTrendChart } from "@components/stats/EraTrendChart";
+import { HeadlineStatsCard } from "@components/stats/HeadlineStatsCard";
+import { HitDirectionTable } from "@components/stats/HitDirectionTable";
+import { OutTypeDonut } from "@components/stats/OutTypeDonut";
 import { PeriodToggle } from "@components/stats/PeriodToggle";
 import { PlateAppearanceDonut } from "@components/stats/PlateAppearanceDonut";
+import { RunnersSituationCard } from "@components/stats/RunnersSituationCard";
 import { SprayChart } from "@components/stats/SprayChart";
 import { StatsFilters } from "@components/stats/StatsFilters";
 import {
@@ -31,11 +37,16 @@ import {
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useMySeasons } from "@hooks/useSeasons";
 import {
+  useCountSituations,
   useHitDirections,
+  useHitLocations,
+  useOutTypeBreakdown,
   usePlateAppearanceBreakdown,
   useBattingStatsTable,
   usePitchingStatsTable,
   useEraTrend,
+  useHeadlineStats,
+  useRunnersSituation,
 } from "@hooks/useStats";
 import { useTournaments } from "@hooks/useTournaments";
 
@@ -234,7 +245,14 @@ export default function StatsScreen() {
   const { tournaments } = useTournaments();
   const { years: availableYears } = useAvailableYears();
   const hitDirections = useHitDirections(filters);
+  const hitLocations = useHitLocations(filters);
+  const outTypeBreakdown = useOutTypeBreakdown(filters);
+  const countSituations = useCountSituations(filters);
   const paBreakdown = usePlateAppearanceBreakdown(filters);
+  const headlineStats = useHeadlineStats(filters);
+  const runnersSituation = useRunnersSituation(filters);
+  const [sprayChartMode, setSprayChartMode] =
+    useState<SprayChartMode>("scatter");
   const battingTable = useBattingStatsTable(
     battingPeriod,
     tableYear,
@@ -266,7 +284,12 @@ export default function StatsScreen() {
     setManualRefreshing(true);
     await Promise.all([
       hitDirections.refetch(),
+      hitLocations.refetch(),
+      outTypeBreakdown.refetch(),
+      countSituations.refetch(),
       paBreakdown.refetch(),
+      headlineStats.refetch(),
+      runnersSituation.refetch(),
       battingTable.refetch(),
       pitchingTable.refetch(),
       eraTrend.refetch(),
@@ -275,7 +298,12 @@ export default function StatsScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     hitDirections.refetch,
+    hitLocations.refetch,
+    outTypeBreakdown.refetch,
+    countSituations.refetch,
     paBreakdown.refetch,
+    headlineStats.refetch,
+    runnersSituation.refetch,
     battingTable.refetch,
     pitchingTable.refetch,
     eraTrend.refetch,
@@ -403,11 +431,39 @@ export default function StatsScreen() {
         {/* Batting Tab */}
         {activeTab === "batting" && (
           <View style={styles.content}>
+            {headlineStats.data && (
+              <FetchingOverlay isFetching={headlineStats.isFetching}>
+                <HeadlineStatsCard data={headlineStats.data} />
+              </FetchingOverlay>
+            )}
+            {runnersSituation.data && (
+              <FetchingOverlay isFetching={runnersSituation.isFetching}>
+                <RunnersSituationCard data={runnersSituation.data} />
+              </FetchingOverlay>
+            )}
             {hitDirections.data && (
-              <FetchingOverlay isFetching={hitDirections.isFetching}>
+              <FetchingOverlay
+                isFetching={hitDirections.isFetching || hitLocations.isFetching}
+              >
                 <SprayChart
                   directions={hitDirections.data.directions}
                   homeRuns={hitDirections.data.home_runs}
+                  mode={sprayChartMode}
+                  onModeChange={setSprayChartMode}
+                  points={hitLocations.data?.points ?? []}
+                />
+              </FetchingOverlay>
+            )}
+            {hitDirections.data && (
+              <FetchingOverlay isFetching={hitDirections.isFetching}>
+                <HitDirectionTable directions={hitDirections.data.directions} />
+              </FetchingOverlay>
+            )}
+            {outTypeBreakdown.data && (
+              <FetchingOverlay isFetching={outTypeBreakdown.isFetching}>
+                <OutTypeDonut
+                  breakdown={outTypeBreakdown.data.breakdown}
+                  total={outTypeBreakdown.data.total}
                 />
               </FetchingOverlay>
             )}
@@ -420,6 +476,11 @@ export default function StatsScreen() {
                     0,
                   )}
                 />
+              </FetchingOverlay>
+            )}
+            {countSituations.data && (
+              <FetchingOverlay isFetching={countSituations.isFetching}>
+                <CountSituationCards data={countSituations.data} />
               </FetchingOverlay>
             )}
             <View style={styles.tableHeader}>

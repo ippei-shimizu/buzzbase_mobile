@@ -2,12 +2,17 @@ import type { StatsFilters } from "../types/profile";
 import type { StatsPeriod } from "../types/stats";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
+  getCountSituations,
   getHitDirections,
+  getHitLocations,
+  getOutTypeBreakdown,
   getPlateAppearanceBreakdown,
   getBattingStatsTable,
   getPitchingStatsTable,
   getEraTrend,
   getGameSummary,
+  getHeadlineStats,
+  getRunnersSituation,
 } from "../services/statsService";
 
 export const useHitDirections = (filters: StatsFilters) =>
@@ -71,5 +76,40 @@ export const useGameSummary = (
   useQuery({
     queryKey: ["gameSummary", year, matchType, seasonId, tournamentId],
     queryFn: () => getGameSummary(year, matchType, seasonId, tournamentId),
+    placeholderData: keepPreviousData,
+  });
+
+export const useHeadlineStats = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["headlineStats", filters],
+    queryFn: () => getHeadlineStats(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const useRunnersSituation = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["runnersSituation", filters],
+    queryFn: () => getRunnersSituation(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const useHitLocations = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["hitLocations", filters],
+    queryFn: () => getHitLocations(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const useOutTypeBreakdown = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["outTypeBreakdown", filters],
+    queryFn: () => getOutTypeBreakdown(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const useCountSituations = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["countSituations", filters],
+    queryFn: () => getCountSituations(filters),
     placeholderData: keepPreviousData,
   });

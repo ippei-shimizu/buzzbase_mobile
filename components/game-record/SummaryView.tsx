@@ -1,7 +1,9 @@
 import type { AppearanceType, BattingBox } from "../../types/gameRecord";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import type { PlateAppearanceV2 } from "../../types/plateAppearance";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
 import { formatMatchTypeLabel } from "@utils/matchType";
+import { PlateAppearanceSummaryCard } from "./PlateAppearanceSummaryCard";
 
 interface Props {
   // 試合情報
@@ -20,6 +22,8 @@ interface Props {
   memo: string;
   // 打撃
   battingBoxes: BattingBox[];
+  /** v2 形式の打席記録。指定されると詳細チップ表示の打席詳細セクションを描画する。 */
+  plateAppearances?: PlateAppearanceV2[];
   runsBattedIn: number;
   run: number;
   stealingBase: number;
@@ -341,6 +345,25 @@ export function SummaryView(props: Props) {
               <StatItem label="盗塁" value={props.stealingBase} />
               <StatItem label="盗塁死" value={props.caughtStealing} />
             </View>
+
+            {props.plateAppearances && props.plateAppearances.length > 0 && (
+              <View style={{ marginTop: 16 }}>
+                <Text
+                  style={{ fontSize: 12, color: "#A1A1AA", marginBottom: 8 }}
+                >
+                  打席詳細
+                </Text>
+                {props.plateAppearances
+                  .slice()
+                  .sort((a, b) => a.batter_box_number - b.batter_box_number)
+                  .map((pa) => (
+                    <PlateAppearanceSummaryCard
+                      key={pa.id}
+                      plateAppearance={pa}
+                    />
+                  ))}
+              </View>
+            )}
 
             <Divider />
 

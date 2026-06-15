@@ -47,6 +47,9 @@ export const buildExpoRouterMock = (options: ExpoRouterMockOptions = {}) => {
     useSegments: () => [] as string[],
     usePathname: () => "/",
     useFocusEffect: (cb: () => (() => void) | void) => cb(),
+    // headerLeft 等の Stack スクリーン options を上書きするために使う。
+    // テスト側では呼び出し回数の検証はせず no-op で十分。
+    useNavigation: () => ({ setOptions: jest.fn() }),
     Link: ({ children }: { children: React.ReactNode }) => children,
     Redirect: () => null,
     Stack: Object.assign(
