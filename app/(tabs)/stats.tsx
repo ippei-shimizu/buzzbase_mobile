@@ -3,7 +3,7 @@ import type { BattingTrendGranularity, StatsPeriod } from "../../types/stats";
 import type { SprayChartMode } from "@components/stats/SprayChart";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import React, { useState, useCallback, useLayoutEffect } from "react";
+import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,9 @@ import {
   RefreshControl,
   StyleSheet,
   ActivityIndicator,
+  Pressable,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from "react-native";
 import { AdditionalStatsCard } from "@components/stats/AdditionalStatsCard";
 import { BattingTrendChart } from "@components/stats/BattingTrendChart";
@@ -297,6 +300,19 @@ export default function StatsScreen() {
 
   const [manualRefreshing, setManualRefreshing] = useState(false);
 
+  // 画面右下の「トップに戻る」ボタン用。一定スクロールでフェードイン表示する。
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      setShowBackToTop(event.nativeEvent.contentOffset.y > 400);
+    },
+    [],
+  );
+  const scrollToTop = useCallback(() => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  }, []);
+
   const onRefresh = useCallback(async () => {
     setManualRefreshing(true);
     await Promise.all([
@@ -393,7 +409,10 @@ export default function StatsScreen() {
   return (
     <>
       <ScrollView
+        ref={scrollViewRef}
         style={styles.container}
+        onScroll={handleScroll}
+        scrollEventThrottle={64}
         refreshControl={
           <RefreshControl
             refreshing={manualRefreshing}
@@ -677,6 +696,17 @@ export default function StatsScreen() {
         )}
       </ScrollView>
 
+      {showBackToTop && (
+        <Pressable
+          onPress={scrollToTop}
+          style={styles.backToTopButton}
+          accessibilityRole="button"
+          accessibilityLabel="画面のトップに戻る"
+        >
+          <Ionicons name="chevron-up" size={26} color="#F4F4F4" />
+        </Pressable>
+      )}
+
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}
@@ -745,5 +775,21 @@ const styles = StyleSheet.create({
   },
   tableBottomSpacer: {
     height: 300,
+  },
+  backToTopButton: {
+    position: "absolute",
+    right: 16,
+    bottom: 24,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#d08000",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 6,
   },
 });
