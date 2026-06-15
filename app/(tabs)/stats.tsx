@@ -474,7 +474,7 @@ export default function StatsScreen() {
           />
         </View>
 
-        {/* Batting Tab (Issue #370 指定の 12 セクション順) */}
+        {/* Batting Tab */}
         {activeTab === "batting" && (
           <View style={styles.content}>
             {/* 1. HeadlineStatsCard */}
@@ -505,7 +505,7 @@ export default function StatsScreen() {
                 />
               </FetchingOverlay>
             )}
-            {/* 4. SprayChart */}
+            {/* 5. SprayChart */}
             {hitDirections.data && (
               <FetchingOverlay
                 isFetching={hitDirections.isFetching || hitLocations.isFetching}
@@ -519,13 +519,13 @@ export default function StatsScreen() {
                 />
               </FetchingOverlay>
             )}
-            {/* 7. HitDirectionTable */}
+            {/* 6. HitDirectionTable */}
             {hitDirections.data && (
               <FetchingOverlay isFetching={hitDirections.isFetching}>
                 <HitDirectionTable directions={hitDirections.data.directions} />
               </FetchingOverlay>
             )}
-            {/* 8. PlateAppearanceDonut（打席結果の内訳） */}
+            {/* 7. PlateAppearanceDonut（打席結果の内訳） */}
             {paBreakdown.data && (
               <FetchingOverlay isFetching={paBreakdown.isFetching}>
                 <PlateAppearanceDonut
@@ -537,7 +537,7 @@ export default function StatsScreen() {
                 />
               </FetchingOverlay>
             )}
-            {/* 7. ContactQualityCard（打球の質） */}
+            {/* 8. ContactQualityCard（打球の質） */}
             {contactQualities.data && (
               <FetchingOverlay isFetching={contactQualities.isFetching}>
                 <ContactQualityCard
@@ -546,7 +546,7 @@ export default function StatsScreen() {
                 />
               </FetchingOverlay>
             )}
-            {/* 8. TimingCard（タイミング別の打席比率） */}
+            {/* 9. TimingCard（タイミング別の打席比率） */}
             {timingBreakdown.data && (
               <FetchingOverlay isFetching={timingBreakdown.isFetching}>
                 <TimingCard
@@ -555,13 +555,13 @@ export default function StatsScreen() {
                 />
               </FetchingOverlay>
             )}
-            {/* 9. CountSituationCards（カウント別の打率） */}
+            {/* 10. CountSituationCards（カウント別の打率） */}
             {countSituations.data && (
               <FetchingOverlay isFetching={countSituations.isFetching}>
                 <CountSituationCards data={countSituations.data} />
               </FetchingOverlay>
             )}
-            {/* 9. PitchTypeCard（球種別の打率） */}
+            {/* 11. PitchTypeCard（球種別の打率） */}
             {pitchTypes.data && (
               <FetchingOverlay isFetching={pitchTypes.isFetching}>
                 <PitchTypeCard
@@ -570,7 +570,7 @@ export default function StatsScreen() {
                 />
               </FetchingOverlay>
             )}
-            {/* 11. PitcherFaceoffList */}
+            {/* 12. PitcherFaceoffList */}
             {pitcherFaceoffs.data && (
               <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
                 <PitcherFaceoffList
@@ -582,7 +582,7 @@ export default function StatsScreen() {
                 />
               </FetchingOverlay>
             )}
-            {/* 12. 打撃成績テーブル（最下部） */}
+            {/* 13. 打撃成績テーブル（最下部） */}
             <View style={styles.tableHeader}>
               <Text style={styles.tableHeaderLabel}>打撃成績</Text>
               <PeriodToggle
