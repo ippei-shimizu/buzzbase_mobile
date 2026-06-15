@@ -521,6 +521,7 @@ export default function StatsScreen() {
                   minPlateAppearances={
                     pitcherFaceoffs.data.min_plate_appearances
                   }
+                  totalTargetPa={pitcherFaceoffs.data.total_target_pa}
                 />
               </FetchingOverlay>
             )}
