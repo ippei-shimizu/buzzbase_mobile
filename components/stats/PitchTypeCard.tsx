@@ -1,6 +1,7 @@
 import type { PitchTypeRow } from "../../types/stats";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { formatBattingAverage } from "@utils/formatBattingAverage";
 
 interface PitchTypeCardProps {
   rows: PitchTypeRow[];
@@ -8,11 +9,6 @@ interface PitchTypeCardProps {
 }
 
 const SECTION_LIMIT = 3;
-
-const formatAverage = (row: PitchTypeRow): string => {
-  if (row.at_bats === 0) return ".---";
-  return row.batting_average.toFixed(3).replace(/^0\./, ".");
-};
 
 interface InsightRowProps {
   row: PitchTypeRow;
@@ -24,7 +20,7 @@ const InsightRow = ({ row, highlightColor }: InsightRowProps) => (
     <Text style={styles.pitchLabel}>{row.label}</Text>
     <View style={styles.rowRight}>
       <Text style={[styles.average, { color: highlightColor }]}>
-        {formatAverage(row)}
+        {formatBattingAverage(row.batting_average, row.at_bats)}
       </Text>
       <Text style={styles.subText}>
         ({row.at_bats}-{row.hits})
