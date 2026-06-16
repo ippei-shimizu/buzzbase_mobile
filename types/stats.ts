@@ -359,7 +359,15 @@ export interface PitcherAttributeBucket {
   plate_appearances: number;
   at_bats: number;
   hits: number;
+  total_bases: number;
+  base_on_balls: number;
+  hit_by_pitch: number;
+  sacrifice_fly: number;
   batting_average: number;
+  on_base_percentage: number;
+  slugging_percentage: number;
+  ops: number;
+  result_counts: PitcherResultCount[];
   display_order: number;
 }
 
