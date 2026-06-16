@@ -9,6 +9,7 @@ import type {
   HitLocationData,
   OutTypeBreakdownData,
   PitchTypeData,
+  PitcherAttributeSummaryData,
   PitcherFaceoffData,
   PlateAppearanceCategory,
   TimingBreakdownData,
@@ -194,6 +195,16 @@ export const getPitcherFaceoffs = async (
   const query = buildStatsQuery(filters);
   const res = await axiosInstance.get(
     `${STATS_URL}/pitcher_faceoffs${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+export const getPitcherAttributeSummary = async (
+  filters: StatsFilters,
+): Promise<PitcherAttributeSummaryData> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/pitcher_attribute_summary${query ? `?${query}` : ""}`,
   );
   return res.data;
 };

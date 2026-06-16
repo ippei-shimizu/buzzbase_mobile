@@ -10,6 +10,7 @@ import {
   getHitLocations,
   getOutTypeBreakdown,
   getPitchTypes,
+  getPitcherAttributeSummary,
   getPitcherFaceoffs,
   getPlateAppearanceBreakdown,
   getTimingBreakdown,
@@ -138,6 +139,13 @@ export const usePitcherFaceoffs = (filters: StatsFilters) =>
   useQuery({
     queryKey: ["pitcherFaceoffs", filters],
     queryFn: () => getPitcherFaceoffs(filters),
+    placeholderData: keepPreviousData,
+  });
+
+export const usePitcherAttributeSummary = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["pitcherAttributeSummary", filters],
+    queryFn: () => getPitcherAttributeSummary(filters),
     placeholderData: keepPreviousData,
   });
 
