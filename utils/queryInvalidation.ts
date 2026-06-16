@@ -30,8 +30,9 @@ export type InvalidateGameResultMode = "stale-only" | "refetch";
  * - stats タブで使う集計 API 群（試合・打席が変わったら全部最新化する）:
  *   `headlineStats` / `additionalStats` / `runnersSituation` / `hitDirections` /
  *   `hitLocations` / `outTypeBreakdown` / `countSituations` / `contactQualities` /
- *   `pitchTypes` / `pitcherFaceoffs` / `battingTrend` / `paBreakdown` /
- *   `battingTable` / `pitchingTable` / `eraTrend` / `gameSummary`
+ *   `pitchTypes` / `pitcherFaceoffs` / `pitcherAttributeSummary` /
+ *   `battingTrend` / `paBreakdown` / `battingTable` / `pitchingTable` /
+ *   `eraTrend` / `gameSummary`
  *
  * @param queryClient - 呼び出し元で `useQueryClient()` で取得した QueryClient
  * @param mode - `"stale-only"`（既定）か `"refetch"`。詳細は {@link InvalidateGameResultMode}
@@ -53,6 +54,7 @@ const RELATED_QUERY_KEYS = [
   "contactQualities",
   "pitchTypes",
   "pitcherFaceoffs",
+  "pitcherAttributeSummary",
   "timingBreakdown",
   "battingTrend",
   "paBreakdown",
