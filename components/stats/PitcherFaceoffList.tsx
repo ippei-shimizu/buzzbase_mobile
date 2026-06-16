@@ -1,6 +1,7 @@
-import type { PitcherFaceoff, PitcherResultCount } from "../../types/stats";
+import type { PitcherFaceoff } from "../../types/stats";
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { PitcherStatsDetailGrid } from "@components/stats/PitcherStatsDetailGrid";
 import { formatBattingAverage } from "@utils/formatBattingAverage";
 
 interface PitcherFaceoffListProps {
@@ -8,26 +9,6 @@ interface PitcherFaceoffListProps {
   minPlateAppearances: number;
   totalTargetPa: number;
 }
-
-const PR_NAMES = {
-  single: "ヒット",
-  double: "二塁打",
-  triple: "三塁打",
-  homerun: "本塁打",
-  strikeout: "三振",
-  walk: "四球",
-  hbp: "死球",
-} as const;
-
-// result_counts から特定の plate_result_name の件数を取り出す。マスタが
-// 増減しても影響しないよう、必要な名前だけ参照する。
-const countOf = (counts: PitcherResultCount[], name: string): number =>
-  counts.find((c) => c.plate_result_name === name)?.count ?? 0;
-
-const fmtRate = (value: number, denominator: number): string => {
-  if (denominator <= 0) return "-";
-  return value.toFixed(3).replace(/^0\./, ".");
-};
 
 export const PitcherFaceoffList = ({
   rows,
@@ -98,69 +79,23 @@ interface ExpansionProps {
   row: PitcherFaceoff;
 }
 
-const PitcherFaceoffExpansion = ({ row }: ExpansionProps) => {
-  const obpDenom =
-    row.at_bats + row.base_on_balls + row.hit_by_pitch + row.sacrifice_fly;
-
-  // ブロック 1: 打率/打席/打数/安打/二塁打/三塁打/本塁打。
-  // ブロック 2: 三振/四球/死球/出塁率/長打率/OPS。
-  // ユーザー指定の順序に沿って固定する。
-  const primary: { label: string; value: string }[] = [
-    { label: "打率", value: fmtRate(row.batting_average, row.at_bats) },
-    { label: "打席", value: String(row.plate_appearances) },
-    { label: "打数", value: String(row.at_bats) },
-    { label: "安打", value: String(row.hits) },
-    {
-      label: "二塁打",
-      value: String(countOf(row.result_counts, PR_NAMES.double)),
-    },
-    {
-      label: "三塁打",
-      value: String(countOf(row.result_counts, PR_NAMES.triple)),
-    },
-    {
-      label: "本塁打",
-      value: String(countOf(row.result_counts, PR_NAMES.homerun)),
-    },
-  ];
-
-  const secondary: { label: string; value: string }[] = [
-    {
-      label: "三振",
-      value: String(countOf(row.result_counts, PR_NAMES.strikeout)),
-    },
-    { label: "四球", value: String(row.base_on_balls) },
-    { label: "死球", value: String(row.hit_by_pitch) },
-    { label: "出塁率", value: fmtRate(row.on_base_percentage, obpDenom) },
-    { label: "長打率", value: fmtRate(row.slugging_percentage, row.at_bats) },
-    { label: "OPS", value: fmtRate(row.ops, row.at_bats) },
-  ];
-
-  return (
-    <View style={styles.expansion}>
-      <View style={styles.statBlock}>
-        <View style={styles.statRow}>
-          {primary.map((s) => (
-            <View key={s.label} style={styles.statCell}>
-              <Text style={styles.statLabel}>{s.label}</Text>
-              <Text style={styles.statValue}>{s.value}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-      <View style={styles.statBlock}>
-        <View style={styles.statRow}>
-          {secondary.map((s) => (
-            <View key={s.label} style={styles.statCell}>
-              <Text style={styles.statLabel}>{s.label}</Text>
-              <Text style={styles.statValueSmall}>{s.value}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-    </View>
-  );
-};
+const PitcherFaceoffExpansion = ({ row }: ExpansionProps) => (
+  <View style={styles.expansionWrapper}>
+    <PitcherStatsDetailGrid
+      plateAppearances={row.plate_appearances}
+      atBats={row.at_bats}
+      hits={row.hits}
+      baseOnBalls={row.base_on_balls}
+      hitByPitch={row.hit_by_pitch}
+      sacrificeFly={row.sacrifice_fly}
+      battingAverage={row.batting_average}
+      onBasePercentage={row.on_base_percentage}
+      sluggingPercentage={row.slugging_percentage}
+      ops={row.ops}
+      resultCounts={row.result_counts}
+    />
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -229,41 +164,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 16,
   },
-  expansion: {
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    gap: 10,
-    backgroundColor: "#2E2E2E",
-    borderRadius: 8,
+  expansionWrapper: {
     marginBottom: 4,
-  },
-  statBlock: {
-    backgroundColor: "#27272A",
-    borderRadius: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 6,
-  },
-  statRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  statCell: {
-    alignItems: "center",
-    minWidth: 36,
-  },
-  statLabel: {
-    color: "#A1A1AA",
-    fontSize: 10,
-    marginBottom: 2,
-  },
-  statValue: {
-    color: "#F4F4F4",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  statValueSmall: {
-    color: "#F4F4F4",
-    fontSize: 13,
-    fontWeight: "600",
   },
 });
