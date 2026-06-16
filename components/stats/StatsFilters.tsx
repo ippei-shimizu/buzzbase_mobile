@@ -138,7 +138,10 @@ export const StatsFilters = ({
     filters.seasonId ||
     filters.tournamentId
   );
-  const handleReset = () => onFiltersChange({});
+  const handleReset = () => {
+    setActiveFilter(null);
+    onFiltersChange({});
+  };
 
   return (
     <View style={styles.container}>

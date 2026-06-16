@@ -247,6 +247,7 @@ export default function StatsScreen() {
     setTableActiveFilter((prev) => (prev === id ? null : id));
   const hasTableFilter = !!(tableYear || tableSeasonId || tableTournamentId);
   const resetTableFilters = () => {
+    setTableActiveFilter(null);
     setTableYear(undefined);
     setTableSeasonId(undefined);
     setTableTournamentId(undefined);
