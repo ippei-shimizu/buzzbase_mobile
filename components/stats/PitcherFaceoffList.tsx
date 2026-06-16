@@ -99,42 +99,48 @@ interface ExpansionProps {
 }
 
 const PitcherFaceoffExpansion = ({ row }: ExpansionProps) => {
-  const totals: { label: string; value: string }[] = [
+  const obpDenom =
+    row.at_bats + row.base_on_balls + row.hit_by_pitch + row.sacrifice_fly;
+
+  // ブロック 1: 打率/打席/打数/安打/二塁打/三塁打/本塁打。
+  // ブロック 2: 三振/四球/死球/出塁率/長打率/OPS。
+  // ユーザー指定の順序に沿って固定する。
+  const primary: { label: string; value: string }[] = [
+    { label: "打率", value: fmtRate(row.batting_average, row.at_bats) },
     { label: "打席", value: String(row.plate_appearances) },
     { label: "打数", value: String(row.at_bats) },
     { label: "安打", value: String(row.hits) },
     {
-      label: "打率",
-      value: fmtRate(row.batting_average, row.at_bats),
+      label: "二塁打",
+      value: String(countOf(row.result_counts, PR_NAMES.double)),
     },
     {
-      label: "出塁",
-      value: fmtRate(
-        row.on_base_percentage,
-        row.at_bats + row.base_on_balls + row.hit_by_pitch + row.sacrifice_fly,
-      ),
+      label: "三塁打",
+      value: String(countOf(row.result_counts, PR_NAMES.triple)),
     },
     {
-      label: "長打",
-      value: fmtRate(row.slugging_percentage, row.at_bats),
+      label: "本塁打",
+      value: String(countOf(row.result_counts, PR_NAMES.homerun)),
     },
-    { label: "OPS", value: fmtRate(row.ops, row.at_bats) },
   ];
 
-  const breakdown: { label: string; value: number }[] = [
-    { label: "二塁", value: countOf(row.result_counts, PR_NAMES.double) },
-    { label: "三塁", value: countOf(row.result_counts, PR_NAMES.triple) },
-    { label: "本塁", value: countOf(row.result_counts, PR_NAMES.homerun) },
-    { label: "三振", value: countOf(row.result_counts, PR_NAMES.strikeout) },
-    { label: "四球", value: row.base_on_balls },
-    { label: "死球", value: row.hit_by_pitch },
+  const secondary: { label: string; value: string }[] = [
+    {
+      label: "三振",
+      value: String(countOf(row.result_counts, PR_NAMES.strikeout)),
+    },
+    { label: "四球", value: String(row.base_on_balls) },
+    { label: "死球", value: String(row.hit_by_pitch) },
+    { label: "出塁率", value: fmtRate(row.on_base_percentage, obpDenom) },
+    { label: "長打率", value: fmtRate(row.slugging_percentage, row.at_bats) },
+    { label: "OPS", value: fmtRate(row.ops, row.at_bats) },
   ];
 
   return (
     <View style={styles.expansion}>
       <View style={styles.statBlock}>
         <View style={styles.statRow}>
-          {totals.map((s) => (
+          {primary.map((s) => (
             <View key={s.label} style={styles.statCell}>
               <Text style={styles.statLabel}>{s.label}</Text>
               <Text style={styles.statValue}>{s.value}</Text>
@@ -144,7 +150,7 @@ const PitcherFaceoffExpansion = ({ row }: ExpansionProps) => {
       </View>
       <View style={styles.statBlock}>
         <View style={styles.statRow}>
-          {breakdown.map((s) => (
+          {secondary.map((s) => (
             <View key={s.label} style={styles.statCell}>
               <Text style={styles.statLabel}>{s.label}</Text>
               <Text style={styles.statValueSmall}>{s.value}</Text>
