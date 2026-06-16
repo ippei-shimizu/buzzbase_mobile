@@ -2,8 +2,9 @@ import type {
   PitcherAttributeBucket,
   PitcherAttributeSummaryData,
 } from "../../types/stats";
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { PitcherStatsDetailGrid } from "@components/stats/PitcherStatsDetailGrid";
 import { formatBattingAverage } from "@utils/formatBattingAverage";
 
 interface PitcherAttributeSummaryProps {
@@ -11,9 +12,16 @@ interface PitcherAttributeSummaryProps {
 }
 
 interface Section {
+  axis: AxisKey;
   title: string;
   buckets: PitcherAttributeBucket[];
 }
+
+type AxisKey =
+  | "by_throw_hand"
+  | "by_arm_angle"
+  | "by_velocity_zone"
+  | "by_pitcher_style";
 
 type Tier = "strong" | "mid" | "weak" | "unset";
 
@@ -47,10 +55,6 @@ const TIER_STYLES: Record<
 const STRONG_THRESHOLD = 0.35;
 const WEAK_THRESHOLD = 0.2;
 
-/**
- * 母数 0 のバケットは batting_average が 0 でも「苦手」に倒れないよう unset 扱い。
- * 母数があれば打率帯で 3 段階に色分けする。
- */
 const tierFor = (bucket: PitcherAttributeBucket): Tier => {
   if (bucket.at_bats === 0) return "unset";
   if (bucket.batting_average >= STRONG_THRESHOLD) return "strong";
@@ -58,21 +62,36 @@ const tierFor = (bucket: PitcherAttributeBucket): Tier => {
   return "mid";
 };
 
+// (axis, key) のペアでチップを一意に識別する。null キー（未設定バケット）も
+// JSON.stringify で安定化された文字列にして state にしまう。
+const chipId = (axis: AxisKey, key: PitcherAttributeBucket["key"]): string =>
+  `${axis}:${JSON.stringify(key)}`;
+
 /**
  * 投手属性 4 軸（利き手 / 腕の角度 / 球速帯 / 投手タイプ）の打率を、
  * 打率帯（得意 / 普通 / 苦手）で色分けしたチップで横並びに見せるカード。
- * 一画面に収まる情報密度と、強み/弱みの即時判別を優先したヒートマップ風 UI。
+ * チップタップで PitcherFaceoffList と同じ詳細グリッドを展開する。
  */
 export const PitcherAttributeSummary = ({
   data,
 }: PitcherAttributeSummaryProps) => {
+  const [selectedChip, setSelectedChip] = useState<string | null>(null);
+
   if (!data) return null;
 
   const sections: Section[] = [
-    { title: "利き手", buckets: data.by_throw_hand },
-    { title: "腕の角度", buckets: data.by_arm_angle },
-    { title: "球速帯", buckets: data.by_velocity_zone },
-    { title: "投手タイプ", buckets: data.by_pitcher_style },
+    { axis: "by_throw_hand", title: "利き手", buckets: data.by_throw_hand },
+    { axis: "by_arm_angle", title: "腕の角度", buckets: data.by_arm_angle },
+    {
+      axis: "by_velocity_zone",
+      title: "球速帯",
+      buckets: data.by_velocity_zone,
+    },
+    {
+      axis: "by_pitcher_style",
+      title: "投手タイプ",
+      buckets: data.by_pitcher_style,
+    },
   ];
 
   const hasAnyData = sections.some((s) => s.buckets.length > 0);
@@ -101,7 +120,12 @@ export const PitcherAttributeSummary = ({
         </View>
       </View>
       {sections.map((section) => (
-        <AttributeSection key={section.title} {...section} />
+        <AttributeSection
+          key={section.axis}
+          section={section}
+          selectedChip={selectedChip}
+          onToggle={(id) => setSelectedChip(id === selectedChip ? null : id)}
+        />
       ))}
     </View>
   );
@@ -114,42 +138,89 @@ const LegendDot = ({ color, label }: { color: string; label: string }) => (
   </View>
 );
 
-const AttributeSection = ({ title, buckets }: Section) => {
-  if (buckets.length === 0) {
+interface SectionProps {
+  section: Section;
+  selectedChip: string | null;
+  onToggle: (id: string) => void;
+}
+
+const AttributeSection = ({
+  section,
+  selectedChip,
+  onToggle,
+}: SectionProps) => {
+  if (section.buckets.length === 0) {
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={styles.sectionTitle}>{section.title}</Text>
         <Text style={styles.sectionEmpty}>データなし</Text>
       </View>
     );
   }
 
+  const selectedBucket = section.buckets.find(
+    (b) => chipId(section.axis, b.key) === selectedChip,
+  );
+
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={styles.sectionTitle}>{section.title}</Text>
       <View style={styles.chipGrid}>
-        {buckets.map((bucket) => (
-          <AttributeChip
-            key={`${bucket.label}-${String(bucket.key)}`}
-            bucket={bucket}
-          />
-        ))}
+        {section.buckets.map((bucket) => {
+          const id = chipId(section.axis, bucket.key);
+          return (
+            <AttributeChip
+              key={id}
+              bucket={bucket}
+              isSelected={id === selectedChip}
+              onPress={() => onToggle(id)}
+            />
+          );
+        })}
       </View>
+      {selectedBucket && (
+        <View style={styles.detailWrapper}>
+          <PitcherStatsDetailGrid
+            plateAppearances={selectedBucket.plate_appearances}
+            atBats={selectedBucket.at_bats}
+            hits={selectedBucket.hits}
+            baseOnBalls={selectedBucket.base_on_balls}
+            hitByPitch={selectedBucket.hit_by_pitch}
+            sacrificeFly={selectedBucket.sacrifice_fly}
+            battingAverage={selectedBucket.batting_average}
+            onBasePercentage={selectedBucket.on_base_percentage}
+            sluggingPercentage={selectedBucket.slugging_percentage}
+            ops={selectedBucket.ops}
+            resultCounts={selectedBucket.result_counts}
+          />
+        </View>
+      )}
     </View>
   );
 };
 
-const AttributeChip = ({ bucket }: { bucket: PitcherAttributeBucket }) => {
+interface ChipProps {
+  bucket: PitcherAttributeBucket;
+  isSelected: boolean;
+  onPress: () => void;
+}
+
+const AttributeChip = ({ bucket, isSelected, onPress }: ChipProps) => {
   const tier = tierFor(bucket);
   const tierStyle = TIER_STYLES[tier];
 
   return (
-    <View
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: isSelected }}
       style={[
         styles.chip,
         {
           backgroundColor: tierStyle.bg,
-          borderColor: tierStyle.border,
+          borderColor: isSelected ? tierStyle.accent : tierStyle.border,
+          borderWidth: isSelected ? 2 : 1,
         },
       ]}
     >
@@ -171,7 +242,7 @@ const AttributeChip = ({ bucket }: { bucket: PitcherAttributeBucket }) => {
       <Text style={styles.chipSub}>
         {bucket.at_bats}-{bucket.hits}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -233,7 +304,6 @@ const styles = StyleSheet.create({
   },
   chip: {
     minWidth: 92,
-    borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -257,6 +327,9 @@ const styles = StyleSheet.create({
   },
   subtleText: {
     color: "#A1A1AA",
+  },
+  detailWrapper: {
+    marginTop: 10,
   },
   emptyState: {
     paddingVertical: 24,
