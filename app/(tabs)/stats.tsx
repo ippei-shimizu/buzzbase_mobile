@@ -26,6 +26,7 @@ import { FilterResetButton } from "@components/stats/FilterResetButton";
 import { HeadlineStatsCard } from "@components/stats/HeadlineStatsCard";
 import { HitDirectionTable } from "@components/stats/HitDirectionTable";
 import { PeriodToggle } from "@components/stats/PeriodToggle";
+import { PitcherAttributeSummary } from "@components/stats/PitcherAttributeSummary";
 import { PitcherFaceoffList } from "@components/stats/PitcherFaceoffList";
 import { PitchTypeCard } from "@components/stats/PitchTypeCard";
 import { PlateAppearanceDonut } from "@components/stats/PlateAppearanceDonut";
@@ -53,6 +54,7 @@ import {
   useHitDirections,
   useHitLocations,
   usePitchTypes,
+  usePitcherAttributeSummary,
   usePitcherFaceoffs,
   usePlateAppearanceBreakdown,
   useBattingStatsTable,
@@ -272,6 +274,7 @@ export default function StatsScreen() {
   const timingBreakdown = useTimingBreakdown(filters);
   const pitchTypes = usePitchTypes(filters);
   const pitcherFaceoffs = usePitcherFaceoffs(filters);
+  const pitcherAttributeSummary = usePitcherAttributeSummary(filters);
   const [battingTrendGranularity, setBattingTrendGranularity] =
     useState<BattingTrendGranularity>("game");
   const battingTrend = useBattingTrend(filters, battingTrendGranularity);
@@ -331,6 +334,7 @@ export default function StatsScreen() {
       timingBreakdown.refetch(),
       pitchTypes.refetch(),
       pitcherFaceoffs.refetch(),
+      pitcherAttributeSummary.refetch(),
       battingTrend.refetch(),
       paBreakdown.refetch(),
       headlineStats.refetch(),
@@ -350,6 +354,7 @@ export default function StatsScreen() {
     timingBreakdown.refetch,
     pitchTypes.refetch,
     pitcherFaceoffs.refetch,
+    pitcherAttributeSummary.refetch,
     battingTrend.refetch,
     paBreakdown.refetch,
     headlineStats.refetch,
@@ -590,7 +595,13 @@ export default function StatsScreen() {
                 />
               </FetchingOverlay>
             )}
-            {/* 13. 打撃成績テーブル（最下部） */}
+            {/* 13. PitcherAttributeSummary */}
+            {pitcherAttributeSummary.data && (
+              <FetchingOverlay isFetching={pitcherAttributeSummary.isFetching}>
+                <PitcherAttributeSummary data={pitcherAttributeSummary.data} />
+              </FetchingOverlay>
+            )}
+            {/* 14. 打撃成績テーブル（最下部） */}
             <View style={styles.tableHeader}>
               <Text style={styles.tableHeaderLabel}>打撃成績</Text>
               <PeriodToggle
