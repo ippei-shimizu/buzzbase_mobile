@@ -23,6 +23,7 @@ import {
 } from "react-native";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
+import { FilterResetButton } from "@components/stats/FilterResetButton";
 import { GameResultSummary } from "@components/stats/GameResultSummary";
 import {
   GlobalMenuButton,
@@ -462,6 +463,24 @@ export default function GameResultsScreen() {
             onToggle={() => toggleFilter("tournament")}
           />
         )}
+        <FilterResetButton
+          visible={
+            !!(
+              selectedYear ||
+              selectedMatchType ||
+              selectedSeasonId ||
+              selectedTournamentId
+            )
+          }
+          onPress={() => {
+            setSelectedYear(undefined);
+            setSelectedMatchType(undefined);
+            setSelectedSeasonId(undefined);
+            setSelectedTournamentId(undefined);
+            setCurrentPage(1);
+            scrollToTop();
+          }}
+        />
       </View>
 
       {/* 検索 + ソート */}
@@ -625,6 +644,22 @@ export default function GameResultsScreen() {
                 onToggle={() => toggleSummaryFilter("summaryTournament")}
               />
             )}
+            <FilterResetButton
+              visible={
+                !!(
+                  summaryYear ||
+                  summaryMatchType ||
+                  summarySeasonId ||
+                  summaryTournamentId
+                )
+              }
+              onPress={() => {
+                setSummaryYear(undefined);
+                setSummaryMatchType(undefined);
+                setSummarySeasonId(undefined);
+                setSummaryTournamentId(undefined);
+              }}
+            />
           </View>
           <Text style={styles.activeFilterLabel}>
             {summaryYear ? `${summaryYear}年` : "通算"}

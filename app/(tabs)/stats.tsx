@@ -22,6 +22,7 @@ import { BattingTrendChart } from "@components/stats/BattingTrendChart";
 import { ContactQualityCard } from "@components/stats/ContactQualityCard";
 import { CountSituationCards } from "@components/stats/CountSituationCards";
 import { EraTrendChart } from "@components/stats/EraTrendChart";
+import { FilterResetButton } from "@components/stats/FilterResetButton";
 import { HeadlineStatsCard } from "@components/stats/HeadlineStatsCard";
 import { HitDirectionTable } from "@components/stats/HitDirectionTable";
 import { PeriodToggle } from "@components/stats/PeriodToggle";
@@ -244,6 +245,12 @@ export default function StatsScreen() {
   );
   const toggleTableFilter = (id: string) =>
     setTableActiveFilter((prev) => (prev === id ? null : id));
+  const hasTableFilter = !!(tableYear || tableSeasonId || tableTournamentId);
+  const resetTableFilters = () => {
+    setTableYear(undefined);
+    setTableSeasonId(undefined);
+    setTableTournamentId(undefined);
+  };
 
   const { menuVisible, menuOpacity, openMenu, closeMenu } = useGlobalMenu();
 
@@ -620,6 +627,10 @@ export default function StatsScreen() {
                     onToggle={() => toggleTableFilter("tableTournament")}
                   />
                 )}
+                <FilterResetButton
+                  visible={hasTableFilter}
+                  onPress={resetTableFilters}
+                />
               </View>
             )}
             {battingTable.data && (
@@ -680,6 +691,10 @@ export default function StatsScreen() {
                     onToggle={() => toggleTableFilter("tableTournament")}
                   />
                 )}
+                <FilterResetButton
+                  visible={hasTableFilter}
+                  onPress={resetTableFilters}
+                />
               </View>
             )}
             {pitchingTable.data && (
