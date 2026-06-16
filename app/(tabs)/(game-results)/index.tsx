@@ -473,6 +473,7 @@ export default function GameResultsScreen() {
             )
           }
           onPress={() => {
+            setActiveFilter(null);
             setSelectedYear(undefined);
             setSelectedMatchType(undefined);
             setSelectedSeasonId(undefined);
@@ -654,6 +655,7 @@ export default function GameResultsScreen() {
                 )
               }
               onPress={() => {
+                setSummaryActiveFilter(null);
                 setSummaryYear(undefined);
                 setSummaryMatchType(undefined);
                 setSummarySeasonId(undefined);
