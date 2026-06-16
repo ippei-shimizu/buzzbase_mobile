@@ -9,40 +9,25 @@ interface PitcherFaceoffListProps {
   totalTargetPa: number;
 }
 
-// plate_result_name で 3 カテゴリにバケットする。サーバーは生の count 列を
-// 返すので、フロントで「ヒット / アウト / 四死球」のセマンティクスを持つ。
-// マスタ名と照合するため、PlateResult 側の追加 / リネームが発生した時は
-// ここを更新する必要がある（CategoryRule で一覧化）。
-const HIT_NAMES = new Set(["ヒット", "二塁打", "三塁打", "本塁打"]);
-const WALK_NAMES = new Set(["四球", "死球"]);
+const PR_NAMES = {
+  single: "ヒット",
+  double: "二塁打",
+  triple: "三塁打",
+  homerun: "本塁打",
+  strikeout: "三振",
+  walk: "四球",
+  hbp: "死球",
+} as const;
 
-interface CategorizedCounts {
-  hits: number;
-  outs: number;
-  walks: number;
-}
+// result_counts から特定の plate_result_name の件数を取り出す。マスタが
+// 増減しても影響しないよう、必要な名前だけ参照する。
+const countOf = (counts: PitcherResultCount[], name: string): number =>
+  counts.find((c) => c.plate_result_name === name)?.count ?? 0;
 
-const classifyResults = (counts: PitcherResultCount[]): CategorizedCounts => {
-  const initial: CategorizedCounts = { hits: 0, outs: 0, walks: 0 };
-  return counts.reduce((acc, c) => {
-    if (HIT_NAMES.has(c.plate_result_name)) acc.hits += c.count;
-    else if (WALK_NAMES.has(c.plate_result_name)) acc.walks += c.count;
-    else acc.outs += c.count;
-    return acc;
-  }, initial);
+const fmtRate = (value: number, denominator: number): string => {
+  if (denominator <= 0) return "-";
+  return value.toFixed(3).replace(/^0\./, ".");
 };
-
-const CATEGORY_COLORS = {
-  hits: "#17C964",
-  outs: "#71717A",
-  walks: "#d08000",
-} as const;
-
-const CATEGORY_LABELS = {
-  hits: "ヒット",
-  outs: "アウト",
-  walks: "四死球",
-} as const;
 
 export const PitcherFaceoffList = ({
   rows,
@@ -90,9 +75,7 @@ export const PitcherFaceoffList = ({
                 <Text style={styles.pitcherName} numberOfLines={1}>
                   {isExpanded ? "▼" : "▶"} {row.pitcher_name}
                 </Text>
-                <Text style={styles.subText}>
-                  {row.plate_appearances}対戦・主に {row.top_result}
-                </Text>
+                <Text style={styles.subText}>{row.plate_appearances}対戦</Text>
               </View>
               <View style={styles.rightCol}>
                 <Text style={styles.average}>
@@ -103,12 +86,7 @@ export const PitcherFaceoffList = ({
                 </Text>
               </View>
             </TouchableOpacity>
-            {isExpanded && (
-              <PitcherFaceoffExpansion
-                counts={classifyResults(row.result_counts)}
-                totalPa={row.plate_appearances}
-              />
-            )}
+            {isExpanded && <PitcherFaceoffExpansion row={row} />}
           </View>
         );
       })}
@@ -117,50 +95,63 @@ export const PitcherFaceoffList = ({
 };
 
 interface ExpansionProps {
-  counts: CategorizedCounts;
-  totalPa: number;
+  row: PitcherFaceoff;
 }
 
-const PitcherFaceoffExpansion = ({ counts, totalPa }: ExpansionProps) => {
-  const categories = ["hits", "outs", "walks"] as const;
+const PitcherFaceoffExpansion = ({ row }: ExpansionProps) => {
+  const totals: { label: string; value: string }[] = [
+    { label: "打席", value: String(row.plate_appearances) },
+    { label: "打数", value: String(row.at_bats) },
+    { label: "安打", value: String(row.hits) },
+    {
+      label: "打率",
+      value: fmtRate(row.batting_average, row.at_bats),
+    },
+    {
+      label: "出塁",
+      value: fmtRate(
+        row.on_base_percentage,
+        row.at_bats + row.base_on_balls + row.hit_by_pitch + row.sacrifice_fly,
+      ),
+    },
+    {
+      label: "長打",
+      value: fmtRate(row.slugging_percentage, row.at_bats),
+    },
+    { label: "OPS", value: fmtRate(row.ops, row.at_bats) },
+  ];
+
+  const breakdown: { label: string; value: number }[] = [
+    { label: "二塁", value: countOf(row.result_counts, PR_NAMES.double) },
+    { label: "三塁", value: countOf(row.result_counts, PR_NAMES.triple) },
+    { label: "本塁", value: countOf(row.result_counts, PR_NAMES.homerun) },
+    { label: "三振", value: countOf(row.result_counts, PR_NAMES.strikeout) },
+    { label: "四球", value: row.base_on_balls },
+    { label: "死球", value: row.hit_by_pitch },
+  ];
+
   return (
     <View style={styles.expansion}>
-      {categories.map((cat) => {
-        const count = counts[cat];
-        const pct = totalPa > 0 ? (count / totalPa) * 100 : 0;
-        return (
-          <View key={cat} style={styles.expansionBarItem}>
-            <View style={styles.expansionBarHeader}>
-              <View style={styles.expansionLabelRow}>
-                <View
-                  style={[
-                    styles.dot,
-                    { backgroundColor: CATEGORY_COLORS[cat] },
-                  ]}
-                />
-                <Text style={styles.expansionLabel}>
-                  {CATEGORY_LABELS[cat]}
-                </Text>
-              </View>
-              <Text style={styles.expansionValue}>
-                {count} ({pct.toFixed(1)}%)
-              </Text>
+      <View style={styles.statBlock}>
+        <View style={styles.statRow}>
+          {totals.map((s) => (
+            <View key={s.label} style={styles.statCell}>
+              <Text style={styles.statLabel}>{s.label}</Text>
+              <Text style={styles.statValue}>{s.value}</Text>
             </View>
-            <View style={styles.barTrack}>
-              <View
-                style={[
-                  styles.barFill,
-                  {
-                    width: `${pct}%`,
-                    backgroundColor: CATEGORY_COLORS[cat],
-                    opacity: count > 0 ? 1 : 0.2,
-                  },
-                ]}
-              />
+          ))}
+        </View>
+      </View>
+      <View style={styles.statBlock}>
+        <View style={styles.statRow}>
+          {breakdown.map((s) => (
+            <View key={s.label} style={styles.statCell}>
+              <Text style={styles.statLabel}>{s.label}</Text>
+              <Text style={styles.statValueSmall}>{s.value}</Text>
             </View>
-          </View>
-        );
-      })}
+          ))}
+        </View>
+      </View>
     </View>
   );
 };
@@ -233,49 +224,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   expansion: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    gap: 10,
     backgroundColor: "#2E2E2E",
     borderRadius: 8,
     marginBottom: 4,
   },
-  expansionBarItem: {
-    gap: 3,
+  statBlock: {
+    backgroundColor: "#27272A",
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
   },
-  expansionBarHeader: {
+  statRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
+  },
+  statCell: {
     alignItems: "center",
+    minWidth: 36,
   },
-  expansionLabelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  expansionLabel: {
+  statLabel: {
     color: "#A1A1AA",
-    fontSize: 11,
-    fontWeight: "600",
+    fontSize: 10,
+    marginBottom: 2,
   },
-  expansionValue: {
+  statValue: {
     color: "#F4F4F4",
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "700",
   },
-  barTrack: {
-    height: 4,
-    backgroundColor: "#27272A",
-    borderRadius: 2,
-    overflow: "hidden",
-  },
-  barFill: {
-    height: "100%",
-    borderRadius: 2,
+  statValueSmall: {
+    color: "#F4F4F4",
+    fontSize: 13,
+    fontWeight: "600",
   },
 });
