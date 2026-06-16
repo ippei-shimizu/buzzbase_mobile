@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
+import { FilterResetButton } from "./FilterResetButton";
 
 interface StatsFiltersProps {
   filters: StatsFiltersType;
@@ -131,6 +132,14 @@ export const StatsFilters = ({
     label: t.name,
   }));
 
+  const hasAnyFilter = !!(
+    filters.year ||
+    filters.matchType ||
+    filters.seasonId ||
+    filters.tournamentId
+  );
+  const handleReset = () => onFiltersChange({});
+
   return (
     <View style={styles.container}>
       <FilterDropdown
@@ -171,6 +180,7 @@ export const StatsFilters = ({
           onToggle={() => toggleFilter("tournamentId")}
         />
       )}
+      <FilterResetButton visible={hasAnyFilter} onPress={handleReset} />
     </View>
   );
 };
