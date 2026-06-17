@@ -5,6 +5,7 @@ import type {
   PlateAppearanceV2Input,
   PlateAppearanceV2Payload,
   RunnersState,
+  SwingType,
 } from "../types/plateAppearance";
 import { create } from "zustand";
 import {
@@ -38,6 +39,7 @@ interface BattingRecordState {
   plateResultId: number | null;
   outType: OutType | null;
   hitType: HitType | null;
+  swingType: SwingType | null;
   hitDirectionId: number | null;
   hitLocationX: number | null;
   hitLocationY: number | null;
@@ -65,7 +67,11 @@ interface BattingRecordState {
   clearHitLocation: () => void;
   setPlateResult: (
     plateResultId: number,
-    options?: { outType?: OutType | null; hitType?: HitType | null },
+    options?: {
+      outType?: OutType | null;
+      hitType?: HitType | null;
+      swingType?: SwingType | null;
+    },
   ) => void;
   setCounter: (key: CounterKey, value: number) => void;
   setDetailCount: (key: DetailCountKey, value: number | null) => void;
@@ -84,6 +90,7 @@ const initialState = {
   plateResultId: null as number | null,
   outType: null as OutType | null,
   hitType: null as HitType | null,
+  swingType: null as SwingType | null,
   hitDirectionId: null as number | null,
   hitLocationX: null as number | null,
   hitLocationY: null as number | null,
@@ -161,6 +168,7 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       plateResultId: pa.plate_result_id,
       outType: pa.out_type,
       hitType: pa.hit_type,
+      swingType: pa.swing_type,
       hitDirectionId: pa.hit_direction_id,
       hitLocationX: parsedX ?? fallback?.x ?? null,
       hitLocationY: parsedY ?? fallback?.y ?? null,
@@ -202,6 +210,7 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       plateResultId,
       outType: options?.outType ?? null,
       hitType: options?.hitType ?? null,
+      swingType: options?.swingType ?? null,
     }),
 
   setCounter: (key, value) => {
@@ -262,6 +271,7 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       plate_result_id: state.plateResultId,
       out_type: state.outType,
       hit_type: state.hitType,
+      swing_type: state.swingType,
       hit_direction_id: state.hitDirectionId,
       hit_location_x: roundLocation(state.hitLocationX),
       hit_location_y: roundLocation(state.hitLocationY),

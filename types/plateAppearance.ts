@@ -23,6 +23,12 @@ export type OutType =
 /** ヒット種別（`plate_appearances.hit_type` enum）。 */
 export type HitType = "single" | "double" | "triple" | "home_run";
 
+/**
+ * 三振の種類（`plate_appearances.swing_type` enum）。
+ * `plate_result_id === 13`（三振）の場合のみ送信・保存される。
+ */
+export type SwingType = "swinging" | "looking";
+
 /** ランナー状況（`plate_appearances.runners_state` enum）。 */
 export type RunnersState =
   | "no_runner"
@@ -49,6 +55,7 @@ export interface PlateAppearanceV2 {
   batting_position_id: number | null;
   out_type: OutType | null;
   hit_type: HitType | null;
+  swing_type: SwingType | null;
   hit_location_x: string | null;
   hit_location_y: string | null;
   rbi: number | null;
@@ -84,6 +91,7 @@ export interface PlateAppearanceV2Input {
   plate_result_id: number;
   out_type?: OutType | null;
   hit_type?: HitType | null;
+  swing_type?: SwingType | null;
   hit_direction_id?: number | null;
   hit_location_x?: number | null;
   hit_location_y?: number | null;
