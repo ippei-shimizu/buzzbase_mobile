@@ -19,6 +19,7 @@ import {
   View,
 } from "react-native";
 import { HelpTooltipIcon } from "@components/ui/HelpTooltipIcon";
+import { PLATE_RESULT_IDS } from "@constants/plateResults";
 import {
   useCreatePlateAppearance,
   useUpdatePlateAppearance,
@@ -428,6 +429,13 @@ export function PlateAppearanceWizard({
         )}
       </View>
       <View style={styles.buttonsSection}>
+        {isEditMode &&
+          plateResultIdValue === PLATE_RESULT_IDS.STRIKEOUT &&
+          swingTypeValue === null && (
+            <Text style={styles.strikeoutSwingTypeHint}>
+              三振の種類（空振り/見逃し）を選び直してください
+            </Text>
+          )}
         <PlateResultButtons
           hasHitLocation={hitLocation !== null}
           selectedPlateResultId={plateResultIdValue as PlateResultId | null}
@@ -519,6 +527,11 @@ const styles = StyleSheet.create({
   },
   buttonsSection: {
     marginTop: 16,
+  },
+  strikeoutSwingTypeHint: {
+    color: "#d08000",
+    fontSize: 12,
+    marginBottom: 8,
   },
   clearLocationSlot: {
     minHeight: 36,
