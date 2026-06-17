@@ -1,4 +1,7 @@
-import type { PlateAppearanceV2 } from "../../../types/plateAppearance";
+import type {
+  PlateAppearanceV2,
+  SwingType,
+} from "../../../types/plateAppearance";
 import type {
   HitTypeOption,
   OutTypeOption,
@@ -16,6 +19,7 @@ import {
   View,
 } from "react-native";
 import { HelpTooltipIcon } from "@components/ui/HelpTooltipIcon";
+import { PLATE_RESULT_IDS } from "@constants/plateResults";
 import {
   useCreatePlateAppearance,
   useUpdatePlateAppearance,
@@ -87,6 +91,7 @@ export function PlateAppearanceWizard({
   // タブの入力済みドット表示用。zustand セレクタは毎レンダーで新規オブジェクトを
   // 返すと無限ループになるため、boolean に集約してから取得する。
   const plateResultIdValue = useBattingRecordStore((s) => s.plateResultId);
+  const swingTypeValue = useBattingRecordStore((s) => s.swingType);
   const hasDetailInputFromStore = useBattingRecordStore(
     (s) =>
       s.finalBalls !== null ||
@@ -195,6 +200,7 @@ export function PlateAppearanceWizard({
     options?: {
       outType?: OutTypeOption["out_type"];
       hitType?: HitTypeOption["hit_type"];
+      swingType?: SwingType;
     },
   ) => {
     setPlateResult(resultId, options);
@@ -423,10 +429,20 @@ export function PlateAppearanceWizard({
         )}
       </View>
       <View style={styles.buttonsSection}>
+        {isEditMode &&
+          plateResultIdValue === PLATE_RESULT_IDS.STRIKEOUT &&
+          swingTypeValue === null && (
+            <Text style={styles.strikeoutSwingTypeHint}>
+              三振の種類（空振り/見逃し）を選び直してください
+            </Text>
+          )}
         <PlateResultButtons
           hasHitLocation={hitLocation !== null}
           selectedPlateResultId={plateResultIdValue as PlateResultId | null}
-          onSelectNoDirection={(resultId) => proceedToCounter(resultId)}
+          selectedSwingType={swingTypeValue}
+          onSelectNoDirection={(resultId, swingType) =>
+            proceedToCounter(resultId, { swingType })
+          }
           onSelectOut={() => setOutModalVisible(true)}
           onSelectHit={() => setHitModalVisible(true)}
           onSelectDirectionOnly={(resultId) => proceedToCounter(resultId)}
@@ -511,6 +527,11 @@ const styles = StyleSheet.create({
   },
   buttonsSection: {
     marginTop: 16,
+  },
+  strikeoutSwingTypeHint: {
+    color: "#d08000",
+    fontSize: 12,
+    marginBottom: 8,
   },
   clearLocationSlot: {
     minHeight: 36,

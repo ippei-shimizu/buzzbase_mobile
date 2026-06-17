@@ -20,6 +20,7 @@ const buildPlateAppearance = (
   batting_position_id: null,
   out_type: null,
   hit_type: "single",
+  swing_type: null,
   hit_location_x: "0.5000",
   hit_location_y: "0.3000",
   rbi: 1,
@@ -167,5 +168,36 @@ describe("useBattingRecordStore - 詳細項目", () => {
     expect(state.selfAnalysisMemo).toBeNull();
     expect(state.inning).toBeNull();
     expect(state.firstPitchSwing).toBeNull();
+  });
+});
+
+describe("useBattingRecordStore - swing_type", () => {
+  it("initializeFromExisting で swing_type が store に反映される", () => {
+    useBattingRecordStore
+      .getState()
+      .initializeFromExisting(
+        buildPlateAppearance({ plate_result_id: 13, swing_type: "swinging" }),
+      );
+
+    expect(useBattingRecordStore.getState().swingType).toBe("swinging");
+  });
+
+  it("setPlateResult(13, { swingType: 'looking' }) → toCreatePayload に swing_type が乗る", () => {
+    const store = useBattingRecordStore.getState();
+    store.initializeForNew(1);
+    store.setPlateResult(13, { swingType: "looking" });
+
+    const payload = useBattingRecordStore.getState().toCreatePayload(100);
+    expect(payload.plate_appearance.swing_type).toBe("looking");
+  });
+
+  it("setPlateResult で別結果（四球）を選択すると swingType が null にリセットされる", () => {
+    const store = useBattingRecordStore.getState();
+    store.initializeForNew(1);
+    store.setPlateResult(13, { swingType: "swinging" });
+    expect(useBattingRecordStore.getState().swingType).toBe("swinging");
+
+    store.setPlateResult(15);
+    expect(useBattingRecordStore.getState().swingType).toBeNull();
   });
 });

@@ -17,6 +17,8 @@ interface CellConfig {
 
 // マイページ / ダッシュボードの SummaryStatsTable と同じ並び順で、
 // 主要スタッツ (HeadlineStatsCard) 以外の 16 項目を 4 列 × 4 行で表示する。
+// 「三振」セルだけはメイン数値の下に「空 N / 見 M」のサブテキストを並べて
+// 内訳を見せる（4×4 グリッドを維持するため独立セル化はしない）。
 const CELLS: readonly CellConfig[] = [
   { key: "games", label: "試合", format: "count" },
   { key: "plate_appearances", label: "打席", format: "count" },
@@ -60,6 +62,11 @@ export const AdditionalStatsCard = ({ data }: AdditionalStatsCardProps) => (
           <Text style={styles.value}>
             {formatValue(data[cell.key], cell.format)}
           </Text>
+          {cell.key === "strike_out" && (
+            <Text style={styles.subValue}>
+              空 {data.swinging_strike_out} / 見 {data.looking_strike_out}
+            </Text>
+          )}
         </View>
       ))}
     </View>
@@ -92,5 +99,10 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 16,
     fontWeight: "700",
+  },
+  subValue: {
+    color: "#A1A1AA",
+    fontSize: 10,
+    marginTop: 2,
   },
 });
