@@ -1,4 +1,7 @@
-import type { PlateAppearanceV2 } from "../../../types/plateAppearance";
+import type {
+  PlateAppearanceV2,
+  SwingType,
+} from "../../../types/plateAppearance";
 import type {
   HitTypeOption,
   OutTypeOption,
@@ -87,6 +90,7 @@ export function PlateAppearanceWizard({
   // タブの入力済みドット表示用。zustand セレクタは毎レンダーで新規オブジェクトを
   // 返すと無限ループになるため、boolean に集約してから取得する。
   const plateResultIdValue = useBattingRecordStore((s) => s.plateResultId);
+  const swingTypeValue = useBattingRecordStore((s) => s.swingType);
   const hasDetailInputFromStore = useBattingRecordStore(
     (s) =>
       s.finalBalls !== null ||
@@ -195,6 +199,7 @@ export function PlateAppearanceWizard({
     options?: {
       outType?: OutTypeOption["out_type"];
       hitType?: HitTypeOption["hit_type"];
+      swingType?: SwingType;
     },
   ) => {
     setPlateResult(resultId, options);
@@ -426,7 +431,10 @@ export function PlateAppearanceWizard({
         <PlateResultButtons
           hasHitLocation={hitLocation !== null}
           selectedPlateResultId={plateResultIdValue as PlateResultId | null}
-          onSelectNoDirection={(resultId) => proceedToCounter(resultId)}
+          selectedSwingType={swingTypeValue}
+          onSelectNoDirection={(resultId, swingType) =>
+            proceedToCounter(resultId, { swingType })
+          }
           onSelectOut={() => setOutModalVisible(true)}
           onSelectHit={() => setHitModalVisible(true)}
           onSelectDirectionOnly={(resultId) => proceedToCounter(resultId)}

@@ -1,3 +1,4 @@
+import type { SwingType } from "../../../types/plateAppearance";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {
@@ -17,8 +18,16 @@ interface Props {
    * null/undefined のときはどのボタンもハイライトされない。
    */
   selectedPlateResultId?: PlateResultId | null;
-  /** 三振 / 四球 / 死球 / 打撃妨害 / 振り逃げ を選んだとき */
-  onSelectNoDirection: (plateResultId: PlateResultId) => void;
+  /** 三振モードのうち空振り / 見逃しを区別したいときに照合する */
+  selectedSwingType?: SwingType | null;
+  /**
+   * 三振 / 四球 / 死球 / 打撃妨害 / 振り逃げ を選んだとき。三振の場合は
+   * swing_type 付き（空振り / 見逃しの区別）。
+   */
+  onSelectNoDirection: (
+    plateResultId: PlateResultId,
+    swingType?: SwingType,
+  ) => void;
   /** アウトボタンを押したとき。呼び出し側で OutTypeModal を開く */
   onSelectOut: () => void;
   /** ヒットボタンを押したとき。呼び出し側で HitTypeModal を開く */
@@ -91,6 +100,7 @@ const chunkPairs = <T,>(items: readonly T[]): T[][] => {
 export function PlateResultButtons({
   hasHitLocation,
   selectedPlateResultId = null,
+  selectedSwingType = null,
   onSelectNoDirection,
   onSelectOut,
   onSelectHit,
@@ -146,16 +156,31 @@ export function PlateResultButtons({
       <View style={styles.section}>
         {chunkPairs(NO_DIRECTION_RESULT_OPTIONS).map((row, rowIndex) => (
           <View key={`no-direction-row-${rowIndex}`} style={styles.row}>
-            {row.map((option) => (
-              <ResultButton
-                key={`${option.plate_result_id}-${option.label}`}
-                label={option.label}
-                tone={toneForPlateResult(option.plate_result_id)}
-                disabled={hasHitLocation}
-                onPress={() => onSelectNoDirection(option.plate_result_id)}
-                isSelected={selectedPlateResultId === option.plate_result_id}
-              />
-            ))}
+            {row.map((option) => {
+              // 三振 (id=13) は「空振り」「見逃し」で同じ plate_result_id を持つので、
+              // どちらのボタンが選択中かを swing_type まで突合してハイライトを分ける。
+              const isStrikeout =
+                option.plate_result_id === PLATE_RESULT_IDS.STRIKEOUT;
+              const isSelected = isStrikeout
+                ? selectedPlateResultId === option.plate_result_id &&
+                  selectedSwingType === (option.swing_type ?? null)
+                : selectedPlateResultId === option.plate_result_id;
+              return (
+                <ResultButton
+                  key={`${option.plate_result_id}-${option.label}`}
+                  label={option.label}
+                  tone={toneForPlateResult(option.plate_result_id)}
+                  disabled={hasHitLocation}
+                  onPress={() =>
+                    onSelectNoDirection(
+                      option.plate_result_id,
+                      option.swing_type,
+                    )
+                  }
+                  isSelected={isSelected}
+                />
+              );
+            })}
           </View>
         ))}
       </View>
