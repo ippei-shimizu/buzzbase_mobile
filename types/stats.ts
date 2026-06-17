@@ -277,6 +277,14 @@ export interface AdditionalStats {
   total_bases: number;
   run: number;
   strike_out: number;
+  /**
+   * 三振 (plate_result_id=13) のうち空振り (新仕様 PA で swing_type=swinging) の数。
+   * 振り逃げ / 旧 PA / swing_type 未指定の三振は含まないため、
+   * `swinging_strike_out + looking_strike_out <= strike_out` の関係になる。
+   */
+  swinging_strike_out: number;
+  /** 三振 (plate_result_id=13) のうち見逃し (新仕様 PA で swing_type=looking) の数。 */
+  looking_strike_out: number;
   base_on_balls: number;
   hit_by_pitch: number;
   sacrifice_hit: number;
