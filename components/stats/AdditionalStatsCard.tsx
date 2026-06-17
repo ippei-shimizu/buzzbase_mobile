@@ -15,8 +15,10 @@ interface CellConfig {
   format: "rate" | "count" | "ratio";
 }
 
-// マイページ / ダッシュボードの SummaryStatsTable に「空振」「見逃」を加えた 18 項目。
-// 「三振」(合計) はそのまま残し、その直後に「空振」「見逃」を並べて視線移動を最小化する。
+// マイページ / ダッシュボードの SummaryStatsTable と同じ並び順で、
+// 主要スタッツ (HeadlineStatsCard) 以外の 16 項目を 4 列 × 4 行で表示する。
+// 「三振」セルだけはメイン数値の下に「空 N / 見 M」のサブテキストを並べて
+// 内訳を見せる（4×4 グリッドを維持するため独立セル化はしない）。
 const CELLS: readonly CellConfig[] = [
   { key: "games", label: "試合", format: "count" },
   { key: "plate_appearances", label: "打席", format: "count" },
@@ -25,8 +27,6 @@ const CELLS: readonly CellConfig[] = [
   { key: "total_bases", label: "塁打", format: "count" },
   { key: "run", label: "得点", format: "count" },
   { key: "strike_out", label: "三振", format: "count" },
-  { key: "swinging_strike_out", label: "空振", format: "count" },
-  { key: "looking_strike_out", label: "見逃", format: "count" },
   { key: "base_on_balls", label: "四球", format: "count" },
   { key: "hit_by_pitch", label: "死球", format: "count" },
   { key: "sacrifice_hit", label: "犠打", format: "count" },
@@ -62,6 +62,11 @@ export const AdditionalStatsCard = ({ data }: AdditionalStatsCardProps) => (
           <Text style={styles.value}>
             {formatValue(data[cell.key], cell.format)}
           </Text>
+          {cell.key === "strike_out" && (
+            <Text style={styles.subValue}>
+              空 {data.swinging_strike_out} / 見 {data.looking_strike_out}
+            </Text>
+          )}
         </View>
       ))}
     </View>
@@ -94,5 +99,10 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 16,
     fontWeight: "700",
+  },
+  subValue: {
+    color: "#A1A1AA",
+    fontSize: 10,
+    marginTop: 2,
   },
 });
