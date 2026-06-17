@@ -51,20 +51,33 @@ const formatValue = (value: number, format: CellConfig["format"]): string => {
   }
 };
 
-export const AdditionalStatsCard = ({ data }: AdditionalStatsCardProps) => (
-  <View style={styles.container}>
-    <View style={styles.grid}>
-      {CELLS.map((cell) => (
-        <View key={cell.key} style={styles.cell}>
-          <Text style={styles.label}>{cell.label}</Text>
-          <Text style={styles.value}>
-            {formatValue(data[cell.key], cell.format)}
-          </Text>
-        </View>
-      ))}
+export const AdditionalStatsCard = ({ data }: AdditionalStatsCardProps) => {
+  // 「三振」セルだけは新仕様 PA から取得した空振り / 見逃しの内訳を
+  // メイン数値の下に小さく併記する。旧データのみのユーザーは合計が 0 に
+  // なるためサブテキスト非表示にして従来の見た目を保つ。
+  const showStrikeoutBreakdown =
+    data.swinging_strike_out + data.looking_strike_out > 0;
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.grid}>
+        {CELLS.map((cell) => (
+          <View key={cell.key} style={styles.cell}>
+            <Text style={styles.label}>{cell.label}</Text>
+            <Text style={styles.value}>
+              {formatValue(data[cell.key], cell.format)}
+            </Text>
+            {cell.key === "strike_out" && showStrikeoutBreakdown && (
+              <Text style={styles.subValue}>
+                空 {data.swinging_strike_out} / 見 {data.looking_strike_out}
+              </Text>
+            )}
+          </View>
+        ))}
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -92,5 +105,10 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 16,
     fontWeight: "700",
+  },
+  subValue: {
+    color: "#A1A1AA",
+    fontSize: 10,
+    marginTop: 2,
   },
 });
