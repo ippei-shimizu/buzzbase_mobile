@@ -70,8 +70,10 @@ describe("PlateResultButtons", () => {
 
     fireEvent.press(getByRole("button", { name: "四球" }));
 
+    // 四球は swing_type を持たないので第 2 引数は undefined
     expect(props.onSelectNoDirection).toHaveBeenCalledWith(
       PLATE_RESULT_IDS.WALK,
+      undefined,
     );
   });
 
@@ -87,7 +89,7 @@ describe("PlateResultButtons", () => {
     ).toMatchObject({ disabled: true });
   });
 
-  it("「空振り三振」タップ → onSelectNoDirection が STRIKEOUT(13) で呼ばれる", () => {
+  it("「空振り三振」タップ → onSelectNoDirection が STRIKEOUT(13) + swing_type='swinging' で呼ばれる", () => {
     const props = buildProps();
     const { getByRole } = render(<PlateResultButtons {...props} />);
 
@@ -95,6 +97,19 @@ describe("PlateResultButtons", () => {
 
     expect(props.onSelectNoDirection).toHaveBeenCalledWith(
       PLATE_RESULT_IDS.STRIKEOUT,
+      "swinging",
+    );
+  });
+
+  it("「見逃し三振」タップ → onSelectNoDirection が STRIKEOUT(13) + swing_type='looking' で呼ばれる", () => {
+    const props = buildProps();
+    const { getByRole } = render(<PlateResultButtons {...props} />);
+
+    fireEvent.press(getByRole("button", { name: "見逃し三振" }));
+
+    expect(props.onSelectNoDirection).toHaveBeenCalledWith(
+      PLATE_RESULT_IDS.STRIKEOUT,
+      "looking",
     );
   });
 });
