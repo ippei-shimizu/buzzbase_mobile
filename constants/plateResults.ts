@@ -14,7 +14,7 @@
  * 走塁妨害 (id=18) は新仕様の UI では非表示（既存データのみ残す）。
  */
 
-import type { HitType, OutType } from "../types/plateAppearance";
+import type { HitType, OutType, SwingType } from "../types/plateAppearance";
 
 export const PLATE_RESULT_IDS = {
   GROUND_OUT: 1,
@@ -41,19 +41,28 @@ export const PLATE_RESULT_IDS = {
 export type PlateResultId =
   (typeof PLATE_RESULT_IDS)[keyof typeof PLATE_RESULT_IDS];
 
-/** タップ不要のボタン（打球方向を伴わない結果）。 */
+/**
+ * タップ不要のボタン（打球方向を伴わない結果）。
+ * 空振り / 見逃し三振は `swing_type` も併送して back の enum に保存する
+ * （`plate_result_id` は両者とも STRIKEOUT=13）。
+ */
 export interface NoDirectionOption {
   label: string;
   plate_result_id: PlateResultId;
+  swing_type?: SwingType;
 }
 
-// TODO: 空振り三振と見逃し三振の API 上の区別を導入する。
-// 現状は plate_results マスタが両者を同一 id (=13) で持つため、ボタンを分けても
-// 保存値が同一になり、分析（見逃し率など）で振り分けられない。バックエンドに
-// swing_type 相当のカラムが追加されたら、この配列と PlateAppearanceV2Input を更新する。
 export const NO_DIRECTION_RESULT_OPTIONS: readonly NoDirectionOption[] = [
-  { label: "空振り三振", plate_result_id: PLATE_RESULT_IDS.STRIKEOUT },
-  { label: "見逃し三振", plate_result_id: PLATE_RESULT_IDS.STRIKEOUT },
+  {
+    label: "空振り三振",
+    plate_result_id: PLATE_RESULT_IDS.STRIKEOUT,
+    swing_type: "swinging",
+  },
+  {
+    label: "見逃し三振",
+    plate_result_id: PLATE_RESULT_IDS.STRIKEOUT,
+    swing_type: "looking",
+  },
   { label: "振り逃げ", plate_result_id: PLATE_RESULT_IDS.STRIKEOUT_REACHED },
   { label: "四球", plate_result_id: PLATE_RESULT_IDS.WALK },
   { label: "死球", plate_result_id: PLATE_RESULT_IDS.HIT_BY_PITCH },
