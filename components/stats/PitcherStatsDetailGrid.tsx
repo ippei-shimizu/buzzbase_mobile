@@ -1,6 +1,7 @@
 import type { PitcherResultCount } from "../../types/stats";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { formatStatRate } from "@utils/formatStats";
 
 /**
  * 投手別 / 投手属性別のチップタップ展開で共通に使う詳細スタッツグリッド。
@@ -32,11 +33,6 @@ const PR_NAMES = {
 const countOf = (counts: PitcherResultCount[], name: string): number =>
   counts.find((c) => c.plate_result_name === name)?.count ?? 0;
 
-const fmtRate = (value: number, denominator: number): string => {
-  if (denominator <= 0) return "-";
-  return value.toFixed(3).replace(/^0\./, ".");
-};
-
 export const PitcherStatsDetailGrid = ({
   plateAppearances,
   atBats,
@@ -53,7 +49,7 @@ export const PitcherStatsDetailGrid = ({
   const obpDenom = atBats + baseOnBalls + hitByPitch + sacrificeFly;
 
   const primary: { label: string; value: string }[] = [
-    { label: "打率", value: fmtRate(battingAverage, atBats) },
+    { label: "打率", value: formatStatRate(battingAverage, atBats) },
     { label: "打席", value: String(plateAppearances) },
     { label: "打数", value: String(atBats) },
     { label: "安打", value: String(hits) },
@@ -78,9 +74,9 @@ export const PitcherStatsDetailGrid = ({
     },
     { label: "四球", value: String(baseOnBalls) },
     { label: "死球", value: String(hitByPitch) },
-    { label: "出塁率", value: fmtRate(onBasePercentage, obpDenom) },
-    { label: "長打率", value: fmtRate(sluggingPercentage, atBats) },
-    { label: "OPS", value: fmtRate(ops, atBats) },
+    { label: "出塁率", value: formatStatRate(onBasePercentage, obpDenom) },
+    { label: "長打率", value: formatStatRate(sluggingPercentage, atBats) },
+    { label: "OPS", value: formatStatRate(ops, atBats) },
   ];
 
   return (
