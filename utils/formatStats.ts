@@ -29,3 +29,21 @@ export function formatRate2(value: number): string {
 export function formatEra(value: number): string {
   return value.toFixed(2);
 }
+
+/**
+ * 母数 0 のとき ".---" を返す野球向け率系フォーマッタ。
+ *
+ * 打率 / 出塁率 / 長打率 / OPS など、計算分母が 0 の場合に未計算であることを
+ * 明示したいケースで使う。`formatBattingAverage` の第 2 引数は "atBats" に
+ * 名前が固定されているが、こちらは汎用的に出塁率の OBP 分母 (AB+BB+HBP+SF)
+ * など任意の denominator を渡せる。
+ *
+ * @example
+ *   formatStatRate(0.333, 6)  // ".333"
+ *   formatStatRate(0.0, 0)    // ".---"
+ *   formatStatRate(1.667, 5)  // "1.667"
+ */
+export function formatStatRate(value: number, denominator: number): string {
+  if (denominator <= 0) return ".---";
+  return value.toFixed(3).replace(/^0\./, ".");
+}

@@ -246,11 +246,18 @@ export interface TimingBreakdownData {
 export interface PitchTypeRow {
   id: number;
   label: string;
+  plate_appearances: number;
   at_bats: number;
   hits: number;
   total_bases: number;
+  base_on_balls: number;
+  hit_by_pitch: number;
+  sacrifice_fly: number;
   batting_average: number;
+  on_base_percentage: number;
   slugging_percentage: number;
+  ops: number;
+  result_counts: PitcherResultCount[];
 }
 
 export interface PitchTypeData {
@@ -323,12 +330,57 @@ export interface PitcherFaceoff {
   plate_appearances: number;
   at_bats: number;
   hits: number;
+  total_bases: number;
+  base_on_balls: number;
+  hit_by_pitch: number;
+  sacrifice_fly: number;
   batting_average: number;
+  on_base_percentage: number;
+  slugging_percentage: number;
+  ops: number;
   top_result: string;
+  result_counts: PitcherResultCount[];
+}
+
+/** 投手別の plate_result 別件数。plate_result_id 昇順で返る。 */
+export interface PitcherResultCount {
+  plate_result_id: number;
+  plate_result_name: string;
+  count: number;
 }
 
 export interface PitcherFaceoffData {
   rows: PitcherFaceoff[];
   total_target_pa: number;
   min_plate_appearances: number;
+}
+
+/**
+ * 投手属性別サマリ。利き手 / 腕の角度 / 球速帯 / 投手タイプの 4 軸で
+ * 打席を束ねた打率を返す。`key` が null の要素は「未設定」バケットで、
+ * 各配列の末尾に並ぶ。
+ */
+export interface PitcherAttributeBucket {
+  key: string | number | null;
+  label: string;
+  plate_appearances: number;
+  at_bats: number;
+  hits: number;
+  total_bases: number;
+  base_on_balls: number;
+  hit_by_pitch: number;
+  sacrifice_fly: number;
+  batting_average: number;
+  on_base_percentage: number;
+  slugging_percentage: number;
+  ops: number;
+  result_counts: PitcherResultCount[];
+  display_order: number;
+}
+
+export interface PitcherAttributeSummaryData {
+  by_throw_hand: PitcherAttributeBucket[];
+  by_arm_angle: PitcherAttributeBucket[];
+  by_velocity_zone: PitcherAttributeBucket[];
+  by_pitcher_style: PitcherAttributeBucket[];
 }

@@ -1,6 +1,7 @@
 import type { PitcherFaceoff } from "../../types/stats";
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { PitcherStatsDetailGrid } from "@components/stats/PitcherStatsDetailGrid";
 import { formatBattingAverage } from "@utils/formatBattingAverage";
 
 interface PitcherFaceoffListProps {
@@ -14,6 +15,8 @@ export const PitcherFaceoffList = ({
   minPlateAppearances,
   totalTargetPa,
 }: PitcherFaceoffListProps) => {
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
   if (rows.length === 0) {
     return (
       <View style={styles.container}>
@@ -38,29 +41,61 @@ export const PitcherFaceoffList = ({
         </Text>
       </View>
 
-      {rows.map((row) => (
-        <View key={row.pitcher_id} style={styles.row}>
-          <View style={styles.leftCol}>
-            <Text style={styles.pitcherName} numberOfLines={1}>
-              {row.pitcher_name}
-            </Text>
-            <Text style={styles.subText}>
-              {row.plate_appearances}対戦・主に {row.top_result}
-            </Text>
+      {rows.map((row) => {
+        const isExpanded = expandedId === row.pitcher_id;
+        return (
+          <View key={row.pitcher_id}>
+            <TouchableOpacity
+              style={styles.row}
+              activeOpacity={0.7}
+              onPress={() => setExpandedId(isExpanded ? null : row.pitcher_id)}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: isExpanded }}
+            >
+              <View style={styles.leftCol}>
+                <Text style={styles.pitcherName} numberOfLines={1}>
+                  {isExpanded ? "▼" : "▶"} {row.pitcher_name}
+                </Text>
+                <Text style={styles.subText}>{row.plate_appearances}対戦</Text>
+              </View>
+              <View style={styles.rightCol}>
+                <Text style={styles.average}>
+                  {formatBattingAverage(row.batting_average, row.at_bats)}
+                </Text>
+                <Text style={styles.subText}>
+                  {row.at_bats}-{row.hits}
+                </Text>
+              </View>
+            </TouchableOpacity>
+            {isExpanded && <PitcherFaceoffExpansion row={row} />}
           </View>
-          <View style={styles.rightCol}>
-            <Text style={styles.average}>
-              {formatBattingAverage(row.batting_average, row.at_bats)}
-            </Text>
-            <Text style={styles.subText}>
-              {row.at_bats}-{row.hits}
-            </Text>
-          </View>
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 };
+
+interface ExpansionProps {
+  row: PitcherFaceoff;
+}
+
+const PitcherFaceoffExpansion = ({ row }: ExpansionProps) => (
+  <View style={styles.expansionWrapper}>
+    <PitcherStatsDetailGrid
+      plateAppearances={row.plate_appearances}
+      atBats={row.at_bats}
+      hits={row.hits}
+      baseOnBalls={row.base_on_balls}
+      hitByPitch={row.hit_by_pitch}
+      sacrificeFly={row.sacrifice_fly}
+      battingAverage={row.batting_average}
+      onBasePercentage={row.on_base_percentage}
+      sluggingPercentage={row.slugging_percentage}
+      ops={row.ops}
+      resultCounts={row.result_counts}
+    />
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -128,5 +163,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textAlign: "center",
     paddingHorizontal: 16,
+  },
+  expansionWrapper: {
+    marginBottom: 4,
   },
 });

@@ -1,6 +1,7 @@
 import type { PitchTypeRow } from "../../types/stats";
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { PitcherStatsDetailGrid } from "@components/stats/PitcherStatsDetailGrid";
 import { formatBattingAverage } from "@utils/formatBattingAverage";
 
 interface PitchTypeCardProps {
@@ -13,11 +14,26 @@ const SECTION_LIMIT = 3;
 interface InsightRowProps {
   row: PitchTypeRow;
   highlightColor: string;
+  isExpanded: boolean;
+  onPress: () => void;
 }
 
-const InsightRow = ({ row, highlightColor }: InsightRowProps) => (
-  <View style={styles.row}>
-    <Text style={styles.pitchLabel}>{row.label}</Text>
+const InsightRow = ({
+  row,
+  highlightColor,
+  isExpanded,
+  onPress,
+}: InsightRowProps) => (
+  <TouchableOpacity
+    style={styles.row}
+    activeOpacity={0.7}
+    onPress={onPress}
+    accessibilityRole="button"
+    accessibilityState={{ expanded: isExpanded }}
+  >
+    <Text style={styles.pitchLabel}>
+      {isExpanded ? "▼" : "▶"} {row.label}
+    </Text>
     <View style={styles.rowRight}>
       <Text style={[styles.average, { color: highlightColor }]}>
         {formatBattingAverage(row.batting_average, row.at_bats)}
@@ -26,7 +42,7 @@ const InsightRow = ({ row, highlightColor }: InsightRowProps) => (
         ({row.at_bats}-{row.hits})
       </Text>
     </View>
-  </View>
+  </TouchableOpacity>
 );
 
 /**
@@ -35,8 +51,11 @@ const InsightRow = ({ row, highlightColor }: InsightRowProps) => (
  * TOP セクションでハイライトし、0 打数の球種は「その他 N 球種」に集約する
  * インサイト型 UI。打数 1 以上の球種を打率降順で並べ替えて、上位を得意、
  * 下位を苦手にする（同じ行を重複させない）。
+ * 各行タップで PitcherFaceoffList と同じ詳細グリッドを展開する。
  */
 export const PitchTypeCard = ({ rows, totalTargetPa }: PitchTypeCardProps) => {
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
   if (totalTargetPa === 0) {
     return (
       <View style={styles.container}>
@@ -59,17 +78,44 @@ export const PitchTypeCard = ({ rows, totalTargetPa }: PitchTypeCardProps) => {
   const goodRows = sortedByAverage.slice(0, SECTION_LIMIT);
   const goodIds = new Set(goodRows.map((row) => row.id));
   const remaining = sortedByAverage.filter((row) => !goodIds.has(row.id));
-  // 残りの末尾から SECTION_LIMIT 件を「苦手」として打率の低い順で並べる
   const badRowsCandidate = remaining.slice(-SECTION_LIMIT).reverse();
 
-  // 有効球種が SECTION_LIMIT 以下なら「全部得意」と読まれる可能性があるため、
-  // 「得意」が SECTION_LIMIT 件揃って、かつ remaining にも実球種があるときだけ
-  // 「苦手」セクションを出す。サンプルが少ない時の誤読を防ぐためのガード。
   const showBadSection =
     goodRows.length >= SECTION_LIMIT && badRowsCandidate.length > 0;
   const badRows = showBadSection ? badRowsCandidate : [];
 
   const zeroCount = rows.length - activeRows.length;
+
+  const renderRow = (row: PitchTypeRow, highlightColor: string) => {
+    const isExpanded = expandedId === row.id;
+    return (
+      <View key={row.id}>
+        <InsightRow
+          row={row}
+          highlightColor={highlightColor}
+          isExpanded={isExpanded}
+          onPress={() => setExpandedId(isExpanded ? null : row.id)}
+        />
+        {isExpanded && (
+          <View style={styles.detailWrapper}>
+            <PitcherStatsDetailGrid
+              plateAppearances={row.plate_appearances}
+              atBats={row.at_bats}
+              hits={row.hits}
+              baseOnBalls={row.base_on_balls}
+              hitByPitch={row.hit_by_pitch}
+              sacrificeFly={row.sacrifice_fly}
+              battingAverage={row.batting_average}
+              onBasePercentage={row.on_base_percentage}
+              sluggingPercentage={row.slugging_percentage}
+              ops={row.ops}
+              resultCounts={row.result_counts}
+            />
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -81,18 +127,14 @@ export const PitchTypeCard = ({ rows, totalTargetPa }: PitchTypeCardProps) => {
       {goodRows.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>得意</Text>
-          {goodRows.map((row) => (
-            <InsightRow key={row.id} row={row} highlightColor="#d08000" />
-          ))}
+          {goodRows.map((row) => renderRow(row, "#d08000"))}
         </View>
       )}
 
       {badRows.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>苦手</Text>
-          {badRows.map((row) => (
-            <InsightRow key={row.id} row={row} highlightColor="#A1A1AA" />
-          ))}
+          {badRows.map((row) => renderRow(row, "#A1A1AA"))}
         </View>
       )}
 
@@ -163,6 +205,9 @@ const styles = StyleSheet.create({
   subText: {
     color: "#71717A",
     fontSize: 11,
+  },
+  detailWrapper: {
+    marginBottom: 6,
   },
   zeroNote: {
     color: "#71717A",
