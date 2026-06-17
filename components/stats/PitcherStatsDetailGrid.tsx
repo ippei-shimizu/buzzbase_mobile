@@ -76,7 +76,10 @@ export const PitcherStatsDetailGrid = ({
     { label: "死球", value: String(hitByPitch) },
     { label: "出塁率", value: formatStatRate(onBasePercentage, obpDenom) },
     { label: "長打率", value: formatStatRate(sluggingPercentage, atBats) },
-    { label: "OPS", value: formatStatRate(ops, atBats) },
+    // OPS = OBP + SLG なので、OBP が表示できる（obpDenom > 0）なら OPS も
+    // 表示できる。AB=0 でガードすると四球のみ打席（AB=0, BB>0）で OBP は出るが
+    // OPS だけ ".---" になり矛盾するため、guard は obpDenom に揃える。
+    { label: "OPS", value: formatStatRate(ops, obpDenom) },
   ];
 
   return (
