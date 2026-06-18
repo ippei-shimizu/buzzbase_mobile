@@ -81,7 +81,7 @@ const renderSignIn = () => {
 };
 
 describe("sign-in: メール/パスワード ログイン", () => {
-  it("正しい入力で /auth/sign_in が呼ばれ、(tabs) へ遷移する", async () => {
+  it("正しい入力で /auth/sign_in が呼ばれ、user_id 設定済みなら (tabs) へ遷移する", async () => {
     let receivedBody: unknown = null;
     server.use(
       http.post(apiUrl("/auth/sign_in"), async ({ request }) => {
@@ -91,6 +91,14 @@ describe("sign-in: メール/パスワード ログイン", () => {
           { headers: authSuccessHeaders() },
         );
       }),
+      http.get(apiUrl("/user"), () =>
+        HttpResponse.json({
+          id: 1,
+          email: "test@example.com",
+          name: "tester",
+          user_id: "tester",
+        }),
+      ),
     );
 
     const { getByPlaceholderText, getByText } = renderSignIn();
@@ -112,6 +120,44 @@ describe("sign-in: メール/パスワード ログイン", () => {
     expect(receivedBody).toEqual({
       email: "test@example.com",
       password: "password123",
+    });
+  });
+
+  it("メールログイン成功 + user_id 未設定 (null) で username-registration へ遷移する", async () => {
+    server.use(
+      http.post(apiUrl("/auth/sign_in"), () =>
+        HttpResponse.json(
+          { data: { id: 1, email: "noslug@example.com", name: "noslug" } },
+          { headers: authSuccessHeaders() },
+        ),
+      ),
+      http.get(apiUrl("/user"), () =>
+        HttpResponse.json({
+          id: 1,
+          email: "noslug@example.com",
+          name: "noslug",
+          user_id: null,
+        }),
+      ),
+    );
+
+    const { getByPlaceholderText, getByText } = renderSignIn();
+
+    fireEvent.changeText(
+      getByPlaceholderText("email@example.com"),
+      "noslug@example.com",
+    );
+    fireEvent.changeText(
+      getByPlaceholderText("6文字以上の半角英数字"),
+      "password123",
+    );
+    fireEvent.press(getByText("ログイン"));
+
+    const routerSpies = getRouterSpies();
+    await waitFor(() => {
+      expect(routerSpies.replace).toHaveBeenCalledWith(
+        "/(auth)/username-registration",
+      );
     });
   });
 
