@@ -4,22 +4,28 @@ import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { TextInput } from "@components/ui/TextInput";
 
 interface Props {
-  username: string;
-  usernameError?: string;
+  name: string;
+  userId: string;
+  nameError?: string;
+  userIdError?: string;
   errors: string[];
   isSubmitting: boolean;
   isValid: boolean;
-  onUsernameChange: (value: string) => void;
+  onNameChange: (value: string) => void;
+  onUserIdChange: (value: string) => void;
   onSubmit: () => void;
 }
 
 export function UsernameRegistrationForm({
-  username,
-  usernameError,
+  name,
+  userId,
+  nameError,
+  userIdError,
   errors,
   isSubmitting,
   isValid,
-  onUsernameChange,
+  onNameChange,
+  onUserIdChange,
   onSubmit,
 }: Props) {
   return (
@@ -53,20 +59,40 @@ export function UsernameRegistrationForm({
           marginBottom: 24,
         }}
       >
-        ユーザーIDを設定してください
+        ユーザー名とユーザーIDを設定してください
       </Text>
 
       <ErrorMessage errors={errors} />
 
       <TextInput
-        label="ユーザーID"
-        placeholder="半角英数字・アンダーバー"
-        value={username}
-        onChangeText={onUsernameChange}
-        error={usernameError}
+        label="ユーザー名"
+        placeholder="大谷 一郎（ニックネーム可）"
+        value={name}
+        onChangeText={onNameChange}
+        error={nameError}
         autoCapitalize="none"
         autoCorrect={false}
       />
+
+      <TextInput
+        label="ユーザーID"
+        placeholder="buzz_base235"
+        value={userId}
+        onChangeText={onUserIdChange}
+        error={userIdError}
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
+
+      <Text
+        style={{
+          fontSize: 12,
+          color: "#999",
+          marginBottom: 12,
+        }}
+      >
+        ※IDはプロフィール編集から変更できます。
+      </Text>
 
       <Button
         title="登録する"
