@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { SignInForm } from "@components/auth/SignInForm";
 import { useAuth } from "@hooks/useAuth";
 import { useFormValidation } from "@hooks/useFormValidation";
+import { getCurrentUserProfile } from "@services/profileService";
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -31,7 +32,15 @@ export default function SignInScreen() {
 
     try {
       await login({ email, password });
-      router.replace("/(tabs)");
+      // メールログインは devise_token_auth のデフォルトレスポンスを使うため、
+      // Google / Apple のような requires_username フラグが返らない。Web 版と同じく
+      // GET /user の user_id (slug) 空判定で username 未設定を検出する。
+      const profile = await getCurrentUserProfile();
+      if (profile?.user_id) {
+        router.replace("/(tabs)");
+      } else {
+        router.replace("/(auth)/username-registration");
+      }
       return;
     } catch (error) {
       if (error instanceof AxiosError) {
