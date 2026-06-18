@@ -161,6 +161,84 @@ describe("sign-in: メール/パスワード ログイン", () => {
     });
   });
 
+  it("メールログイン成功 + user_id 空文字列 で username-registration へ遷移する", async () => {
+    server.use(
+      http.post(apiUrl("/auth/sign_in"), () =>
+        HttpResponse.json(
+          { data: { id: 1, email: "empty@example.com", name: "empty" } },
+          { headers: authSuccessHeaders() },
+        ),
+      ),
+      http.get(apiUrl("/user"), () =>
+        HttpResponse.json({
+          id: 1,
+          email: "empty@example.com",
+          name: "empty",
+          user_id: "",
+        }),
+      ),
+    );
+
+    const { getByPlaceholderText, getByText } = renderSignIn();
+
+    fireEvent.changeText(
+      getByPlaceholderText("email@example.com"),
+      "empty@example.com",
+    );
+    fireEvent.changeText(
+      getByPlaceholderText("6文字以上の半角英数字"),
+      "password123",
+    );
+    fireEvent.press(getByText("ログイン"));
+
+    const routerSpies = getRouterSpies();
+    await waitFor(() => {
+      expect(routerSpies.replace).toHaveBeenCalledWith(
+        "/(auth)/username-registration",
+      );
+    });
+  });
+
+  it("メールログイン成功後に GET /user が失敗しても username-registration へ救済遷移する", async () => {
+    server.use(
+      http.post(apiUrl("/auth/sign_in"), () =>
+        HttpResponse.json(
+          { data: { id: 1, email: "neterr@example.com", name: "neterr" } },
+          { headers: authSuccessHeaders() },
+        ),
+      ),
+      // プロフィール取得は 500 エラー（ネットワーク断 / サーバーエラー相当）
+      http.get(apiUrl("/user"), () =>
+        HttpResponse.json({ errors: ["server error"] }, { status: 500 }),
+      ),
+    );
+
+    const { getByPlaceholderText, getByText, queryByText } = renderSignIn();
+
+    fireEvent.changeText(
+      getByPlaceholderText("email@example.com"),
+      "neterr@example.com",
+    );
+    fireEvent.changeText(
+      getByPlaceholderText("6文字以上の半角英数字"),
+      "password123",
+    );
+    fireEvent.press(getByText("ログイン"));
+
+    const routerSpies = getRouterSpies();
+    await waitFor(() => {
+      expect(routerSpies.replace).toHaveBeenCalledWith(
+        "/(auth)/username-registration",
+      );
+    });
+    // login は成功しているので「パスワードが正しくありません」等の誤った
+    // エラー文言が出ないことを確認する。
+    expect(
+      queryByText("メールアドレスまたはパスワードが正しくありません"),
+    ).toBeNull();
+    expect(queryByText("ネットワークエラーが発生しました")).toBeNull();
+  });
+
   it("401 + confirmation エラー時は confirmation-pending へ遷移する", async () => {
     server.use(
       http.post(apiUrl("/auth/sign_in"), () =>
