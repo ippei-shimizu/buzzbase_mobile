@@ -65,6 +65,12 @@ const getRouterSpies = (): RouterSpies => {
   return expoRouterMock.__routerSpies;
 };
 
+// CI 環境は実行が遅く（ローカルの ~4 倍）、login → getCurrentUserProfile →
+// router.replace の連鎖を 5 秒以内に完了できない場合がある。MSW + waitFor の
+// 構成自体は健全だがランタイムの遅さで timeout になるため、Jest デフォルトの
+// 5 秒タイムアウトを 15 秒に延長する。
+jest.setTimeout(15000);
+
 beforeEach(() => {
   // jest.clearAllMocks は jest.fn() で生成された全モック（routerSpies を含む）を
   // 一括でクリアする。
