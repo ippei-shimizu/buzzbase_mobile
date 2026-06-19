@@ -29,8 +29,6 @@ import {
 
 interface HitDirectionTableProps {
   directions: HitDirection[];
-  /** カード装飾とタイトルを省き、球場図本体のみ描画する（Coming soon のボカし背景用）。 */
-  bare?: boolean;
 }
 
 const WIDTH = GROUND_CANVAS_WIDTH;
@@ -76,10 +74,7 @@ const formatAverage = (hits: number, atBats: number): string => {
  * 球場描画は SprayChart と同一のイラストを使い、見た目を統一する。
  * 円の色濃度 = 打率の高さ、中央テキスト = 打率値（0打数は「—」）。
  */
-export const HitDirectionTable = ({
-  directions,
-  bare = false,
-}: HitDirectionTableProps) => {
+export const HitDirectionTable = ({ directions }: HitDirectionTableProps) => {
   // ダート半円（SprayChart と同じ算出）
   const dirtCenterX = HOME.x;
   const dirtCenterY = FIRST.y + 5;
@@ -109,8 +104,8 @@ export const HitDirectionTable = ({
     setSelectedId((prev) => (prev === id ? null : id));
 
   return (
-    <View style={bare ? styles.bareContainer : styles.container}>
-      {!bare && <Text style={styles.title}>方向別の打率</Text>}
+    <View style={styles.container}>
+      <Text style={styles.title}>方向別の打率</Text>
 
       <View style={styles.chartWrapper}>
         <Svg
@@ -455,7 +450,6 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
   },
-  bareContainer: {},
   title: {
     color: "#F4F4F4",
     fontSize: 16,

@@ -1,4 +1,3 @@
-import type { HitDirection } from "../../types/stats";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -6,36 +5,8 @@ import { StyleSheet, Text, View } from "react-native";
  * Pro プラン Coming soon カードのボカし対象ダミー body 群。
  * 数値はすべてダミー固定値で、BlurView で読み取れなくなる前提のため正確さは不要。
  * 各機能のレイアウトに似せて「何ができる機能か」を視覚的に伝える役割を持つ。
+ * 方向別の球場図は ProComingSoonHitDirectionField.tsx を参照。
  */
-
-// 方向別の打率は実際の HitDirectionTable（球場図）をそのまま使うため、
-// 13 方向ぶんのダミー打席データを渡す。打率の高低で色濃度が変わるよう値を散らす。
-export const DUMMY_HIT_DIRECTIONS: HitDirection[] = [
-  { at_bats: 4, hits: 1 },
-  { at_bats: 6, hits: 2 },
-  { at_bats: 9, hits: 3 },
-  { at_bats: 7, hits: 1 },
-  { at_bats: 12, hits: 5 },
-  { at_bats: 10, hits: 4 },
-  { at_bats: 8, hits: 3 },
-  { at_bats: 14, hits: 6 },
-  { at_bats: 5, hits: 2 },
-  { at_bats: 11, hits: 4 },
-  { at_bats: 6, hits: 1 },
-  { at_bats: 9, hits: 4 },
-  { at_bats: 3, hits: 1 },
-].map((stat, index) => ({
-  id: index + 1,
-  label: "",
-  count: stat.at_bats,
-  top_category: "単打",
-  at_bats: stat.at_bats,
-  hits: stat.hits,
-  two_base_hit: 0,
-  three_base_hit: 0,
-  home_run: 0,
-  total_bases: stat.hits,
-}));
 
 export function CountSituationDummy() {
   const columns = [
