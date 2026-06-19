@@ -4575,10 +4575,10 @@ expect@^29.7.0:
     jest-message-util "^29.7.0"
     jest-util "^29.7.0"
 
-expo-apple-authentication@^55.0.9:
-  version "55.0.9"
-  resolved "https://registry.yarnpkg.com/expo-apple-authentication/-/expo-apple-authentication-55.0.9.tgz#3951a418746e5fdc0f9b24629e51769509cb8ba9"
-  integrity sha512-0+RKdvrNOfi262klXjvFqsFI/OkWZ7b46fNOjrJFhiI33Qi/c2DC2vuM/XR/sy0Ssa1wGnLdImcN4TJCBJwQ1w==
+expo-apple-authentication@^55.0.13:
+  version "55.0.13"
+  resolved "https://registry.yarnpkg.com/expo-apple-authentication/-/expo-apple-authentication-55.0.13.tgz#0045228dbc991877001790eff1f1afbdd2e295f7"
+  integrity sha512-Qvh3DmhXqhtWOe7BC9e7UVApR3XS1qE7+68tVLqb3KI/sET7QV9KT5JgOJogWmmCJVxA/kaot0M136yvW1pdWA==
 
 expo-application@~55.0.9:
   version "55.0.9"
