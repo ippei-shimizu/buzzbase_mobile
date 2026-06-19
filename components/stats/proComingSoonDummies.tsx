@@ -1,3 +1,4 @@
+import type { HitDirection } from "../../types/stats";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -7,31 +8,34 @@ import { StyleSheet, Text, View } from "react-native";
  * 各機能のレイアウトに似せて「何ができる機能か」を視覚的に伝える役割を持つ。
  */
 
-export function HitDirectionDummy() {
-  const cells = [
-    ".000",
-    ".333",
-    ".286",
-    ".000",
-    ".400",
-    ".250",
-    ".312",
-    ".200",
-    ".278",
-    ".000",
-    ".357",
-    ".300",
-  ];
-  return (
-    <View style={styles.gridWrapper}>
-      {cells.map((value, index) => (
-        <View key={index} style={styles.heatCell}>
-          <Text style={styles.heatValue}>{value}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
+// 方向別の打率は実際の HitDirectionTable（球場図）をそのまま使うため、
+// 13 方向ぶんのダミー打席データを渡す。打率の高低で色濃度が変わるよう値を散らす。
+export const DUMMY_HIT_DIRECTIONS: HitDirection[] = [
+  { at_bats: 4, hits: 1 },
+  { at_bats: 6, hits: 2 },
+  { at_bats: 9, hits: 3 },
+  { at_bats: 7, hits: 1 },
+  { at_bats: 12, hits: 5 },
+  { at_bats: 10, hits: 4 },
+  { at_bats: 8, hits: 3 },
+  { at_bats: 14, hits: 6 },
+  { at_bats: 5, hits: 2 },
+  { at_bats: 11, hits: 4 },
+  { at_bats: 6, hits: 1 },
+  { at_bats: 9, hits: 4 },
+  { at_bats: 3, hits: 1 },
+].map((stat, index) => ({
+  id: index + 1,
+  label: "",
+  count: stat.at_bats,
+  top_category: "単打",
+  at_bats: stat.at_bats,
+  hits: stat.hits,
+  two_base_hit: 0,
+  three_base_hit: 0,
+  home_run: 0,
+  total_bases: stat.hits,
+}));
 
 export function CountSituationDummy() {
   const columns = [
@@ -89,24 +93,6 @@ export function PitcherFaceoffDummy() {
 }
 
 const styles = StyleSheet.create({
-  gridWrapper: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  heatCell: {
-    width: "22%",
-    aspectRatio: 1.6,
-    backgroundColor: "#27272A",
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  heatValue: {
-    color: "#F4F4F4",
-    fontSize: 14,
-    fontWeight: "700",
-  },
   countRow: {
     flexDirection: "row",
     gap: 8,
