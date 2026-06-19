@@ -12,7 +12,7 @@ interface ProComingSoonCardProps {
 /**
  * Pro プラン限定機能のリリース前告知カード。
  * タイトル・説明は読める状態のまま、children（ダミー body）を BlurView でボカし、
- * 「見えそうだけど見えない」状態にして機能の事前訴求を行う。
+ * ブラーの上に「Pro プラン (準備中)」バッジを重ねて機能の事前訴求を行う。
  */
 export function ProComingSoonCard({
   title,
@@ -21,20 +21,16 @@ export function ProComingSoonCard({
 }: ProComingSoonCardProps) {
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
-        <View style={styles.badge}>
-          <Ionicons name="lock-closed" size={11} color="#1A1A1A" />
-          <Text style={styles.badgeText}>Pro プラン (準備中)</Text>
-        </View>
-      </View>
+      <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
       <View style={styles.previewWrapper} pointerEvents="none">
         {children}
         <BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFill} />
-        <View style={styles.lockOverlay}>
-          <Ionicons name="lock-closed" size={22} color="#F4F4F4" />
-          <Text style={styles.lockText}>準備中</Text>
+        <View style={styles.overlay}>
+          <View style={styles.badge}>
+            <Ionicons name="lock-closed" size={13} color="#1A1A1A" />
+            <Text style={styles.badgeText}>Pro プラン (準備中)</Text>
+          </View>
         </View>
       </View>
     </View>
@@ -48,29 +44,9 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
   title: {
     color: "#F4F4F4",
     fontSize: 16,
-    fontWeight: "700",
-    flexShrink: 1,
-  },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    backgroundColor: "#d08000",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-  },
-  badgeText: {
-    color: "#1A1A1A",
-    fontSize: 10,
     fontWeight: "700",
   },
   description: {
@@ -85,15 +61,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
   },
-  lockOverlay: {
+  overlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
   },
-  lockText: {
-    color: "#F4F4F4",
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#d08000",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  badgeText: {
+    color: "#1A1A1A",
     fontSize: 13,
-    fontWeight: "700",
+    fontWeight: "800",
   },
 });
