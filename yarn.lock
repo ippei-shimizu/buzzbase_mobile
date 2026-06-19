@@ -4593,6 +4593,11 @@ expo-asset@~55.0.8:
     "@expo/image-utils" "^0.8.12"
     expo-constants "~55.0.7"
 
+expo-blur@~55.0.14:
+  version "55.0.14"
+  resolved "https://registry.yarnpkg.com/expo-blur/-/expo-blur-55.0.14.tgz#ae2cc7eb7766279830fc6d622ca7b4c8706eb786"
+  integrity sha512-NKyCKFWTNpX4CZSsiE1sgkqk/yvR1K0UTukuIbxVKoobB+yALLg1CFav0NqfdQqjhtoj5oEzP0Brlq92Z08Zfg==
+
 expo-clipboard@^55.0.11:
   version "55.0.11"
   resolved "https://registry.yarnpkg.com/expo-clipboard/-/expo-clipboard-55.0.11.tgz#978c0004a2584b9f58317a2f1ea0e75dd5a126c6"
