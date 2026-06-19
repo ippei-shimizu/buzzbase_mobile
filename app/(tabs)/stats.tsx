@@ -33,10 +33,10 @@ import { PlateAppearanceDonut } from "@components/stats/PlateAppearanceDonut";
 import { ProComingSoonCard } from "@components/stats/ProComingSoonCard";
 import {
   CountSituationDummy,
-  DUMMY_HIT_DIRECTIONS,
   PitcherFaceoffDummy,
   PitchTypeDummy,
 } from "@components/stats/proComingSoonDummies";
+import { ProComingSoonHitDirectionField } from "@components/stats/ProComingSoonHitDirectionField";
 import { RunnersSituationCard } from "@components/stats/RunnersSituationCard";
 import { SprayChart } from "@components/stats/SprayChart";
 import { StatsFilters } from "@components/stats/StatsFilters";
@@ -561,7 +561,7 @@ export default function StatsScreen() {
                 title="方向別の打率"
                 description="打球を打った方向ごとの打率をヒートマップで可視化します"
               >
-                <HitDirectionTable directions={DUMMY_HIT_DIRECTIONS} bare />
+                <ProComingSoonHitDirectionField />
               </ProComingSoonCard>
             ) : (
               hitDirections.data && (
