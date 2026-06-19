@@ -114,10 +114,11 @@ export const useOutTypeBreakdown = (filters: StatsFilters) =>
     placeholderData: keepPreviousData,
   });
 
-export const useCountSituations = (filters: StatsFilters) =>
+export const useCountSituations = (filters: StatsFilters, enabled = true) =>
   useQuery({
     queryKey: ["countSituations", filters],
     queryFn: () => getCountSituations(filters),
+    enabled,
     placeholderData: keepPreviousData,
   });
 
@@ -128,17 +129,19 @@ export const useContactQualities = (filters: StatsFilters) =>
     placeholderData: keepPreviousData,
   });
 
-export const usePitchTypes = (filters: StatsFilters) =>
+export const usePitchTypes = (filters: StatsFilters, enabled = true) =>
   useQuery({
     queryKey: ["pitchTypes", filters],
     queryFn: () => getPitchTypes(filters),
+    enabled,
     placeholderData: keepPreviousData,
   });
 
-export const usePitcherFaceoffs = (filters: StatsFilters) =>
+export const usePitcherFaceoffs = (filters: StatsFilters, enabled = true) =>
   useQuery({
     queryKey: ["pitcherFaceoffs", filters],
     queryFn: () => getPitcherFaceoffs(filters),
+    enabled,
     placeholderData: keepPreviousData,
   });
 
