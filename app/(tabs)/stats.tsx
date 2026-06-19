@@ -30,6 +30,13 @@ import { PitcherAttributeSummary } from "@components/stats/PitcherAttributeSumma
 import { PitcherFaceoffList } from "@components/stats/PitcherFaceoffList";
 import { PitchTypeCard } from "@components/stats/PitchTypeCard";
 import { PlateAppearanceDonut } from "@components/stats/PlateAppearanceDonut";
+import { ProComingSoonCard } from "@components/stats/ProComingSoonCard";
+import {
+  CountSituationDummy,
+  HitDirectionDummy,
+  PitcherFaceoffDummy,
+  PitchTypeDummy,
+} from "@components/stats/proComingSoonDummies";
 import { RunnersSituationCard } from "@components/stats/RunnersSituationCard";
 import { SprayChart } from "@components/stats/SprayChart";
 import { StatsFilters } from "@components/stats/StatsFilters";
@@ -69,6 +76,10 @@ import { useTournaments } from "@hooks/useTournaments";
 type ActiveTab = "batting" | "pitching";
 
 const currentYear = new Date().getFullYear().toString();
+
+// Pro プラン本体（課金・エンタイトルメント判定）実装時に false にすると、
+// 対象4セクションが通常表示に戻り、停止していた hook の API 呼び出しが再開する。
+const PRO_FEATURES_COMING_SOON = true;
 
 // テーブル用FilterDropdown（game-results/index.tsxと同じパターン）
 function TableFilterDropdown({
@@ -269,11 +280,17 @@ export default function StatsScreen() {
   const { years: availableYears } = useAvailableYears();
   const hitDirections = useHitDirections(filters);
   const hitLocations = useHitLocations(filters);
-  const countSituations = useCountSituations(filters);
+  const countSituations = useCountSituations(
+    filters,
+    !PRO_FEATURES_COMING_SOON,
+  );
   const contactQualities = useContactQualities(filters);
   const timingBreakdown = useTimingBreakdown(filters);
-  const pitchTypes = usePitchTypes(filters);
-  const pitcherFaceoffs = usePitcherFaceoffs(filters);
+  const pitchTypes = usePitchTypes(filters, !PRO_FEATURES_COMING_SOON);
+  const pitcherFaceoffs = usePitcherFaceoffs(
+    filters,
+    !PRO_FEATURES_COMING_SOON,
+  );
   const pitcherAttributeSummary = usePitcherAttributeSummary(filters);
   const [battingTrendGranularity, setBattingTrendGranularity] =
     useState<BattingTrendGranularity>("game");
@@ -329,11 +346,17 @@ export default function StatsScreen() {
     await Promise.all([
       hitDirections.refetch(),
       hitLocations.refetch(),
-      countSituations.refetch(),
       contactQualities.refetch(),
       timingBreakdown.refetch(),
-      pitchTypes.refetch(),
-      pitcherFaceoffs.refetch(),
+      // Coming soon 中は disabled な hook（countSituations / pitchTypes /
+      // pitcherFaceoffs）を refetch しない。無駄な API 呼び出しを避ける。
+      ...(PRO_FEATURES_COMING_SOON
+        ? []
+        : [
+            countSituations.refetch(),
+            pitchTypes.refetch(),
+            pitcherFaceoffs.refetch(),
+          ]),
       pitcherAttributeSummary.refetch(),
       battingTrend.refetch(),
       paBreakdown.refetch(),
@@ -533,10 +556,21 @@ export default function StatsScreen() {
               </FetchingOverlay>
             )}
             {/* 6. HitDirectionTable */}
-            {hitDirections.data && (
-              <FetchingOverlay isFetching={hitDirections.isFetching}>
-                <HitDirectionTable directions={hitDirections.data.directions} />
-              </FetchingOverlay>
+            {PRO_FEATURES_COMING_SOON ? (
+              <ProComingSoonCard
+                title="方向別の打率"
+                description="打球を打った方向ごとの打率をヒートマップで可視化します"
+              >
+                <HitDirectionDummy />
+              </ProComingSoonCard>
+            ) : (
+              hitDirections.data && (
+                <FetchingOverlay isFetching={hitDirections.isFetching}>
+                  <HitDirectionTable
+                    directions={hitDirections.data.directions}
+                  />
+                </FetchingOverlay>
+              )
             )}
             {/* 7. PlateAppearanceDonut（打席結果の内訳） */}
             {paBreakdown.data && (
@@ -569,31 +603,58 @@ export default function StatsScreen() {
               </FetchingOverlay>
             )}
             {/* 10. CountSituationCards（カウント別の打率） */}
-            {countSituations.data && (
-              <FetchingOverlay isFetching={countSituations.isFetching}>
-                <CountSituationCards data={countSituations.data} />
-              </FetchingOverlay>
+            {PRO_FEATURES_COMING_SOON ? (
+              <ProComingSoonCard
+                title="カウント別の打率"
+                description="初球・有利カウント・追い込みなど、カウント状況別の打率がわかります"
+              >
+                <CountSituationDummy />
+              </ProComingSoonCard>
+            ) : (
+              countSituations.data && (
+                <FetchingOverlay isFetching={countSituations.isFetching}>
+                  <CountSituationCards data={countSituations.data} />
+                </FetchingOverlay>
+              )
             )}
             {/* 11. PitchTypeCard（球種別の打率） */}
-            {pitchTypes.data && (
-              <FetchingOverlay isFetching={pitchTypes.isFetching}>
-                <PitchTypeCard
-                  rows={pitchTypes.data.rows}
-                  totalTargetPa={pitchTypes.data.total_target_pa}
-                />
-              </FetchingOverlay>
+            {PRO_FEATURES_COMING_SOON ? (
+              <ProComingSoonCard
+                title="球種別の打率"
+                description="ストレートや変化球など、球種ごとの得意・苦手が分析できます"
+              >
+                <PitchTypeDummy />
+              </ProComingSoonCard>
+            ) : (
+              pitchTypes.data && (
+                <FetchingOverlay isFetching={pitchTypes.isFetching}>
+                  <PitchTypeCard
+                    rows={pitchTypes.data.rows}
+                    totalTargetPa={pitchTypes.data.total_target_pa}
+                  />
+                </FetchingOverlay>
+              )
             )}
             {/* 12. PitcherFaceoffList */}
-            {pitcherFaceoffs.data && (
-              <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
-                <PitcherFaceoffList
-                  rows={pitcherFaceoffs.data.rows}
-                  minPlateAppearances={
-                    pitcherFaceoffs.data.min_plate_appearances
-                  }
-                  totalTargetPa={pitcherFaceoffs.data.total_target_pa}
-                />
-              </FetchingOverlay>
+            {PRO_FEATURES_COMING_SOON ? (
+              <ProComingSoonCard
+                title="対戦投手別"
+                description="対戦した投手ごとの打撃成績を一覧で確認できます"
+              >
+                <PitcherFaceoffDummy />
+              </ProComingSoonCard>
+            ) : (
+              pitcherFaceoffs.data && (
+                <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
+                  <PitcherFaceoffList
+                    rows={pitcherFaceoffs.data.rows}
+                    minPlateAppearances={
+                      pitcherFaceoffs.data.min_plate_appearances
+                    }
+                    totalTargetPa={pitcherFaceoffs.data.total_target_pa}
+                  />
+                </FetchingOverlay>
+              )
             )}
             {/* 13. PitcherAttributeSummary */}
             {pitcherAttributeSummary.data && (
