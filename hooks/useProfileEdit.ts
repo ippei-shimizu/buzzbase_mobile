@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { trackProfileUpdated } from "@utils/analytics";
 import { updateUserProfile } from "../services/profileService";
 
 export const useProfileEdit = () => {
@@ -7,6 +8,7 @@ export const useProfileEdit = () => {
   const mutation = useMutation({
     mutationFn: updateUserProfile,
     onSuccess: () => {
+      trackProfileUpdated();
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["teams"] });
       queryClient.invalidateQueries({ queryKey: ["awards"] });

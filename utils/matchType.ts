@@ -28,6 +28,25 @@ export function formatMatchTypeLabel(
   return MATCH_TYPE_LABELS[value] ?? value;
 }
 
+/** 日本語ラベル → DB 値のマップ（{@link MATCH_TYPE_LABELS} の逆引き） */
+const MATCH_TYPE_KEYS: Record<string, string> = Object.fromEntries(
+  Object.entries(MATCH_TYPE_LABELS).map(([key, label]) => [label, key]),
+);
+
+/**
+ * 日本語ラベルを match_type の DB 値に逆変換する。
+ * 集計時にロケール非依存のキー（"regular" / "open"）で扱うために使う。
+ *
+ * @param value `"公式戦"` / `"オープン戦"` / 既に DB 値 / `null` / `undefined`
+ * @returns 対応する DB 値。未知の値はそのまま返し、`null` / `undefined` は `null`
+ */
+export function toMatchTypeKey(
+  value: string | null | undefined,
+): string | null {
+  if (value == null) return null;
+  return MATCH_TYPE_KEYS[value] ?? value;
+}
+
 /**
  * フィルタ／ピッカー用の選択肢配列。
  * `FilterDropdown` の `options` プロパティに渡す形式。
