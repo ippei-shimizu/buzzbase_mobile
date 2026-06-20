@@ -18,6 +18,9 @@ export const isPostHogEnabled = !__DEV__ && !!apiKey;
 export const posthog = isPostHogEnabled
   ? new PostHog(apiKey as string, {
       host,
+      // アプリ起動/フォアグラウンド復帰の計測（リテンション分析に使用）。
+      // autocapture の captureScreens/captureTouches とは別軸で、画面遷移と
+      // タッチの自動取得は PostHogProvider 側で無効化している。
       captureAppLifecycleEvents: true,
     })
   : null;
