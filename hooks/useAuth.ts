@@ -16,6 +16,7 @@ import { googleSignIn } from "@services/googleAuthService";
 import { useAuthStore } from "@stores/authStore";
 import { useGameRecordStore } from "@stores/gameRecordStore";
 import { getAuthToken, clearAllAuthTokens } from "@utils/authTokenStorage";
+import { posthog } from "@utils/posthog";
 
 /**
  * 認証カスタムフック。マウント時に SecureStore のトークンを検証し
@@ -78,6 +79,7 @@ export const useAuth = () => {
       // signOut 失敗時のトークン残留を防ぐため冪等に削除する。
       await clearAllAuthTokens();
       Sentry.setUser(null);
+      posthog?.reset();
     }
 
     setIsLoggedIn(false);

@@ -10,6 +10,7 @@ import type { AuthResponse, SignInData, SignUpData } from "../types/auth";
 import * as Sentry from "@sentry/react-native";
 import { clearAllAuthTokens } from "@utils/authTokenStorage";
 import axiosInstance from "@utils/axiosInstance";
+import { posthog } from "@utils/posthog";
 
 /** メールアドレスとパスワードでログイン */
 export const signIn = async (data: SignInData): Promise<AuthResponse> => {
@@ -20,6 +21,7 @@ export const signIn = async (data: SignInData): Promise<AuthResponse> => {
   const body = response.data as AuthResponse;
   if (body.data?.id) {
     Sentry.setUser({ id: String(body.data.id) });
+    posthog?.identify(String(body.data.id));
   }
   return body;
 };
@@ -29,6 +31,7 @@ export const signOut = async (): Promise<void> => {
   await axiosInstance.delete("/auth/sign_out");
   await clearAllAuthTokens();
   Sentry.setUser(null);
+  posthog?.reset();
 };
 
 /** SecureStoreのトークンが有効か検証（アプリ起動時に使用） */
@@ -37,6 +40,7 @@ export const validateToken = async (): Promise<AuthResponse> => {
   const body = response.data as AuthResponse;
   if (body.data?.id) {
     Sentry.setUser({ id: String(body.data.id) });
+    posthog?.identify(String(body.data.id));
   }
   return body;
 };
