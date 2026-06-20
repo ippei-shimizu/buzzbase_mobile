@@ -40,6 +40,10 @@ export const DashboardContent = ({
     router.push("/(groups)/create");
   };
 
+  const handleRecordGame = () => {
+    router.push("/(game-record)/step1-game-info");
+  };
+
   return (
     <ScrollView
       style={[styles.container, style]}
@@ -56,10 +60,12 @@ export const DashboardContent = ({
       <StatsOverview
         battingStats={data.batting_stats}
         pitchingStats={data.pitching_stats}
+        onRecordGame={handleRecordGame}
       />
       <RecentGameResults
         results={data.recent_game_results}
         style={styles.section}
+        onRecordGame={handleRecordGame}
       />
       <GroupRankings
         rankings={data.group_rankings}

@@ -23,6 +23,7 @@ interface StatsOverviewProps {
   battingStats: BattingStats;
   pitchingStats: PitchingStats;
   style?: ViewStyle;
+  onRecordGame?: () => void;
 }
 
 function formatStat(value: number | undefined | null, decimals = 3): string {
@@ -37,9 +38,11 @@ function formatStat(value: number | undefined | null, decimals = 3): string {
 const BattingSection = ({
   stats,
   filterBar,
+  onRecordGame,
 }: {
   stats: BattingStats;
   filterBar: React.ReactNode;
+  onRecordGame?: () => void;
 }) => {
   const radarData = normalizeBattingStats(stats);
   const { aggregate: agg, calculated: calc } = stats;
@@ -52,7 +55,14 @@ const BattingSection = ({
       {filterBar}
 
       {!agg || !calc ? (
-        <EmptyState title="打撃データがありません" />
+        <EmptyState
+          title="打撃データがありません"
+          action={
+            onRecordGame
+              ? { label: "初めての試合を記録する", onPress: onRecordGame }
+              : undefined
+          }
+        />
       ) : (
         <>
           {radarData.length > 0 && (
@@ -296,9 +306,15 @@ export const StatsOverview = ({
   battingStats: defaultBatting,
   pitchingStats: defaultPitching,
   style,
+  onRecordGame,
 }: StatsOverviewProps) => {
   const batting = useStatsFilter("batting");
   const pitching = useStatsFilter("pitching");
+
+  // 通算（フィルターなし）の打撃データがゼロのユーザーだけを「初回ユーザー」とみなす。
+  // フィルターで一致試合が無く空になった既存ユーザーに CTA を出さないための判定。
+  const isFirstTimeUser =
+    !defaultBatting.aggregate && !defaultBatting.calculated;
 
   const { battingStats: filteredBatting } = useProfileStats(batting.filters);
   const { pitchingStats: filteredPitching } = useProfileStats(pitching.filters);
@@ -368,6 +384,7 @@ export const StatsOverview = ({
         <BattingSection
           stats={battingStats}
           filterBar={buildFilterBar(batting)}
+          onRecordGame={isFirstTimeUser ? onRecordGame : undefined}
         />
       </View>
       <View style={styles.sectionCard}>

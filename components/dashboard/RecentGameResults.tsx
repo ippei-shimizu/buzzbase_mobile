@@ -15,6 +15,7 @@ import { EmptyState } from "./EmptyState";
 interface RecentGameResultsProps {
   results: RecentGameResult[];
   style?: ViewStyle;
+  onRecordGame?: () => void;
 }
 
 const formatDate = (dateStr: string): string => {
@@ -170,6 +171,7 @@ const GameResultCard = ({ game }: { game: RecentGameResult }) => {
 export const RecentGameResults = ({
   results,
   style,
+  onRecordGame,
 }: RecentGameResultsProps) => {
   const router = useRouter();
 
@@ -184,7 +186,14 @@ export const RecentGameResults = ({
         )}
       </View>
       {results.length === 0 ? (
-        <EmptyState title="試合結果がありません" />
+        <EmptyState
+          title="試合結果がありません"
+          action={
+            onRecordGame
+              ? { label: "初めての試合を記録する", onPress: onRecordGame }
+              : undefined
+          }
+        />
       ) : (
         results
           .filter(
