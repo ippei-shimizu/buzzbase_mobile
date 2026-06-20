@@ -95,7 +95,8 @@ export const useAcceptInvitation = () => {
 
   const mutation = useMutation({
     mutationFn: acceptInvitation,
-    onSuccess: () => {
+    onSuccess: (_data, groupId) => {
+      trackGroupJoined(groupId);
       queryClient.invalidateQueries({ queryKey: ["groups"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
