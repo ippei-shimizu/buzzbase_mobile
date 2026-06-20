@@ -7,9 +7,11 @@ import {
   StyleSheet,
   type ViewStyle,
 } from "react-native";
+import { useProfile } from "@hooks/useProfile";
 import { GroupRankings } from "./GroupRankings";
 import { RecentGameResults } from "./RecentGameResults";
 import { StatsOverview } from "./StatsOverview";
+import { WelcomeCard } from "./WelcomeCard";
 
 interface DashboardContentProps {
   data: DashboardData;
@@ -27,6 +29,11 @@ export const DashboardContent = ({
   headerComponent,
 }: DashboardContentProps) => {
   const router = useRouter();
+  const { profile } = useProfile();
+
+  const isNewUser =
+    data.recent_game_results.length === 0 &&
+    data.batting_stats.aggregate === null;
 
   const handleGroupPress = (groupId: number) => {
     router.push({ pathname: "/group-detail", params: { id: groupId } });
@@ -44,6 +51,12 @@ export const DashboardContent = ({
     router.push("/(game-record)/step1-game-info");
   };
 
+  const handleInviteFriends = () => {
+    router.push(
+      profile?.user_id ? "/(groups)/create" : "/(auth)/username-registration",
+    );
+  };
+
   return (
     <ScrollView
       style={[styles.container, style]}
@@ -56,7 +69,14 @@ export const DashboardContent = ({
         />
       }
     >
-      {headerComponent}
+      {isNewUser ? (
+        <WelcomeCard
+          onRecordGame={handleRecordGame}
+          onInviteFriends={handleInviteFriends}
+        />
+      ) : (
+        headerComponent
+      )}
       <StatsOverview
         battingStats={data.batting_stats}
         pitchingStats={data.pitching_stats}

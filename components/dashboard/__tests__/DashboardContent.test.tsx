@@ -10,7 +10,9 @@
  */
 import type { RouterSpies } from "../../../__tests__/test-utils/mockExpoRouter";
 import type { DashboardData } from "../../../types/dashboard";
+import type { ReactNode } from "react";
 import { fireEvent, waitFor } from "@testing-library/react-native";
+import { Text } from "react-native";
 import {
   apiUrl,
   baseUrl,
@@ -67,9 +69,17 @@ beforeEach(() => {
   );
 });
 
-const renderDashboard = (data: DashboardData = emptyData) =>
+const renderDashboard = (
+  data: DashboardData = emptyData,
+  headerComponent?: ReactNode,
+) =>
   renderWithProviders(
-    <DashboardContent data={data} isRefreshing={false} onRefresh={jest.fn()} />,
+    <DashboardContent
+      data={data}
+      isRefreshing={false}
+      onRefresh={jest.fn()}
+      headerComponent={headerComponent}
+    />,
   );
 
 // 通算（フィルターなし）の打撃データを持つ既存ユーザー。
@@ -179,5 +189,72 @@ describe("DashboardContent: 既存ユーザーへの CTA 誤表示防止", () =>
       expect(getByText("打撃データがありません")).toBeTruthy();
     });
     expect(queryByText("初めての試合を記録する")).toBeNull();
+  });
+});
+
+describe("DashboardContent: ウェルカムカード", () => {
+  const header = <Text>試合結果を記録する</Text>;
+
+  it("新規ユーザーにはウェルカムカードを表示し、ヘッダーボタンを表示しない", async () => {
+    const { getByText, queryByText } = renderDashboard(emptyData, header);
+
+    await waitFor(() => {
+      expect(getByText("3ステップで始めよう")).toBeTruthy();
+    });
+    expect(queryByText("試合結果を記録する")).toBeNull();
+  });
+
+  it("既存ユーザーにはウェルカムカードを表示せず、ヘッダーボタンを表示する", async () => {
+    const { getByText, queryByText } = renderDashboard(
+      existingUserData,
+      header,
+    );
+
+    await waitFor(() => {
+      expect(getByText("試合結果を記録する")).toBeTruthy();
+    });
+    expect(queryByText("3ステップで始めよう")).toBeNull();
+  });
+
+  it("「試合を記録する」タップで試合記録ウィザードへ遷移する", async () => {
+    const { getByText } = renderDashboard(emptyData, header);
+
+    fireEvent.press(await waitFor(() => getByText("試合を記録する")));
+
+    expect(getRouterSpies().push).toHaveBeenCalledWith(
+      "/(game-record)/step1-game-info",
+    );
+  });
+
+  it("username 未設定のユーザーは「友達を招待する」でユーザー名登録へ遷移する", async () => {
+    server.use(
+      http.get(apiUrl("/user"), () =>
+        HttpResponse.json({ id: 1, user_id: null }),
+      ),
+    );
+
+    const { getByText } = renderDashboard(emptyData, header);
+
+    fireEvent.press(await waitFor(() => getByText("友達を招待する")));
+
+    expect(getRouterSpies().push).toHaveBeenCalledWith(
+      "/(auth)/username-registration",
+    );
+  });
+
+  it("username 設定済みのユーザーは「友達を招待する」でグループ作成へ遷移する", async () => {
+    server.use(
+      http.get(apiUrl("/user"), () =>
+        HttpResponse.json({ id: 1, user_id: "taro" }),
+      ),
+    );
+
+    const { getByText } = renderDashboard(emptyData, header);
+
+    // プロフィール取得は非同期なので、読み込み完了後の遷移先が出るまで再試行する。
+    await waitFor(() => {
+      fireEvent.press(getByText("友達を招待する"));
+      expect(getRouterSpies().push).toHaveBeenCalledWith("/(groups)/create");
+    });
   });
 });
