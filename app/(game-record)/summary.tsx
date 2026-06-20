@@ -1,12 +1,16 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Share, View } from "react-native";
 import { SummaryView } from "@components/game-record/SummaryView";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { BottomTabBar } from "@components/ui/BottomTabBar";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { useStoreReview } from "@hooks/useStoreReview";
+import {
+  trackGameRecordCompleted,
+  trackGameRecordStepViewed,
+} from "@utils/analytics";
 import { invalidateGameResultRelated } from "@utils/queryInvalidation";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 
@@ -21,6 +25,10 @@ export default function SummaryScreen() {
     useStoreReview();
   const [prePromptVisible, setPrePromptVisible] = useState(false);
   const sourceRef = useRef<PrePromptSource>("complete");
+
+  useEffect(() => {
+    trackGameRecordStepViewed("summary");
+  }, []);
 
   const tryShowPrePrompt = async (source: PrePromptSource) => {
     try {
@@ -88,6 +96,12 @@ export default function SummaryScreen() {
   };
 
   const handleComplete = async () => {
+    // resetFlow() で store がクリアされる前に計測する。
+    trackGameRecordCompleted({
+      match_type: store.matchType,
+      appearance_type: store.appearanceType,
+      has_pitching: store.pitchingResultId !== null,
+    });
     resetFlow();
     invalidateGameResultRelated(queryClient);
 

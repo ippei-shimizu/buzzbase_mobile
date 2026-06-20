@@ -1,9 +1,10 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import { BattingForm } from "@components/game-record/BattingForm";
 import { StepIndicator } from "@components/game-record/StepIndicator";
 import { useGameRecord } from "@hooks/useGameRecord";
+import { trackGameRecordStepViewed } from "@utils/analytics";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 
 export default function Step2BattingScreen() {
@@ -11,6 +12,10 @@ export default function Step2BattingScreen() {
   const { submitStep2 } = useGameRecord();
   const store = useGameRecordStore();
   const [errors, setErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    trackGameRecordStepViewed(2);
+  }, []);
 
   const handleFieldChange = (field: string, value: number) => {
     store.setField(field as keyof typeof store, value as never);
