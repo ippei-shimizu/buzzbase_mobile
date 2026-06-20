@@ -73,6 +73,7 @@ export const DashboardContent = ({
         <WelcomeCard
           onRecordGame={handleRecordGame}
           onInviteFriends={handleInviteFriends}
+          style={styles.welcomeCard}
         />
       ) : (
         headerComponent
@@ -108,5 +109,8 @@ const styles = StyleSheet.create({
   },
   section: {
     marginTop: 24,
+  },
+  welcomeCard: {
+    marginBottom: 24,
   },
 });
