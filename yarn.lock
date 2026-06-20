@@ -7620,6 +7620,11 @@ postcss@^8.5.14:
     picocolors "^1.1.1"
     source-map-js "^1.2.1"
 
+posthog-react-native-session-replay@^1.6.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/posthog-react-native-session-replay/-/posthog-react-native-session-replay-1.6.0.tgz#ff1534253d249d7cb45c6d2144da014a78a3669c"
+  integrity sha512-OCaei77mtgg7JT+TgHSCgpWeKq2XXENUOPNxGbjhXZa/aJpptOW5VsBqjtH4BPzM2c1veS1DK4/Fb/uV4Rb3cg==
+
 posthog-react-native@^4.50.0:
   version "4.50.0"
   resolved "https://registry.yarnpkg.com/posthog-react-native/-/posthog-react-native-4.50.0.tgz#14536602aab1490f2578fa534abd6aaf4acfb9a3"
