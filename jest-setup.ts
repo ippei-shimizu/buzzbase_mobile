@@ -21,6 +21,26 @@ jest.mock("@sentry/react-native", () => ({
   wrap: (component: unknown) => component,
 }));
 
+// posthog-react-native: ネイティブ依存を含むため import を成立させる。
+// utils/posthog は __DEV__===true でシングルトンが null になるが、_layout が
+// PostHogProvider を import するため Provider をパススルーで差し替える。
+jest.mock("posthog-react-native", () => ({
+  __esModule: true,
+  default: jest.fn().mockImplementation(() => ({
+    identify: jest.fn(),
+    capture: jest.fn(),
+    screen: jest.fn(),
+    reset: jest.fn(),
+  })),
+  PostHogProvider: ({ children }: { children: unknown }) => children,
+  usePostHog: () => ({
+    identify: jest.fn(),
+    capture: jest.fn(),
+    screen: jest.fn(),
+    reset: jest.fn(),
+  }),
+}));
+
 // react-native-reanimated は jest-expo preset 経由で扱われるが、念のためモック
 jest.mock("react-native-reanimated", () =>
   // eslint-disable-next-line @typescript-eslint/no-require-imports
