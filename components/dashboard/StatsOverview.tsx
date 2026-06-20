@@ -311,6 +311,11 @@ export const StatsOverview = ({
   const batting = useStatsFilter("batting");
   const pitching = useStatsFilter("pitching");
 
+  // 通算（フィルターなし）の打撃データがゼロのユーザーだけを「初回ユーザー」とみなす。
+  // フィルターで一致試合が無く空になった既存ユーザーに CTA を出さないための判定。
+  const isFirstTimeUser =
+    !defaultBatting.aggregate && !defaultBatting.calculated;
+
   const { battingStats: filteredBatting } = useProfileStats(batting.filters);
   const { pitchingStats: filteredPitching } = useProfileStats(pitching.filters);
 
@@ -379,7 +384,7 @@ export const StatsOverview = ({
         <BattingSection
           stats={battingStats}
           filterBar={buildFilterBar(batting)}
-          onRecordGame={onRecordGame}
+          onRecordGame={isFirstTimeUser ? onRecordGame : undefined}
         />
       </View>
       <View style={styles.sectionCard}>
