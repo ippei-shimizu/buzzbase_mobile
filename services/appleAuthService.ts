@@ -2,7 +2,9 @@ import * as Sentry from "@sentry/react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
+import { trackSignUpCompleted, trackUserLoggedIn } from "@utils/analytics";
 import axiosInstance from "@utils/axiosInstance";
+import { posthog } from "@utils/posthog";
 
 const isExpoGo = Constants.appOwnership === "expo";
 
@@ -53,7 +55,15 @@ export const appleSignIn = async () => {
   });
 
   const userId = apiResponse.data?.data?.id;
-  if (userId) Sentry.setUser({ id: String(userId) });
+  if (userId) {
+    Sentry.setUser({ id: String(userId) });
+    posthog?.identify(String(userId));
+    if (apiResponse.data?.requires_username) {
+      trackSignUpCompleted("apple");
+    } else {
+      trackUserLoggedIn("apple");
+    }
+  }
 
   return apiResponse.data;
 };

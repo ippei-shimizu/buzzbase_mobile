@@ -1,7 +1,9 @@
 import * as Sentry from "@sentry/react-native";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
+import { trackSignUpCompleted, trackUserLoggedIn } from "@utils/analytics";
 import axiosInstance from "@utils/axiosInstance";
+import { posthog } from "@utils/posthog";
 
 const isExpoGo = Constants.appOwnership === "expo";
 
@@ -35,7 +37,15 @@ export const googleSignIn = async () => {
   });
 
   const userId = apiResponse.data?.data?.id;
-  if (userId) Sentry.setUser({ id: String(userId) });
+  if (userId) {
+    Sentry.setUser({ id: String(userId) });
+    posthog?.identify(String(userId));
+    if (apiResponse.data?.requires_username) {
+      trackSignUpCompleted("google");
+    } else {
+      trackUserLoggedIn("google");
+    }
+  }
 
   return apiResponse.data;
 };

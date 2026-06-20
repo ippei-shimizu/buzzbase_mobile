@@ -14,6 +14,7 @@ import { useGameRecord } from "@hooks/useGameRecord";
 import { useProfile } from "@hooks/useProfile";
 import { useMySeasons } from "@hooks/useSeasons";
 import { getMatchResultFormDefaults } from "@services/matchResultService";
+import { trackGameRecordStepViewed } from "@utils/analytics";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 import { useSnackbarStore } from "../../stores/snackbarStore";
 
@@ -32,6 +33,10 @@ export default function Step1GameInfoScreen() {
   const [fieldErrors, setFieldErrors] = useState<GameInfoFieldErrors>({});
   const [isInitializing, setIsInitializing] = useState(false);
   const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    trackGameRecordStepViewed(1);
+  }, []);
 
   // 新規作成時にプロフィールのチームを自動セット
   useEffect(() => {

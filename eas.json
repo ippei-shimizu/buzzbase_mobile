@@ -15,7 +15,9 @@
         "EXPO_PUBLIC_APP_ENV": "development",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "889577013867-8oe50vgbh3jdeo48m4j4gri3onak0unt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "phc_mJ9UeGSUvLp6SSd3iYKuAcMw6DjUwaerDgTwZ7VNo9dc"
       }
     },
     "development-device": {
@@ -26,7 +28,9 @@
         "EXPO_PUBLIC_APP_ENV": "development",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "889577013867-8oe50vgbh3jdeo48m4j4gri3onak0unt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "phc_mJ9UeGSUvLp6SSd3iYKuAcMw6DjUwaerDgTwZ7VNo9dc"
       }
     },
     "preview": {
@@ -39,7 +43,9 @@
         "EXPO_PUBLIC_APP_ENV": "preview",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "889577013867-8oe50vgbh3jdeo48m4j4gri3onak0unt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "phc_mJ9UeGSUvLp6SSd3iYKuAcMw6DjUwaerDgTwZ7VNo9dc"
       }
     },
     "production": {
@@ -49,7 +55,9 @@
         "EXPO_PUBLIC_APP_ENV": "production",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "889577013867-8oe50vgbh3jdeo48m4j4gri3onak0unt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "889577013867-34v02g7avss4gr4sttb8po2g8gpifocl.apps.googleusercontent.com",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "phc_mJ9UeGSUvLp6SSd3iYKuAcMw6DjUwaerDgTwZ7VNo9dc"
       }
     }
   },
