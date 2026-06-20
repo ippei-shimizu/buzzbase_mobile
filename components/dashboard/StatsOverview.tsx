@@ -23,6 +23,7 @@ interface StatsOverviewProps {
   battingStats: BattingStats;
   pitchingStats: PitchingStats;
   style?: ViewStyle;
+  onRecordGame?: () => void;
 }
 
 function formatStat(value: number | undefined | null, decimals = 3): string {
@@ -37,9 +38,11 @@ function formatStat(value: number | undefined | null, decimals = 3): string {
 const BattingSection = ({
   stats,
   filterBar,
+  onRecordGame,
 }: {
   stats: BattingStats;
   filterBar: React.ReactNode;
+  onRecordGame?: () => void;
 }) => {
   const radarData = normalizeBattingStats(stats);
   const { aggregate: agg, calculated: calc } = stats;
@@ -52,7 +55,14 @@ const BattingSection = ({
       {filterBar}
 
       {!agg || !calc ? (
-        <EmptyState title="打撃データがありません" />
+        <EmptyState
+          title="打撃データがありません"
+          action={
+            onRecordGame
+              ? { label: "初めての試合を記録する", onPress: onRecordGame }
+              : undefined
+          }
+        />
       ) : (
         <>
           {radarData.length > 0 && (
@@ -296,6 +306,7 @@ export const StatsOverview = ({
   battingStats: defaultBatting,
   pitchingStats: defaultPitching,
   style,
+  onRecordGame,
 }: StatsOverviewProps) => {
   const batting = useStatsFilter("batting");
   const pitching = useStatsFilter("pitching");
@@ -368,6 +379,7 @@ export const StatsOverview = ({
         <BattingSection
           stats={battingStats}
           filterBar={buildFilterBar(batting)}
+          onRecordGame={onRecordGame}
         />
       </View>
       <View style={styles.sectionCard}>
