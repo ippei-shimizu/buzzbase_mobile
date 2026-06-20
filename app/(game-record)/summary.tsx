@@ -11,6 +11,7 @@ import {
   trackGameRecordCompleted,
   trackGameRecordStepViewed,
 } from "@utils/analytics";
+import { toMatchTypeKey } from "@utils/matchType";
 import { invalidateGameResultRelated } from "@utils/queryInvalidation";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 
@@ -96,12 +97,15 @@ export default function SummaryScreen() {
   };
 
   const handleComplete = async () => {
+    // 編集保存も summary を経由するため、新規作成のみを完了として計測する。
     // resetFlow() で store がクリアされる前に計測する。
-    trackGameRecordCompleted({
-      match_type: store.matchType,
-      appearance_type: store.appearanceType,
-      has_pitching: store.pitchingResultId !== null,
-    });
+    if (!store.isEditMode) {
+      trackGameRecordCompleted({
+        match_type: toMatchTypeKey(store.matchType),
+        appearance_type: store.appearanceType,
+        has_pitching: store.pitchingResultId !== null,
+      });
+    }
     resetFlow();
     invalidateGameResultRelated(queryClient);
 
