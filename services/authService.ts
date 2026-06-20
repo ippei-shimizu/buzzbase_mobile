@@ -8,6 +8,7 @@
  */
 import type { AuthResponse, SignInData, SignUpData } from "../types/auth";
 import * as Sentry from "@sentry/react-native";
+import { trackSignUpCompleted, trackUserLoggedIn } from "@utils/analytics";
 import { clearAllAuthTokens } from "@utils/authTokenStorage";
 import axiosInstance from "@utils/axiosInstance";
 import { posthog } from "@utils/posthog";
@@ -22,6 +23,7 @@ export const signIn = async (data: SignInData): Promise<AuthResponse> => {
   if (body.data?.id) {
     Sentry.setUser({ id: String(body.data.id) });
     posthog?.identify(String(body.data.id));
+    trackUserLoggedIn("email");
   }
   return body;
 };
@@ -55,6 +57,7 @@ export const signUp = async (data: SignUpData): Promise<void> => {
       process.env.EXPO_PUBLIC_CONFIRM_SUCCESS_URL ||
       "buzzbase://confirmation-success",
   });
+  trackSignUpCompleted("email");
 };
 
 /** 確認メールを再送信 */
