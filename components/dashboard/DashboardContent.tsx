@@ -53,6 +53,10 @@ export const DashboardContent = ({
     router.push("/(groups)/create");
   };
 
+  const handleJoinGroup = () => {
+    router.push("/(groups)/join");
+  };
+
   const handleRecordGame = () => {
     router.push("/(game-record)/step1-game-info");
   };
@@ -111,6 +115,7 @@ export const DashboardContent = ({
         onGroupPress={handleGroupPress}
         onShowAll={handleShowAll}
         onCreateGroup={handleCreateGroup}
+        onJoinGroup={handleJoinGroup}
       />
     </ScrollView>
   );

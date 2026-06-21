@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   FlatList,
@@ -16,12 +16,23 @@ import {
   GlobalMenuOverlay,
   useGlobalMenu,
 } from "@components/ui/GlobalMenu";
+import { useGroupJoinTooltip } from "@hooks/useGroupJoinTooltip";
 import { useGroups } from "@hooks/useGroups";
 
 export default function GroupsTabScreen() {
   const router = useRouter();
   const { groups, isLoading, refetch, isRefreshing } = useGroups();
   const { menuVisible, menuOpacity, openMenu, closeMenu } = useGlobalMenu();
+  const { hasShown: tooltipHasShown, markShown: markTooltipShown } =
+    useGroupJoinTooltip();
+  const [isTooltipDismissed, setIsTooltipDismissed] = useState(false);
+
+  // 初回表示時にフラグを永続化し、次回起動以降は表示しない
+  useEffect(() => {
+    if (tooltipHasShown === false) markTooltipShown();
+  }, [tooltipHasShown, markTooltipShown]);
+
+  const showJoinTooltip = tooltipHasShown === false && !isTooltipDismissed;
 
   const handleGroupPress = (id: number) => {
     router.push(`/(groups)/${id}`);
@@ -40,6 +51,7 @@ export default function GroupsTabScreen() {
   }
 
   const handleJoin = () => {
+    setIsTooltipDismissed(true);
     router.push("/(groups)/join");
   };
 
@@ -63,6 +75,22 @@ export default function GroupsTabScreen() {
       <Ionicons name="chevron-forward" size={16} color="#71717A" />
     </TouchableOpacity>
   );
+
+  const joinTooltip = showJoinTooltip ? (
+    <View style={styles.tooltip}>
+      <Text style={styles.tooltipText}>
+        チームメイトから招待コードをもらって参加しよう
+      </Text>
+      <TouchableOpacity
+        onPress={() => setIsTooltipDismissed(true)}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel="ヒントを閉じる"
+      >
+        <Ionicons name="close" size={16} color="#A1A1AA" />
+      </TouchableOpacity>
+    </View>
+  ) : null;
 
   const groupListHeader =
     groups.length > 0 ? (
@@ -88,6 +116,7 @@ export default function GroupsTabScreen() {
           <>
             {banner}
             {joinBanner}
+            {joinTooltip}
             {groupListHeader}
           </>
         }
@@ -174,6 +203,25 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 14,
     fontWeight: "600",
+  },
+  tooltip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#3a2e1a",
+    borderWidth: 1,
+    borderColor: "#d08000",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginTop: -12,
+    marginBottom: 24,
+  },
+  tooltipText: {
+    flex: 1,
+    color: "#F4F4F4",
+    fontSize: 13,
+    lineHeight: 18,
   },
   sectionTitle: {
     color: "#F4F4F4",
