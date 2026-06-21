@@ -12,7 +12,12 @@ export default function TabLayout() {
   const { isLoggedIn, isLoading } = useAuth();
   const { isCompleted: isOnboardingCompleted } = useOnboarding();
 
-  if (isOnboardingCompleted === null || isLoading || isLoggedIn === undefined) {
+  const isResolvingAuth = isLoading || isLoggedIn === undefined;
+  // ログイン済みユーザーにはオンボーディングを出さないため、未ログイン時のみ
+  // 完了フラグの確定を待つ。
+  const isResolvingOnboarding = !isLoggedIn && isOnboardingCompleted === null;
+
+  if (isResolvingAuth || isResolvingOnboarding) {
     return (
       <View
         style={{
@@ -27,12 +32,11 @@ export default function TabLayout() {
     );
   }
 
-  // 認証状態に関わらず、初回起動はまずオンボーディングへ振り分ける
-  if (!isOnboardingCompleted) {
-    return <Redirect href="/(onboarding)/welcome" />;
-  }
-
   if (!isLoggedIn) {
+    // 新規ダウンロードの未ログインユーザーにのみ初回オンボーディングを表示する
+    if (!isOnboardingCompleted) {
+      return <Redirect href="/(onboarding)/welcome" />;
+    }
     return <Redirect href="/(auth)/sign-in" />;
   }
 

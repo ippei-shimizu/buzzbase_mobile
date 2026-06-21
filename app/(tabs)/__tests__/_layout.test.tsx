@@ -49,9 +49,9 @@ beforeEach(() => {
 });
 
 describe("(tabs)/_layout 玄関ガード", () => {
-  it("オンボーディング未完了なら認証状態に関わらずオンボーディングへ振り分ける", async () => {
+  it("未ログインかつオンボーディング未完了ならオンボーディングへ振り分ける", async () => {
     getItemAsyncMock.mockResolvedValueOnce(null);
-    useAuthStore.setState({ isLoggedIn: true, isLoading: false });
+    useAuthStore.setState({ isLoggedIn: false, isLoading: false });
 
     renderTabLayout();
 
@@ -60,7 +60,7 @@ describe("(tabs)/_layout 玄関ガード", () => {
     });
   });
 
-  it("オンボーディング完了済みかつ未ログインなら sign-in へ振り分ける", async () => {
+  it("未ログインかつオンボーディング完了済みなら sign-in へ振り分ける", async () => {
     getItemAsyncMock.mockResolvedValueOnce("1");
     useAuthStore.setState({ isLoggedIn: false, isLoading: false });
 
@@ -71,15 +71,15 @@ describe("(tabs)/_layout 玄関ガード", () => {
     });
   });
 
-  it("オンボーディング完了済みかつログイン済みならどこにも振り分けない", async () => {
-    getItemAsyncMock.mockResolvedValueOnce("1");
+  it("ログイン済みならオンボーディング未完了でも表示せずタブへ進む", async () => {
+    getItemAsyncMock.mockResolvedValueOnce(null);
     useAuthStore.setState({ isLoggedIn: true, isLoading: false });
 
     renderTabLayout();
 
     await waitFor(() => {
-      expect(getItemAsyncMock).toHaveBeenCalled();
+      expect(getRedirectHrefs()).toHaveLength(0);
     });
-    expect(getRedirectHrefs()).toHaveLength(0);
+    expect(getRedirectHrefs()).not.toContain("/(onboarding)/welcome");
   });
 });
