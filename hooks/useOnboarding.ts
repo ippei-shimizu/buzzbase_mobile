@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import * as SecureStore from "expo-secure-store";
 import { useCallback, useEffect, useState } from "react";
 
@@ -14,17 +15,30 @@ export const useOnboarding = () => {
 
   useEffect(() => {
     let isMounted = true;
-    SecureStore.getItemAsync(ONBOARDING_COMPLETED_KEY).then((value) => {
-      if (isMounted) setIsCompleted(value === "1");
-    });
+    SecureStore.getItemAsync(ONBOARDING_COMPLETED_KEY)
+      .then((value) => {
+        if (isMounted) setIsCompleted(value === "1");
+      })
+      .catch((error) => {
+        // 読み込み失敗時はスピナーで固まらないよう未完了扱いにする（fail-open）
+        Sentry.captureException(error);
+        if (isMounted) setIsCompleted(false);
+      });
     return () => {
       isMounted = false;
     };
   }, []);
 
   const complete = useCallback(async () => {
-    setIsCompleted(true);
-    await SecureStore.setItemAsync(ONBOARDING_COMPLETED_KEY, "1");
+    // 書き込み失敗でもオンボーディングは進める（次回再表示は許容）。呼び出し側で
+    // unhandled rejection にならないよう、このメソッドは reject しない。
+    try {
+      await SecureStore.setItemAsync(ONBOARDING_COMPLETED_KEY, "1");
+    } catch (error) {
+      Sentry.captureException(error);
+    } finally {
+      setIsCompleted(true);
+    }
   }, []);
 
   return { isCompleted, complete };
