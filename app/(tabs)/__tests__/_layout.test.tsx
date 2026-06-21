@@ -4,7 +4,7 @@
  * 起動時に必ず通る (tabs)/_layout で、オンボーディング未完了なら認証状態に
  * 関わらずオンボーディングへ、完了済みなら従来の認証ガードへ振り分けることを検証する。
  */
-import { waitFor } from "@testing-library/react-native";
+import { act, waitFor } from "@testing-library/react-native";
 import * as SecureStore from "expo-secure-store";
 import { useAuthStore } from "@stores/authStore";
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
@@ -77,9 +77,8 @@ describe("(tabs)/_layout 玄関ガード", () => {
 
     renderTabLayout();
 
-    await waitFor(() => {
-      expect(getRedirectHrefs()).toHaveLength(0);
-    });
-    expect(getRedirectHrefs()).not.toContain("/(onboarding)/welcome");
+    // useOnboarding の非同期読み込みを flush してもなお Redirect されないことを保証する
+    await act(async () => {});
+    expect(getRedirectHrefs()).toHaveLength(0);
   });
 });
