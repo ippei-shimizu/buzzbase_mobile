@@ -30,13 +30,15 @@ export const useGroupTabBadge = () => {
   }, []);
 
   const markSeen = useCallback(async () => {
+    // 既に閲覧済みなら不要な書き込みをしない
+    if (seen) return;
     setSeen(true);
     try {
       await SecureStore.setItemAsync(BADGE_SEEN_KEY, "1");
     } catch (error) {
       Sentry.captureException(error);
     }
-  }, []);
+  }, [seen]);
 
   return { seen, markSeen };
 };
