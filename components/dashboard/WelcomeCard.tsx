@@ -1,5 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet, type ViewStyle } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  type ViewStyle,
+} from "react-native";
 import { Button } from "@components/ui/Button";
 
 type WelcomeCardVariant = "record" | "invite";
@@ -9,6 +15,7 @@ interface WelcomeCardProps {
   onPress: () => void;
   style?: ViewStyle;
   disabled?: boolean;
+  onDismiss?: () => void;
 }
 
 const CONTENT: Record<
@@ -79,11 +86,23 @@ export const WelcomeCard = ({
   onPress,
   style,
   disabled,
+  onDismiss,
 }: WelcomeCardProps) => {
   const content = CONTENT[variant];
 
   return (
     <View style={[styles.container, style]}>
+      {onDismiss && (
+        <TouchableOpacity
+          onPress={onDismiss}
+          style={styles.dismissButton}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="このカードを閉じる"
+        >
+          <Text style={styles.dismissIcon}>✕</Text>
+        </TouchableOpacity>
+      )}
       <Text style={styles.title}>{content.title}</Text>
       <Text style={styles.description}>{content.description}</Text>
 
@@ -111,6 +130,19 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 18,
     fontWeight: "700",
+    paddingRight: 24,
+  },
+  dismissButton: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    zIndex: 1,
+    padding: 4,
+  },
+  dismissIcon: {
+    color: "#71717A",
+    fontSize: 16,
+    lineHeight: 16,
   },
   description: {
     color: "#A1A1AA",

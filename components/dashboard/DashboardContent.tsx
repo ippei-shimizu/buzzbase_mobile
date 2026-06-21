@@ -7,6 +7,7 @@ import {
   StyleSheet,
   type ViewStyle,
 } from "react-native";
+import { useInviteCardDismissal } from "@hooks/useInviteCardDismissal";
 import { useProfile } from "@hooks/useProfile";
 import { GroupRankings } from "./GroupRankings";
 import { RecentGameResults } from "./RecentGameResults";
@@ -30,6 +31,8 @@ export const DashboardContent = ({
 }: DashboardContentProps) => {
   const router = useRouter();
   const { profile, isLoading: isProfileLoading } = useProfile();
+  const { isDismissed: isInviteDismissed, dismiss: dismissInviteCard } =
+    useInviteCardDismissal();
 
   // 段階的オンボーディング: 未記録 → 記録済みかつ未所属 → 完了 の3段階で出し分ける。
   const hasRecord =
@@ -81,12 +84,13 @@ export const DashboardContent = ({
       ) : (
         <>
           {headerComponent}
-          {!inGroup && (
+          {!inGroup && isInviteDismissed === false && (
             <WelcomeCard
               variant="invite"
               onPress={handleInviteFriends}
               style={styles.welcomeCard}
               disabled={isProfileLoading}
+              onDismiss={dismissInviteCard}
             />
           )}
         </>
