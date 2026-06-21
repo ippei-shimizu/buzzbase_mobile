@@ -34,7 +34,8 @@ export const DashboardContent = ({
   // 段階的オンボーディング: 未記録 → 記録済みかつ未所属 → 完了 の3段階で出し分ける。
   const hasRecord =
     data.recent_game_results.length > 0 ||
-    data.batting_stats.aggregate !== null;
+    data.batting_stats.aggregate !== null ||
+    data.pitching_stats.aggregate !== null;
   const inGroup = data.group_rankings.length > 0;
 
   const handleGroupPress = (groupId: number) => {
