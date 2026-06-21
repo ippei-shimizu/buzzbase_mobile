@@ -10,6 +10,7 @@ export const PageIndicator = ({ count, activeIndex }: Props) => (
   <View
     style={styles.container}
     accessibilityRole="progressbar"
+    accessibilityLabel="進捗インジケーター"
     accessibilityValue={{ min: 1, max: count, now: activeIndex + 1 }}
   >
     {Array.from({ length: count }).map((_, index) => (

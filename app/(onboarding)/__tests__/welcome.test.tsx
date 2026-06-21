@@ -45,14 +45,14 @@ beforeEach(() => {
 
 describe("onboarding welcome", () => {
   it("初期表示は Step1 で、次へボタンと進捗インジケーターを表示する", () => {
-    const { getByText, queryByText, queryByLabelText, getByRole } =
+    const { getByText, queryByText, queryByLabelText, getByLabelText } =
       renderWelcome();
 
     expect(getByText("打者も投手も、入力するだけで自動計算")).toBeTruthy();
     expect(getByText("次へ")).toBeTruthy();
     expect(queryByText("はじめる")).toBeNull();
     expect(queryByLabelText("前のステップに戻る")).toBeNull();
-    expect(getByRole("progressbar")).toBeTruthy();
+    expect(getByLabelText("進捗インジケーター")).toBeTruthy();
   });
 
   it("次へを進めると最終ステップで「はじめる」が表示される", () => {
