@@ -132,6 +132,21 @@ const existingUserData: DashboardData = {
   available_years: [],
 };
 
+// 記録ありかつグループ所属済み（オンボーディング完了）のユーザー。
+const onboardedUserData: DashboardData = {
+  ...existingUserData,
+  group_rankings: [
+    {
+      group_id: 1,
+      group_name: "テストグループ",
+      group_icon: null,
+      total_members: 3,
+      batting_rankings: [],
+      pitching_rankings: [],
+    },
+  ],
+};
+
 describe("DashboardContent: 空データ時の初回試合記録 CTA", () => {
   it("打撃・試合結果の EmptyState に CTA を表示し、投手には表示しない", async () => {
     const { getAllByText, getByText } = renderDashboard();
@@ -192,34 +207,53 @@ describe("DashboardContent: 既存ユーザーへの CTA 誤表示防止", () =>
   });
 });
 
-describe("DashboardContent: ウェルカムカード", () => {
+describe("DashboardContent: ウェルカムカード（段階的オンボーディング）", () => {
   const header = <Text>試合結果を記録する</Text>;
 
-  it("新規ユーザーにはウェルカムカードを表示し、ヘッダーボタンを表示しない", async () => {
+  it("未記録ユーザーには記録カード（単一CTA＋サンプル）を表示し、ヘッダーボタンは出さない", async () => {
     const { getByText, queryByText } = renderDashboard(emptyData, header);
 
     await waitFor(() => {
-      expect(getByText("3ステップで始めよう")).toBeTruthy();
+      expect(getByText("BUZZ BASEへようこそ")).toBeTruthy();
     });
+    // 単一CTA。招待ボタンとヘッダーボタンは出さない。
+    expect(getByText("最初の試合を記録する")).toBeTruthy();
+    expect(getByText("記録するとこう計算されます")).toBeTruthy();
+    expect(queryByText("友達を招待する")).toBeNull();
     expect(queryByText("試合結果を記録する")).toBeNull();
   });
 
-  it("既存ユーザーにはウェルカムカードを表示せず、ヘッダーボタンを表示する", async () => {
+  it("記録済みかつ未所属ユーザーには招待カードとヘッダーボタンを表示する", async () => {
     const { getByText, queryByText } = renderDashboard(
       existingUserData,
       header,
     );
 
     await waitFor(() => {
-      expect(getByText("試合結果を記録する")).toBeTruthy();
+      expect(getByText("チームメイトと競い合おう")).toBeTruthy();
     });
-    expect(queryByText("3ステップで始めよう")).toBeNull();
+    expect(getByText("友達を招待する")).toBeTruthy();
+    expect(getByText("試合結果を記録する")).toBeTruthy();
+    expect(queryByText("最初の試合を記録する")).toBeNull();
   });
 
-  it("「試合を記録する」タップで試合記録ウィザードへ遷移する", async () => {
+  it("記録済みかつグループ所属済みユーザーにはカードを表示しない", async () => {
+    const { getByText, queryByText } = renderDashboard(
+      onboardedUserData,
+      header,
+    );
+
+    await waitFor(() => {
+      expect(getByText("試合結果を記録する")).toBeTruthy();
+    });
+    expect(queryByText("BUZZ BASEへようこそ")).toBeNull();
+    expect(queryByText("チームメイトと競い合おう")).toBeNull();
+  });
+
+  it("「最初の試合を記録する」タップで試合記録ウィザードへ遷移する", async () => {
     const { getByText } = renderDashboard(emptyData, header);
 
-    fireEvent.press(await waitFor(() => getByText("試合を記録する")));
+    fireEvent.press(await waitFor(() => getByText("最初の試合を記録する")));
 
     expect(getRouterSpies().push).toHaveBeenCalledWith(
       "/(game-record)/step1-game-info",
@@ -233,7 +267,7 @@ describe("DashboardContent: ウェルカムカード", () => {
       ),
     );
 
-    const { getByText } = renderDashboard(emptyData, header);
+    const { getByText } = renderDashboard(existingUserData, header);
 
     fireEvent.press(await waitFor(() => getByText("友達を招待する")));
 
@@ -249,7 +283,7 @@ describe("DashboardContent: ウェルカムカード", () => {
       ),
     );
 
-    const { getByText } = renderDashboard(emptyData, header);
+    const { getByText } = renderDashboard(existingUserData, header);
 
     // プロフィール取得は非同期なので、読み込み完了後の遷移先が出るまで再試行する。
     await waitFor(() => {

@@ -31,9 +31,11 @@ export const DashboardContent = ({
   const router = useRouter();
   const { profile } = useProfile();
 
-  const isNewUser =
-    data.recent_game_results.length === 0 &&
-    data.batting_stats.aggregate === null;
+  // 段階的オンボーディング: 未記録 → 記録済みかつ未所属 → 完了 の3段階で出し分ける。
+  const hasRecord =
+    data.recent_game_results.length > 0 ||
+    data.batting_stats.aggregate !== null;
+  const inGroup = data.group_rankings.length > 0;
 
   const handleGroupPress = (groupId: number) => {
     router.push({ pathname: "/group-detail", params: { id: groupId } });
@@ -69,14 +71,23 @@ export const DashboardContent = ({
         />
       }
     >
-      {isNewUser ? (
+      {!hasRecord ? (
         <WelcomeCard
-          onRecordGame={handleRecordGame}
-          onInviteFriends={handleInviteFriends}
+          variant="record"
+          onPress={handleRecordGame}
           style={styles.welcomeCard}
         />
       ) : (
-        headerComponent
+        <>
+          {headerComponent}
+          {!inGroup && (
+            <WelcomeCard
+              variant="invite"
+              onPress={handleInviteFriends}
+              style={styles.welcomeCard}
+            />
+          )}
+        </>
       )}
       <StatsOverview
         battingStats={data.batting_stats}
