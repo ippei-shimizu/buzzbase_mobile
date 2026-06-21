@@ -19,6 +19,7 @@ interface GroupRankingsProps {
   onGroupPress?: (groupId: number) => void;
   onShowAll?: () => void;
   onCreateGroup?: () => void;
+  onJoinGroup?: () => void;
 }
 
 const getRankStyle = (rank: number | null) => {
@@ -139,6 +140,7 @@ export const GroupRankings = ({
   onGroupPress,
   onShowAll,
   onCreateGroup,
+  onJoinGroup,
 }: GroupRankingsProps) => {
   return (
     <View style={style}>
@@ -159,6 +161,12 @@ export const GroupRankings = ({
               onPress={onCreateGroup}
             >
               <Text style={styles.createButtonText}>グループを作成</Text>
+            </TouchableOpacity>
+          )}
+          {onJoinGroup && (
+            <TouchableOpacity style={styles.joinButton} onPress={onJoinGroup}>
+              <Ionicons name="ticket-outline" size={16} color="#d08000" />
+              <Text style={styles.joinButtonText}>招待コードで参加</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -288,6 +296,18 @@ const styles = StyleSheet.create({
   createButtonText: {
     color: "#FFFFFF",
     fontSize: 15,
+    fontWeight: "600",
+  },
+  joinButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "center",
+    marginTop: 12,
+  },
+  joinButtonText: {
+    color: "#d08000",
+    fontSize: 14,
     fontWeight: "600",
   },
 });
