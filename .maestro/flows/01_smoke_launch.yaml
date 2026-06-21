@@ -1,0 +1,8 @@
+# 疎通確認（最初に通すべき土台）。アプリが起動し、ログイン画面が表示されることだけを確認する。
+# これが green にならない限り、以降のゴールデンパスは成立しない。
+appId: jp.buzzbase.mobile
+---
+- launchApp:
+    clearState: true
+- assertVisible: "メールアドレス"
+- assertVisible: "ログイン"

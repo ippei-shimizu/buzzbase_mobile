@@ -1,0 +1,56 @@
+name: Maestro E2E
+
+# E2E は iOS Simulator のビルド・起動で重いため、リリース系 PR と手動実行に絞る。
+# flows が安定 green になるまでは workflow_dispatch 中心で運用し、安定後に pull_request を有効化する。
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - "release/**"
+
+# 前提（Repository secrets / variables）:
+#   MAESTRO_EMAIL / MAESTRO_PASSWORD : シード済みテストユーザーの認証情報
+#   EXPO_PUBLIC_API_URL              : テスト対象バックエンド（v1 データを seed したステージング等）
+jobs:
+  e2e:
+    name: Golden path E2E (iOS Simulator)
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --ignore-engines
+
+      - name: Install Maestro CLI
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Build & install app on iOS Simulator
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
+        # expo run:ios が prebuild → CocoaPods → xcodebuild → シミュレータ起動・インストールまで行う。
+        # Expo 55 でビルドに詰まる場合は issue #380 のフォールバック（Detox / dev client）を検討する。
+        run: npx expo run:ios --configuration Release
+
+      - name: Run Maestro golden paths
+        env:
+          MAESTRO_EMAIL: ${{ secrets.MAESTRO_EMAIL }}
+          MAESTRO_PASSWORD: ${{ secrets.MAESTRO_PASSWORD }}
+        run: maestro test .maestro/
+
+      - name: Upload Maestro artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-output
+          path: ~/.maestro/tests
+          retention-days: 7

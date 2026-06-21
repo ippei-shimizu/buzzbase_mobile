@@ -1,0 +1,16 @@
+# 再利用するログインサブフロー。runFlow で各ゴールデンパスから呼ぶ。
+# テストユーザーの認証情報は環境変数で渡す（バックエンドの seed と同期させること）:
+#   MAESTRO_EMAIL / MAESTRO_PASSWORD
+appId: jp.buzzbase.mobile
+---
+- launchApp:
+    clearState: true
+- assertVisible: "ログイン"
+- tapOn: "email@example.com"
+- inputText: ${MAESTRO_EMAIL}
+- tapOn: "6文字以上の半角英数字"
+- inputText: ${MAESTRO_PASSWORD}
+- hideKeyboard
+- tapOn: "ログイン"
+# ログイン完了の目印（ダッシュボードタブ）。
+- assertVisible: "ダッシュボード"
