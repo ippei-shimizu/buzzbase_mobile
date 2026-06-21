@@ -34,18 +34,42 @@ jobs:
           curl -Ls "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
 
-      - name: Build & install app on iOS Simulator
+      # expo run:ios は Release で実機向け（署名必須）ビルドに倒れるため、
+      # prebuild → iphonesimulator SDK + 署名無効で xcodebuild し、シミュレータに install する。
+      - name: Expo prebuild (iOS native project + CocoaPods)
         env:
           EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
-        # expo run:ios が prebuild → CocoaPods → xcodebuild → シミュレータ起動・インストールまで行う。
-        # Expo 55 でビルドに詰まる場合は issue #380 のフォールバック（Detox / dev client）を検討する。
-        run: npx expo run:ios --configuration Release
+        run: npx expo prebuild --platform ios
 
-      - name: Run Maestro golden paths
+      - name: Boot iOS Simulator
+        run: |
+          xcrun simctl boot "iPhone 16" || xcrun simctl boot "iPhone 15" || true
+          xcrun simctl list devices booted
+
+      - name: Build app for simulator (no code signing)
+        run: |
+          xcodebuild \
+            -workspace ios/BUZZBASE.xcworkspace \
+            -scheme BUZZBASE \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -derivedDataPath ios/build \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Install app on simulator
+        run: |
+          APP_PATH=$(find ios/build/Build/Products/Release-iphonesimulator -maxdepth 1 -name '*.app' | head -1)
+          echo "Installing: $APP_PATH"
+          xcrun simctl install booted "$APP_PATH"
+
+      # まずは認証不要の疎通フロー(01)で build + Maestro 基盤を green にする。
+      # ログインを伴う 02/03 は MAESTRO_EMAIL/PASSWORD（シード済みユーザー）と稼働バックエンドが
+      # 必要なため、secrets 整備後に対象を .maestro/ 全体へ広げる。
+      - name: Run Maestro smoke flow
         env:
           MAESTRO_EMAIL: ${{ secrets.MAESTRO_EMAIL }}
           MAESTRO_PASSWORD: ${{ secrets.MAESTRO_PASSWORD }}
-        run: maestro test .maestro/
+        run: maestro test .maestro/flows/01_smoke_launch.yaml
 
       - name: Upload Maestro artifacts on failure
         if: failure()
