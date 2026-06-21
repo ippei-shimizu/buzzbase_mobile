@@ -16,7 +16,8 @@ const CONTENT: Record<
 > = {
   record: {
     title: "BUZZ BASEへようこそ",
-    description: "打席を入力するだけで、打率・OPS・防御率を自動で計算します。",
+    description:
+      "試合を記録するだけで、打率・OPS から防御率まで自動で計算。打者も投手もまとめて成績を管理できます。",
     cta: "最初の試合を記録する",
   },
   invite: {
@@ -36,10 +37,17 @@ const SampleStat = ({ label, value }: { label: string; value: string }) => (
 const StatsPreview = () => (
   <View style={styles.preview}>
     <Text style={styles.previewCaption}>記録するとこう計算されます</Text>
+    <Text style={styles.groupLabel}>打撃成績</Text>
     <View style={styles.statsRow}>
       <SampleStat label="打率" value=".333" />
       <SampleStat label="OPS" value=".900" />
       <SampleStat label="本塁打" value="5" />
+    </View>
+    <Text style={[styles.groupLabel, styles.groupLabelSpacing]}>投手成績</Text>
+    <View style={styles.statsRow}>
+      <SampleStat label="防御率" value="2.50" />
+      <SampleStat label="奪三振" value="42" />
+      <SampleStat label="勝利" value="6" />
     </View>
     <Text style={styles.previewNote}>※サンプル</Text>
   </View>
@@ -109,6 +117,15 @@ const styles = StyleSheet.create({
     color: "#71717A",
     fontSize: 12,
     marginBottom: 10,
+  },
+  groupLabel: {
+    color: "#A1A1AA",
+    fontSize: 11,
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+  groupLabelSpacing: {
+    marginTop: 12,
   },
   previewNote: {
     color: "#52525b",
