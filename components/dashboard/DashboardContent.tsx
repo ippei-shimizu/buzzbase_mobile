@@ -29,7 +29,7 @@ export const DashboardContent = ({
   headerComponent,
 }: DashboardContentProps) => {
   const router = useRouter();
-  const { profile } = useProfile();
+  const { profile, isLoading: isProfileLoading } = useProfile();
 
   // 段階的オンボーディング: 未記録 → 記録済みかつ未所属 → 完了 の3段階で出し分ける。
   const hasRecord =
@@ -85,6 +85,7 @@ export const DashboardContent = ({
               variant="invite"
               onPress={handleInviteFriends}
               style={styles.welcomeCard}
+              disabled={isProfileLoading}
             />
           )}
         </>

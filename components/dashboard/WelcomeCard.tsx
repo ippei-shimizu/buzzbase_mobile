@@ -8,6 +8,7 @@ interface WelcomeCardProps {
   variant: WelcomeCardVariant;
   onPress: () => void;
   style?: ViewStyle;
+  disabled?: boolean;
 }
 
 const CONTENT: Record<
@@ -73,7 +74,12 @@ const RankingPreview = () => (
   </View>
 );
 
-export const WelcomeCard = ({ variant, onPress, style }: WelcomeCardProps) => {
+export const WelcomeCard = ({
+  variant,
+  onPress,
+  style,
+  disabled,
+}: WelcomeCardProps) => {
   const content = CONTENT[variant];
 
   return (
@@ -83,7 +89,12 @@ export const WelcomeCard = ({ variant, onPress, style }: WelcomeCardProps) => {
 
       {variant === "record" ? <StatsPreview /> : <RankingPreview />}
 
-      <Button title={content.cta} onPress={onPress} style={styles.cta} />
+      <Button
+        title={content.cta}
+        onPress={onPress}
+        style={styles.cta}
+        disabled={disabled}
+      />
     </View>
   );
 };
