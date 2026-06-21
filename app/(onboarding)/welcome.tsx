@@ -36,8 +36,9 @@ export default function OnboardingWelcome() {
   };
 
   const goToPage = (index: number) => {
-    scrollRef.current?.scrollTo({ x: index * width, animated: true });
-    setPageIndex(index);
+    const clamped = Math.max(0, Math.min(index, ONBOARDING_STEPS.length - 1));
+    scrollRef.current?.scrollTo({ x: clamped * width, animated: true });
+    setPageIndex(clamped);
   };
 
   const finish = async () => {
