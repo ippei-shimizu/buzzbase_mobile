@@ -48,7 +48,7 @@ describe("onboarding welcome", () => {
     const { getByText, queryByText, queryByLabelText, getByRole } =
       renderWelcome();
 
-    expect(getByText("打席を入力するだけで自動計算")).toBeTruthy();
+    expect(getByText("打者も投手も、入力するだけで自動計算")).toBeTruthy();
     expect(getByText("次へ")).toBeTruthy();
     expect(queryByText("はじめる")).toBeNull();
     expect(queryByLabelText("前のステップに戻る")).toBeNull();

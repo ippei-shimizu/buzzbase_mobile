@@ -10,8 +10,8 @@ export interface OnboardingStep {
 export const ONBOARDING_STEPS: readonly OnboardingStep[] = [
   {
     illustration: "autoCalc",
-    title: "打席を入力するだけで自動計算",
-    copy: "もう自分で電卓を叩かなくていい。打率・OPS・防御率など29指標を自動で算出します。",
+    title: "打者も投手も、入力するだけで自動計算",
+    copy: "もう自分で電卓を叩かなくていい。打率・OPS から防御率・奪三振まで、打撃も投球も29指標を自動で算出します。",
   },
   {
     illustration: "ranking",
