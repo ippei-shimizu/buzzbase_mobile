@@ -6,10 +6,11 @@ import {
   getFollowingUsers,
 } from "../services/groupService";
 
-export const useGroups = () => {
+export const useGroups = (options?: { enabled?: boolean }) => {
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
     queryKey: ["groups"],
     queryFn: getGroups,
+    enabled: options?.enabled ?? true,
   });
 
   return {

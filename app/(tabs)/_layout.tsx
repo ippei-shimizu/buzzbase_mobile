@@ -1,16 +1,30 @@
 import { Redirect, Tabs } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { BallIcon } from "@components/icon/BallIcon";
-import { GroupIcon } from "@components/icon/GroupIcon";
+import { GroupTabIcon } from "@components/icon/GroupTabIcon";
 import { HomeIcon } from "@components/icon/HomeIcon";
 import { StatsIcon } from "@components/icon/StatsIcon";
 import { UserIcon } from "@components/icon/UserIcon";
 import { useAuth } from "@hooks/useAuth";
+import { useGroups } from "@hooks/useGroups";
+import { useGroupTabBadge } from "@hooks/useGroupTabBadge";
 import { useOnboarding } from "@hooks/useOnboarding";
 
 export default function TabLayout() {
   const { isLoggedIn, isLoading } = useAuth();
   const { isCompleted: isOnboardingCompleted } = useOnboarding();
+  const { groups, isLoading: isGroupsLoading } = useGroups({
+    enabled: isLoggedIn === true,
+  });
+  const { seen: isGroupBadgeSeen, markSeen: markGroupBadgeSeen } =
+    useGroupTabBadge();
+
+  // 未参加（グループ0件）かつ未閲覧のときだけグループタブに赤ポチを出す
+  const showGroupBadge =
+    isLoggedIn === true &&
+    !isGroupsLoading &&
+    groups.length === 0 &&
+    isGroupBadgeSeen === false;
 
   const isResolvingAuth = isLoading || isLoggedIn === undefined;
   // ログイン済みユーザーにはオンボーディングを出さないため、未ログイン時のみ
@@ -102,11 +116,16 @@ export default function TabLayout() {
           title: "グループ",
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <GroupIcon size={size} color={color} />
+            <GroupTabIcon
+              size={size}
+              color={color}
+              showBadge={showGroupBadge}
+            />
           ),
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
+            markGroupBadgeSeen();
             const state = navigation.getState();
             const groupRoute = state.routes.find(
               (r: { name: string }) => r.name === "(groups)",
