@@ -6,11 +6,18 @@ import { HomeIcon } from "@components/icon/HomeIcon";
 import { StatsIcon } from "@components/icon/StatsIcon";
 import { UserIcon } from "@components/icon/UserIcon";
 import { useAuth } from "@hooks/useAuth";
+import { useOnboarding } from "@hooks/useOnboarding";
 
 export default function TabLayout() {
   const { isLoggedIn, isLoading } = useAuth();
+  const { isCompleted: isOnboardingCompleted } = useOnboarding();
 
-  if (isLoading || isLoggedIn === undefined) {
+  const isResolvingAuth = isLoading || isLoggedIn === undefined;
+  // ログイン済みユーザーにはオンボーディングを出さないため、未ログイン時のみ
+  // 完了フラグの確定を待つ。
+  const isResolvingOnboarding = !isLoggedIn && isOnboardingCompleted === null;
+
+  if (isResolvingAuth || isResolvingOnboarding) {
     return (
       <View
         style={{
@@ -26,6 +33,10 @@ export default function TabLayout() {
   }
 
   if (!isLoggedIn) {
+    // 新規ダウンロードの未ログインユーザーにのみ初回オンボーディングを表示する
+    if (!isOnboardingCompleted) {
+      return <Redirect href="/(onboarding)/welcome" />;
+    }
     return <Redirect href="/(auth)/sign-in" />;
   }
 
