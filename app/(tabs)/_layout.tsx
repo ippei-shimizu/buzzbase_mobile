@@ -13,16 +13,17 @@ import { useOnboarding } from "@hooks/useOnboarding";
 export default function TabLayout() {
   const { isLoggedIn, isLoading } = useAuth();
   const { isCompleted: isOnboardingCompleted } = useOnboarding();
-  const { groups, isLoading: isGroupsLoading } = useGroups({
+  const { groups, isFetched: isGroupsFetched } = useGroups({
     enabled: isLoggedIn === true,
   });
   const { seen: isGroupBadgeSeen, markSeen: markGroupBadgeSeen } =
     useGroupTabBadge();
 
-  // 未参加（グループ0件）かつ未閲覧のときだけグループタブに赤ポチを出す
+  // 取得確定後に未参加（グループ0件）かつ未閲覧のときだけグループタブに赤ポチを出す。
+  // isGroupsFetched でフェッチ開始前の一瞬の誤点灯を防ぐ。
   const showGroupBadge =
     isLoggedIn === true &&
-    !isGroupsLoading &&
+    isGroupsFetched &&
     groups.length === 0 &&
     isGroupBadgeSeen === false;
 
