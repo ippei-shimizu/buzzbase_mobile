@@ -25,6 +25,7 @@ export default function OnboardingWelcome() {
   const { isLoggedIn } = useAuth();
   const { complete } = useOnboarding();
   const scrollRef = useRef<ScrollView>(null);
+  const isFinishingRef = useRef(false);
   const [pageIndex, setPageIndex] = useState(0);
 
   const isLastStep = pageIndex === ONBOARDING_STEPS.length - 1;
@@ -42,6 +43,9 @@ export default function OnboardingWelcome() {
   };
 
   const finish = async () => {
+    // 連続タップによる二重遷移・二重フラグ書き込みを防ぐ
+    if (isFinishingRef.current) return;
+    isFinishingRef.current = true;
     await complete();
     router.replace(isLoggedIn ? "/(tabs)" : "/(auth)/sign-up");
   };
