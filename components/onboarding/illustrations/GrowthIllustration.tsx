@@ -48,7 +48,7 @@ export const GrowthIllustration = ({ size = 200 }: Props) => {
         strokeLinejoin="round"
       />
       {points.split(" ").map((point) => {
-        const [x, y] = point.split(",");
+        const [x, y] = point.split(",").map(Number);
         return <Circle key={point} cx={x} cy={y} r="5" fill="#d08000" />;
       })}
     </Svg>
