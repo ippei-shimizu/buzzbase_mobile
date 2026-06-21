@@ -6,11 +6,13 @@ import { HomeIcon } from "@components/icon/HomeIcon";
 import { StatsIcon } from "@components/icon/StatsIcon";
 import { UserIcon } from "@components/icon/UserIcon";
 import { useAuth } from "@hooks/useAuth";
+import { useOnboarding } from "@hooks/useOnboarding";
 
 export default function TabLayout() {
   const { isLoggedIn, isLoading } = useAuth();
+  const { isCompleted: isOnboardingCompleted } = useOnboarding();
 
-  if (isLoading || isLoggedIn === undefined) {
+  if (isOnboardingCompleted === null || isLoading || isLoggedIn === undefined) {
     return (
       <View
         style={{
@@ -23,6 +25,11 @@ export default function TabLayout() {
         <ActivityIndicator size="large" color="#d08000" />
       </View>
     );
+  }
+
+  // 認証状態に関わらず、初回起動はまずオンボーディングへ振り分ける
+  if (!isOnboardingCompleted) {
+    return <Redirect href="/(onboarding)/welcome" />;
   }
 
   if (!isLoggedIn) {
