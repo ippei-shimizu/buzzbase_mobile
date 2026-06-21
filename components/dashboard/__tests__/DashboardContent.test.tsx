@@ -52,7 +52,9 @@ beforeEach(() => {
   jest.clearAllMocks();
   // StatsOverview / RecentGameResults 配下のフックがマウント時に叩く HTTP を intercept する。
   server.use(
-    http.get(apiUrl("/user"), () => HttpResponse.json({ id: 1 })),
+    http.get(apiUrl("/user"), () =>
+      HttpResponse.json({ id: 1, user_id: null }),
+    ),
     http.get(apiUrl("/seasons"), () => HttpResponse.json([])),
     http.get(apiUrl("/match_results/available_years"), () =>
       HttpResponse.json([]),
