@@ -10,7 +10,9 @@
  */
 import type { RouterSpies } from "../../../__tests__/test-utils/mockExpoRouter";
 import type { DashboardData } from "../../../types/dashboard";
+import type { ReactNode } from "react";
 import { fireEvent, waitFor } from "@testing-library/react-native";
+import { Text } from "react-native";
 import {
   apiUrl,
   baseUrl,
@@ -50,7 +52,9 @@ beforeEach(() => {
   jest.clearAllMocks();
   // StatsOverview / RecentGameResults 配下のフックがマウント時に叩く HTTP を intercept する。
   server.use(
-    http.get(apiUrl("/user"), () => HttpResponse.json({ id: 1 })),
+    http.get(apiUrl("/user"), () =>
+      HttpResponse.json({ id: 1, user_id: null }),
+    ),
     http.get(apiUrl("/seasons"), () => HttpResponse.json([])),
     http.get(apiUrl("/match_results/available_years"), () =>
       HttpResponse.json([]),
@@ -67,9 +71,17 @@ beforeEach(() => {
   );
 });
 
-const renderDashboard = (data: DashboardData = emptyData) =>
+const renderDashboard = (
+  data: DashboardData = emptyData,
+  headerComponent?: ReactNode,
+) =>
   renderWithProviders(
-    <DashboardContent data={data} isRefreshing={false} onRefresh={jest.fn()} />,
+    <DashboardContent
+      data={data}
+      isRefreshing={false}
+      onRefresh={jest.fn()}
+      headerComponent={headerComponent}
+    />,
   );
 
 // 通算（フィルターなし）の打撃データを持つ既存ユーザー。
@@ -120,6 +132,21 @@ const existingUserData: DashboardData = {
   pitching_stats: { aggregate: null, calculated: null },
   group_rankings: [],
   available_years: [],
+};
+
+// 記録ありかつグループ所属済み（オンボーディング完了）のユーザー。
+const onboardedUserData: DashboardData = {
+  ...existingUserData,
+  group_rankings: [
+    {
+      group_id: 1,
+      group_name: "テストグループ",
+      group_icon: null,
+      total_members: 3,
+      batting_rankings: [],
+      pitching_rankings: [],
+    },
+  ],
 };
 
 describe("DashboardContent: 空データ時の初回試合記録 CTA", () => {
@@ -179,5 +206,108 @@ describe("DashboardContent: 既存ユーザーへの CTA 誤表示防止", () =>
       expect(getByText("打撃データがありません")).toBeTruthy();
     });
     expect(queryByText("初めての試合を記録する")).toBeNull();
+  });
+});
+
+describe("DashboardContent: ウェルカムカード（段階的オンボーディング）", () => {
+  const header = <Text>試合結果を記録する</Text>;
+
+  it("未記録ユーザーには記録カード（単一CTA＋サンプル）を表示し、ヘッダーボタンは出さない", async () => {
+    const { getByText, queryByText } = renderDashboard(emptyData, header);
+
+    await waitFor(() => {
+      expect(getByText("BUZZ BASEへようこそ")).toBeTruthy();
+    });
+    // 単一CTA。招待ボタンとヘッダーボタンは出さない。
+    expect(getByText("最初の試合を記録する")).toBeTruthy();
+    expect(getByText("記録するとこう計算されます")).toBeTruthy();
+    expect(queryByText("友達を招待する")).toBeNull();
+    expect(queryByText("試合結果を記録する")).toBeNull();
+  });
+
+  it("記録済みかつ未所属ユーザーには招待カードとヘッダーボタンを表示する", async () => {
+    const { getByText, queryByText } = renderDashboard(
+      existingUserData,
+      header,
+    );
+
+    await waitFor(() => {
+      expect(getByText("チームメイトと競い合おう")).toBeTruthy();
+    });
+    expect(getByText("友達を招待する")).toBeTruthy();
+    expect(getByText("試合結果を記録する")).toBeTruthy();
+    expect(queryByText("最初の試合を記録する")).toBeNull();
+  });
+
+  it("招待カードの閉じるボタンをタップすると非表示になる", async () => {
+    const { getByText, getByLabelText, queryByText } = renderDashboard(
+      existingUserData,
+      header,
+    );
+
+    await waitFor(() => {
+      expect(getByText("チームメイトと競い合おう")).toBeTruthy();
+    });
+
+    fireEvent.press(getByLabelText("このカードを閉じる"));
+
+    await waitFor(() => {
+      expect(queryByText("チームメイトと競い合おう")).toBeNull();
+    });
+  });
+
+  it("記録済みかつグループ所属済みユーザーにはカードを表示しない", async () => {
+    const { getByText, queryByText } = renderDashboard(
+      onboardedUserData,
+      header,
+    );
+
+    await waitFor(() => {
+      expect(getByText("試合結果を記録する")).toBeTruthy();
+    });
+    expect(queryByText("BUZZ BASEへようこそ")).toBeNull();
+    expect(queryByText("チームメイトと競い合おう")).toBeNull();
+  });
+
+  it("「最初の試合を記録する」タップで試合記録ウィザードへ遷移する", async () => {
+    const { getByText } = renderDashboard(emptyData, header);
+
+    fireEvent.press(await waitFor(() => getByText("最初の試合を記録する")));
+
+    expect(getRouterSpies().push).toHaveBeenCalledWith(
+      "/(game-record)/step1-game-info",
+    );
+  });
+
+  it("username 未設定のユーザーは「友達を招待する」でユーザー名登録へ遷移する", async () => {
+    server.use(
+      http.get(apiUrl("/user"), () =>
+        HttpResponse.json({ id: 1, user_id: null }),
+      ),
+    );
+
+    const { getByText } = renderDashboard(existingUserData, header);
+
+    fireEvent.press(await waitFor(() => getByText("友達を招待する")));
+
+    expect(getRouterSpies().push).toHaveBeenCalledWith(
+      "/(auth)/username-registration",
+    );
+  });
+
+  it("username 設定済みのユーザーは「友達を招待する」でグループ作成へ遷移する", async () => {
+    server.use(
+      http.get(apiUrl("/user"), () =>
+        HttpResponse.json({ id: 1, user_id: "taro" }),
+      ),
+    );
+
+    const { getByText } = renderDashboard(existingUserData, header);
+
+    // プロフィール取得は非同期なので、読み込み完了後の遷移先が出るまで再試行する。
+    await waitFor(() => {
+      fireEvent.press(getByText("友達を招待する"));
+      expect(getRouterSpies().push).toHaveBeenCalledWith("/(groups)/create");
+    });
   });
 });
