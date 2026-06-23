@@ -37,6 +37,7 @@ export function BottomTabBar() {
               paddingVertical: 8,
             }}
           >
+            {/* (tabs) 外の画面では useGroupTabBadge を購読できないため、グループの未参加バッジは出さない */}
             <Icon size={22} color={color} />
             <Text style={{ fontSize: 10, color, marginTop: 2 }}>
               {tab.label}
