@@ -19,7 +19,11 @@ export function BottomTabBar() {
       }}
     >
       {BOTTOM_TAB_ITEMS.map((tab) => {
-        const isActive = pathname.startsWith(tab.href.replace("/(tabs)", ""));
+        // index の href は "/(tabs)" → 除去後 "" となり startsWith("") が常に true になるため、
+        // 先頭一致ではなく完全一致で判定する。
+        const tabPath = tab.href.replace("/(tabs)", "") || "/";
+        const isActive =
+          tabPath === "/" ? pathname === "/" : pathname.startsWith(tabPath);
         const color = isActive ? "#d08000" : "#A1A1AA";
         const Icon = tab.Icon;
 
