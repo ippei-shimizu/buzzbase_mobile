@@ -189,7 +189,7 @@ export const BattingTrendChart = ({
         {onGranularityChange && (
           <GranularityToggle
             value={granularity}
-            onChange={onGranularityChange}
+            onChange={handleGranularityChange}
           />
         )}
       </View>
