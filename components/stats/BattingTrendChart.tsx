@@ -53,6 +53,8 @@ const PADDING_TOP = 16;
 const PADDING_BOTTOM = 24;
 const PLOT_WIDTH = CHART_WIDTH - PADDING_LEFT - PADDING_RIGHT;
 const PLOT_HEIGHT = CHART_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
+const PLOT_RIGHT = CHART_WIDTH - PADDING_RIGHT;
+const PLOT_BOTTOM = PADDING_TOP + PLOT_HEIGHT;
 
 // X 軸ラベルは混雑回避のため最大 6 本に間引く。
 const MAX_X_LABELS = 6;
@@ -161,8 +163,6 @@ export const BattingTrendChart = ({
 
   // タップ領域の縦帯。隣接点との X 中点で分割し、両端はプロット境界にクランプする。
   // 点が 1 個のときはプロット幅全体を 1 帯とする。
-  const PLOT_RIGHT = CHART_WIDTH - PADDING_RIGHT;
-  const PLOT_BOTTOM = PADDING_TOP + PLOT_HEIGHT;
   const getBandX = (i: number) =>
     i === 0 ? PADDING_LEFT : (getX(i - 1) + getX(i)) / 2;
   const getBandRight = (i: number) =>
