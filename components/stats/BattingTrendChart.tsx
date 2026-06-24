@@ -53,6 +53,8 @@ const PADDING_TOP = 16;
 const PADDING_BOTTOM = 24;
 const PLOT_WIDTH = CHART_WIDTH - PADDING_LEFT - PADDING_RIGHT;
 const PLOT_HEIGHT = CHART_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
+const PLOT_RIGHT = CHART_WIDTH - PADDING_RIGHT;
+const PLOT_BOTTOM = PADDING_TOP + PLOT_HEIGHT;
 
 // X 軸ラベルは混雑回避のため最大 6 本に間引く。
 const MAX_X_LABELS = 6;
@@ -159,6 +161,13 @@ export const BattingTrendChart = ({
   const getY = (value: number) =>
     PADDING_TOP + PLOT_HEIGHT - ((value - minValue) / valueRange) * PLOT_HEIGHT;
 
+  // タップ領域の縦帯。隣接点との X 中点で分割し、両端はプロット境界にクランプする。
+  // 点が 1 個のときはプロット幅全体を 1 帯とする。
+  const getBandX = (i: number) =>
+    i === 0 ? PADDING_LEFT : (getX(i - 1) + getX(i)) / 2;
+  const getBandRight = (i: number) =>
+    i === points.length - 1 ? PLOT_RIGHT : (getX(i) + getX(i + 1)) / 2;
+
   // 各ライン分のパスを構築（絞り込みで非アクティブなラインは含めない）。
   const linePaths = visibleLines.map((line) => ({
     ...line,
@@ -180,7 +189,7 @@ export const BattingTrendChart = ({
         {onGranularityChange && (
           <GranularityToggle
             value={granularity}
-            onChange={onGranularityChange}
+            onChange={handleGranularityChange}
           />
         )}
       </View>
@@ -306,15 +315,21 @@ export const BattingTrendChart = ({
               const isSelected =
                 selectedDot?.lineKey === line.key &&
                 selectedDot?.pointIndex === i;
+              const bandX = getBandX(i);
+              const bandWidth = getBandRight(i) - bandX;
+              const bandY = Math.max(PADDING_TOP, getY(point[line.key]) - 8);
               return (
                 // 累積モードで同じ日に複数試合がある場合 point.key が重複しうるため、
                 // 描画上の index を組み合わせて一意化する。
                 <React.Fragment key={`pt-${line.key}-${i}`}>
-                  {/* 透明な大きい円でタップヒット領域を広げる */}
-                  <Circle
-                    cx={getX(i)}
-                    cy={getY(point[line.key])}
-                    r={10}
+                  {/* 点とその真下（Y 軸方向の縦帯）をタップ領域にして、点だけより
+                      タップしやすくする。複数ライン表示時は描画順で後のラインの帯が
+                      前面に来る（重なり領域は後勝ち）。 */}
+                  <Rect
+                    x={bandX}
+                    y={bandY}
+                    width={bandWidth}
+                    height={PLOT_BOTTOM - bandY}
                     fill="transparent"
                     onPress={() => handleDotPress(line.key, i)}
                   />
