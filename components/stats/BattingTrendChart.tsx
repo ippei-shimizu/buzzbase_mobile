@@ -315,6 +315,9 @@ export const BattingTrendChart = ({
               const isSelected =
                 selectedDot?.lineKey === line.key &&
                 selectedDot?.pointIndex === i;
+              const bandX = getBandX(i);
+              const bandWidth = getBandRight(i) - bandX;
+              const bandY = Math.max(PADDING_TOP, getY(point[line.key]) - 8);
               return (
                 // 累積モードで同じ日に複数試合がある場合 point.key が重複しうるため、
                 // 描画上の index を組み合わせて一意化する。
@@ -323,13 +326,10 @@ export const BattingTrendChart = ({
                       タップしやすくする。複数ライン表示時は描画順で後のラインの帯が
                       前面に来る（重なり領域は後勝ち）。 */}
                   <Rect
-                    x={getBandX(i)}
-                    y={Math.max(PADDING_TOP, getY(point[line.key]) - 8)}
-                    width={getBandRight(i) - getBandX(i)}
-                    height={
-                      PLOT_BOTTOM -
-                      Math.max(PADDING_TOP, getY(point[line.key]) - 8)
-                    }
+                    x={bandX}
+                    y={bandY}
+                    width={bandWidth}
+                    height={PLOT_BOTTOM - bandY}
                     fill="transparent"
                     onPress={() => handleDotPress(line.key, i)}
                   />
