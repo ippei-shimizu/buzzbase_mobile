@@ -51,6 +51,14 @@ export const PitcherFaceoffList = ({
 
       {rows.map((row) => {
         const isExpanded = expandedId === row.pitcher_id;
+        const attributeText = [
+          row.team_name,
+          formatThrowHand(row.throw_hand),
+          row.pitcher_style,
+          row.velocity_zone,
+        ]
+          .filter(Boolean)
+          .join("・");
         return (
           <View key={row.pitcher_id}>
             <TouchableOpacity
@@ -64,19 +72,11 @@ export const PitcherFaceoffList = ({
                 <Text style={styles.pitcherName} numberOfLines={1}>
                   {isExpanded ? "▼" : "▶"} {row.pitcher_name}
                 </Text>
-                {(() => {
-                  const attributes = [
-                    row.team_name,
-                    formatThrowHand(row.throw_hand),
-                    row.pitcher_style,
-                    row.velocity_zone,
-                  ].filter(Boolean);
-                  return attributes.length > 0 ? (
-                    <Text style={styles.subText} numberOfLines={1}>
-                      {attributes.join("・")}
-                    </Text>
-                  ) : null;
-                })()}
+                {attributeText ? (
+                  <Text style={styles.subText} numberOfLines={1}>
+                    {attributeText}
+                  </Text>
+                ) : null}
                 <Text style={styles.subText}>{row.plate_appearances}対戦</Text>
               </View>
               <View style={styles.rightCol}>
