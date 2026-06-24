@@ -1,12 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 interface ProComingSoonCardProps {
   title: string;
   description: string;
   children: React.ReactNode;
+  /** カードタップ時のハンドラ（課金意向シグナルの計測用）。未指定ならタップ不可。 */
+  onPress?: () => void;
 }
 
 /**
@@ -18,9 +20,20 @@ export function ProComingSoonCard({
   title,
   description,
   children,
+  onPress,
 }: ProComingSoonCardProps) {
+  const Container = onPress ? Pressable : View;
   return (
-    <View style={styles.container}>
+    <Container
+      style={styles.container}
+      {...(onPress
+        ? {
+            onPress,
+            accessibilityRole: "button" as const,
+            accessibilityLabel: `${title}（Pro プラン 準備中）`,
+          }
+        : {})}
+    >
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
       <View style={styles.previewWrapper} pointerEvents="none">
@@ -33,7 +46,7 @@ export function ProComingSoonCard({
           </View>
         </View>
       </View>
-    </View>
+    </Container>
   );
 }
 

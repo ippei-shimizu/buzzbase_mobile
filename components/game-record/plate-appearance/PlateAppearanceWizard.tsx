@@ -9,7 +9,7 @@ import type {
 } from "@constants/plateResults";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -29,6 +29,10 @@ import {
   useBattingRecordStore,
 } from "@stores/battingRecordStore";
 import { useSnackbarStore } from "@stores/snackbarStore";
+import {
+  trackPlateAppearanceCanceled,
+  trackPlateAppearanceCompleted,
+} from "@utils/analytics";
 import { DetailDataForm } from "./detail/DetailDataForm";
 import { EditTabBar } from "./EditTabBar";
 import { GroundTapField } from "./GroundTapField";
@@ -122,6 +126,10 @@ export function PlateAppearanceWizard({
   // store をリセットして、次回ウィザード起動時に前回の入力値が残らないようにする。
   // 完了経路では handleSubmit 内でも resetStore を呼ぶが、reset は冪等なので二重実行しても問題ない。
 
+  // 完了経路（handleSubmit 成功）で true にし、アンマウント時の「途中離脱」計測と
+  // 区別する。ref にするのはアンマウントのクリーンアップで最新値を読むため。
+  const completedRef = useRef(false);
+
   useEffect(() => {
     if (editingPlateAppearance) {
       initializeFromExisting(editingPlateAppearance);
@@ -129,6 +137,10 @@ export function PlateAppearanceWizard({
       initializeForNew(batterBoxNumber);
     }
     return () => {
+      // 完了せずに離れた場合のみ途中離脱として計測（戻るジェスチャー / 中断ボタン / 親画面の close を包含）。
+      if (!completedRef.current) {
+        trackPlateAppearanceCanceled({ is_edit: isEditMode });
+      }
       resetStore();
     };
     // マウント 1 回限りの初期化と、アンマウント時のリセットだけが意図。
@@ -227,6 +239,12 @@ export function PlateAppearanceWizard({
       } else {
         await createPlateAppearance(payload);
       }
+      completedRef.current = true;
+      trackPlateAppearanceCompleted({
+        is_edit: isEditMode,
+        has_pitcher: state.pitcherId !== null,
+        has_detail: hasDetailInputFromStore,
+      });
       resetStore();
       onClose();
     } catch (error) {
