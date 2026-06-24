@@ -72,6 +72,11 @@ import {
   useTimingBreakdown,
 } from "@hooks/useStats";
 import { useTournaments } from "@hooks/useTournaments";
+import {
+  trackBattingTrendGranularityChanged,
+  trackProFeatureTapped,
+  trackStatsFilterChanged,
+} from "@utils/analytics";
 
 type ActiveTab = "batting" | "pitching";
 
@@ -242,6 +247,23 @@ export default function StatsScreen() {
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState<ActiveTab>("batting");
   const [filters, setFilters] = useState<StatsFiltersType>({});
+  // フィルター変更時、変わったキーだけを計測してから state を更新する。
+  const handleFiltersChange = useCallback(
+    (next: StatsFiltersType) => {
+      (["year", "matchType", "seasonId", "tournamentId"] as const).forEach(
+        (key) => {
+          if (filters[key] !== next[key]) {
+            trackStatsFilterChanged({
+              filter_key: key,
+              filter_value: next[key] ?? null,
+            });
+          }
+        },
+      );
+      setFilters(next);
+    },
+    [filters],
+  );
   const [battingPeriod, setBattingPeriod] = useState<StatsPeriod>("yearly");
   const [pitchingPeriod, setPitchingPeriod] = useState<StatsPeriod>("yearly");
 
@@ -497,7 +519,7 @@ export default function StatsScreen() {
         <View style={styles.content}>
           <StatsFilters
             filters={filters}
-            onFiltersChange={setFilters}
+            onFiltersChange={handleFiltersChange}
             availableYears={availableYears}
             availableSeasons={seasons.map((s) => ({
               id: String(s.id),
@@ -537,7 +559,10 @@ export default function StatsScreen() {
                 <BattingTrendChart
                   points={battingTrend.data.points}
                   granularity={battingTrendGranularity}
-                  onGranularityChange={setBattingTrendGranularity}
+                  onGranularityChange={(next) => {
+                    trackBattingTrendGranularityChanged(next);
+                    setBattingTrendGranularity(next);
+                  }}
                 />
               </FetchingOverlay>
             )}
@@ -560,6 +585,7 @@ export default function StatsScreen() {
               <ProComingSoonCard
                 title="方向別の打率"
                 description="打球を打った方向ごとの打率をヒートマップで可視化します"
+                onPress={() => trackProFeatureTapped("hit_direction")}
               >
                 <ProComingSoonHitDirectionField />
               </ProComingSoonCard>
@@ -607,6 +633,7 @@ export default function StatsScreen() {
               <ProComingSoonCard
                 title="カウント別の打率"
                 description="初球・有利カウント・追い込みなど、カウント状況別の打率がわかります"
+                onPress={() => trackProFeatureTapped("count_situation")}
               >
                 <CountSituationDummy />
               </ProComingSoonCard>
@@ -622,6 +649,7 @@ export default function StatsScreen() {
               <ProComingSoonCard
                 title="球種別の打率"
                 description="ストレートや変化球など、球種ごとの得意・苦手が分析できます"
+                onPress={() => trackProFeatureTapped("pitch_type")}
               >
                 <PitchTypeDummy />
               </ProComingSoonCard>
@@ -640,6 +668,7 @@ export default function StatsScreen() {
               <ProComingSoonCard
                 title="対戦投手別"
                 description="対戦した投手ごとの打撃成績を一覧で確認できます"
+                onPress={() => trackProFeatureTapped("pitcher_faceoff")}
               >
                 <PitcherFaceoffDummy />
               </ProComingSoonCard>
