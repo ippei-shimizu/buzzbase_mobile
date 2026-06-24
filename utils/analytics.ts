@@ -1,3 +1,4 @@
+import type { BattingTrendGranularity } from "../types/stats";
 import { posthog } from "@utils/posthog";
 
 /**
@@ -57,8 +58,9 @@ export const trackStatsFilterChanged = (props: {
 }) => posthog?.capture("stats filter changed", props);
 
 /** 打撃成績推移グラフの粒度切替（試合 / 月 / 年 / 直近10）。 */
-export const trackBattingTrendGranularityChanged = (granularity: string) =>
-  posthog?.capture("batting trend granularity changed", { granularity });
+export const trackBattingTrendGranularityChanged = (
+  granularity: BattingTrendGranularity,
+) => posthog?.capture("batting trend granularity changed", { granularity });
 
 /** Pro プラン Coming Soon カードのタップ。課金意向シグナルとして計測する。 */
 export const trackProFeatureTapped = (feature: string) =>
