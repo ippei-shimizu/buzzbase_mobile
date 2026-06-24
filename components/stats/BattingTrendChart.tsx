@@ -159,6 +159,15 @@ export const BattingTrendChart = ({
   const getY = (value: number) =>
     PADDING_TOP + PLOT_HEIGHT - ((value - minValue) / valueRange) * PLOT_HEIGHT;
 
+  // タップ領域の縦帯。隣接点との X 中点で分割し、両端はプロット境界にクランプする。
+  // 点が 1 個のときはプロット幅全体を 1 帯とする。
+  const PLOT_RIGHT = CHART_WIDTH - PADDING_RIGHT;
+  const PLOT_BOTTOM = PADDING_TOP + PLOT_HEIGHT;
+  const getBandX = (i: number) =>
+    i === 0 ? PADDING_LEFT : (getX(i - 1) + getX(i)) / 2;
+  const getBandRight = (i: number) =>
+    i === points.length - 1 ? PLOT_RIGHT : (getX(i) + getX(i + 1)) / 2;
+
   // 各ライン分のパスを構築（絞り込みで非アクティブなラインは含めない）。
   const linePaths = visibleLines.map((line) => ({
     ...line,
@@ -310,11 +319,17 @@ export const BattingTrendChart = ({
                 // 累積モードで同じ日に複数試合がある場合 point.key が重複しうるため、
                 // 描画上の index を組み合わせて一意化する。
                 <React.Fragment key={`pt-${line.key}-${i}`}>
-                  {/* 透明な大きい円でタップヒット領域を広げる */}
-                  <Circle
-                    cx={getX(i)}
-                    cy={getY(point[line.key])}
-                    r={10}
+                  {/* 点とその真下（Y 軸方向の縦帯）をタップ領域にして、点だけより
+                      タップしやすくする。複数ライン表示時は描画順で後のラインの帯が
+                      前面に来る（重なり領域は後勝ち）。 */}
+                  <Rect
+                    x={getBandX(i)}
+                    y={Math.max(PADDING_TOP, getY(point[line.key]) - 8)}
+                    width={getBandRight(i) - getBandX(i)}
+                    height={
+                      PLOT_BOTTOM -
+                      Math.max(PADDING_TOP, getY(point[line.key]) - 8)
+                    }
                     fill="transparent"
                     onPress={() => handleDotPress(line.key, i)}
                   />
