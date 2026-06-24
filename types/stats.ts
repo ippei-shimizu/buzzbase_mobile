@@ -335,6 +335,10 @@ export interface BattingTrendData {
 export interface PitcherFaceoff {
   pitcher_id: number;
   pitcher_name: string;
+  team_name: string | null;
+  throw_hand: "right" | "left" | null;
+  pitcher_style: string | null;
+  velocity_zone: string | null;
   plate_appearances: number;
   at_bats: number;
   hits: number;

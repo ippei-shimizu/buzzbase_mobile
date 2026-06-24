@@ -10,6 +10,14 @@ interface PitcherFaceoffListProps {
   totalTargetPa: number;
 }
 
+const formatThrowHand = (
+  throwHand: PitcherFaceoff["throw_hand"],
+): string | null => {
+  if (throwHand === "right") return "右投げ";
+  if (throwHand === "left") return "左投げ";
+  return null;
+};
+
 export const PitcherFaceoffList = ({
   rows,
   minPlateAppearances,
@@ -56,6 +64,19 @@ export const PitcherFaceoffList = ({
                 <Text style={styles.pitcherName} numberOfLines={1}>
                   {isExpanded ? "▼" : "▶"} {row.pitcher_name}
                 </Text>
+                {(() => {
+                  const attributes = [
+                    row.team_name,
+                    formatThrowHand(row.throw_hand),
+                    row.pitcher_style,
+                    row.velocity_zone,
+                  ].filter(Boolean);
+                  return attributes.length > 0 ? (
+                    <Text style={styles.subText} numberOfLines={1}>
+                      {attributes.join("・")}
+                    </Text>
+                  ) : null;
+                })()}
                 <Text style={styles.subText}>{row.plate_appearances}対戦</Text>
               </View>
               <View style={styles.rightCol}>
