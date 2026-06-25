@@ -29,7 +29,7 @@ export type InvalidateGameResultMode = "stale-only" | "refetch";
  * - `profile` — プロフィール（試合数・打率などのサマリー）
  * - stats タブで使う集計 API 群（試合・打席が変わったら全部最新化する）:
  *   `headlineStats` / `additionalStats` / `runnersSituation` / `hitDirections` /
- *   `hitLocations` / `outTypeBreakdown` / `countSituations` / `contactQualities` /
+ *   `hitLocations` / `countSituations` / `contactQualities` /
  *   `pitchTypes` / `pitcherFaceoffs` / `pitcherAttributeSummary` /
  *   `battingTrend` / `paBreakdown` / `battingTable` / `pitchingTable` /
  *   `eraTrend` / `gameSummary`
@@ -49,7 +49,6 @@ const RELATED_QUERY_KEYS = [
   "runnersSituation",
   "hitDirections",
   "hitLocations",
-  "outTypeBreakdown",
   "countSituations",
   "contactQualities",
   "pitchTypes",

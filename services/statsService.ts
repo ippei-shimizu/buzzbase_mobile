@@ -7,7 +7,6 @@ import type {
   CountSituations,
   HitDirectionData,
   HitLocationData,
-  OutTypeBreakdownData,
   PitchTypeData,
   PitcherAttributeSummaryData,
   PitcherFaceoffData,
@@ -145,16 +144,6 @@ export const getHitLocations = async (
   const query = buildStatsQuery(filters);
   const res = await axiosInstance.get(
     `${STATS_URL}/hit_locations${query ? `?${query}` : ""}`,
-  );
-  return res.data;
-};
-
-export const getOutTypeBreakdown = async (
-  filters: StatsFilters,
-): Promise<OutTypeBreakdownData> => {
-  const query = buildStatsQuery(filters);
-  const res = await axiosInstance.get(
-    `${STATS_URL}/out_type_breakdown${query ? `?${query}` : ""}`,
   );
   return res.data;
 };

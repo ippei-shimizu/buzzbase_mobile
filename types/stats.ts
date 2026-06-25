@@ -21,17 +21,6 @@ export interface HitLocationData {
   points: HitLocationPoint[];
 }
 
-export interface OutTypeBreakdownCategory {
-  category: string;
-  count: number;
-  percentage: number;
-}
-
-export interface OutTypeBreakdownData {
-  breakdown: OutTypeBreakdownCategory[];
-  total: number;
-}
-
 /**
  * カウント別分析カード（初球 / 有利カウント / 追い込み）の 1 セル分。
  */

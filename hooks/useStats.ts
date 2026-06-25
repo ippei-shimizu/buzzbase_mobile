@@ -8,7 +8,6 @@ import {
   getCountSituations,
   getHitDirections,
   getHitLocations,
-  getOutTypeBreakdown,
   getPitchTypes,
   getPitcherAttributeSummary,
   getPitcherFaceoffs,
@@ -104,13 +103,6 @@ export const useHitLocations = (filters: StatsFilters) =>
   useQuery({
     queryKey: ["hitLocations", filters],
     queryFn: () => getHitLocations(filters),
-    placeholderData: keepPreviousData,
-  });
-
-export const useOutTypeBreakdown = (filters: StatsFilters) =>
-  useQuery({
-    queryKey: ["outTypeBreakdown", filters],
-    queryFn: () => getOutTypeBreakdown(filters),
     placeholderData: keepPreviousData,
   });
 

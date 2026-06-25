@@ -8,7 +8,7 @@ interface ContactQualityCardProps {
   total: number;
 }
 
-// PlateAppearanceDonut / OutTypeDonut と同じパレットを共有しつつ、
+// PlateAppearanceDonut と同じパレットを共有しつつ、
 // 打球の質ならではの 5 カテゴリにユニークな色を割り振る。
 const COLORS: Record<string, string> = {
   真芯: "#f31260",
