@@ -62,7 +62,11 @@ export default function PlateAppearancesListScreen() {
 
   const handleAdd = () => router.push("/(game-record)/plate-appearances/new");
 
-  const nextBatterBoxNumber = plateAppearances.length + 1;
+  // 打席削除後は length と batter_box_number がずれるため、最大値 + 1 で採番して重複を防ぐ。
+  const nextBatterBoxNumber =
+    plateAppearances.length > 0
+      ? Math.max(...plateAppearances.map((pa) => pa.batter_box_number)) + 1
+      : 1;
 
   return (
     <View style={styles.container}>
