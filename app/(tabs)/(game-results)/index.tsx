@@ -23,6 +23,7 @@ import {
 } from "react-native";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
+import { FilterResetButton } from "@components/stats/FilterResetButton";
 import { GameResultSummary } from "@components/stats/GameResultSummary";
 import {
   GlobalMenuButton,
@@ -35,6 +36,7 @@ import { useMySeasons } from "@hooks/useSeasons";
 import { useGameSummary } from "@hooks/useStats";
 import { useTournaments } from "@hooks/useTournaments";
 import { MATCH_TYPE_OPTIONS } from "@utils/matchType";
+import { useGameRecordStore } from "../../../stores/gameRecordStore";
 
 type ScreenTab = "summary" | "list";
 
@@ -297,6 +299,7 @@ export default function GameResultsScreen() {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
       setCurrentPage(1);
+      scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -340,8 +343,25 @@ export default function GameResultsScreen() {
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
+  }, []);
+
+  // フィルター変更ハンドラから明示的に呼ぶ用。
+  // ページ1で setCurrentPage(1) してもページ番号自体は変化しないため、
+  // 下記 useEffect だけだとフィルター変更時に先頭へ戻らない。
+  const scrollToTop = useCallback(() => {
     scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, []);
+
+  // ページ変更時の先頭スクロール。currentPage state の変化だけを監視すると
+  // データ再フェッチ中にスクロールが走ってリスト再描画で無効化されることがある。
+  // API レスポンスが反映されて pagination.current_page が更新されたタイミングで
+  // スクロールするのが最も確実なので、それを監視する。初回マウント時の発火は
+  // 既に先頭にいるため実害なし。
+  const paginationCurrentPage = pagination?.current_page;
+  useEffect(() => {
+    if (paginationCurrentPage === undefined) return;
+    scrollToTop();
+  }, [paginationCurrentPage, scrollToTop]);
 
   if (isLoading) {
     return (
@@ -364,7 +384,12 @@ export default function GameResultsScreen() {
       {/* 試合記録ボタン */}
       <TouchableOpacity
         style={styles.recordButton}
-        onPress={() => router.push("/(game-record)/step1-game-info")}
+        onPress={() => {
+          // 直前の編集モードフラグが残っていると Step1 が編集モードのまま起動するため、
+          // 新規記録の入口では store を必ず初期化する。
+          useGameRecordStore.getState().reset();
+          router.push("/(game-record)/step1-game-info");
+        }}
       >
         <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
         <Text style={styles.recordButtonText}>試合結果を記録する</Text>
@@ -389,6 +414,7 @@ export default function GameResultsScreen() {
           onSelect={(v) => {
             setSelectedYear(v === "all" ? undefined : v);
             setCurrentPage(1);
+            scrollToTop();
           }}
           isOpen={activeFilter === "year"}
           onToggle={() => toggleFilter("year")}
@@ -400,6 +426,7 @@ export default function GameResultsScreen() {
           onSelect={(v) => {
             setSelectedMatchType(v);
             setCurrentPage(1);
+            scrollToTop();
           }}
           isOpen={activeFilter === "matchType"}
           onToggle={() => toggleFilter("matchType")}
@@ -414,6 +441,7 @@ export default function GameResultsScreen() {
           onSelect={(v) => {
             setSelectedSeasonId(v);
             setCurrentPage(1);
+            scrollToTop();
           }}
           isOpen={activeFilter === "season"}
           onToggle={() => toggleFilter("season")}
@@ -429,11 +457,31 @@ export default function GameResultsScreen() {
             onSelect={(v) => {
               setSelectedTournamentId(v);
               setCurrentPage(1);
+              scrollToTop();
             }}
             isOpen={activeFilter === "tournament"}
             onToggle={() => toggleFilter("tournament")}
           />
         )}
+        <FilterResetButton
+          visible={
+            !!(
+              selectedYear ||
+              selectedMatchType ||
+              selectedSeasonId ||
+              selectedTournamentId
+            )
+          }
+          onPress={() => {
+            setActiveFilter(null);
+            setSelectedYear(undefined);
+            setSelectedMatchType(undefined);
+            setSelectedSeasonId(undefined);
+            setSelectedTournamentId(undefined);
+            setCurrentPage(1);
+            scrollToTop();
+          }}
+        />
       </View>
 
       {/* 検索 + ソート */}
@@ -463,6 +511,7 @@ export default function GameResultsScreen() {
           onPress={() => {
             setSortDesc((p) => !p);
             setCurrentPage(1);
+            scrollToTop();
           }}
         >
           <Text style={filterStyles.buttonText}>
@@ -538,7 +587,12 @@ export default function GameResultsScreen() {
         >
           <TouchableOpacity
             style={styles.recordButton}
-            onPress={() => router.push("/(game-record)/step1-game-info")}
+            onPress={() => {
+              // 直前の編集モードフラグが残っていると Step1 が編集モードのまま起動するため、
+              // 新規記録の入口では store を必ず初期化する。
+              useGameRecordStore.getState().reset();
+              router.push("/(game-record)/step1-game-info");
+            }}
           >
             <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
             <Text style={styles.recordButtonText}>試合結果を記録する</Text>
@@ -591,6 +645,23 @@ export default function GameResultsScreen() {
                 onToggle={() => toggleSummaryFilter("summaryTournament")}
               />
             )}
+            <FilterResetButton
+              visible={
+                !!(
+                  summaryYear ||
+                  summaryMatchType ||
+                  summarySeasonId ||
+                  summaryTournamentId
+                )
+              }
+              onPress={() => {
+                setSummaryActiveFilter(null);
+                setSummaryYear(undefined);
+                setSummaryMatchType(undefined);
+                setSummarySeasonId(undefined);
+                setSummaryTournamentId(undefined);
+              }}
+            />
           </View>
           <Text style={styles.activeFilterLabel}>
             {summaryYear ? `${summaryYear}年` : "通算"}

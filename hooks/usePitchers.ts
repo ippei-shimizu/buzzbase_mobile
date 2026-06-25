@@ -1,0 +1,76 @@
+import type { PitcherInput } from "../types/pitcher";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  createPitcher,
+  getPitchers,
+  updatePitcher,
+} from "@services/pitcherService";
+
+interface UsePitchersParams {
+  q?: string;
+  teamId?: number | null;
+}
+
+// 投手はユーザー追加分のみで頻繁に変わらない。useCreatePitcher / useUpdatePitcher で
+// invalidate するため、それ以外は数分キャッシュしてリストモーダルを開くたびのリフェッチを抑える。
+const PITCHERS_STALE_TIME = 5 * 60 * 1000;
+
+/**
+ * 相手投手マスタの一覧を取得する。
+ * サーバ側で current_user 作成分のみ返却されるため、フロントは追加の絞り込み不要。
+ */
+export const usePitchers = (params?: UsePitchersParams) => {
+  const queryParams = params
+    ? { q: params.q, team_id: params.teamId ?? undefined }
+    : undefined;
+  const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
+    queryKey: ["pitchers", queryParams],
+    queryFn: () => getPitchers(queryParams),
+    staleTime: PITCHERS_STALE_TIME,
+  });
+
+  return {
+    pitchers: data?.data ?? [],
+    pagination: data?.pagination,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefreshing: isRefetching,
+  };
+};
+
+/**
+ * 新規投手の追加。成功時に `pitchers` query を invalidate して一覧を再取得する。
+ */
+export const useCreatePitcher = () => {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: createPitcher,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pitchers"] });
+    },
+  });
+  return {
+    createPitcher: mutation.mutateAsync,
+    isCreating: mutation.isPending,
+  };
+};
+
+/**
+ * 既存投手の更新。invalidate で一覧を再取得し、選択中の投手表示にも反映される。
+ */
+export const useUpdatePitcher = () => {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: PitcherInput }) =>
+      updatePitcher(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pitchers"] });
+    },
+  });
+  return {
+    updatePitcher: mutation.mutateAsync,
+    isUpdating: mutation.isPending,
+  };
+};

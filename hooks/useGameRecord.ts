@@ -28,6 +28,7 @@ import {
 import { getCurrentUserProfile } from "../services/profileService";
 import { createSeason } from "../services/seasonService";
 import { useGameRecordStore } from "../stores/gameRecordStore";
+import { invalidateGameResultRelated } from "../utils/queryInvalidation";
 
 export const useGameRecord = () => {
   const store = useGameRecordStore();
@@ -75,17 +76,21 @@ export const useGameRecord = () => {
   /** Step1送信: matchResult作成or更新 → gameResult更新 */
   const submitStep1 = useMutation({
     mutationFn: async () => {
-      // チームIDを取得または作成
-      let myTeamId = store.myTeamId;
-      let opponentTeamId = store.opponentTeamId;
+      // submit 直前に画面側で setField された値（新規球場の stadium_id 等）を確実に読むため、
+      // レンダー時スナップショットの store ではなく getState() で最新状態を取得する（step2/3 と統一）。
+      const s = useGameRecordStore.getState();
 
-      if (!myTeamId && store.myTeamName) {
-        const team = await createTeam(store.myTeamName);
+      // チームIDを取得または作成
+      let myTeamId = s.myTeamId;
+      let opponentTeamId = s.opponentTeamId;
+
+      if (!myTeamId && s.myTeamName) {
+        const team = await createTeam(s.myTeamName);
         myTeamId = team.id;
         store.setField("myTeamId", team.id);
       }
-      if (!opponentTeamId && store.opponentTeamName) {
-        const team = await createTeam(store.opponentTeamName);
+      if (!opponentTeamId && s.opponentTeamName) {
+        const team = await createTeam(s.opponentTeamName);
         opponentTeamId = team.id;
         store.setField("opponentTeamId", team.id);
       }
@@ -95,52 +100,54 @@ export const useGameRecord = () => {
       }
 
       // 大会名の処理
-      let tournamentId = store.tournamentId;
-      if (!tournamentId && store.tournamentName.trim()) {
-        const tournament = await createTournament(store.tournamentName.trim());
+      let tournamentId = s.tournamentId;
+      if (!tournamentId && s.tournamentName.trim()) {
+        const tournament = await createTournament(s.tournamentName.trim());
         tournamentId = tournament.id;
         store.setField("tournamentId", tournament.id);
       }
 
       // シーズン名の処理: 既存選択（seasonId 有）はそのまま、未選択で名前のみ入力されていれば新規作成する
-      let seasonId = store.seasonId;
-      if (!seasonId && store.seasonName.trim()) {
-        const season = await createSeason({ name: store.seasonName.trim() });
+      let seasonId = s.seasonId;
+      if (!seasonId && s.seasonName.trim()) {
+        const season = await createSeason({ name: s.seasonName.trim() });
         seasonId = season.id;
         store.setField("seasonId", season.id);
         queryClient.invalidateQueries({ queryKey: ["seasons"] });
       }
 
       const matchResultPayload = {
-        game_result_id: store.gameResultId!,
-        date_and_time: `${store.date}T00:00:00`,
-        match_type: store.matchType,
+        game_result_id: s.gameResultId!,
+        date_and_time: `${s.date}T00:00:00`,
+        match_type: s.matchType,
         my_team_id: myTeamId,
         opponent_team_id: opponentTeamId,
         // Step1 画面のバリデーションで null は弾かれている前提だが、
         // 万一のために 0 へフォールバック（API は数値必須のため）。
-        my_team_score: store.myTeamScore ?? 0,
-        opponent_team_score: store.opponentTeamScore ?? 0,
-        batting_order: store.battingOrder,
-        defensive_position: store.defensivePosition,
-        memo: store.memo,
-        inning_format: store.inningFormat,
-        appearance_type: store.appearanceType,
+        my_team_score: s.myTeamScore ?? 0,
+        opponent_team_score: s.opponentTeamScore ?? 0,
+        batting_order: s.battingOrder,
+        defensive_position: s.defensivePosition,
+        memo: s.memo,
+        inning_format: s.inningFormat,
+        appearance_type: s.appearanceType,
+        // 球場は任意項目。未選択時は null を送って明示的に外す（編集モードで解除可能にする）。
+        stadium_id: s.stadiumId,
         ...(tournamentId ? { tournament_id: tournamentId } : {}),
       };
 
-      if (store.matchResultId) {
-        await updateMatchResult(store.matchResultId, matchResultPayload);
+      if (s.matchResultId) {
+        await updateMatchResult(s.matchResultId, matchResultPayload);
         // updateMatchResult は match_result テーブルのみ更新するため、
         // game_result.season_id は別途明示的に更新する必要がある。
-        await updateGameResult(store.gameResultId!, {
+        await updateGameResult(s.gameResultId!, {
           season_id: seasonId,
         });
       } else {
         const matchResult = await createMatchResult(matchResultPayload);
         store.setField("matchResultId", matchResult.id);
 
-        await updateGameResult(store.gameResultId!, {
+        await updateGameResult(s.gameResultId!, {
           match_result_id: matchResult.id,
           season_id: seasonId,
         });
@@ -301,8 +308,7 @@ export const useGameRecord = () => {
 
   const resetFlow = () => {
     store.reset();
-    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    queryClient.invalidateQueries({ queryKey: ["gameResults"] });
+    invalidateGameResultRelated(queryClient);
   };
 
   return {

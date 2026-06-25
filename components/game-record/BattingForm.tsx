@@ -25,6 +25,10 @@ interface Props {
   onFieldChange: (field: string, value: number) => void;
   onSubmit: () => void;
   onSkipPitching: () => void;
+  // 「打撃のみ」モードでは投手記録の遷移ボタンを出さないため、メインボタンの
+  // ラベルとスキップボタン表示有無を呼び出し側から制御する。
+  submitLabel?: string;
+  showSkipButton?: boolean;
 }
 
 export function BattingForm({
@@ -43,6 +47,8 @@ export function BattingForm({
   onFieldChange,
   onSubmit,
   onSkipPitching,
+  submitLabel = "投手結果入力へ",
+  showSkipButton = true,
 }: Props) {
   return (
     <ScrollView
@@ -259,17 +265,19 @@ export function BattingForm({
       {/* ボタン */}
       <View style={{ marginTop: 24, gap: 12, marginBottom: 40 }}>
         <Button
-          title="投手結果入力へ"
+          title={submitLabel}
           onPress={onSubmit}
           loading={isSubmitting}
           disabled={isSubmitting}
         />
-        <Button
-          title="投手成績をスキップ"
-          onPress={onSkipPitching}
-          disabled={isSubmitting}
-          style={{ backgroundColor: "#52525B" }}
-        />
+        {showSkipButton && (
+          <Button
+            title="投手成績をスキップ"
+            onPress={onSkipPitching}
+            disabled={isSubmitting}
+            style={{ backgroundColor: "#52525B" }}
+          />
+        )}
       </View>
     </ScrollView>
   );

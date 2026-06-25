@@ -1,11 +1,13 @@
+import type { BattingBox } from "../../types/gameRecord";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Share, View } from "react-native";
 import { SummaryView } from "@components/game-record/SummaryView";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { BottomTabBar } from "@components/ui/BottomTabBar";
 import { useGameRecord } from "@hooks/useGameRecord";
+import { usePlateAppearancesByGame } from "@hooks/usePlateAppearances";
 import { useStoreReview } from "@hooks/useStoreReview";
 import {
   trackGameRecordCompleted,
@@ -30,6 +32,45 @@ export default function SummaryScreen() {
   useEffect(() => {
     trackGameRecordStepViewed("summary");
   }, []);
+
+  // v2 で記録された打席は plate_appearances API から取得する。
+  // v1 経路（store.battingBoxes が埋まる）はサーバから取れない場合のフォールバック。
+  const { plateAppearances } = usePlateAppearancesByGame(store.gameResultId);
+
+  const battingBoxes: BattingBox[] = useMemo(() => {
+    if (plateAppearances.length > 0) {
+      return plateAppearances
+        .slice()
+        .sort((a, b) => a.batter_box_number - b.batter_box_number)
+        .map((pa) => ({
+          id: pa.id,
+          position: pa.hit_direction_id ?? 0,
+          result: pa.plate_result_id ?? 0,
+          text: pa.batting_result || "",
+        }));
+    }
+    return store.battingBoxes;
+  }, [plateAppearances, store.battingBoxes]);
+
+  // v2 経路では打点 / 得点 / 盗塁 / 盗塁死は plate_appearances 単位で保存される。
+  // SummaryView は試合合計値で表示するため、ここで集計してから渡す。
+  // by_game は v1 打席（rbi 等が null）も返すため is_new_format で絞らないと、
+  // v1 試合の編集時に打点/得点/盗塁が 0 に化ける。v1 試合は store の試合合計値へフォールバックする。
+  const v2Appearances = plateAppearances.filter((pa) => pa.is_new_format);
+  const isV2 = v2Appearances.length > 0;
+  const aggregate = (
+    selector: (pa: (typeof plateAppearances)[number]) => number | null,
+  ) => v2Appearances.reduce((sum, pa) => sum + (selector(pa) ?? 0), 0);
+  const summaryRunsBattedIn = isV2
+    ? aggregate((pa) => pa.rbi)
+    : store.runsBattedIn;
+  const summaryRun = isV2 ? aggregate((pa) => pa.run_scored) : store.run;
+  const summaryStealingBase = isV2
+    ? aggregate((pa) => pa.stolen_bases)
+    : store.stealingBase;
+  const summaryCaughtStealing = isV2
+    ? aggregate((pa) => pa.caught_stealing)
+    : store.caughtStealing;
 
   const tryShowPrePrompt = async (source: PrePromptSource) => {
     try {
@@ -58,7 +99,7 @@ export default function SummaryScreen() {
       `${formattedDate} ${store.matchType} vs ${store.opponentTeamName} ${myScore}-${opponentScore}`,
     );
 
-    const filteredBoxes = store.battingBoxes.filter((box) => box.result !== 0);
+    const filteredBoxes = battingBoxes.filter((box) => box.result !== 0);
     if (filteredBoxes.length > 0) {
       const hits = filteredBoxes.filter((box) => {
         const lastChar = box.text[box.text.length - 1];
@@ -72,8 +113,8 @@ export default function SummaryScreen() {
           !box.text.includes("犠飛"),
       ).length;
       const parts = [`${atBats}打数${hits}安打`];
-      if (store.runsBattedIn > 0) parts.push(`${store.runsBattedIn}打点`);
-      if (store.run > 0) parts.push(`${store.run}得点`);
+      if (summaryRunsBattedIn > 0) parts.push(`${summaryRunsBattedIn}打点`);
+      if (summaryRun > 0) parts.push(`${summaryRun}得点`);
       lines.push(`打撃: ${parts.join(" ")}`);
     }
 
@@ -159,11 +200,12 @@ export default function SummaryScreen() {
         battingOrder={store.battingOrder}
         defensivePosition={store.defensivePosition}
         memo={store.memo}
-        battingBoxes={store.battingBoxes}
-        runsBattedIn={store.runsBattedIn}
-        run={store.run}
-        stealingBase={store.stealingBase}
-        caughtStealing={store.caughtStealing}
+        battingBoxes={battingBoxes}
+        plateAppearances={plateAppearances}
+        runsBattedIn={summaryRunsBattedIn}
+        run={summaryRun}
+        stealingBase={summaryStealingBase}
+        caughtStealing={summaryCaughtStealing}
         battingError={store.battingError}
         hasPitching={store.pitchingResultId !== null}
         win={store.win}
