@@ -54,11 +54,13 @@ export default function SummaryScreen() {
 
   // v2 経路では打点 / 得点 / 盗塁 / 盗塁死は plate_appearances 単位で保存される。
   // SummaryView は試合合計値で表示するため、ここで集計してから渡す。
-  // plate_appearances が空（= v1 経路）のときは従来通り store の試合合計値を使う。
-  const isV2 = plateAppearances.length > 0;
+  // by_game は v1 打席（rbi 等が null）も返すため is_new_format で絞らないと、
+  // v1 試合の編集時に打点/得点/盗塁が 0 に化ける。v1 試合は store の試合合計値へフォールバックする。
+  const v2Appearances = plateAppearances.filter((pa) => pa.is_new_format);
+  const isV2 = v2Appearances.length > 0;
   const aggregate = (
     selector: (pa: (typeof plateAppearances)[number]) => number | null,
-  ) => plateAppearances.reduce((sum, pa) => sum + (selector(pa) ?? 0), 0);
+  ) => v2Appearances.reduce((sum, pa) => sum + (selector(pa) ?? 0), 0);
   const summaryRunsBattedIn = isV2
     ? aggregate((pa) => pa.rbi)
     : store.runsBattedIn;
