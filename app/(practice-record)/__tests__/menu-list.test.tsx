@@ -10,7 +10,7 @@ import {
 } from "../../../__tests__/test-utils/handlers";
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
 import { server } from "../../../jest-setup-msw";
-import PracticeMenuListScreen from "../index";
+import PracticeMenuListScreen from "../menu-list";
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 jest.mock("expo-router", () => {

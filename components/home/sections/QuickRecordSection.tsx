@@ -61,7 +61,7 @@ export function QuickRecordSection() {
       <View style={styles.actionRow}>
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={() => router.push("/(practice-record)")}
+          onPress={() => router.push("/(practice-record)/menu-list")}
         >
           <Text style={styles.actionText}>📝 練習を記録</Text>
         </TouchableOpacity>
