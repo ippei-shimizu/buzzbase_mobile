@@ -42,11 +42,59 @@ jest.mock("@sentry/react-native", () => ({
   wrap: (component: unknown) => component,
 }));
 
-// react-native-reanimated は jest-expo preset 経由で扱われるが、念のためモック
-jest.mock("react-native-reanimated", () =>
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  require("react-native-reanimated/mock"),
-);
+// posthog-react-native: ネイティブ依存を含むため import を成立させる。
+// utils/posthog は __DEV__===true でシングルトンが null になるが、_layout が
+// PostHogProvider を import するため Provider をパススルーで差し替える。
+jest.mock("posthog-react-native", () => ({
+  __esModule: true,
+  default: jest.fn().mockImplementation(() => ({
+    identify: jest.fn(),
+    capture: jest.fn(),
+    screen: jest.fn(),
+    reset: jest.fn(),
+  })),
+  PostHogProvider: ({ children }: { children: unknown }) => children,
+  usePostHog: () => ({
+    identify: jest.fn(),
+    capture: jest.fn(),
+    screen: jest.fn(),
+    reset: jest.fn(),
+  }),
+}));
+
+// react-native-reanimated: 公式 mock (`react-native-reanimated/mock`) は内部で
+// react-native-worklets の native init を要求して `WorkletsError` で失敗するため、
+// 必要な API だけ手動で no-op としてモックする。アニメーションはテストでは
+// 視覚的に検証しないため、worklet 起動を完全に避ける。
+jest.mock("react-native-reanimated", () => {
+  const passThrough = <T>(value: T) => value;
+  return {
+    __esModule: true,
+    default: {
+      createAnimatedComponent: <T>(component: T) => component,
+    },
+    createAnimatedComponent: <T>(component: T) => component,
+    useSharedValue: (initial: unknown) => ({ value: initial }),
+    useAnimatedProps: () => ({}),
+    useAnimatedStyle: () => ({}),
+    useDerivedValue: (factory: () => unknown) => ({ value: factory() }),
+    withTiming: passThrough,
+    withSpring: passThrough,
+    withRepeat: passThrough,
+    withDelay: (_delay: number, animation: unknown) => animation,
+    withSequence: (...args: unknown[]) => args[args.length - 1],
+    Easing: {
+      linear: () => 0,
+      ease: () => 0,
+      quad: () => 0,
+      cubic: () => 0,
+      out: () => () => 0,
+      in: () => () => 0,
+      inOut: () => () => 0,
+      bezier: () => () => 0,
+    },
+  };
+});
 
 // react-native-safe-area-context: テストでは固定の inset を返す。
 // 実環境では Expo Router がプロバイダを供給するが、テストでは直接フックを使えるようにする。

@@ -1,5 +1,11 @@
-import type { AppearanceType, Position, Team } from "../../types/gameRecord";
+import type {
+  AppearanceType,
+  Position,
+  Team,
+  RecordPattern,
+} from "../../types/gameRecord";
 import type { Season } from "../../types/season";
+import type { Stadium } from "../../types/stadium";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, {
   type DateTimePickerEvent,
@@ -17,6 +23,7 @@ import {
   Platform,
   Modal,
 } from "react-native";
+import { PatternSelector } from "@components/game-record/PatternSelector";
 import { Button } from "@components/ui/Button";
 import { SelectPicker } from "@components/ui/SelectPicker";
 import {
@@ -57,16 +64,27 @@ interface Props {
   tournamentName: string;
   tournamentId: number | null;
   tournaments: { id: number; name: string }[];
-  seasonId: number | null;
+  seasonName: string;
+  stadiums: Stadium[];
   seasons: Season[];
   teams: Team[];
   positions: Position[];
   inningFormat: number;
   appearanceType: AppearanceType;
+  // 球場は任意項目。
+  stadiumId: number | null;
+  stadiumName: string;
   isSubmitting: boolean;
   fieldErrors: GameInfoFieldErrors;
   onFieldChange: (field: string, value: string | number | null) => void;
   onSubmit: () => void;
+  // appearanceType !== "no_play" の場合に末尾へ表示する記録パターン選択 UI のハンドラ。
+  // 編集モードでは未指定にして既存の onSubmit Button を表示する。
+  onPatternSelect?: (pattern: RecordPattern) => void;
+  // 編集モードのときは見出し・ボタン文言を「編集」表現に切り替える。
+  isEditMode?: boolean;
+  // 編集モードのとき、試合情報だけ編集して完了するためのサブ動線。
+  onCompleteEdit?: () => void;
 }
 
 // 打順の選択肢。1〜9番／DH に加え、代打・代走・途中出場・未出場ケース向けに「なし」を先頭に追加。
@@ -142,22 +160,30 @@ export function GameInfoForm({
   tournamentName,
   tournamentId: _tournamentId,
   tournaments,
-  seasonId,
+  seasonName,
+  stadiums,
   seasons,
   teams,
   positions,
   inningFormat,
   appearanceType,
+  stadiumId: _stadiumId,
+  stadiumName,
   isSubmitting,
   fieldErrors,
   onFieldChange,
   onSubmit,
+  onPatternSelect,
+  isEditMode = false,
+  onCompleteEdit,
 }: Props) {
   const [showMyTeamSuggestions, setShowMyTeamSuggestions] = useState(false);
   const [showOpponentTeamSuggestions, setShowOpponentTeamSuggestions] =
     useState(false);
   const [showTournamentSuggestions, setShowTournamentSuggestions] =
     useState(false);
+  const [showSeasonSuggestions, setShowSeasonSuggestions] = useState(false);
+  const [showStadiumSuggestions, setShowStadiumSuggestions] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -216,23 +242,29 @@ export function GameInfoForm({
         ? tournaments.filter((t) =>
             t.name.toLowerCase().includes(tournamentName.toLowerCase()),
           )
-        : tournaments,
+        : [],
     [tournamentName, tournaments],
   );
+
+  const filteredSeasons = useMemo(
+    () =>
+      seasonName.length > 0
+        ? seasons.filter((s) =>
+            s.name.toLowerCase().includes(seasonName.toLowerCase()),
+          )
+        : [],
+    [seasonName, seasons],
+  );
+
+  // 球場サジェスト。stadiums は親 (useStadiumSearch) が stadiumName を q として
+  // 既にサーバ側で絞り込んだ結果が渡されるため、ここでは表示件数のみ制御する。
+  const filteredStadiums = useMemo(() => stadiums.slice(0, 5), [stadiums]);
 
   // 代打／代走／途中出場／未出場のときに守備位置を「なし」（未選択）にできるよう、
   // 先頭に空値の選択肢を入れる。先発の必須バリデーションは Step1 画面側で値の有無を見て行う。
   const positionItems = [
     { label: "なし", value: "" },
     ...positions.map((p) => ({ label: p.name, value: p.name })),
-  ];
-
-  const seasonItems = [
-    { label: "シーズン名を入力", value: "" },
-    ...seasons.map((s) => ({
-      label: s.name,
-      value: String(s.id),
-    })),
   ];
 
   const renderTeamSuggestions = (
@@ -270,7 +302,9 @@ export function GameInfoForm({
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={{ paddingBottom: 40 }}
     >
-      <Text style={styles.heading}>試合結果を入力しよう！</Text>
+      <Text style={styles.heading}>
+        {isEditMode ? "試合結果を編集しよう！" : "試合結果を入力しよう！"}
+      </Text>
 
       <View style={styles.formCard}>
         {/* 試合日付 */}
@@ -410,6 +444,58 @@ export function GameInfoForm({
 
         <View style={styles.divider} />
 
+        {/* 球場 */}
+        <FormRow label="球場">
+          <View style={styles.comboBox}>
+            <RNTextInput
+              style={styles.comboInput}
+              value={stadiumName}
+              onChangeText={(v) => {
+                onFieldChange("stadiumName", v);
+                onFieldChange("stadiumId", null);
+                setShowStadiumSuggestions(true);
+              }}
+              onFocus={() => setShowStadiumSuggestions(true)}
+              onBlur={() =>
+                setTimeout(() => setShowStadiumSuggestions(false), 200)
+              }
+              placeholder="球場名を入力"
+              placeholderTextColor="#71717A"
+            />
+            <Ionicons name="chevron-down" size={16} color="#A1A1AA" />
+          </View>
+        </FormRow>
+        {showStadiumSuggestions && filteredStadiums.length > 0 && (
+          <>
+            <TouchableWithoutFeedback
+              onPress={() => {
+                setShowStadiumSuggestions(false);
+                Keyboard.dismiss();
+              }}
+            >
+              <View style={styles.suggestionsOverlay} />
+            </TouchableWithoutFeedback>
+            <View style={styles.suggestions}>
+              {filteredStadiums.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.suggestionItem}
+                  onPress={() => {
+                    onFieldChange("stadiumName", item.name);
+                    onFieldChange("stadiumId", item.id);
+                    setShowStadiumSuggestions(false);
+                    Keyboard.dismiss();
+                  }}
+                >
+                  <Text style={styles.suggestionText}>{item.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
+
+        <View style={styles.divider} />
+
         {/* 大会名 */}
         <FormRow label="大会名">
           <View style={styles.comboBox}>
@@ -438,7 +524,11 @@ export function GameInfoForm({
             >
               <View style={styles.suggestionsOverlay} />
             </TouchableWithoutFeedback>
-            <View style={styles.suggestions}>
+            <ScrollView
+              style={styles.suggestions}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+            >
               {filteredTournaments.map((item) => (
                 <TouchableOpacity
                   key={item.id}
@@ -453,28 +543,68 @@ export function GameInfoForm({
                   <Text style={styles.suggestionText}>{item.name}</Text>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
           </>
         )}
 
         <View style={styles.divider} />
 
-        {/* シーズン */}
-        {seasons.length > 0 && (
+        {/* シーズン: 既存選択 / 新規入力どちらにも対応するコンボボックス。
+            未選択かつ入力ありの場合は Step1 送信時に新規シーズンを作成する。 */}
+        <FormRow label="シーズン">
+          <View style={styles.comboBox}>
+            <RNTextInput
+              style={styles.comboInput}
+              value={seasonName}
+              onChangeText={(v) => {
+                onFieldChange("seasonName", v);
+                onFieldChange("seasonId", null);
+                setShowSeasonSuggestions(true);
+              }}
+              onFocus={() => setShowSeasonSuggestions(true)}
+              onBlur={() =>
+                setTimeout(() => setShowSeasonSuggestions(false), 200)
+              }
+              placeholder="シーズン名を入力"
+              placeholderTextColor="#71717A"
+            />
+            <Ionicons name="chevron-down" size={16} color="#A1A1AA" />
+          </View>
+        </FormRow>
+        {showSeasonSuggestions && filteredSeasons.length > 0 && (
           <>
-            <FormRow label="シーズン">
-              <SelectPicker
-                items={seasonItems}
-                selectedValue={seasonId ? String(seasonId) : ""}
-                onSelect={(v) =>
-                  onFieldChange("seasonId", v ? Number(v) : null)
-                }
-                compact
-              />
-            </FormRow>
-            <View style={styles.divider} />
+            <TouchableWithoutFeedback
+              onPress={() => {
+                setShowSeasonSuggestions(false);
+                Keyboard.dismiss();
+              }}
+            >
+              <View style={styles.suggestionsOverlay} />
+            </TouchableWithoutFeedback>
+            <ScrollView
+              style={styles.suggestions}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+            >
+              {filteredSeasons.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.suggestionItem}
+                  onPress={() => {
+                    onFieldChange("seasonName", item.name);
+                    onFieldChange("seasonId", item.id);
+                    setShowSeasonSuggestions(false);
+                    Keyboard.dismiss();
+                  }}
+                >
+                  <Text style={styles.suggestionText}>{item.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </>
         )}
+
+        <View style={styles.divider} />
 
         {/* 自チーム */}
         <FormRow label="自チーム" required error={fieldErrors.myTeamName}>
@@ -553,42 +683,18 @@ export function GameInfoForm({
           error={fieldErrors.myTeamScore || fieldErrors.opponentTeamScore}
         >
           <View style={styles.scoreRow}>
-            <RNTextInput
-              style={styles.scoreInput}
-              value={myTeamScore !== null ? String(myTeamScore) : ""}
-              onChangeText={(v) => {
-                if (v === "") {
-                  onFieldChange("myTeamScore", null);
-                  return;
-                }
-                const parsed = parseInt(v, 10);
-                if (!Number.isNaN(parsed)) {
-                  onFieldChange("myTeamScore", parsed);
-                }
-              }}
+            <ScoreStepper
+              value={myTeamScore}
+              onChange={(v) => onFieldChange("myTeamScore", v)}
+              accessibilityLabel="自チームの点数"
               placeholder="自分"
-              placeholderTextColor="#71717A"
-              keyboardType="number-pad"
             />
             <Text style={styles.scoreSeparator}>対</Text>
-            <RNTextInput
-              style={styles.scoreInput}
-              value={
-                opponentTeamScore !== null ? String(opponentTeamScore) : ""
-              }
-              onChangeText={(v) => {
-                if (v === "") {
-                  onFieldChange("opponentTeamScore", null);
-                  return;
-                }
-                const parsed = parseInt(v, 10);
-                if (!Number.isNaN(parsed)) {
-                  onFieldChange("opponentTeamScore", parsed);
-                }
-              }}
+            <ScoreStepper
+              value={opponentTeamScore}
+              onChange={(v) => onFieldChange("opponentTeamScore", v)}
+              accessibilityLabel="相手チームの点数"
               placeholder="相手"
-              placeholderTextColor="#71717A"
-              keyboardType="number-pad"
             />
           </View>
         </FormRow>
@@ -646,16 +752,102 @@ export function GameInfoForm({
         />
       </View>
 
-      <Button
-        title={
-          appearanceType === "no_play" ? "試合結果まとめへ" : "打撃成績入力へ"
-        }
-        onPress={onSubmit}
-        loading={isSubmitting}
-        disabled={isSubmitting}
-        style={{ marginBottom: 40 }}
-      />
+      {appearanceType === "no_play" || !onPatternSelect ? (
+        <>
+          <Button
+            title={(() => {
+              if (appearanceType === "no_play") {
+                return isEditMode ? "編集を完了する" : "試合結果まとめへ";
+              }
+              return isEditMode ? "打撃成績編集へ" : "打撃成績入力へ";
+            })()}
+            onPress={onSubmit}
+            loading={isSubmitting}
+            disabled={isSubmitting}
+            style={
+              isEditMode && onCompleteEdit ? undefined : { marginBottom: 40 }
+            }
+          />
+          {isEditMode && onCompleteEdit && appearanceType !== "no_play" && (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="編集を完了する"
+              onPress={onCompleteEdit}
+              disabled={isSubmitting}
+              style={styles.completeEditButton}
+            >
+              <Text style={styles.completeEditLabel}>編集を完了する</Text>
+            </TouchableOpacity>
+          )}
+        </>
+      ) : (
+        <PatternSelector onSelect={onPatternSelect} disabled={isSubmitting} />
+      )}
     </ScrollView>
+  );
+}
+
+interface ScoreStepperProps {
+  value: number | null;
+  onChange: (next: number | null) => void;
+  accessibilityLabel: string;
+  placeholder?: string;
+}
+
+/**
+ * 試合スコア用の +/- ステッパー付き入力。
+ * 0-0（完封）も有効値のため、空入力は null として未入力と区別する。
+ * 「-」は value が null か 0 以下のとき disabled、「+」は常時活性。
+ */
+function ScoreStepper({
+  value,
+  onChange,
+  accessibilityLabel,
+  placeholder,
+}: ScoreStepperProps) {
+  const decrementDisabled = value === null || value <= 0;
+  return (
+    <View style={styles.scoreStepper}>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={`${accessibilityLabel}を減らす`}
+        accessibilityState={{ disabled: decrementDisabled }}
+        disabled={decrementDisabled}
+        onPress={() => onChange(Math.max(0, (value ?? 0) - 1))}
+        hitSlop={6}
+      >
+        <Ionicons
+          name="remove-circle"
+          size={26}
+          color={decrementDisabled ? "#52525B" : "#d08000"}
+        />
+      </TouchableOpacity>
+      <RNTextInput
+        style={styles.scoreInput}
+        value={value !== null ? String(value) : ""}
+        onChangeText={(v) => {
+          if (v === "") {
+            onChange(null);
+            return;
+          }
+          const parsed = parseInt(v, 10);
+          if (!Number.isNaN(parsed)) {
+            onChange(Math.max(0, parsed));
+          }
+        }}
+        placeholder={placeholder}
+        placeholderTextColor="#71717A"
+        keyboardType="number-pad"
+      />
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={`${accessibilityLabel}を増やす`}
+        onPress={() => onChange((value ?? 0) + 1)}
+        hitSlop={6}
+      >
+        <Ionicons name="add-circle" size={26} color="#d08000" />
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -663,6 +855,17 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     padding: 16,
+  },
+  completeEditButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    marginBottom: 28,
+  },
+  completeEditLabel: {
+    color: "#A1A1AA",
+    fontSize: 14,
+    fontWeight: "600",
   },
   heading: {
     color: "#F4F4F4",
@@ -779,15 +982,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
+  scoreStepper: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   scoreInput: {
     flex: 1,
     backgroundColor: "#3A3A3A",
     borderRadius: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 10,
     color: "#F4F4F4",
     fontSize: 15,
     textAlign: "center",
+    minWidth: 40,
   },
   scoreSeparator: {
     color: "#A1A1AA",
@@ -809,6 +1019,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     maxHeight: 200,
     zIndex: 10,
+    // iOS の View はデフォルト overflow: visible で、ScrollView 化していても
+    // 角丸を効かせるため明示的に切る。
+    overflow: "hidden",
   },
   suggestionItem: {
     paddingVertical: 10,

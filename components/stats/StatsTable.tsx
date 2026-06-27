@@ -86,6 +86,7 @@ export const PITCHING_COLUMNS: Column<PitchingStatsRow>[] = [
   { key: "complete_games", label: "完投", width: 40, format: fmtInt },
   { key: "shutouts", label: "完封", width: 40, format: fmtInt },
   { key: "innings_pitched", label: "投球回", width: 48, format: fmt2 },
+  { key: "number_of_pitches", label: "総投球数", width: 56, format: fmtInt },
   { key: "hits_allowed", label: "被安打", width: 44, format: fmtInt },
   { key: "home_runs_hit", label: "被本塁打", width: 52, format: fmtInt },
   { key: "strikeouts", label: "三振", width: 40, format: fmtInt },

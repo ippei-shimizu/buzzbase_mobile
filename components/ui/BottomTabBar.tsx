@@ -1,33 +1,7 @@
 import { useRouter, usePathname } from "expo-router";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BallIcon } from "@components/icon/BallIcon";
-import { GroupIcon } from "@components/icon/GroupIcon";
-import { HomeIcon } from "@components/icon/HomeIcon";
-import { UserIcon } from "@components/icon/UserIcon";
-
-const TABS = [
-  {
-    label: "ダッシュボード",
-    href: "/(tabs)" as const,
-    icon: HomeIcon,
-  },
-  {
-    label: "試合結果",
-    href: "/(tabs)/(game-results)" as const,
-    icon: BallIcon,
-  },
-  {
-    label: "グループ",
-    href: "/(tabs)/(groups)" as const,
-    icon: GroupIcon,
-  },
-  {
-    label: "マイページ",
-    href: "/(tabs)/(profile)" as const,
-    icon: UserIcon,
-  },
-];
+import { BOTTOM_TAB_ITEMS } from "@components/ui/bottomTabItems";
 
 export function BottomTabBar() {
   const router = useRouter();
@@ -44,14 +18,18 @@ export function BottomTabBar() {
         paddingBottom: insets.bottom,
       }}
     >
-      {TABS.map((tab) => {
-        const isActive = pathname.startsWith(tab.href.replace("/(tabs)", ""));
+      {BOTTOM_TAB_ITEMS.map((tab) => {
+        // index の href は "/(tabs)" → 除去後 "" となり startsWith("") が常に true になるため、
+        // 先頭一致ではなく完全一致で判定する。
+        const tabPath = tab.href.replace("/(tabs)", "") || "/";
+        const isActive =
+          tabPath === "/" ? pathname === "/" : pathname.startsWith(tabPath);
         const color = isActive ? "#d08000" : "#A1A1AA";
-        const Icon = tab.icon;
+        const Icon = tab.Icon;
 
         return (
           <TouchableOpacity
-            key={tab.label}
+            key={tab.name}
             onPress={() => router.replace(tab.href)}
             style={{
               flex: 1,
@@ -59,6 +37,7 @@ export function BottomTabBar() {
               paddingVertical: 8,
             }}
           >
+            {/* (tabs) 外の画面では useGroupTabBadge を購読できないため、グループの未参加バッジは出さない */}
             <Icon size={22} color={color} />
             <Text style={{ fontSize: 10, color, marginTop: 2 }}>
               {tab.label}

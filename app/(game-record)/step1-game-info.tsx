@@ -1,3 +1,4 @@
+import type { RecordPattern } from "../../types/gameRecord";
 import type { GameInfoFieldErrors } from "@components/game-record/GameInfoForm";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -13,7 +14,9 @@ import { isLineupRequired } from "@constants/appearanceType";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { useProfile } from "@hooks/useProfile";
 import { useMySeasons } from "@hooks/useSeasons";
+import { useCreateStadium, useStadiumSearch } from "@hooks/useStadiums";
 import { getMatchResultFormDefaults } from "@services/matchResultService";
+import { trackGameRecordStepViewed } from "@utils/analytics";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 import { useSnackbarStore } from "../../stores/snackbarStore";
 
@@ -29,9 +32,15 @@ export default function Step1GameInfoScreen() {
   const store = useGameRecordStore();
   const { profile } = useProfile();
   const { seasons } = useMySeasons();
+  const { stadiums } = useStadiumSearch(store.stadiumName);
+  const { createStadium } = useCreateStadium();
   const [fieldErrors, setFieldErrors] = useState<GameInfoFieldErrors>({});
   const [isInitializing, setIsInitializing] = useState(false);
   const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    trackGameRecordStepViewed(1);
+  }, []);
 
   // 新規作成時にプロフィールのチームを自動セット
   useEffect(() => {
@@ -107,7 +116,12 @@ export default function Step1GameInfoScreen() {
     }
   };
 
-  const handleSubmit = () => {
+  // 編集モードと未出場 (no_play) は「次へ」ボタン経由の固定遷移、
+  // 新規作成時は GameInfoForm 下部の PatternSelector からパターンを選んで遷移する。
+  const runSubmit = async (
+    pattern: RecordPattern | null,
+    options?: { completeEdit?: boolean },
+  ) => {
     if (submitStep1.isPending) return;
 
     const errors: GameInfoFieldErrors = {};
@@ -122,12 +136,10 @@ export default function Step1GameInfoScreen() {
     if (store.opponentTeamScore === null) {
       errors.opponentTeamScore = "相手チームの点数を入力してください";
     }
-    // 先発／途中出場のときだけ打順・守備位置を必須にする。
+    // 先発／途中出場のときだけ守備位置を必須にする。
+    // 打順は DH 制で投手として出場する場合「なし」を許容するため任意。
     // 代打／代走／未出場は GameInfoForm 側で自動的に「なし」がセットされるため任意。
     const lineupRequired = isLineupRequired(store.appearanceType);
-    if (lineupRequired && !store.battingOrder) {
-      errors.battingOrder = "打順を選択してください";
-    }
     if (lineupRequired && !store.defensivePosition) {
       errors.defensivePosition = "守備位置を選択してください";
     }
@@ -146,13 +158,43 @@ export default function Step1GameInfoScreen() {
     }
 
     setFieldErrors({});
+    if (pattern) {
+      store.setField("recordPattern", pattern);
+    }
+
+    // 球場名が入っているのに stadium_id 未解決なら、submit 前に新規球場を作って ID を確定させる。
+    if (store.stadiumName.trim() && store.stadiumId === null) {
+      try {
+        const stadium = await createStadium({
+          name: store.stadiumName.trim(),
+        });
+        store.setField("stadiumId", stadium.id);
+      } catch {
+        // 新規作成に失敗しても遷移はブロックしない。stadium_id 未解決のまま送信する。
+        useSnackbarStore.getState().show({
+          type: "error",
+          message: "球場の新規登録に失敗しました。球場なしで保存します。",
+        });
+      }
+    }
+
     submitStep1.mutate(undefined, {
       onSuccess: () => {
-        // 未出場の場合は打撃・投手成績の入力を飛ばして直接サマリー画面へ。
-        const next =
-          store.appearanceType === "no_play"
-            ? "/(game-record)/summary"
-            : "/(game-record)/step2-batting";
+        if (options?.completeEdit) {
+          router.replace("/(game-record)/summary");
+          return;
+        }
+        const next = (() => {
+          if (store.appearanceType === "no_play")
+            return "/(game-record)/summary";
+          if (pattern === "pitching") return "/(game-record)/step3-pitching";
+          if (pattern === "batting" || pattern === "both")
+            return "/(game-record)/plate-appearances";
+          // 編集モード（pattern=null）も新仕様の打席リスト画面へ統一する。
+          // 旧 BattingForm (step2-batting) は新規記録フローで pattern 未確定時のみ使う。
+          if (store.isEditMode) return "/(game-record)/plate-appearances";
+          return "/(game-record)/step2-batting";
+        })();
         router.push(next);
       },
       onError: (error) => {
@@ -164,6 +206,12 @@ export default function Step1GameInfoScreen() {
       },
     });
   };
+
+  // no_play / 編集モードでは GameInfoForm 下部に従来の Button が出る。
+  const handleSubmit = () => runSubmit(null);
+  const handlePatternSelect = (pattern: RecordPattern) => runSubmit(pattern);
+  // 編集モードのみ: 試合情報だけ編集して完了したいケース用の動線。
+  const handleCompleteEdit = () => runSubmit(null, { completeEdit: true });
 
   if (isInitializing || createGameResultMutation.isPending) {
     return (
@@ -205,16 +253,22 @@ export default function Step1GameInfoScreen() {
         tournamentName={store.tournamentName}
         tournamentId={store.tournamentId}
         tournaments={tournamentsQuery.data ?? []}
-        seasonId={store.seasonId}
+        seasonName={store.seasonName}
+        stadiums={stadiums}
         seasons={seasons}
         teams={teamsQuery.data ?? []}
         positions={positionsQuery.data ?? []}
         inningFormat={store.inningFormat}
         appearanceType={store.appearanceType}
+        stadiumId={store.stadiumId}
+        stadiumName={store.stadiumName}
         isSubmitting={submitStep1.isPending}
         fieldErrors={fieldErrors}
         onFieldChange={handleFieldChange}
         onSubmit={handleSubmit}
+        onPatternSelect={store.isEditMode ? undefined : handlePatternSelect}
+        isEditMode={store.isEditMode}
+        onCompleteEdit={store.isEditMode ? handleCompleteEdit : undefined}
       />
     </KeyboardAvoidingView>
   );

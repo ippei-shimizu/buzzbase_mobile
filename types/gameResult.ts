@@ -17,6 +17,9 @@ export interface GameResultMatchResult {
   my_team_name: string;
   opponent_team_name: string;
   tournament_name: string | null;
+  // 球場は任意項目。未指定時は null が返る。
+  stadium_id: number | null;
+  stadium_name: string | null;
 }
 
 export interface PlateAppearance {

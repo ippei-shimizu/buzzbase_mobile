@@ -3,7 +3,9 @@ import * as AppleAuthentication from "expo-apple-authentication";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 import { loginRevenueCat } from "@services/revenueCatService";
+import { trackSignUpCompleted, trackUserLoggedIn } from "@utils/analytics";
 import axiosInstance from "@utils/axiosInstance";
+import { posthog } from "@utils/posthog";
 
 const isExpoGo = Constants.appOwnership === "expo";
 
@@ -62,6 +64,12 @@ export const appleSignIn = async () => {
         tags: { source: "revenue_cat_login" },
       });
     });
+    posthog?.identify(String(userId));
+    if (apiResponse.data?.requires_username) {
+      trackSignUpCompleted("apple");
+    } else {
+      trackUserLoggedIn("apple");
+    }
   }
 
   return apiResponse.data;

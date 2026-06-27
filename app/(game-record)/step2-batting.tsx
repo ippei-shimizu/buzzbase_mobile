@@ -1,9 +1,10 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import { BattingForm } from "@components/game-record/BattingForm";
 import { StepIndicator } from "@components/game-record/StepIndicator";
 import { useGameRecord } from "@hooks/useGameRecord";
+import { trackGameRecordStepViewed } from "@utils/analytics";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 
 export default function Step2BattingScreen() {
@@ -12,8 +13,18 @@ export default function Step2BattingScreen() {
   const store = useGameRecordStore();
   const [errors, setErrors] = useState<string[]>([]);
 
+  useEffect(() => {
+    trackGameRecordStepViewed(2);
+  }, []);
+
   const handleFieldChange = (field: string, value: number) => {
     store.setField(field as keyof typeof store, value as never);
+  };
+
+  const handleError = (error: unknown) => {
+    setErrors([
+      error instanceof Error ? error.message : "エラーが発生しました",
+    ]);
   };
 
   const handleSubmit = () => {
@@ -22,13 +33,15 @@ export default function Step2BattingScreen() {
     setErrors([]);
     submitStep2.mutate(undefined, {
       onSuccess: () => {
-        router.push("/(game-record)/step3-pitching");
+        // 「打撃のみ」を選んだ場合は投手成績をスキップして直接サマリーへ。
+        // それ以外（両方 / 編集モード）は従来通り Step3 へ。
+        const next =
+          store.recordPattern === "batting"
+            ? "/(game-record)/summary"
+            : "/(game-record)/step3-pitching";
+        router.push(next);
       },
-      onError: (error) => {
-        setErrors([
-          error instanceof Error ? error.message : "エラーが発生しました",
-        ]);
-      },
+      onError: handleError,
     });
   };
 
@@ -40,11 +53,7 @@ export default function Step2BattingScreen() {
       onSuccess: () => {
         router.push("/(game-record)/summary");
       },
-      onError: (error) => {
-        setErrors([
-          error instanceof Error ? error.message : "エラーが発生しました",
-        ]);
-      },
+      onError: handleError,
     });
   };
 
@@ -73,6 +82,17 @@ export default function Step2BattingScreen() {
         onFieldChange={handleFieldChange}
         onSubmit={handleSubmit}
         onSkipPitching={handleSkipPitching}
+        submitLabel={(() => {
+          if (store.isEditMode) {
+            return store.pitchingResultId !== null
+              ? "投手成績編集へ"
+              : "編集を完了する";
+          }
+          return store.recordPattern === "batting"
+            ? "試合結果まとめへ"
+            : "投手結果入力へ";
+        })()}
+        showSkipButton={store.recordPattern !== "batting"}
       />
     </KeyboardAvoidingView>
   );

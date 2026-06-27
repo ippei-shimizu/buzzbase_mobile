@@ -6,11 +6,13 @@ import {
   getFollowingUsers,
 } from "../services/groupService";
 
-export const useGroups = () => {
-  const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
-    queryKey: ["groups"],
-    queryFn: getGroups,
-  });
+export const useGroups = (options?: { enabled?: boolean }) => {
+  const { data, isLoading, isError, error, refetch, isRefetching, isFetched } =
+    useQuery({
+      queryKey: ["groups"],
+      queryFn: getGroups,
+      enabled: options?.enabled ?? true,
+    });
 
   return {
     groups: data ?? [],
@@ -19,6 +21,8 @@ export const useGroups = () => {
     error,
     refetch,
     isRefreshing: isRefetching,
+    // 取得確定前（enabled が true になった直後のフェッチ開始前）を区別するために露出する
+    isFetched,
   };
 };
 

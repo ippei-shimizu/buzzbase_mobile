@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { trackGroupCreated, trackGroupJoined } from "@utils/analytics";
 import {
   createGroup,
   updateGroupInfo,
@@ -15,7 +16,8 @@ export const useCreateGroup = () => {
 
   const mutation = useMutation({
     mutationFn: createGroup,
-    onSuccess: () => {
+    onSuccess: (group) => {
+      trackGroupCreated(group.id);
       queryClient.invalidateQueries({ queryKey: ["groups"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
@@ -93,7 +95,8 @@ export const useAcceptInvitation = () => {
 
   const mutation = useMutation({
     mutationFn: acceptInvitation,
-    onSuccess: () => {
+    onSuccess: (_data, groupId) => {
+      trackGroupJoined(groupId);
       queryClient.invalidateQueries({ queryKey: ["groups"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
@@ -123,7 +126,8 @@ export const useAcceptInviteLink = () => {
 
   const mutation = useMutation({
     mutationFn: acceptInviteLink,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      trackGroupJoined(data.group_id);
       queryClient.invalidateQueries({ queryKey: ["groups"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },

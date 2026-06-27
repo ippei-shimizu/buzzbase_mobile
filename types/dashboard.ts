@@ -68,6 +68,7 @@ export interface PitchingStats {
     hit_by_pitch: number;
     run_allowed: number;
     earned_run: number;
+    number_of_pitches: number;
   } | null;
   calculated: {
     era: number;

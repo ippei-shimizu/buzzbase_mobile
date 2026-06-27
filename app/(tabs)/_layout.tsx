@@ -1,14 +1,13 @@
 import { Redirect, Tabs } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
-import { BallIcon } from "@components/icon/BallIcon";
-import { GroupIcon } from "@components/icon/GroupIcon";
-import { HomeIcon } from "@components/icon/HomeIcon";
-import { StatsIcon } from "@components/icon/StatsIcon";
-import { UserIcon } from "@components/icon/UserIcon";
 import { BillingIssueAlert } from "@components/pro/BillingIssueAlert";
 import { TrialExpiringBanner } from "@components/pro/TrialExpiringBanner";
+import { BOTTOM_TAB_ITEMS } from "@components/ui/bottomTabItems";
 import { useAuth } from "@hooks/useAuth";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
+import { useGroups } from "@hooks/useGroups";
+import { useGroupTabBadge } from "@hooks/useGroupTabBadge";
+import { useOnboarding } from "@hooks/useOnboarding";
 import { useProStatus } from "@hooks/useProStatus";
 
 export default function TabLayout() {
@@ -16,8 +15,27 @@ export default function TabLayout() {
   const { enabled: proFeatures } = useFeatureFlag("pro_features");
   // pro_features=false の環境では Banner/Alert を一切表示しないため、/pro/status も叩かない。
   const { proStatus } = useProStatus({ enabled: proFeatures });
+  const { isCompleted: isOnboardingCompleted } = useOnboarding();
+  const { groups, isFetched: isGroupsFetched } = useGroups({
+    enabled: isLoggedIn === true,
+  });
+  const { seen: isGroupBadgeSeen, markSeen: markGroupBadgeSeen } =
+    useGroupTabBadge();
 
-  if (isLoading || isLoggedIn === undefined) {
+  // 取得確定後に未参加（グループ0件）かつ未閲覧のときだけグループタブに赤ポチを出す。
+  // isGroupsFetched でフェッチ開始前の一瞬の誤点灯を防ぐ。
+  const showGroupBadge =
+    isLoggedIn === true &&
+    isGroupsFetched &&
+    groups.length === 0 &&
+    isGroupBadgeSeen === false;
+
+  const isResolvingAuth = isLoading || isLoggedIn === undefined;
+  // ログイン済みユーザーにはオンボーディングを出さないため、未ログイン時のみ
+  // 完了フラグの確定を待つ。
+  const isResolvingOnboarding = !isLoggedIn && isOnboardingCompleted === null;
+
+  if (isResolvingAuth || isResolvingOnboarding) {
     return (
       <View
         style={{
@@ -33,6 +51,10 @@ export default function TabLayout() {
   }
 
   if (!isLoggedIn) {
+    // 新規ダウンロードの未ログインユーザーにのみ初回オンボーディングを表示する
+    if (!isOnboardingCompleted) {
+      return <Redirect href="/(onboarding)/welcome" />;
+    }
     return <Redirect href="/(auth)/sign-in" />;
   }
 
@@ -57,80 +79,47 @@ export default function TabLayout() {
           headerTintColor: "#F4F4F4",
         }}
       >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: "ダッシュボード",
-            tabBarIcon: ({ color, size }) => (
-              <HomeIcon size={size} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="(game-results)"
-          options={{
-            title: "試合結果",
-            headerShown: false,
-            tabBarIcon: ({ color, size }) => (
-              <BallIcon size={size} color={color} />
-            ),
-          }}
-          listeners={({ navigation }) => ({
-            tabPress: (e) => {
-              const state = navigation.getState();
-              const route = state.routes.find(
-                (r: { name: string }) => r.name === "(game-results)",
-              );
-              if (route?.state && route.state.index > 0) {
-                e.preventDefault();
-                navigation.navigate("(game-results)", { screen: "index" });
+        {BOTTOM_TAB_ITEMS.map((tab) => {
+          const Icon = tab.Icon;
+          const isGroupRoute = tab.name === "(groups)";
+          // カッコ付きグループ route 配下に積まれたスタックは、再タップで先頭(index)へ戻す。
+          const needsStackReset = tab.name === "(game-results)" || isGroupRoute;
+          return (
+            <Tabs.Screen
+              key={tab.name}
+              name={tab.name}
+              options={{
+                title: tab.label,
+                // カッコ付きグループ route はネスト Stack 側で独自ヘッダを持つため親タブのヘッダは隠す
+                headerShown: !tab.name.startsWith("("),
+                tabBarIcon: ({ color, size }) => (
+                  <Icon
+                    size={size}
+                    color={color}
+                    showBadge={isGroupRoute ? showGroupBadge : undefined}
+                  />
+                ),
+              }}
+              listeners={
+                needsStackReset
+                  ? ({ navigation }) => ({
+                      tabPress: (e) => {
+                        if (isGroupRoute) markGroupBadgeSeen();
+                        const state = navigation.getState();
+                        const route = state.routes.find(
+                          (r: { name: string }) => r.name === tab.name,
+                        );
+                        if (route?.state && route.state.index > 0) {
+                          e.preventDefault();
+                          navigation.navigate(tab.name, { screen: "index" });
+                        }
+                      },
+                    })
+                  : undefined
               }
-            },
-          })}
-        />
-        <Tabs.Screen
-          name="stats"
-          options={{
-            title: "成績",
-            headerStyle: { backgroundColor: "#2E2E2E" },
-            headerTintColor: "#F4F4F4",
-            tabBarIcon: ({ color, size }) => (
-              <StatsIcon size={size} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="(groups)"
-          options={{
-            title: "グループ",
-            headerShown: false,
-            tabBarIcon: ({ color, size }) => (
-              <GroupIcon size={size} color={color} />
-            ),
-          }}
-          listeners={({ navigation }) => ({
-            tabPress: (e) => {
-              const state = navigation.getState();
-              const groupRoute = state.routes.find(
-                (r: { name: string }) => r.name === "(groups)",
-              );
-              if (groupRoute?.state && groupRoute.state.index > 0) {
-                e.preventDefault();
-                navigation.navigate("(groups)", { screen: "index" });
-              }
-            },
-          })}
-        />
-        <Tabs.Screen
-          name="(profile)"
-          options={{
-            title: "マイページ",
-            headerShown: false,
-            tabBarIcon: ({ color, size }) => (
-              <UserIcon size={size} color={color} />
-            ),
-          }}
-        />
+            />
+          );
+        })}
       </Tabs>
     </View>
   );

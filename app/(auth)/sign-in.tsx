@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { SignInForm } from "@components/auth/SignInForm";
 import { useAuth } from "@hooks/useAuth";
 import { useFormValidation } from "@hooks/useFormValidation";
+import { getCurrentUserProfile } from "@services/profileService";
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -25,39 +26,58 @@ export default function SignInScreen() {
     validateEmail(email) &&
     validatePassword(password);
 
+  const handleLoginError = (error: unknown) => {
+    if (error instanceof AxiosError) {
+      const status = error.response?.status;
+      const message = error.response?.data?.errors?.join(" ") || "";
+
+      if (
+        status === 401 &&
+        (message.includes("confirmation") ||
+          message.includes("A confirmation email"))
+      ) {
+        router.push({
+          pathname: "/(auth)/confirmation-pending",
+          params: { email },
+        });
+        return;
+      }
+
+      if (status === 401) {
+        setErrors(["メールアドレスまたはパスワードが正しくありません"]);
+      } else {
+        setErrors(["エラーが発生しました。もう一度お試しください"]);
+      }
+    } else {
+      setErrors(["ネットワークエラーが発生しました"]);
+    }
+  };
+
   const handleSubmit = async () => {
     setErrors([]);
     setIsSubmitting(true);
 
     try {
       await login({ email, password });
-      router.replace("/(tabs)");
-      return;
     } catch (error) {
-      if (error instanceof AxiosError) {
-        const status = error.response?.status;
-        const message = error.response?.data?.errors?.join(" ") || "";
+      // login 失敗時のみの error handling。GET /user の失敗をここで処理すると
+      // 「ネットワークエラー」「パスワードが正しくありません」等の誤った文言が
+      // 出てしまうため、後段のプロフィール取得とは try-catch を分離する。
+      handleLoginError(error);
+      setIsSubmitting(false);
+      return;
+    }
 
-        if (
-          status === 401 &&
-          (message.includes("confirmation") ||
-            message.includes("A confirmation email"))
-        ) {
-          router.push({
-            pathname: "/(auth)/confirmation-pending",
-            params: { email },
-          });
-          return;
-        }
-
-        if (status === 401) {
-          setErrors(["メールアドレスまたはパスワードが正しくありません"]);
-        } else {
-          setErrors(["エラーが発生しました。もう一度お試しください"]);
-        }
-      } else {
-        setErrors(["ネットワークエラーが発生しました"]);
-      }
+    // ここに来た = login 成功（トークンは SecureStore に保存済み）。
+    // プロフィール取得自体が失敗したケースは安全側（username-registration）
+    // に倒す。ログインは成功しているので、画面側で再取得 / 再保存が可能。
+    try {
+      const profile = await getCurrentUserProfile();
+      router.replace(
+        profile.user_id ? "/(tabs)" : "/(auth)/username-registration",
+      );
+    } catch {
+      router.replace("/(auth)/username-registration");
     } finally {
       setIsSubmitting(false);
     }

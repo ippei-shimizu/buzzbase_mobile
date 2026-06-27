@@ -3,7 +3,7 @@
     "name": "BUZZ BASE",
     "slug": "buzzbase",
     "scheme": "buzzbase",
-    "version": "1.1.1",
+    "version": "1.1.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "jp.buzzbase.mobile",
-      "buildNumber": "3",
+      "buildNumber": "5",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "プロフィール画像の撮影に使用します",
@@ -70,7 +70,18 @@
         {
           "iosUrlScheme": "com.googleusercontent.apps.889577013867-dea18o17vcspn5u6t0teqf3r7ns84jod"
         }
-      ]
+      ],
+      "expo-font",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
+      "expo-localization"
     ],
     "extra": {
       "eas": {

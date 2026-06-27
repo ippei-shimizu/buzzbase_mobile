@@ -116,6 +116,7 @@ const buildPitchingStats = (
     hit_by_pitch: 2,
     run_allowed: 18,
     earned_run: 15,
+    number_of_pitches: 800,
     ...aggregateOverrides,
   },
   calculated: {

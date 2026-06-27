@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { trackUserFollowed } from "@utils/analytics";
 import { getUserProfileDetail } from "../services/profileService";
 import {
   followUser,
@@ -45,7 +46,8 @@ export const useFollowUser = () => {
 
   const mutation = useMutation({
     mutationFn: followUser,
-    onSuccess: () => {
+    onSuccess: (_data, followedId) => {
+      trackUserFollowed(followedId);
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       queryClient.invalidateQueries({ queryKey: ["followingUsers"] });
       queryClient.invalidateQueries({ queryKey: ["followersUsers"] });

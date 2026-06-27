@@ -1,6 +1,17 @@
-import type { HitDirection, HomeRunDirection } from "../../types/stats";
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import type {
+  HitDirection,
+  HitLocationPoint,
+  HomeRunDirection,
+} from "../../types/stats";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TouchableWithoutFeedback,
+} from "react-native";
 import Svg, {
   Path,
   Rect,
@@ -12,15 +23,84 @@ import Svg, {
   ClipPath,
   G,
 } from "react-native-svg";
+import {
+  DIRECTION_LABEL_POSITIONS,
+  GROUND_CANVAS_HEIGHT,
+  GROUND_CANVAS_WIDTH,
+  GROUND_FIRST,
+  GROUND_HOME,
+  GROUND_LEFT_END,
+  GROUND_OUTFIELD_RX,
+  GROUND_OUTFIELD_RY,
+  GROUND_RIGHT_END,
+  GROUND_SECOND,
+  GROUND_THIRD,
+} from "@constants/groundCanvas";
+
+export type SprayChartMode = "scatter" | "bubbles";
 
 interface SprayChartProps {
   directions: HitDirection[];
   homeRuns: HomeRunDirection[];
+  mode?: SprayChartMode;
+  onModeChange?: (mode: SprayChartMode) => void;
+  points?: HitLocationPoint[];
 }
 
-// フェンス外の座標（各方向のバブル位置をフェンスの少し外に配置）
-// ホームを中心に、OUTFIELD_R + オフセットの位置
-const HR_OFFSET = 30;
+// plate_result_id → バブルと同じカテゴリ表示名へのマップ。
+// scatter モードの点を CATEGORY_COLORS で色分けし、バブル凡例と統一する。
+// 四死球 (15/16) は打球結果ではないため意図的に含めない（hit_location は通常 NULL）。
+// 念のため点として届いても LEGEND_CATEGORIES に無いカテゴリにはマップしない。
+const PLATE_RESULT_TO_CATEGORY: Record<number, string> = {
+  7: "単打",
+  8: "長打",
+  9: "長打",
+  10: "本塁打",
+  1: "ゴロ",
+  2: "フライ",
+  3: "フライ",
+  // ライナー(4)は専用カテゴリが凡例に無いため、宙を飛ぶ打球として「フライ」系へ寄せる。
+  4: "フライ",
+  // 併殺打(19)は通常ゴロ由来のため「ゴロ」に含める。
+  19: "ゴロ",
+  13: "三振",
+  14: "三振",
+};
+
+const getPointCategory = (plateResultId: number): string =>
+  PLATE_RESULT_TO_CATEGORY[plateResultId] || "その他";
+
+// 凡例に表示するカテゴリ順。タップでオン/オフを切り替えてフィルタする。
+const LEGEND_CATEGORIES = [
+  "単打",
+  "長打",
+  "本塁打",
+  "ゴロ",
+  "フライ",
+  "三振",
+  "その他",
+] as const;
+
+const WIDTH = GROUND_CANVAS_WIDTH;
+const HEIGHT = GROUND_CANVAS_HEIGHT;
+
+// 球場形状は GroundTapField（打席記録 UI）と共通の座標系を使う。
+// 保存済みの hit_location_x/y がタップ時と同じ位置に描画される。
+const HOME = GROUND_HOME;
+const FIRST = GROUND_FIRST;
+const SECOND = GROUND_SECOND;
+const THIRD = GROUND_THIRD;
+const OUTFIELD_RX = GROUND_OUTFIELD_RX;
+const OUTFIELD_RY = GROUND_OUTFIELD_RY;
+const LEFT_END = GROUND_LEFT_END;
+const RIGHT_END = GROUND_RIGHT_END;
+
+// バブル位置は GroundTapField のラベル位置 (DIRECTION_LABEL_POSITIONS) に揃え、
+// 両画面で同じ方向ラベルが同じ場所に置かれるようにする。
+const DIRECTION_POSITIONS = DIRECTION_LABEL_POSITIONS;
+
+// 本塁打バブルは外野フェンス（楕円）の少し外側に配置する。
+const HR_OFFSET = 25;
 const getHrPosition = (dirId: number): { x: number; y: number } | null => {
   const angles: Record<number, number> = {
     7: 135, // 左線
@@ -34,59 +114,33 @@ const getHrPosition = (dirId: number): { x: number; y: number } | null => {
   const deg = angles[dirId];
   if (deg === undefined) return null;
   const rad = (deg * Math.PI) / 180;
-  const r = OUTFIELD_R + HR_OFFSET;
+  const rx = OUTFIELD_RX + HR_OFFSET;
+  const ry = OUTFIELD_RY + HR_OFFSET;
   return {
-    x: HOME.x + r * Math.cos(rad),
-    y: HOME.y - r * Math.sin(rad),
+    x: HOME.x + rx * Math.cos(rad),
+    y: HOME.y - ry * Math.sin(rad),
   };
 };
 
-const WIDTH = 420;
-const HEIGHT = 340;
+// 球場の芝ストライプの x 位置（レンダー毎の再生成を避けて static 定数化）。
+const STRIPE_X_POSITIONS: readonly number[] = Array.from(
+  { length: 20 },
+  (_, i) => -100 + i * 30,
+);
 
-// ダイヤモンド座標（全体の基準）
-const HOME = { x: 210, y: 295 };
-const FIRST = { x: 268, y: 238 };
-const SECOND = { x: 210, y: 185 };
-const THIRD = { x: 152, y: 238 };
-
-// 外野フェンス: ホームを中心に半径Rの円弧
-const OUTFIELD_R = 250;
-// ファウルライン角度（ホームから左上135度、右上45度）
-const LEFT_ANGLE = (135 * Math.PI) / 180;
-const RIGHT_ANGLE = (45 * Math.PI) / 180;
-const LEFT_END = {
-  x: HOME.x + OUTFIELD_R * Math.cos(LEFT_ANGLE),
-  y: HOME.y - OUTFIELD_R * Math.sin(LEFT_ANGLE),
-};
-const RIGHT_END = {
-  x: HOME.x + OUTFIELD_R * Math.cos(RIGHT_ANGLE),
-  y: HOME.y - OUTFIELD_R * Math.sin(RIGHT_ANGLE),
-};
-
-// バブル座標
-const DIRECTION_POSITIONS: Record<number, { x: number; y: number }> = {
-  1: { x: 210, y: 245 }, // 投
-  2: { x: 210, y: 305 }, // 捕
-  3: { x: FIRST.x, y: FIRST.y }, // 一
-  4: { x: 240, y: 213 }, // 二
-  5: { x: THIRD.x, y: THIRD.y }, // 三
-  6: { x: 180, y: 213 }, // 遊
-  7: { x: 48, y: 155 }, // 左線
-  8: { x: 72, y: 122 }, // 左
-  9: { x: 112, y: 85 }, // 左中
-  10: { x: 210, y: 62 }, // 中
-  11: { x: 308, y: 85 }, // 右中
-  12: { x: 348, y: 122 }, // 右
-  13: { x: 372, y: 155 }, // 右線
-};
+// 中（id=10）方向の本塁打バブルが viewBox 上端を超えてマイナス y に、
+// 捕手（id=2, y=332）方向のバブルが下端を超えてプラス y にはみ出すため、
+// 上下双方に余白を確保する（バブル最大半径 22 も加味）。
+const TOP_PADDING = 30;
+const BOTTOM_PADDING = 28;
+const SVG_VIEWBOX_HEIGHT = HEIGHT + TOP_PADDING + BOTTOM_PADDING;
 
 const getBubbleRadius = (count: number, maxCount: number): number => {
   if (count === 0 || maxCount === 0) return 0;
   return 8 + (count / maxCount) * 14;
 };
 
-// 打席結果内訳と同じカラー
+// 打席結果内訳と同じカラー（点プロットの分類とバブル top_category を共通化）。
 const CATEGORY_COLORS: Record<string, string> = {
   単打: "#f31260",
   長打: "#F54180",
@@ -94,7 +148,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   ゴロ: "#71717A",
   フライ: "#9CA3AF",
   三振: "#d08000",
-  四死球: "#17C964",
   その他: "#8b5cf6",
 };
 
@@ -107,28 +160,160 @@ const getBubbleOpacity = (count: number, maxCount: number): number => {
   return 0.5 + (count / maxCount) * 0.4;
 };
 
-export const SprayChart = ({ directions, homeRuns = [] }: SprayChartProps) => {
+export const SprayChart = ({
+  directions,
+  homeRuns = [],
+  mode = "scatter",
+  onModeChange,
+  points = [],
+}: SprayChartProps) => {
   const allCounts = [
     ...directions.map((d) => d.count),
     ...homeRuns.map((h) => h.count),
   ];
   const maxCount = Math.max(...allCounts, 1);
 
+  const isScatter = mode === "scatter";
+
+  // 凡例タップで切り替えるカテゴリフィルタ。デフォルトは全カテゴリ ON。
+  const [activeCategories, setActiveCategories] = useState<Set<string>>(
+    () => new Set<string>(LEGEND_CATEGORIES),
+  );
+  const toggleCategory = (cat: string) => {
+    setActiveCategories((prev: Set<string>) => {
+      const next = new Set<string>(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  };
+
   // ダート半円の中心とサイズ
   const dirtCenterX = HOME.x;
   const dirtCenterY = FIRST.y + 5; // 1塁3塁の少し下
   const dirtRadius = 68;
 
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const allActive = activeCategories.size === LEGEND_CATEGORIES.length;
+  const filterLabel = (() => {
+    if (allActive) return "全て";
+    if (activeCategories.size === 0) return "なし";
+    if (activeCategories.size === 1) return Array.from(activeCategories)[0];
+    return `${activeCategories.size} 件選択`;
+  })();
+  const selectAll = () =>
+    setActiveCategories(new Set<string>(LEGEND_CATEGORIES));
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>打球分布図</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>打球分布図</Text>
+        {onModeChange && (
+          <View style={styles.toggle}>
+            <Pressable
+              onPress={() => onModeChange("scatter")}
+              style={[styles.toggleButton, isScatter && styles.toggleActive]}
+            >
+              <Text
+                style={[
+                  styles.toggleText,
+                  isScatter && styles.toggleTextActive,
+                ]}
+              >
+                点プロット
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => onModeChange("bubbles")}
+              style={[styles.toggleButton, !isScatter && styles.toggleActive]}
+            >
+              <Text
+                style={[
+                  styles.toggleText,
+                  !isScatter && styles.toggleTextActive,
+                ]}
+              >
+                バブル
+              </Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
+      <View style={styles.filterRow}>
+        <Pressable
+          onPress={() => setIsFilterOpen((prev) => !prev)}
+          style={styles.filterButton}
+        >
+          <Text style={styles.filterButtonText}>絞り込み: {filterLabel}</Text>
+          <Ionicons
+            name={isFilterOpen ? "chevron-up" : "chevron-down"}
+            size={14}
+            color="#A1A1AA"
+          />
+        </Pressable>
+        {isFilterOpen && (
+          <>
+            <TouchableWithoutFeedback onPress={() => setIsFilterOpen(false)}>
+              <View style={styles.filterOverlayBg} />
+            </TouchableWithoutFeedback>
+            <View style={styles.filterDropdown}>
+              <Pressable
+                onPress={selectAll}
+                style={[
+                  styles.filterDropdownItem,
+                  allActive && styles.filterDropdownItemActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.filterDropdownText,
+                    allActive && styles.filterDropdownTextActive,
+                  ]}
+                >
+                  全て表示
+                </Text>
+              </Pressable>
+              {LEGEND_CATEGORIES.map((cat) => {
+                const isActive = activeCategories.has(cat);
+                return (
+                  <Pressable
+                    key={cat}
+                    onPress={() => toggleCategory(cat)}
+                    style={styles.filterDropdownItem}
+                  >
+                    <View
+                      style={[
+                        styles.filterDot,
+                        { backgroundColor: CATEGORY_COLORS[cat] },
+                      ]}
+                    />
+                    <Text
+                      style={[
+                        styles.filterDropdownText,
+                        isActive && styles.filterDropdownTextActive,
+                      ]}
+                    >
+                      {cat}
+                    </Text>
+                    {isActive && <Text style={styles.filterCheck}>✓</Text>}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
+        )}
+      </View>
       <View style={styles.chartWrapper}>
-        <Svg width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
+        <Svg
+          width={WIDTH}
+          height={SVG_VIEWBOX_HEIGHT}
+          viewBox={`0 -${TOP_PADDING} ${WIDTH} ${SVG_VIEWBOX_HEIGHT}`}
+        >
           <Defs>
             {/* 外野形状クリップ（円弧） */}
             <ClipPath id="fieldClip">
               <Path
-                d={`M ${HOME.x},${HOME.y} L ${LEFT_END.x},${LEFT_END.y} A ${OUTFIELD_R},${OUTFIELD_R} 0 0,1 ${RIGHT_END.x},${RIGHT_END.y} Z`}
+                d={`M ${HOME.x},${HOME.y} L ${LEFT_END.x},${LEFT_END.y} A ${OUTFIELD_RX},${OUTFIELD_RY} 0 0,1 ${RIGHT_END.x},${RIGHT_END.y} Z`}
               />
             </ClipPath>
           </Defs>
@@ -137,10 +322,10 @@ export const SprayChart = ({ directions, homeRuns = [] }: SprayChartProps) => {
           <G clipPath="url(#fieldClip)">
             <Rect x={0} y={0} width={WIDTH} height={HEIGHT} fill="#4a8e32" />
             {/* 斜めストライプ */}
-            {Array.from({ length: 20 }, (_, i) => (
+            {STRIPE_X_POSITIONS.map((x, i) => (
               <Rect
                 key={`stripe-${i}`}
-                x={-100 + i * 30}
+                x={x}
                 y={0}
                 width={15}
                 height={HEIGHT * 2}
@@ -153,7 +338,7 @@ export const SprayChart = ({ directions, homeRuns = [] }: SprayChartProps) => {
 
           {/* 外野の輪郭線 */}
           <Path
-            d={`M ${HOME.x},${HOME.y} L ${LEFT_END.x},${LEFT_END.y} A ${OUTFIELD_R},${OUTFIELD_R} 0 0,1 ${RIGHT_END.x},${RIGHT_END.y} Z`}
+            d={`M ${HOME.x},${HOME.y} L ${LEFT_END.x},${LEFT_END.y} A ${OUTFIELD_RX},${OUTFIELD_RY} 0 0,1 ${RIGHT_END.x},${RIGHT_END.y} Z`}
             fill="none"
             stroke="#3a7a28"
             strokeWidth={2}
@@ -296,84 +481,102 @@ export const SprayChart = ({ directions, homeRuns = [] }: SprayChartProps) => {
             strokeWidth={3}
           />
 
-          {/* ===== バブル ===== */}
-          {directions.map((dir) => {
-            const pos = DIRECTION_POSITIONS[dir.id];
-            if (!pos || dir.count === 0) return null;
-            const r = getBubbleRadius(dir.count, maxCount);
-            const color = getBubbleColor(dir.top_category);
-            const opacity = getBubbleOpacity(dir.count, maxCount);
-            return (
-              <React.Fragment key={dir.id}>
-                <Circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={r + 2}
-                  fill="black"
-                  opacity={0.15}
-                />
-                <Circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={r}
-                  fill={color}
-                  opacity={opacity}
-                />
-                <SvgText
-                  x={pos.x}
-                  y={pos.y + 4}
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize={r > 14 ? 12 : 10}
-                  fontWeight="700"
-                >
-                  {dir.count}
-                </SvgText>
-              </React.Fragment>
-            );
-          })}
+          {!isScatter &&
+            directions.map((dir) => {
+              const pos = DIRECTION_POSITIONS[dir.id];
+              if (!pos || dir.count === 0) return null;
+              if (!activeCategories.has(dir.top_category)) return null;
+              const r = getBubbleRadius(dir.count, maxCount);
+              const color = getBubbleColor(dir.top_category);
+              const opacity = getBubbleOpacity(dir.count, maxCount);
+              return (
+                <React.Fragment key={dir.id}>
+                  <Circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={r + 2}
+                    fill="black"
+                    opacity={0.15}
+                  />
+                  <Circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={r}
+                    fill={color}
+                    opacity={opacity}
+                  />
+                  <SvgText
+                    x={pos.x}
+                    y={pos.y + 4}
+                    textAnchor="middle"
+                    fill="white"
+                    fontSize={r > 14 ? 12 : 10}
+                    fontWeight="700"
+                  >
+                    {dir.count}
+                  </SvgText>
+                </React.Fragment>
+              );
+            })}
 
-          {/* ===== 本塁打（フェンス外、方向別） ===== */}
-          {homeRuns.map((hr) => {
-            const pos = getHrPosition(hr.id);
-            if (!pos) return null;
-            const r = getBubbleRadius(hr.count, maxCount);
-            const opacity = getBubbleOpacity(hr.count, maxCount);
-            return (
-              <React.Fragment key={`hr-${hr.id}`}>
+          {!isScatter &&
+            activeCategories.has("本塁打") &&
+            homeRuns.map((hr) => {
+              const pos = getHrPosition(hr.id);
+              if (!pos) return null;
+              const r = getBubbleRadius(hr.count, maxCount);
+              const opacity = getBubbleOpacity(hr.count, maxCount);
+              return (
+                <React.Fragment key={`hr-${hr.id}`}>
+                  <Circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={r + 2}
+                    fill="black"
+                    opacity={0.15}
+                  />
+                  <Circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={r}
+                    fill="#FAA0BF"
+                    opacity={opacity}
+                  />
+                  <SvgText
+                    x={pos.x}
+                    y={pos.y + 4}
+                    textAnchor="middle"
+                    fill="white"
+                    fontSize={r > 14 ? 12 : 10}
+                    fontWeight="700"
+                  >
+                    {hr.count}
+                  </SvgText>
+                </React.Fragment>
+              );
+            })}
+
+          {isScatter &&
+            points.map((point, index) => {
+              const category = getPointCategory(point.plate_result_id);
+              if (!activeCategories.has(category)) return null;
+              return (
                 <Circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={r + 2}
-                  fill="black"
-                  opacity={0.15}
+                  key={`point-${index}`}
+                  cx={point.x * WIDTH}
+                  cy={point.y * HEIGHT}
+                  r={5}
+                  fill={CATEGORY_COLORS[category] || "#71717A"}
+                  stroke="rgba(0,0,0,0.5)"
+                  strokeWidth={0.5}
                 />
-                <Circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={r}
-                  fill="#FAA0BF"
-                  opacity={opacity}
-                />
-                <SvgText
-                  x={pos.x}
-                  y={pos.y + 4}
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize={r > 14 ? 12 : 10}
-                  fontWeight="700"
-                >
-                  {hr.count}
-                </SvgText>
-              </React.Fragment>
-            );
-          })}
+              );
+            })}
         </Svg>
       </View>
 
-      {/* 凡例 */}
       <View style={styles.legend}>
-        {["単打", "長打", "本塁打", "ゴロ", "フライ", "三振"].map((cat) => (
+        {LEGEND_CATEGORIES.map((cat) => (
           <View key={cat} style={styles.legendItem}>
             <View
               style={[
@@ -396,11 +599,38 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
   },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
   title: {
     color: "#F4F4F4",
     fontSize: 16,
     fontWeight: "700",
-    marginBottom: 0,
+  },
+  toggle: {
+    flexDirection: "row",
+    backgroundColor: "#27272A",
+    borderRadius: 6,
+    padding: 2,
+  },
+  toggleButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  toggleActive: {
+    backgroundColor: "#52525B",
+  },
+  toggleText: {
+    color: "#A1A1AA",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  toggleTextActive: {
+    color: "#F4F4F4",
   },
   chartWrapper: {
     alignItems: "center",
@@ -408,7 +638,8 @@ const styles = StyleSheet.create({
   legend: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 16,
+    flexWrap: "wrap",
+    gap: 10,
     marginTop: 8,
   },
   legendItem: {
@@ -424,5 +655,83 @@ const styles = StyleSheet.create({
   legendText: {
     color: "#A1A1AA",
     fontSize: 11,
+  },
+  filterRow: {
+    marginTop: 6,
+    marginBottom: 8,
+    alignItems: "flex-end",
+    position: "relative",
+    zIndex: 10,
+  },
+  filterButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderWidth: 1,
+    borderColor: "#71717b",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  filterButtonText: {
+    color: "#F4F4F4",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  filterCaret: {
+    color: "#A1A1AA",
+    fontSize: 10,
+  },
+  filterOverlayBg: {
+    position: "absolute",
+    top: -500,
+    left: -500,
+    right: -500,
+    bottom: -500,
+    zIndex: 15,
+  },
+  filterDropdown: {
+    position: "absolute",
+    top: 36,
+    right: 0,
+    minWidth: 180,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 10,
+    paddingVertical: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 20,
+  },
+  filterDropdownItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  filterDropdownItemActive: {
+    backgroundColor: "#4A4A4A",
+  },
+  filterDropdownText: {
+    color: "#F4F4F4",
+    fontSize: 13,
+    flex: 1,
+  },
+  filterDropdownTextActive: {
+    color: "#d08000",
+    fontWeight: "600",
+  },
+  filterDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  filterCheck: {
+    color: "#d08000",
+    fontSize: 14,
+    fontWeight: "700",
   },
 });

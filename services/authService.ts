@@ -9,8 +9,10 @@
 import type { AuthResponse, SignInData, SignUpData } from "../types/auth";
 import * as Sentry from "@sentry/react-native";
 import { loginRevenueCat, logoutRevenueCat } from "@services/revenueCatService";
+import { trackSignUpCompleted, trackUserLoggedIn } from "@utils/analytics";
 import { clearAllAuthTokens } from "@utils/authTokenStorage";
 import axiosInstance from "@utils/axiosInstance";
+import { posthog } from "@utils/posthog";
 
 // RevenueCat の alias 付け失敗で認証フローが落ちないよう、fire-and-forget で呼ぶ。
 // SDK / ネットワーク失敗時は Sentry に飛ばし、状態は次回起動時の validateToken で再同期する。
@@ -40,6 +42,8 @@ export const signIn = async (data: SignInData): Promise<AuthResponse> => {
   if (body.data?.id) {
     Sentry.setUser({ id: String(body.data.id) });
     syncRevenueCatLogin(String(body.data.id));
+    posthog?.identify(String(body.data.id));
+    trackUserLoggedIn("email");
   }
   return body;
 };
@@ -50,6 +54,7 @@ export const signOut = async (): Promise<void> => {
   await clearAllAuthTokens();
   Sentry.setUser(null);
   syncRevenueCatLogout();
+  posthog?.reset();
 };
 
 /** SecureStoreのトークンが有効か検証（アプリ起動時に使用） */
@@ -59,6 +64,7 @@ export const validateToken = async (): Promise<AuthResponse> => {
   if (body.data?.id) {
     Sentry.setUser({ id: String(body.data.id) });
     syncRevenueCatLogin(String(body.data.id));
+    posthog?.identify(String(body.data.id));
   }
   return body;
 };
@@ -73,6 +79,7 @@ export const signUp = async (data: SignUpData): Promise<void> => {
       process.env.EXPO_PUBLIC_CONFIRM_SUCCESS_URL ||
       "buzzbase://confirmation-success",
   });
+  trackSignUpCompleted("email");
 };
 
 /** 確認メールを再送信 */
