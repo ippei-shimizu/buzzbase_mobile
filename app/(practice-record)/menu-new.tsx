@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { CategoryPicker } from "@components/practice/CategoryPicker";
 import { UnitPicker } from "@components/practice/UnitPicker";
+import { FieldLabel } from "@components/ui/FieldLabel";
 import { PRACTICE_UNITS } from "@constants/practice";
 import { usePracticeMenuMutations } from "@hooks/usePracticeMenus";
 
@@ -64,7 +65,7 @@ export default function MenuNewScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.label}>名前</Text>
+      <FieldLabel text="名前" required />
       <TextInput
         style={styles.input}
         value={name}
@@ -73,13 +74,13 @@ export default function MenuNewScreen() {
         placeholderTextColor="#71717A"
       />
 
-      <Text style={styles.label}>カテゴリ</Text>
+      <FieldLabel text="カテゴリ" required />
       <CategoryPicker value={category} onChange={setCategory} />
 
-      <Text style={styles.label}>計測</Text>
+      <FieldLabel text="計測" required />
       <UnitPicker value={unit} onChange={setUnit} />
 
-      <Text style={styles.label}>単位表示</Text>
+      <FieldLabel text="単位表示" />
       <TextInput
         style={styles.input}
         value={unitLabel}
@@ -101,7 +102,7 @@ export default function MenuNewScreen() {
 
       {isFavorite ? (
         <>
-          <Text style={styles.label}>ワンタップ用の初期値（任意）</Text>
+          <FieldLabel text="ワンタップ用の初期値" />
           <View style={styles.valueRow}>
             <TextInput
               style={[styles.input, styles.valueInput]}
@@ -135,13 +136,6 @@ export default function MenuNewScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#2E2E2E" },
   content: { padding: 16, paddingBottom: 40 },
-  label: {
-    color: "#A1A1AA",
-    fontSize: 13,
-    fontWeight: "600",
-    marginTop: 16,
-    marginBottom: 8,
-  },
   input: {
     backgroundColor: "#3A3A3A",
     borderRadius: 8,
