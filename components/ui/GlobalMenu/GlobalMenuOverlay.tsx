@@ -29,10 +29,13 @@ interface Props {
  * メニュー本体はヘッダーの直下（`useHeaderHeight()` で動的に算出）に配置し、
  * 親 (`useGlobalMenu`) から渡される `Animated.Value` で opacity フェードする。
  *
- * 表示項目は3つ:
+ * 表示項目は4つ:
+ *   - 練習記録
  *   - 野球ノート
  *   - シーズン管理
  *   - 設定
+ *
+ * 練習記録・野球ノートはホームと同じ記録一覧（/(records)/list）の各タブへ遷移する。
  */
 export const GlobalMenuOverlay = ({ visible, opacity, onClose }: Props) => {
   const router = useRouter();
@@ -61,7 +64,20 @@ export const GlobalMenuOverlay = ({ visible, opacity, onClose }: Props) => {
         >
           <TouchableOpacity
             style={styles.item}
-            onPress={() => handleSelect(() => router.push("/(profile)/notes"))}
+            onPress={() =>
+              handleSelect(() => router.push("/(records)/list?tab=practice"))
+            }
+            accessibilityRole="menuitem"
+          >
+            <Ionicons name="barbell-outline" size={20} color="#F4F4F4" />
+            <Text style={styles.itemText}>練習記録</Text>
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity
+            style={styles.item}
+            onPress={() =>
+              handleSelect(() => router.push("/(records)/list?tab=note"))
+            }
             accessibilityRole="menuitem"
           >
             <NoteIcon size={20} color="#F4F4F4" />
