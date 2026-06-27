@@ -51,7 +51,7 @@ export function RecentPracticeSection() {
       )}
       <TouchableOpacity
         style={styles.moreRow}
-        onPress={() => router.push("/(records)")}
+        onPress={() => router.push("/(records)/list")}
       >
         <Text style={styles.moreText}>練習記録・野球ノートの一覧を見る</Text>
         <Ionicons name="chevron-forward" size={16} color="#d08000" />

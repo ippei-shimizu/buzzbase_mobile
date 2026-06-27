@@ -7,6 +7,7 @@ export default function RecordsLayout() {
 
   return (
     <Stack
+      initialRouteName="list"
       screenOptions={{
         headerStyle: { backgroundColor: "#2E2E2E" },
         headerTintColor: "#F4F4F4",
@@ -15,7 +16,7 @@ export default function RecordsLayout() {
       }}
     >
       <Stack.Screen
-        name="index"
+        name="list"
         options={{
           title: "記録一覧",
           headerLeft: () => (
