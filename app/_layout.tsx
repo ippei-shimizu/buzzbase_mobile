@@ -120,6 +120,10 @@ function RootLayoutInner() {
         <Stack.Screen name="(shadow-swing)" options={{ headerShown: false }} />
         <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen
+          name="activity"
+          options={{ title: "活動", headerBackTitle: "戻る" }}
+        />
+        <Stack.Screen
           name="game-result-detail"
           options={{ title: "試合詳細", headerBackTitle: "戻る" }}
         />
