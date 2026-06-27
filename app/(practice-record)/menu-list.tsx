@@ -39,7 +39,7 @@ export default function PracticeMenuListScreen() {
       <View style={styles.empty}>
         <Text style={styles.emptyTitle}>まだ練習メニューがありません</Text>
         <Text style={styles.emptyText}>
-          よくやる練習を登録すると、ワンタップで記録できて草が育ちます
+          よくやる練習を登録すると、ワンタップで記録できます
         </Text>
         <TouchableOpacity style={styles.primaryButton} onPress={goNewMenu}>
           <Ionicons name="add" size={18} color="#FFFFFF" />
