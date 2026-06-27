@@ -1,12 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useNotes } from "@hooks/useNotes";
 import { usePracticeSessions } from "@hooks/usePracticeSessions";
 import { SectionCard, SectionPlaceholder } from "./SectionCard";
 
 /** 最近の練習タイムライン（日付ごとに当日のメニューと紐付いたノートを同居表示）。 */
 export function RecentPracticeSection() {
+  const router = useRouter();
   const { sessions } = usePracticeSessions();
   const { notes } = useNotes();
   const recent = sessions.slice(0, 5);
@@ -47,6 +49,13 @@ export function RecentPracticeSection() {
           </View>
         ))
       )}
+      <TouchableOpacity
+        style={styles.moreRow}
+        onPress={() => router.push("/(records)")}
+      >
+        <Text style={styles.moreText}>練習記録・野球ノートの一覧を見る</Text>
+        <Ionicons name="chevron-forward" size={16} color="#d08000" />
+      </TouchableOpacity>
     </SectionCard>
   );
 }
@@ -68,4 +77,12 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   note: { color: "#A1A1AA", fontSize: 12, flex: 1 },
+  moreRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingTop: 12,
+  },
+  moreText: { color: "#d08000", fontSize: 13, fontWeight: "600" },
 });

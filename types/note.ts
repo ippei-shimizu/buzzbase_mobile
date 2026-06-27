@@ -6,6 +6,7 @@ export interface NoteV2 {
   memo_preview: string;
   game_result_id: number | null;
   practice_log_id: number | null;
+  practice_session_id: number | null;
 }
 
 export interface NoteInput {
@@ -14,6 +15,7 @@ export interface NoteInput {
   memo: string; // Slate 形式の JSON 文字列
   game_result_id?: number | null;
   practice_log_id?: number | null;
+  practice_session_id?: number | null;
 }
 
 /** プレーンテキストを Slate 互換の JSON 文字列にする（v1 ノートと表示互換）。 */

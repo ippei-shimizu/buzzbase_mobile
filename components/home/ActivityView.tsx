@@ -1,8 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useCallback, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet } from "react-native";
-import { QuickRecordSection } from "./sections/QuickRecordSection";
+import { PracticeToolsSection } from "./sections/PracticeToolsSection";
 import { RecentPracticeSection } from "./sections/RecentPracticeSection";
+import { RecordButtonsSection } from "./sections/RecordButtonsSection";
 import { StreakHeaderSection } from "./sections/StreakHeaderSection";
 import { TodayGoalSection } from "./sections/TodayGoalSection";
 import { TodayTasksSection } from "./sections/TodayTasksSection";
@@ -54,9 +55,10 @@ export function ActivityView() {
         />
       }
     >
-      <QuickRecordSection />
+      <RecordButtonsSection />
       <StreakHeaderSection />
       <TodayTasksSection />
+      <PracticeToolsSection />
       <TodayGoalSection />
       <RecentPracticeSection />
     </ScrollView>

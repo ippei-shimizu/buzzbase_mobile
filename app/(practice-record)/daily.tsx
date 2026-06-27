@@ -7,7 +7,7 @@ import type {
 import type { ConditionDraft } from "@components/practice/ConditionForm";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -36,6 +36,12 @@ const toDateString = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
     date.getDate(),
   ).padStart(2, "0")}`;
+
+// "YYYY-MM-DD" をローカル日付の Date に変換する（new Date(string) の UTC ずれを避ける）。
+const parseDateString = (value: string): Date => {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
 
 const toConditionDraft = (session: PracticeSession | null): ConditionDraft => {
   const condition = session?.condition;
@@ -134,7 +140,7 @@ function DailyEditor({
       return;
     }
     try {
-      await saveSession({
+      const session = await saveSession({
         logged_on: dateString,
         memo: memo.trim() || null,
         items,
@@ -147,7 +153,10 @@ function DailyEditor({
           onPress: () =>
             router.replace({
               pathname: "/(note)/new",
-              params: { date: dateString, linkLabel: `${dateString} の練習` },
+              params: {
+                date: dateString,
+                practiceSessionId: String(session.id),
+              },
             }),
         },
       ]);
@@ -255,7 +264,10 @@ function DailyEditor({
 }
 
 export default function DailyRecordScreen() {
-  const [date, setDate] = useState(new Date());
+  const params = useLocalSearchParams<{ date?: string }>();
+  const [date, setDate] = useState(() =>
+    params.date ? parseDateString(params.date) : new Date(),
+  );
   const [showPicker, setShowPicker] = useState(false);
   const dateString = useMemo(() => toDateString(date), [date]);
 
