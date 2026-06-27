@@ -3,6 +3,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useNotes } from "@hooks/useNotes";
 import { usePracticeSessions } from "@hooks/usePracticeSessions";
+import { formatAmount } from "@utils/formatAmount";
 import { SectionCard, SectionPlaceholder } from "./SectionCard";
 
 /** 最近の練習タイムライン（日付ごとに当日のメニューと紐付いたノートを同居表示）。 */
@@ -31,7 +32,7 @@ export function RecentPracticeSection() {
                 <Text style={styles.name}>
                   {log.menu_name}
                   {log.amount != null
-                    ? ` ${log.amount}${log.unit_label ?? ""}`
+                    ? ` ${formatAmount(log.amount)}${log.unit_label ?? ""}`
                     : ""}
                 </Text>
                 {noteByLog.get(log.id) ? (
