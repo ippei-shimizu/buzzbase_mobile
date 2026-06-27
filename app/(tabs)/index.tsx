@@ -11,7 +11,7 @@ import {
   GlobalMenuOverlay,
   useGlobalMenu,
 } from "@components/ui/GlobalMenu";
-import { SegmentedControl } from "@components/ui/SegmentedControl";
+import { UnderlineTabBar } from "@components/ui/UnderlineTabBar";
 import { useNotificationCount } from "@hooks/useNotifications";
 
 const SEGMENTS = ["活動", "ダッシュボード"];
@@ -44,13 +44,11 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={[]}>
-      <View style={styles.segmentWrapper}>
-        <SegmentedControl
-          options={SEGMENTS}
-          selectedIndex={activeSegment}
-          onSelect={setActiveSegment}
-        />
-      </View>
+      <UnderlineTabBar
+        options={SEGMENTS}
+        selectedIndex={activeSegment}
+        onSelect={setActiveSegment}
+      />
       {activeSegment === 0 ? <ActivityView /> : <DashboardView />}
       <GlobalMenuOverlay
         visible={menuVisible}
@@ -65,11 +63,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#2E2E2E",
-  },
-  segmentWrapper: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 4,
   },
   headerRight: {
     flexDirection: "row",
