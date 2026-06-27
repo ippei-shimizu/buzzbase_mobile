@@ -11,27 +11,38 @@ export function RecordButtonsSection() {
   const router = useRouter();
 
   return (
-    <View style={styles.row}>
+    <View style={styles.wrapper}>
+      <View style={styles.row}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/(practice-record)/daily")}
+        >
+          <Ionicons name="barbell-outline" size={22} color="#FFFFFF" />
+          <Text style={styles.text}>練習を記録</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/(note)/new")}
+        >
+          <Ionicons name="create-outline" size={22} color="#FFFFFF" />
+          <Text style={styles.text}>野球ノートを記録</Text>
+        </TouchableOpacity>
+      </View>
       <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/(practice-record)/daily")}
+        style={styles.listLink}
+        onPress={() => router.push("/(records)/list")}
       >
-        <Ionicons name="barbell-outline" size={22} color="#FFFFFF" />
-        <Text style={styles.text}>練習を記録</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/(note)/new")}
-      >
-        <Ionicons name="create-outline" size={22} color="#FFFFFF" />
-        <Text style={styles.text}>野球ノートを記録</Text>
+        <Ionicons name="list-outline" size={16} color="#d08000" />
+        <Text style={styles.listLinkText}>練習記録・野球ノートの一覧</Text>
+        <Ionicons name="chevron-forward" size={16} color="#d08000" />
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", gap: 8, marginBottom: 12 },
+  wrapper: { marginBottom: 12 },
+  row: { flexDirection: "row", gap: 8 },
   button: {
     flex: 1,
     flexDirection: "row",
@@ -43,4 +54,13 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
   },
   text: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
+  listLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    marginTop: 8,
+  },
+  listLinkText: { color: "#d08000", fontSize: 13, fontWeight: "600" },
 });
