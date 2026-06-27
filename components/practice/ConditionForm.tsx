@@ -1,4 +1,5 @@
 import type { Injury } from "../../types/practice";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   View,
@@ -34,11 +35,12 @@ interface Props {
   onChange: (next: ConditionDraft) => void;
 }
 
-const LEVELS: { value: number; emoji: string }[] = [
-  { value: 1, emoji: "😣" },
-  { value: 2, emoji: "😟" },
-  { value: 3, emoji: "🙂" },
-  { value: 4, emoji: "😄" },
+// emoji は RN で表示されない端末があるため Ionicons を使う。
+const LEVELS: { value: number; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { value: 1, icon: "sad" },
+  { value: 2, icon: "sad-outline" },
+  { value: 3, icon: "happy-outline" },
+  { value: 4, icon: "happy" },
 ];
 
 function LevelSelector({
@@ -58,7 +60,11 @@ function LevelSelector({
             style={[styles.levelButton, active && styles.levelButtonActive]}
             onPress={() => onChange(level.value)}
           >
-            <Text style={styles.levelEmoji}>{level.emoji}</Text>
+            <Ionicons
+              name={level.icon}
+              size={24}
+              color={active ? "#FFFFFF" : "#A1A1AA"}
+            />
           </TouchableOpacity>
         );
       })}
@@ -153,7 +159,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   levelButtonActive: { backgroundColor: "#d08000" },
-  levelEmoji: { fontSize: 22 },
   sleepRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   sleepInput: {
     width: 100,
