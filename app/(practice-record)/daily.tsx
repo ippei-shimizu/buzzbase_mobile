@@ -31,6 +31,7 @@ import {
   usePracticeSessionByDate,
   usePracticeSessionMutations,
 } from "@hooks/usePracticeSessions";
+import { formatAmount } from "@utils/formatAmount";
 
 const toDateString = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
@@ -82,8 +83,7 @@ const toSelectedItems = (session: PracticeSession | null): SelectedItems => {
   session?.practice_logs
     .filter((log) => log.source === "manual" && log.practice_menu_id != null)
     .forEach((log) => {
-      selected[log.practice_menu_id as number] =
-        log.amount != null ? String(log.amount) : "";
+      selected[log.practice_menu_id as number] = formatAmount(log.amount);
     });
   return selected;
 };
@@ -103,7 +103,6 @@ function DailyEditor({
   const [selected, setSelected] = useState<SelectedItems>(() =>
     toSelectedItems(initialSession),
   );
-  const [memo, setMemo] = useState(initialSession?.memo ?? "");
   const [condition, setCondition] = useState<ConditionDraft>(() =>
     toConditionDraft(initialSession),
   );
@@ -119,7 +118,7 @@ function DailyEditor({
       }
       return {
         ...prev,
-        [menu.id]: menu.default_value != null ? String(menu.default_value) : "",
+        [menu.id]: formatAmount(menu.default_value),
       };
     });
 
@@ -133,7 +132,8 @@ function DailyEditor({
     }),
   );
 
-  const handleSave = async () => {
+  // 保存後に野球ノートへ進むか、練習記録のみで終えるかを呼び出し側のボタンで分ける。
+  const handleSave = async (withNote: boolean) => {
     const hasCondition = draftHasContent(condition);
     if (items.length === 0 && !hasCondition) {
       Alert.alert("記録する内容がありません", "メニューを選んでください");
@@ -142,24 +142,17 @@ function DailyEditor({
     try {
       const session = await saveSession({
         logged_on: dateString,
-        memo: memo.trim() || null,
         items,
         condition: hasCondition ? toConditionInput(condition) : null,
       });
-      Alert.alert("保存しました", "今日の練習をノートに残しますか？", [
-        { text: "あとで", style: "cancel", onPress: () => router.back() },
-        {
-          text: "ノートに残す",
-          onPress: () =>
-            router.replace({
-              pathname: "/(note)/new",
-              params: {
-                date: dateString,
-                practiceSessionId: String(session.id),
-              },
-            }),
-        },
-      ]);
+      if (withNote) {
+        router.replace({
+          pathname: "/(note)/new",
+          params: { date: dateString, practiceSessionId: String(session.id) },
+        });
+      } else {
+        router.back();
+      }
     } catch {
       Alert.alert("保存に失敗しました");
     }
@@ -227,16 +220,6 @@ function DailyEditor({
         <Text style={styles.addRowText}>新しいメニューを追加</Text>
       </TouchableOpacity>
 
-      <Text style={styles.sectionTitle}>今日の振り返り（任意）</Text>
-      <TextInput
-        style={[styles.input, styles.memoInput]}
-        value={memo}
-        onChangeText={setMemo}
-        multiline
-        placeholder="今日の練習で意識したこと・気づき…"
-        placeholderTextColor="#71717A"
-      />
-
       <Text style={styles.sectionTitle}>コンディション</Text>
       <ProGate
         feature="detailed_condition_log"
@@ -254,10 +237,17 @@ function DailyEditor({
 
       <TouchableOpacity
         style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-        onPress={handleSave}
+        onPress={() => handleSave(true)}
         disabled={isSaving}
       >
-        <Text style={styles.saveButtonText}>記録する</Text>
+        <Text style={styles.saveButtonText}>野球ノートを書く</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.saveSubButton, isSaving && styles.saveButtonDisabled]}
+        onPress={() => handleSave(false)}
+        disabled={isSaving}
+      >
+        <Text style={styles.saveSubButtonText}>練習記録のみ保存</Text>
       </TouchableOpacity>
     </View>
   );
@@ -400,15 +390,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   addRowText: { color: "#d08000", fontSize: 15, fontWeight: "600" },
-  input: {
-    backgroundColor: "#3A3A3A",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    color: "#F4F4F4",
-    fontSize: 15,
-  },
-  memoInput: { minHeight: 72, textAlignVertical: "top" },
   conditionLocked: {
     flexDirection: "row",
     alignItems: "center",
@@ -451,4 +432,12 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: { opacity: 0.5 },
   saveButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
+  saveSubButton: {
+    backgroundColor: "#424242",
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  saveSubButtonText: { color: "#F4F4F4", fontSize: 15, fontWeight: "600" },
 });

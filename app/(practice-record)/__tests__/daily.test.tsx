@@ -76,7 +76,7 @@ describe("日次の練習記録", () => {
     await waitFor(() => expect(getByText("素振り")).toBeTruthy());
 
     fireEvent.press(getByText("素振り"));
-    fireEvent.press(getByText("記録する"));
+    fireEvent.press(getByText("練習記録のみ保存"));
 
     await waitFor(() => expect(savedBody.practice_session).toBeTruthy());
     expect(savedBody.practice_session?.items).toEqual([
