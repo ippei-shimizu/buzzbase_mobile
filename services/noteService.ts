@@ -13,7 +13,22 @@ export const getNotes = async (params?: {
   return res.data;
 };
 
+export const getNote = async (id: number): Promise<NoteV2> => {
+  const res = await axiosInstance.get<NoteV2>(`${URL}/${id}`);
+  return res.data;
+};
+
 export const createNote = async (input: NoteInput): Promise<NoteV2> => {
   const res = await axiosInstance.post<NoteV2>(URL, { baseball_note: input });
+  return res.data;
+};
+
+export const updateNote = async (
+  id: number,
+  input: NoteInput,
+): Promise<NoteV2> => {
+  const res = await axiosInstance.patch<NoteV2>(`${URL}/${id}`, {
+    baseball_note: input,
+  });
   return res.data;
 };

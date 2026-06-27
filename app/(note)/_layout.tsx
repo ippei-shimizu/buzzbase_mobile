@@ -11,6 +11,7 @@ export default function NoteLayout() {
       }}
     >
       <Stack.Screen name="new" options={{ title: "ノートを書く" }} />
+      <Stack.Screen name="[id]" options={{ title: "ノートを編集" }} />
     </Stack>
   );
 }
