@@ -1,50 +1,31 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useEffect, useLayoutEffect } from "react";
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
+import React, { useLayoutEffect, useState } from "react";
+import { View, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { DashboardContent } from "@components/dashboard/DashboardContent";
 import { NotificationBell } from "@components/dashboard/NotificationBell";
-import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
+import { ActivityView } from "@components/home/ActivityView";
+import { DashboardView } from "@components/home/DashboardView";
 import {
   GlobalMenuButton,
   GlobalMenuOverlay,
   useGlobalMenu,
 } from "@components/ui/GlobalMenu";
-import { useDashboard } from "@hooks/useDashboard";
+import { SegmentedControl } from "@components/ui/SegmentedControl";
 import { useNotificationCount } from "@hooks/useNotifications";
-import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
-import { useGameRecordStore } from "../../stores/gameRecordStore";
 
+const SEGMENTS = ["活動", "ダッシュボード"];
+
+/**
+ * ホームタブ。`[活動] ⇄ [ダッシュボード]` のセグメントで2面を切り替える。
+ * デフォルトは「活動」面（毎日の継続ループの司令塔）。
+ */
 export default function HomeScreen() {
   const router = useRouter();
-  const { data, isLoading, isError, refetch, isRefreshing } = useDashboard();
-  const { count } = useNotificationCount();
   const navigation = useNavigation();
-  const { triggerPositiveEvent, modalProps } = useReviewPromptModal();
+  const { count } = useNotificationCount();
   const { menuVisible, menuOpacity, openMenu, closeMenu } = useGlobalMenu();
-
-  useEffect(() => {
-    if (!data) return;
-    const inTopThree = data.group_rankings.some((group) =>
-      [...group.batting_rankings, ...group.pitching_rankings].some(
-        (entry) =>
-          entry.current_rank !== null &&
-          entry.current_rank >= 1 &&
-          entry.current_rank <= 3,
-      ),
-    );
-    if (inTopThree) {
-      triggerPositiveEvent("dashboard-ranking-top3");
-    }
-  }, [data, triggerPositiveEvent]);
+  const [activeSegment, setActiveSegment] = useState(0);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -61,56 +42,21 @@ export default function HomeScreen() {
     });
   }, [navigation, count, router, openMenu]);
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container} edges={["bottom"]}>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#d08000" />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (isError || !data) {
-    return (
-      <SafeAreaView style={styles.container} edges={["bottom"]}>
-        <View style={styles.centered}>
-          <Text style={styles.errorText}>データの取得に失敗しました</Text>
-          <Text style={styles.retryText} onPress={() => refetch()}>
-            タップして再試行
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container} edges={[]}>
-      <DashboardContent
-        data={data}
-        isRefreshing={isRefreshing}
-        onRefresh={refetch}
-        headerComponent={
-          <TouchableOpacity
-            style={styles.recordButton}
-            onPress={() => {
-              // 直前の編集モードフラグが残っていると Step1 が編集モードのまま起動するため、
-              // 新規記録の入口では store を必ず初期化する。
-              useGameRecordStore.getState().reset();
-              router.push("/(game-record)/step1-game-info");
-            }}
-          >
-            <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.recordButtonText}>試合結果を記録する</Text>
-          </TouchableOpacity>
-        }
-      />
+      <View style={styles.segmentWrapper}>
+        <SegmentedControl
+          options={SEGMENTS}
+          selectedIndex={activeSegment}
+          onSelect={setActiveSegment}
+        />
+      </View>
+      {activeSegment === 0 ? <ActivityView /> : <DashboardView />}
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}
         onClose={closeMenu}
       />
-      <PreReviewPrompt {...modalProps} />
     </SafeAreaView>
   );
 }
@@ -120,35 +66,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#2E2E2E",
   },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  errorText: {
-    color: "#A1A1AA",
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  retryText: {
-    color: "#d08000",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  recordButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#d08000",
-    borderRadius: 8,
-    paddingVertical: 12,
-    marginBottom: 12,
-  },
-  recordButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
+  segmentWrapper: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
   },
   headerRight: {
     flexDirection: "row",
