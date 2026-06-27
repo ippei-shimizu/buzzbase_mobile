@@ -4,6 +4,7 @@ export type PracticeCategory =
   | "defense"
   | "baserunning"
   | "training"
+  | "care"
   | "other";
 
 export type PracticeUnit = "count" | "minutes" | "distance";

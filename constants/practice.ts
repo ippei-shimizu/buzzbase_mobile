@@ -6,6 +6,7 @@ export const PRACTICE_CATEGORIES: { key: PracticeCategory; label: string }[] = [
   { key: "defense", label: "守備" },
   { key: "baserunning", label: "走塁" },
   { key: "training", label: "トレーニング" },
+  { key: "care", label: "ケア" },
   { key: "other", label: "その他" },
 ];
 
