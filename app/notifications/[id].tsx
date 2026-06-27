@@ -63,7 +63,7 @@ export default function NoticeDetailScreen() {
         h2 { font-size: 19px; }
         h3 { font-size: 17px; }
         p { margin: 0 0 12px; }
-        ul, ol { padding-left: 20px; margin: 4px 0 8px; line-height: 1.4; }
+        ul, ol { padding-left: 20px; margin: 4px 0 8px; line-height: 1.25; }
         li { margin: 0; padding: 0; }
         strong, b { color: #F4F4F4; }
         code { background: #424242; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
