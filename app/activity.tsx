@@ -39,7 +39,13 @@ export default function ActivityScreen() {
 
       <View style={styles.card}>
         {heatmap ? (
-          <Heatmap data={heatmap.data} from={heatmap.from} to={heatmap.to} />
+          <Heatmap
+            data={heatmap.data}
+            from={heatmap.from}
+            to={heatmap.to}
+            interactive
+            showLabels
+          />
         ) : null}
       </View>
 
