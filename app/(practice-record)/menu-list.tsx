@@ -46,7 +46,7 @@ export default function PracticeMenuListScreen() {
           <Text style={styles.primaryButtonText}>最初のメニューを作る</Text>
         </TouchableOpacity>
         <Text style={styles.exampleText}>
-          例）素振り 200本 ・ ランニング 5km
+          例）素振り ・ ランニング ・ ティーバッティング
         </Text>
       </View>
     );
