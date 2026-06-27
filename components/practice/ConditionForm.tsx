@@ -1,9 +1,5 @@
-import type {
-  ConditionLog,
-  ConditionLogInput,
-  Injury,
-} from "../../types/practice";
-import React, { useState } from "react";
+import type { Injury } from "../../types/practice";
+import React from "react";
 import {
   View,
   Text,
@@ -14,11 +10,28 @@ import {
 import { CONDITION_MOODS } from "../../constants/practice";
 import { InjuryInput } from "./InjuryInput";
 
+/** コンディション入力の編集状態。睡眠は編集途中の文字列で保持する。 */
+export interface ConditionDraft {
+  fatigue_level: number | null;
+  physical_level: number | null;
+  sleep_hours: string;
+  mood: string | null;
+  memo: string;
+  injuries: Injury[];
+}
+
+export const EMPTY_CONDITION_DRAFT: ConditionDraft = {
+  fatigue_level: null,
+  physical_level: null,
+  sleep_hours: "",
+  mood: null,
+  memo: "",
+  injuries: [],
+};
+
 interface Props {
-  date: string;
-  initial: ConditionLog | null;
-  onSave: (input: ConditionLogInput) => Promise<void> | void;
-  isSaving: boolean;
+  value: ConditionDraft;
+  onChange: (next: ConditionDraft) => void;
 }
 
 const LEVELS: { value: number; emoji: string }[] = [
@@ -53,46 +66,34 @@ function LevelSelector({
   );
 }
 
-/** コンディション入力フォーム（疲労/体調/睡眠/気分/怪我）。全項目任意・部分保存可。 */
-export function ConditionForm({ date, initial, onSave, isSaving }: Props) {
-  const [fatigue, setFatigue] = useState<number | null>(
-    initial?.fatigue_level ?? null,
-  );
-  const [physical, setPhysical] = useState<number | null>(
-    initial?.physical_level ?? null,
-  );
-  const [sleep, setSleep] = useState(
-    initial?.sleep_hours != null ? String(initial.sleep_hours) : "",
-  );
-  const [mood, setMood] = useState<string | null>(initial?.mood ?? null);
-  const [memo, setMemo] = useState(initial?.memo ?? "");
-  const [injuries, setInjuries] = useState<Injury[]>(initial?.injuries ?? []);
-
-  const handleSave = () =>
-    onSave({
-      logged_on: date,
-      fatigue_level: fatigue,
-      physical_level: physical,
-      sleep_hours: sleep ? Number(sleep) : null,
-      mood,
-      memo: memo.trim() || null,
-      injuries,
-    });
+/**
+ * コンディション入力フォーム（疲労/体調/睡眠/気分/怪我）。
+ * 値と onChange を親が持つ制御コンポーネント。保存は親（練習セッション）側で一括して行う。
+ */
+export function ConditionForm({ value, onChange }: Props) {
+  const patch = (partial: Partial<ConditionDraft>) =>
+    onChange({ ...value, ...partial });
 
   return (
     <View>
       <Text style={styles.label}>疲労度</Text>
-      <LevelSelector value={fatigue} onChange={setFatigue} />
+      <LevelSelector
+        value={value.fatigue_level}
+        onChange={(fatigue_level) => patch({ fatigue_level })}
+      />
 
       <Text style={styles.label}>体調</Text>
-      <LevelSelector value={physical} onChange={setPhysical} />
+      <LevelSelector
+        value={value.physical_level}
+        onChange={(physical_level) => patch({ physical_level })}
+      />
 
       <Text style={styles.label}>睡眠</Text>
       <View style={styles.sleepRow}>
         <TextInput
           style={styles.sleepInput}
-          value={sleep}
-          onChangeText={setSleep}
+          value={value.sleep_hours}
+          onChangeText={(sleep_hours) => patch({ sleep_hours })}
           keyboardType="numeric"
           placeholder="7.0"
           placeholderTextColor="#71717A"
@@ -103,12 +104,12 @@ export function ConditionForm({ date, initial, onSave, isSaving }: Props) {
       <Text style={styles.label}>気分</Text>
       <View style={styles.moodRow}>
         {CONDITION_MOODS.map((item) => {
-          const active = item === mood;
+          const active = item === value.mood;
           return (
             <TouchableOpacity
               key={item}
               style={[styles.moodChip, active && styles.moodChipActive]}
-              onPress={() => setMood(active ? null : item)}
+              onPress={() => patch({ mood: active ? null : item })}
             >
               <Text style={[styles.moodText, active && styles.moodTextActive]}>
                 {item}
@@ -119,22 +120,17 @@ export function ConditionForm({ date, initial, onSave, isSaving }: Props) {
       </View>
       <TextInput
         style={styles.memoInput}
-        value={memo}
-        onChangeText={setMemo}
+        value={value.memo}
+        onChangeText={(memo) => patch({ memo })}
         placeholder="気分のメモ（任意）"
         placeholderTextColor="#71717A"
       />
 
       <Text style={styles.label}>怪我・痛み</Text>
-      <InjuryInput injuries={injuries} onChange={setInjuries} />
-
-      <TouchableOpacity
-        style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-        onPress={handleSave}
-        disabled={isSaving}
-      >
-        <Text style={styles.saveButtonText}>保存</Text>
-      </TouchableOpacity>
+      <InjuryInput
+        injuries={value.injuries}
+        onChange={(injuries) => patch({ injuries })}
+      />
     </View>
   );
 }
@@ -187,13 +183,4 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 14,
   },
-  saveButton: {
-    backgroundColor: "#d08000",
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 28,
-  },
-  saveButtonDisabled: { opacity: 0.5 },
-  saveButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
 });

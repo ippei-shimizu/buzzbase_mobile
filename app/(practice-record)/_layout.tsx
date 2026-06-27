@@ -7,7 +7,7 @@ export default function PracticeRecordLayout() {
 
   return (
     <Stack
-      initialRouteName="menu-list"
+      initialRouteName="daily"
       screenOptions={{
         headerStyle: { backgroundColor: "#2E2E2E" },
         headerTintColor: "#F4F4F4",
@@ -16,7 +16,7 @@ export default function PracticeRecordLayout() {
       }}
     >
       <Stack.Screen
-        name="menu-list"
+        name="daily"
         options={{
           title: "練習を記録",
           // 初期画面のため自動の戻るボタンが出ない。ホームへ戻る導線を明示する。
@@ -31,8 +31,6 @@ export default function PracticeRecordLayout() {
         }}
       />
       <Stack.Screen name="menu-new" options={{ title: "新しいメニュー" }} />
-      <Stack.Screen name="amount-input" options={{ title: "練習を記録" }} />
-      <Stack.Screen name="condition" options={{ title: "コンディション" }} />
     </Stack>
   );
 }

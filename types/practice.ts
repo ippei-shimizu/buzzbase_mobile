@@ -66,6 +66,33 @@ export interface PracticeLogInput {
   memo?: string | null;
 }
 
+/** 日次の練習セッション。1日（logged_on）の量ログとコンディションを束ねる。 */
+export interface PracticeSession {
+  id: number;
+  logged_on: string;
+  memo: string | null;
+  practice_logs: PracticeLog[];
+  condition: ConditionLog | null;
+  created_at: string;
+}
+
+/** セッション保存時の1メニュー項目。 */
+export interface PracticeSessionItemInput {
+  practice_menu_id: number;
+  amount?: number | null;
+  memo?: string | null;
+}
+
+/** コンディションは logged_on をセッションの日付から決めるため省く。 */
+export type ConditionInput = Omit<ConditionLogInput, "logged_on">;
+
+export interface PracticeSessionInput {
+  logged_on: string;
+  memo?: string | null;
+  items: PracticeSessionItemInput[];
+  condition?: ConditionInput | null;
+}
+
 export interface ConditionLogInput {
   logged_on: string;
   fatigue_level?: number | null;

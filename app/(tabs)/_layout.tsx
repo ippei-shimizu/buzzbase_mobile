@@ -83,7 +83,10 @@ export default function TabLayout() {
           const Icon = tab.Icon;
           const isGroupRoute = tab.name === "(groups)";
           // カッコ付きグループ route 配下に積まれたスタックは、再タップで先頭(index)へ戻す。
-          const needsStackReset = tab.name === "(game-results)" || isGroupRoute;
+          const needsStackReset =
+            tab.name === "(game-results)" ||
+            tab.name === "(profile)" ||
+            isGroupRoute;
           return (
             <Tabs.Screen
               key={tab.name}

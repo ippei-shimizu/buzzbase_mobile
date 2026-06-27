@@ -14,7 +14,7 @@ import {
 import { UnderlineTabBar } from "@components/ui/UnderlineTabBar";
 import { useNotificationCount } from "@hooks/useNotifications";
 
-const SEGMENTS = ["活動", "ダッシュボード"];
+const SEGMENTS = ["練習・活動", "ダッシュボード"];
 
 /**
  * ホームタブ。`[活動] ⇄ [ダッシュボード]` のセグメントで2面を切り替える。

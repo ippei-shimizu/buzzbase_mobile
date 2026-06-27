@@ -15,8 +15,8 @@ const todayString = (): string => {
 };
 
 /**
- * クイック記録（お気に入りワンタップ / 練習を記録 / コンディション）。
- * 素振り導線は #319 で追加する。
+ * 記録（練習を記録 / 野球ノート / お気に入りワンタップ / 素振りタイマー）。
+ * 練習を記録・野球ノートを主動線として最上段に置く。コンディションは練習記録の中で入力する。
  */
 export function QuickRecordSection() {
   const router = useRouter();
@@ -37,14 +37,23 @@ export function QuickRecordSection() {
   };
 
   return (
-    <SectionCard title="クイック記録">
-      <TouchableOpacity
-        style={styles.swingButton}
-        onPress={() => router.push("/(shadow-swing)/setup")}
-      >
-        <Ionicons name="baseball-outline" size={20} color="#FFFFFF" />
-        <Text style={styles.swingButtonText}>素振りを始める</Text>
-      </TouchableOpacity>
+    <SectionCard title="記録">
+      <View style={styles.primaryRow}>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={() => router.push("/(practice-record)/daily")}
+        >
+          <Ionicons name="barbell-outline" size={22} color="#FFFFFF" />
+          <Text style={styles.primaryText}>練習を記録</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={() => router.push("/(note)/new")}
+        >
+          <Ionicons name="create-outline" size={22} color="#FFFFFF" />
+          <Text style={styles.primaryText}>野球ノートを記録</Text>
+        </TouchableOpacity>
+      </View>
       {favorites.length > 0 ? (
         <View style={styles.favRow}>
           {favorites.map((menu) => (
@@ -68,17 +77,10 @@ export function QuickRecordSection() {
       <View style={styles.actionRow}>
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={() => router.push("/(practice-record)/menu-list")}
+          onPress={() => router.push("/(shadow-swing)/setup")}
         >
-          <Ionicons name="barbell-outline" size={20} color="#F4F4F4" />
-          <Text style={styles.actionText}>練習を記録</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => router.push("/(practice-record)/condition")}
-        >
-          <Ionicons name="pulse-outline" size={20} color="#F4F4F4" />
-          <Text style={styles.actionText}>コンディション</Text>
+          <Ionicons name="timer-outline" size={20} color="#F4F4F4" />
+          <Text style={styles.actionText}>素振りタイマー</Text>
         </TouchableOpacity>
       </View>
     </SectionCard>
@@ -86,17 +88,18 @@ export function QuickRecordSection() {
 }
 
 const styles = StyleSheet.create({
-  swingButton: {
+  primaryRow: { flexDirection: "row", gap: 8, marginBottom: 10 },
+  primaryButton: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     backgroundColor: "#d08000",
     borderRadius: 8,
-    paddingVertical: 14,
-    marginBottom: 10,
+    paddingVertical: 16,
   },
-  swingButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
+  primaryText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
   favRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 10 },
   favChip: {
     flexDirection: "row",
