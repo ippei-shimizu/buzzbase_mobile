@@ -63,13 +63,15 @@ export function QuickRecordSection() {
           style={styles.actionButton}
           onPress={() => router.push("/(practice-record)/menu-list")}
         >
-          <Text style={styles.actionText}>📝 練習を記録</Text>
+          <Ionicons name="barbell-outline" size={20} color="#F4F4F4" />
+          <Text style={styles.actionText}>練習を記録</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => router.push("/(practice-record)/condition")}
         >
-          <Text style={styles.actionText}>😪 コンディション</Text>
+          <Ionicons name="pulse-outline" size={20} color="#F4F4F4" />
+          <Text style={styles.actionText}>コンディション</Text>
         </TouchableOpacity>
       </View>
     </SectionCard>
@@ -91,10 +93,13 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: "row", gap: 8 },
   actionButton: {
     flex: 1,
+    flexDirection: "row",
     backgroundColor: "#424242",
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
   },
   actionText: { color: "#F4F4F4", fontSize: 13, fontWeight: "600" },
 });
