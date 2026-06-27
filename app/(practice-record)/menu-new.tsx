@@ -85,7 +85,7 @@ export default function MenuNewScreen() {
         style={styles.input}
         value={unitLabel}
         onChangeText={setUnitLabel}
-        placeholder={unitMeta.defaultLabel}
+        placeholder={`例: ${unitMeta.placeholderValue}${unitMeta.defaultLabel}`}
         placeholderTextColor="#71717A"
       />
 
