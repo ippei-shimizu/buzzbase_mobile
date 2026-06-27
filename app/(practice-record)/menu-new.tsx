@@ -41,7 +41,8 @@ export default function MenuNewScreen() {
         category,
         unit,
         unit_label: unitLabel.trim() || unitMeta.defaultLabel,
-        default_value: defaultValue ? Number(defaultValue) : null,
+        // 既定値はワンタップ用なので、お気に入り時のみ保持する。
+        default_value: isFavorite && defaultValue ? Number(defaultValue) : null,
         is_favorite: isFavorite,
       });
       router.back();
@@ -87,19 +88,9 @@ export default function MenuNewScreen() {
         placeholderTextColor="#71717A"
       />
 
-      <Text style={styles.label}>既定値（任意）</Text>
-      <TextInput
-        style={styles.input}
-        value={defaultValue}
-        onChangeText={setDefaultValue}
-        keyboardType="numeric"
-        placeholder={`例: ${unitMeta.placeholderValue}`}
-        placeholderTextColor="#71717A"
-      />
-
       <View style={styles.favoriteRow}>
         <Text style={styles.favoriteLabel}>
-          お気に入りにする（ホームに表示）
+          お気に入りにする（ホームでワンタップ記録）
         </Text>
         <Switch
           value={isFavorite}
@@ -107,6 +98,28 @@ export default function MenuNewScreen() {
           trackColor={{ true: "#d08000", false: "#52525B" }}
         />
       </View>
+
+      {isFavorite ? (
+        <>
+          <Text style={styles.label}>ワンタップ用の初期値（任意）</Text>
+          <View style={styles.valueRow}>
+            <TextInput
+              style={[styles.input, styles.valueInput]}
+              value={defaultValue}
+              onChangeText={setDefaultValue}
+              keyboardType="numeric"
+              placeholder={`例: ${unitMeta.placeholderValue}`}
+              placeholderTextColor="#71717A"
+            />
+            <Text style={styles.valueUnit}>
+              {unitLabel.trim() || unitMeta.defaultLabel}
+            </Text>
+          </View>
+          <Text style={styles.hint}>
+            ホームのワンタップ記録で使う初期値です。記録時に毎回変更できます。
+          </Text>
+        </>
+      ) : null}
 
       <TouchableOpacity
         style={[styles.saveButton, isCreating && styles.saveButtonDisabled]}
@@ -137,6 +150,10 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 15,
   },
+  valueRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  valueInput: { flex: 1 },
+  valueUnit: { color: "#A1A1AA", fontSize: 15 },
+  hint: { color: "#71717A", fontSize: 12, marginTop: 6 },
   favoriteRow: {
     flexDirection: "row",
     alignItems: "center",
