@@ -38,6 +38,13 @@ export function QuickRecordSection() {
 
   return (
     <SectionCard title="クイック記録">
+      <TouchableOpacity
+        style={styles.swingButton}
+        onPress={() => router.push("/(shadow-swing)/setup")}
+      >
+        <Ionicons name="baseball-outline" size={20} color="#FFFFFF" />
+        <Text style={styles.swingButtonText}>素振りを始める</Text>
+      </TouchableOpacity>
       {favorites.length > 0 ? (
         <View style={styles.favRow}>
           {favorites.map((menu) => (
@@ -79,6 +86,17 @@ export function QuickRecordSection() {
 }
 
 const styles = StyleSheet.create({
+  swingButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#d08000",
+    borderRadius: 8,
+    paddingVertical: 14,
+    marginBottom: 10,
+  },
+  swingButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
   favRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 10 },
   favChip: {
     flexDirection: "row",

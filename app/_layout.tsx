@@ -117,6 +117,7 @@ function RootLayoutInner() {
           name="(practice-record)"
           options={{ headerShown: false }}
         />
+        <Stack.Screen name="(shadow-swing)" options={{ headerShown: false }} />
         <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen
           name="game-result-detail"
