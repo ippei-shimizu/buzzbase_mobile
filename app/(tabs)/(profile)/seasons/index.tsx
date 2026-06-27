@@ -159,6 +159,14 @@ export default function SeasonsScreen() {
             data={seasons}
             keyExtractor={(item) => String(item.id)}
             renderItem={renderItem}
+            ListHeaderComponent={
+              <View style={styles.infoCard}>
+                <Text style={styles.infoTitle}>シーズン管理とは</Text>
+                <Text style={styles.infoText}>
+                  試合記録を期間（シーズン）ごとにまとめる機能です。学年・年度・大会単位でシーズンを分けておくと、成績をその期間ごとに集計・比較でき、成長の振り返りに役立ちます。試合記録を作成・編集するときに、どのシーズンに含めるかを選べます。
+                </Text>
+              </View>
+            }
             ListEmptyComponent={renderEmpty}
             contentContainerStyle={styles.listContent}
             refreshControl={
@@ -184,6 +192,23 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 32,
     flexGrow: 1,
+  },
+  infoCard: {
+    backgroundColor: "#3A3A3A",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  infoTitle: {
+    color: "#F4F4F4",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  infoText: {
+    color: "#A1A1AA",
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 6,
   },
   card: {
     backgroundColor: "#3A3A3A",
