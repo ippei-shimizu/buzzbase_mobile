@@ -1,14 +1,100 @@
+import type { PracticeMenu } from "../../../types/practice";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
-import { SectionCard, SectionPlaceholder } from "./SectionCard";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { usePracticeLogMutations } from "@hooks/usePracticeLogs";
+import { usePracticeMenus } from "@hooks/usePracticeMenus";
+import { SectionCard } from "./SectionCard";
+
+const todayString = (): string => {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate(),
+  ).padStart(2, "0")}`;
+};
 
 /**
- * クイック記録（素振り / 練習を記録 / コンディション）。
- * 記録導線の実体は #321 練習記録・#319 素振りで差し込む。
+ * クイック記録（お気に入りワンタップ / 練習を記録 / コンディション）。
+ * 素振り導線は #319 で追加する。
  */
 export function QuickRecordSection() {
+  const router = useRouter();
+  const { menus } = usePracticeMenus();
+  const { createLog, isCreating } = usePracticeLogMutations();
+  const favorites = menus.filter((menu) => menu.is_favorite).slice(0, 3);
+
+  const quickLog = async (menu: PracticeMenu) => {
+    try {
+      await createLog({
+        practice_menu_id: menu.id,
+        logged_on: todayString(),
+        amount: menu.default_value,
+      });
+    } catch {
+      // ワンタップ記録の失敗は静かに無視（一覧で気付ける）。
+    }
+  };
+
   return (
     <SectionCard title="クイック記録">
-      <SectionPlaceholder message="素振り・練習の記録導線がここに入ります" />
+      {favorites.length > 0 ? (
+        <View style={styles.favRow}>
+          {favorites.map((menu) => (
+            <TouchableOpacity
+              key={menu.id}
+              style={styles.favChip}
+              disabled={isCreating}
+              onPress={() => quickLog(menu)}
+            >
+              <Ionicons name="add" size={14} color="#d08000" />
+              <Text style={styles.favText}>
+                {menu.name}
+                {menu.default_value != null
+                  ? ` ${menu.default_value}${menu.unit_label ?? ""}`
+                  : ""}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : null}
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => router.push("/(practice-record)")}
+        >
+          <Text style={styles.actionText}>📝 練習を記録</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => router.push("/(practice-record)/condition")}
+        >
+          <Text style={styles.actionText}>😪 コンディション</Text>
+        </TouchableOpacity>
+      </View>
     </SectionCard>
   );
 }
+
+const styles = StyleSheet.create({
+  favRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 10 },
+  favChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#424242",
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  favText: { color: "#F4F4F4", fontSize: 13, fontWeight: "600" },
+  actionRow: { flexDirection: "row", gap: 8 },
+  actionButton: {
+    flex: 1,
+    backgroundColor: "#424242",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  actionText: { color: "#F4F4F4", fontSize: 13, fontWeight: "600" },
+});
