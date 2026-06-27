@@ -7,11 +7,16 @@ import { Stack, useRouter, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { PostHogProvider } from "posthog-react-native";
 import { useCallback, useEffect } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import { Snackbar } from "@components/ui/Snackbar";
+import {
+  REVENUECAT_API_KEY_ANDROID,
+  REVENUECAT_API_KEY_IOS,
+} from "@constants/revenueCat";
 import { usePushNotifications } from "@hooks/usePushNotifications";
 import { useStoreReview } from "@hooks/useStoreReview";
 import { configureGoogleSignIn } from "@services/googleAuthService";
+import { configureRevenueCat } from "@services/revenueCatService";
 import { posthog } from "@utils/posthog";
 import { queryClient } from "@utils/queryClient";
 
@@ -29,6 +34,10 @@ Sentry.init({
 });
 
 configureGoogleSignIn();
+
+const revenueCatApiKey =
+  Platform.OS === "ios" ? REVENUECAT_API_KEY_IOS : REVENUECAT_API_KEY_ANDROID;
+if (revenueCatApiKey) configureRevenueCat(revenueCatApiKey);
 
 /**
  * Expo Router の現在パスを PostHog の $screen イベントとして送信する。
@@ -116,6 +125,18 @@ function RootLayoutInner() {
         <Stack.Screen
           name="settings"
           options={{ title: "設定", headerBackTitle: "戻る" }}
+        />
+        <Stack.Screen
+          name="pro"
+          options={{
+            headerShown: false,
+            presentation: "fullScreenModal",
+            animation: "slide_from_bottom",
+          }}
+        />
+        <Stack.Screen
+          name="account/subscription/index"
+          options={{ title: "サブスクリプション管理", headerBackTitle: "戻る" }}
         />
       </Stack>
       <Snackbar />

@@ -1,13 +1,20 @@
 import { Redirect, Tabs } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
+import { BillingIssueAlert } from "@components/pro/BillingIssueAlert";
+import { TrialExpiringBanner } from "@components/pro/TrialExpiringBanner";
 import { BOTTOM_TAB_ITEMS } from "@components/ui/bottomTabItems";
 import { useAuth } from "@hooks/useAuth";
+import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { useGroups } from "@hooks/useGroups";
 import { useGroupTabBadge } from "@hooks/useGroupTabBadge";
 import { useOnboarding } from "@hooks/useOnboarding";
+import { useProStatus } from "@hooks/useProStatus";
 
 export default function TabLayout() {
   const { isLoggedIn, isLoading } = useAuth();
+  const { enabled: proFeatures } = useFeatureFlag("pro_features");
+  // pro_features=false の環境では Banner/Alert を一切表示しないため、/pro/status も叩かない。
+  const { proStatus } = useProStatus({ enabled: proFeatures });
   const { isCompleted: isOnboardingCompleted } = useOnboarding();
   const { groups, isFetched: isGroupsFetched } = useGroups({
     enabled: isLoggedIn === true,
@@ -52,60 +59,68 @@ export default function TabLayout() {
   }
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: "#d08000",
-        tabBarInactiveTintColor: "#A1A1AA",
-        tabBarHideOnKeyboard: true,
-        tabBarStyle: {
-          backgroundColor: "#2E2E2E",
-          borderTopColor: "#424242",
-        },
-        headerStyle: { backgroundColor: "#2E2E2E" },
-        headerTintColor: "#F4F4F4",
-      }}
-    >
-      {BOTTOM_TAB_ITEMS.map((tab) => {
-        const Icon = tab.Icon;
-        const isGroupRoute = tab.name === "(groups)";
-        // カッコ付きグループ route 配下に積まれたスタックは、再タップで先頭(index)へ戻す。
-        const needsStackReset = tab.name === "(game-results)" || isGroupRoute;
-        return (
-          <Tabs.Screen
-            key={tab.name}
-            name={tab.name}
-            options={{
-              title: tab.label,
-              // カッコ付きグループ route はネスト Stack 側で独自ヘッダを持つため親タブのヘッダは隠す
-              headerShown: !tab.name.startsWith("("),
-              tabBarIcon: ({ color, size }) => (
-                <Icon
-                  size={size}
-                  color={color}
-                  showBadge={isGroupRoute ? showGroupBadge : undefined}
-                />
-              ),
-            }}
-            listeners={
-              needsStackReset
-                ? ({ navigation }) => ({
-                    tabPress: (e) => {
-                      if (isGroupRoute) markGroupBadgeSeen();
-                      const state = navigation.getState();
-                      const route = state.routes.find(
-                        (r: { name: string }) => r.name === tab.name,
-                      );
-                      if (route?.state && route.state.index > 0) {
-                        e.preventDefault();
-                        navigation.navigate(tab.name, { screen: "index" });
-                      }
-                    },
-                  })
-                : undefined
-            }
-          />
-        );
-      })}
-    </Tabs>
+    <View style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
+      {proFeatures ? (
+        <>
+          <BillingIssueAlert subscription={proStatus.subscription} />
+          <TrialExpiringBanner subscription={proStatus.subscription} />
+        </>
+      ) : null}
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: "#d08000",
+          tabBarInactiveTintColor: "#A1A1AA",
+          tabBarHideOnKeyboard: true,
+          tabBarStyle: {
+            backgroundColor: "#2E2E2E",
+            borderTopColor: "#424242",
+          },
+          headerStyle: { backgroundColor: "#2E2E2E" },
+          headerTintColor: "#F4F4F4",
+        }}
+      >
+        {BOTTOM_TAB_ITEMS.map((tab) => {
+          const Icon = tab.Icon;
+          const isGroupRoute = tab.name === "(groups)";
+          // カッコ付きグループ route 配下に積まれたスタックは、再タップで先頭(index)へ戻す。
+          const needsStackReset = tab.name === "(game-results)" || isGroupRoute;
+          return (
+            <Tabs.Screen
+              key={tab.name}
+              name={tab.name}
+              options={{
+                title: tab.label,
+                // カッコ付きグループ route はネスト Stack 側で独自ヘッダを持つため親タブのヘッダは隠す
+                headerShown: !tab.name.startsWith("("),
+                tabBarIcon: ({ color, size }) => (
+                  <Icon
+                    size={size}
+                    color={color}
+                    showBadge={isGroupRoute ? showGroupBadge : undefined}
+                  />
+                ),
+              }}
+              listeners={
+                needsStackReset
+                  ? ({ navigation }) => ({
+                      tabPress: (e) => {
+                        if (isGroupRoute) markGroupBadgeSeen();
+                        const state = navigation.getState();
+                        const route = state.routes.find(
+                          (r: { name: string }) => r.name === tab.name,
+                        );
+                        if (route?.state && route.state.index > 0) {
+                          e.preventDefault();
+                          navigation.navigate(tab.name, { screen: "index" });
+                        }
+                      },
+                    })
+                  : undefined
+              }
+            />
+          );
+        })}
+      </Tabs>
+    </View>
   );
 }
