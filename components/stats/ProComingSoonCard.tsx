@@ -38,7 +38,9 @@ export function ProComingSoonCard({
       <Text style={styles.description}>{description}</Text>
       <View style={styles.previewWrapper} pointerEvents="none">
         {children}
-        <BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFill} />
+        {/* iOS は省電力モード/「透明度を下げる」設定でブラーが無効化され透明になるため、内容が透けないよう暗幕でフォールバックする */}
+        <View style={styles.scrim} />
+        <BlurView intensity={14} tint="dark" style={StyleSheet.absoluteFill} />
         <View style={styles.overlay}>
           <View style={styles.badge}>
             <Ionicons name="lock-closed" size={13} color="#1A1A1A" />
@@ -73,6 +75,10 @@ const styles = StyleSheet.create({
     marginTop: 12,
     borderRadius: 8,
     overflow: "hidden",
+  },
+  scrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(26, 26, 26, 0.5)",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
