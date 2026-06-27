@@ -48,15 +48,27 @@ export default function AmountInputScreen() {
 
   const handleSave = async () => {
     try {
-      await createLog({
+      const log = await createLog({
         practice_menu_id: menu.id,
         logged_on: toDateString(date),
         amount: amount ? Number(amount) : null,
         memo: memo.trim() || null,
       });
-      Alert.alert("記録しました 🌱", `${menu.name} を記録しました`, [
-        { text: "完了", onPress: () => router.dismissAll() },
-        { text: "続けて記録", onPress: () => router.back() },
+      // モデルA: 記録直後に「ノートに残す？」を誘導し、その練習に緩く紐付ける。
+      Alert.alert("記録しました", "今日の感覚をノートに残しますか？", [
+        { text: "あとで", style: "cancel", onPress: () => router.back() },
+        {
+          text: "ノートに残す",
+          onPress: () =>
+            router.replace({
+              pathname: "/(note)/new",
+              params: {
+                practiceLogId: String(log.id),
+                date: toDateString(date),
+                linkLabel: `${toDateString(date)} の ${menu.name}`,
+              },
+            }),
+        },
       ]);
     } catch {
       Alert.alert("保存に失敗しました");
