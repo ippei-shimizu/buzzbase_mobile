@@ -5,6 +5,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { usePracticeLogMutations } from "@hooks/usePracticeLogs";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
+import { formatAmount } from "@utils/formatAmount";
 import { SectionCard } from "./SectionCard";
 
 const todayString = (): string => {
@@ -60,7 +61,7 @@ export function PracticeToolsSection() {
                 <Text style={styles.favText}>
                   {menu.name}
                   {menu.default_value != null
-                    ? ` ${menu.default_value}${menu.unit_label ?? ""}`
+                    ? ` ${formatAmount(menu.default_value)}${menu.unit_label ?? ""}`
                     : ""}
                 </Text>
               </TouchableOpacity>
@@ -78,7 +79,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#424242",
+    backgroundColor: "#d08000",
     borderRadius: 8,
     paddingVertical: 14,
   },
