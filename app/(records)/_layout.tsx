@@ -33,6 +33,7 @@ export default function RecordsLayout() {
         name="summary"
         options={{ title: "メニュー別の積み上げ" }}
       />
+      <Stack.Screen name="trend" options={{ title: "メニューの推移" }} />
     </Stack>
   );
 }

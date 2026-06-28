@@ -50,6 +50,42 @@ export interface MenuSummary {
   last_logged_on: string | null;
 }
 
+/** 練習全体のKPI。 */
+export interface PracticeOverview {
+  total_practice_days: number;
+  this_month_practice_days: number;
+  total_swing_count: number;
+  total_volume: number;
+  total_menus: number;
+}
+
+export interface MenuTrendMonth {
+  month: string;
+  total_amount: number;
+  total_volume: number;
+  max_weight: number | null;
+  days_count: number;
+}
+
+/** 単一メニューの推移・自己ベスト・履歴。 */
+export interface MenuTrend {
+  menu: {
+    id: number;
+    name: string;
+    unit: PracticeUnit;
+    unit_label: string | null;
+    is_weight_reps: boolean;
+  };
+  monthly: MenuTrendMonth[];
+  best: { max_amount: number | null; max_weight: number | null };
+  recent: {
+    id: number;
+    logged_on: string;
+    amount: number | null;
+    weight: number | null;
+  }[];
+}
+
 export interface Injury {
   part: string;
   memo?: string;
