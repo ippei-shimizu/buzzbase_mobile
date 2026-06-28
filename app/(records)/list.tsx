@@ -90,7 +90,7 @@ function MonthHeader({ label }: { label: string }) {
   return <Text style={styles.monthHeader}>{label}</Text>;
 }
 
-function PracticeCard({
+function PracticeRow({
   session,
   hasNote,
   onPress,
@@ -103,46 +103,50 @@ function PracticeCard({
   const condition = session.condition;
   const faceLevel = condition?.physical_level ?? condition?.fatigue_level;
   const face = faceLevel ? LEVEL_FACE[faceLevel] : null;
+  const date = parseDate(session.logged_on);
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
-      <View style={styles.cardHead}>
-        <Text style={styles.dateBig}>{formatJaDate(session.logged_on)}</Text>
-        <View style={styles.headRight}>
-          {logs.length > 0 ? (
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{logs.length}メニュー</Text>
-            </View>
-          ) : null}
-          {face ? (
-            <Ionicons name={face.icon} size={20} color={face.color} />
-          ) : null}
-        </View>
+    <View style={styles.tlRow}>
+      <View style={styles.tlRail}>
+        <Text style={styles.tlDay}>{date.getDate()}</Text>
+        <Text style={styles.tlWeek}>{WEEKDAYS[date.getDay()]}</Text>
       </View>
-
-      {logs.length === 0 ? (
-        <Text style={styles.muted}>メニューなし</Text>
-      ) : (
-        <View style={styles.menuList}>
-          {logs.map((log) => (
-            <View key={log.id} style={styles.menuRow}>
-              <Ionicons name={menuIcon(log)} size={15} color="#A1A1AA" />
-              <Text style={styles.menuName} numberOfLines={1}>
-                {log.menu_name}
-              </Text>
-              <Text style={styles.menuValue}>{formatPracticeValue(log)}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {hasNote ? (
-        <View style={styles.noteTag}>
-          <Ionicons name="document-text-outline" size={13} color="#d08000" />
-          <Text style={styles.noteTagText}>ノートあり</Text>
-        </View>
-      ) : null}
-    </TouchableOpacity>
+      <TouchableOpacity style={styles.tlContent} onPress={onPress}>
+        {logs.length === 0 ? (
+          <Text style={styles.muted}>メニューなし</Text>
+        ) : (
+          <View style={styles.chipWrap}>
+            {logs.map((log) => {
+              const value = formatPracticeValue(log);
+              return (
+                <View key={log.id} style={styles.menuChip}>
+                  <Ionicons name={menuIcon(log)} size={13} color="#d08000" />
+                  <Text style={styles.chipName}>{log.menu_name}</Text>
+                  {value ? <Text style={styles.chipValue}>{value}</Text> : null}
+                </View>
+              );
+            })}
+          </View>
+        )}
+        {face || hasNote ? (
+          <View style={styles.tlMeta}>
+            {face ? (
+              <Ionicons name={face.icon} size={18} color={face.color} />
+            ) : null}
+            {hasNote ? (
+              <View style={styles.noteTag}>
+                <Ionicons
+                  name="document-text-outline"
+                  size={13}
+                  color="#d08000"
+                />
+                <Text style={styles.noteTagText}>ノート</Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -174,7 +178,7 @@ function PracticeList() {
           "header" in row ? (
             <MonthHeader key={row.key} label={row.header} />
           ) : (
-            <PracticeCard
+            <PracticeRow
               key={row.key}
               session={row.item}
               hasNote={noteSessionIds.has(row.item.id)}
@@ -324,7 +328,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   countBadgeText: { color: "#A1A1AA", fontSize: 11, fontWeight: "700" },
-  muted: { color: "#A1A1AA", fontSize: 13, marginTop: 10 },
+  muted: { color: "#A1A1AA", fontSize: 13 },
+
+  tlRow: { flexDirection: "row", marginBottom: 14 },
+  tlRail: { width: 40, alignItems: "center", paddingTop: 4 },
+  tlDay: { color: "#F4F4F4", fontSize: 20, fontWeight: "800" },
+  tlWeek: { color: "#A1A1AA", fontSize: 11, fontWeight: "600", marginTop: -2 },
+  tlContent: {
+    flex: 1,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 12,
+    padding: 12,
+    marginLeft: 8,
+  },
+  chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  menuChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#2E2E2E",
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+  chipName: { color: "#F4F4F4", fontSize: 13, fontWeight: "600" },
+  chipValue: { color: "#d08000", fontSize: 13, fontWeight: "800" },
+  tlMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 8,
+  },
   menuList: {
     backgroundColor: "#2E2E2E",
     borderRadius: 10,
