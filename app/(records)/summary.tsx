@@ -13,11 +13,7 @@ import {
   View,
 } from "react-native";
 import { formatTotalAmount, formatVolume } from "@constants/practice";
-import { useStreak } from "@hooks/useActivity";
-import {
-  usePracticeOverview,
-  usePracticeSummaries,
-} from "@hooks/usePracticeSummaries";
+import { usePracticeSummaries } from "@hooks/usePracticeSummaries";
 
 const formatMd = (iso: string | null): string => {
   if (!iso) return "-";
@@ -27,47 +23,6 @@ const formatMd = (iso: string | null): string => {
 
 const isWeightReps = (summary: MenuSummary): boolean =>
   summary.unit === "weight_reps" || summary.total_volume != null;
-
-function KpiTile({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.kpiTile}>
-      <Text style={styles.kpiValue}>{value}</Text>
-      <Text style={styles.kpiLabel}>{label}</Text>
-    </View>
-  );
-}
-
-function OverallHeader() {
-  const { overview } = usePracticeOverview();
-  const { streak } = useStreak();
-  if (!overview) return null;
-
-  return (
-    <View style={styles.kpiCard}>
-      <View style={styles.kpiRow}>
-        <KpiTile label="連続" value={`${streak?.current_streak_days ?? 0}日`} />
-        <KpiTile label="練習日数" value={`${overview.total_practice_days}日`} />
-        <KpiTile
-          label="今月"
-          value={`${overview.this_month_practice_days}日`}
-        />
-      </View>
-      <View style={styles.kpiRow}>
-        <KpiTile
-          label="総素振り"
-          value={`${overview.total_swing_count.toLocaleString()}本`}
-        />
-        {overview.total_volume > 0 ? (
-          <KpiTile
-            label="総挙上重量"
-            value={formatVolume(overview.total_volume)}
-          />
-        ) : null}
-        <KpiTile label="メニュー" value={`${overview.total_menus}`} />
-      </View>
-    </View>
-  );
-}
 
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
@@ -131,7 +86,7 @@ function SummaryCard({
   );
 }
 
-const REFRESH_KEYS = ["practiceSummaries", "practiceOverview", "streak"];
+const REFRESH_KEYS = ["practiceSummaries"];
 
 export default function PracticeSummaryScreen() {
   const router = useRouter();
@@ -171,7 +126,6 @@ export default function PracticeSummaryScreen() {
         />
       }
     >
-      <OverallHeader />
       <Text style={styles.lead}>メニューごとの積み上げ</Text>
       {summaries.length === 0 ? (
         <Text style={styles.empty}>まだ練習記録がありません</Text>
@@ -207,17 +161,6 @@ const styles = StyleSheet.create({
   },
   lead: { color: "#A1A1AA", fontSize: 13, marginBottom: 12, fontWeight: "700" },
   empty: { color: "#A1A1AA", fontSize: 14, textAlign: "center", marginTop: 40 },
-  kpiCard: {
-    backgroundColor: "#3A3A3A",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 20,
-    gap: 12,
-  },
-  kpiRow: { flexDirection: "row", gap: 10 },
-  kpiTile: { flex: 1, alignItems: "center" },
-  kpiValue: { color: "#d08000", fontSize: 20, fontWeight: "800" },
-  kpiLabel: { color: "#A1A1AA", fontSize: 11, fontWeight: "600", marginTop: 2 },
   card: {
     backgroundColor: "#3A3A3A",
     borderRadius: 12,

@@ -59,15 +59,14 @@ export interface PracticeOverview {
   total_menus: number;
 }
 
-export interface MenuTrendMonth {
-  month: string;
+export interface MenuTrendBucket {
+  period: string;
   total_amount: number;
   total_volume: number;
-  max_weight: number | null;
   days_count: number;
 }
 
-/** 単一メニューの推移・自己ベスト・履歴。 */
+/** 単一メニューの推移（年別・月別・日別）。 */
 export interface MenuTrend {
   menu: {
     id: number;
@@ -76,14 +75,9 @@ export interface MenuTrend {
     unit_label: string | null;
     is_weight_reps: boolean;
   };
-  monthly: MenuTrendMonth[];
-  best: { max_amount: number | null; max_weight: number | null };
-  recent: {
-    id: number;
-    logged_on: string;
-    amount: number | null;
-    weight: number | null;
-  }[];
+  by_year: MenuTrendBucket[];
+  by_month: MenuTrendBucket[];
+  by_day: MenuTrendBucket[];
 }
 
 export interface Injury {
