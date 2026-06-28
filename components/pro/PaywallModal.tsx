@@ -58,6 +58,11 @@ const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     description:
       "1シーズンを通した中長期目標を設定し、月次目標と紐づけて追跡できます。",
   },
+  tournament_goals: {
+    title: "大会目標を設定",
+    description:
+      "特定の大会に向けた目標を設定し、その大会の成績で達成を追跡できます。",
+  },
   custom_notification_messages: {
     title: "通知メッセージをカスタマイズ",
     description: "練習リマインドや目標達成通知の文言を自分好みに編集できます。",
