@@ -23,10 +23,6 @@ const parseDate = (iso: string): Date => {
   const [year, month, day] = iso.split("-").map(Number);
   return new Date(year, month - 1, day);
 };
-const formatJaDate = (iso: string): string => {
-  const date = parseDate(iso);
-  return `${date.getMonth() + 1}/${date.getDate()}(${WEEKDAYS[date.getDay()]})`;
-};
 const monthKey = (iso: string): string => iso.slice(0, 7);
 const monthLabel = (iso: string): string => {
   const [year, month] = iso.split("-").map(Number);
@@ -216,21 +212,24 @@ function NoteLinkChip({ note }: { note: NoteV2 }) {
   return null;
 }
 
-function NoteCard({ note, onPress }: { note: NoteV2; onPress: () => void }) {
+function NoteRow({ note, onPress }: { note: NoteV2; onPress: () => void }) {
+  const date = parseDate(note.date);
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
-      <View style={styles.cardHead}>
-        <Text style={styles.dateBig}>{formatJaDate(note.date)}</Text>
-        <Ionicons name="chevron-forward" size={16} color="#A1A1AA" />
+    <View style={styles.tlRow}>
+      <View style={styles.tlRail}>
+        <Text style={styles.tlDay}>{date.getDate()}</Text>
+        <Text style={styles.tlWeek}>{WEEKDAYS[date.getDay()]}</Text>
       </View>
-      <Text style={styles.noteTitle}>{note.title || "無題のノート"}</Text>
-      {note.memo_preview ? (
-        <Text style={styles.preview} numberOfLines={2}>
-          {note.memo_preview}
-        </Text>
-      ) : null}
-      <NoteLinkChip note={note} />
-    </TouchableOpacity>
+      <TouchableOpacity style={styles.tlContent} onPress={onPress}>
+        <Text style={styles.noteTitle}>{note.title || "無題のノート"}</Text>
+        {note.memo_preview ? (
+          <Text style={styles.preview} numberOfLines={2}>
+            {note.memo_preview}
+          </Text>
+        ) : null}
+        <NoteLinkChip note={note} />
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -255,7 +254,7 @@ function NoteList() {
           "header" in row ? (
             <MonthHeader key={row.key} label={row.header} />
           ) : (
-            <NoteCard
+            <NoteRow
               key={row.key}
               note={row.item}
               onPress={() => router.push(`/(note)/${row.item.id}`)}
@@ -308,26 +307,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 4,
   },
-  card: {
-    backgroundColor: "#3A3A3A",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
-  },
-  cardHead: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  dateBig: { color: "#F4F4F4", fontSize: 15, fontWeight: "700" },
-  headRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-  countBadge: {
-    backgroundColor: "#2E2E2E",
-    borderRadius: 10,
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-  },
-  countBadgeText: { color: "#A1A1AA", fontSize: 11, fontWeight: "700" },
   muted: { color: "#A1A1AA", fontSize: 13 },
 
   tlRow: { flexDirection: "row", marginBottom: 14 },
@@ -359,22 +338,6 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 8,
   },
-  menuList: {
-    backgroundColor: "#2E2E2E",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    marginTop: 10,
-  },
-  menuRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 9,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#3A3A3A",
-  },
-  menuName: { color: "#F4F4F4", fontSize: 14, flex: 1 },
-  menuValue: { color: "#d08000", fontSize: 14, fontWeight: "800" },
   noteTag: {
     flexDirection: "row",
     alignItems: "center",
@@ -386,7 +349,6 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 16,
     fontWeight: "700",
-    marginTop: 8,
   },
   preview: { color: "#A1A1AA", fontSize: 13, lineHeight: 19, marginTop: 4 },
   linkChip: {
