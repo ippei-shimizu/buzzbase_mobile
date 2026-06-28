@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { GameResultDetail } from "@components/game-results/GameResultDetail";
 import { useGameResult } from "@hooks/useGameResults";
 import { useNote, useNoteMutations } from "@hooks/useNotes";
 import { usePracticeSession } from "@hooks/usePracticeSessions";
@@ -100,33 +101,10 @@ function LinkedGame({ gameId }: { gameId: number }) {
   if (isLoading) return <ActivityIndicator color="#d08000" />;
   if (!gameResult) return null;
 
-  const match = gameResult.match_result;
-  const result =
-    match.my_team_score > match.opponent_team_score
-      ? "勝ち"
-      : match.my_team_score < match.opponent_team_score
-        ? "負け"
-        : "引き分け";
-  const batting = gameResult.batting_average;
-
   return (
-    <View style={styles.card}>
+    <View style={styles.gameSection}>
       <Text style={styles.cardLabel}>紐付けた試合記録</Text>
-      <Text style={styles.cardDate}>
-        {match.date_and_time.slice(0, 10)}
-        {match.tournament_name ? ` ・ ${match.tournament_name}` : ""}
-      </Text>
-      <Text style={styles.gameTeams}>
-        {match.my_team_name} {match.my_team_score} - {match.opponent_team_score}{" "}
-        {match.opponent_team_name}
-      </Text>
-      <Text style={styles.gameResult}>{result}</Text>
-      {batting ? (
-        <Text style={styles.logLine}>
-          打席 {batting.plate_appearances} ・ 打数 {batting.times_at_bat} ・
-          安打 {batting.hit}
-        </Text>
-      ) : null}
+      <GameResultDetail game={gameResult} scroll={false} />
     </View>
   );
 }
@@ -253,13 +231,7 @@ const styles = StyleSheet.create({
   cardDate: { color: "#F4F4F4", fontSize: 15, fontWeight: "700", marginTop: 6 },
   logLine: { color: "#F4F4F4", fontSize: 14, marginTop: 4 },
   muted: { color: "#A1A1AA", fontSize: 13, marginTop: 6 },
-  gameTeams: { color: "#F4F4F4", fontSize: 15, marginTop: 6 },
-  gameResult: {
-    color: "#d08000",
-    fontSize: 14,
-    fontWeight: "700",
-    marginTop: 4,
-  },
+  gameSection: { marginTop: 20 },
   conditionBox: {
     marginTop: 12,
     paddingTop: 12,
