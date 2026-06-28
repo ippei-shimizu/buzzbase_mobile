@@ -2,6 +2,7 @@ import type { GameResultFilterParams } from "../services/gameResultService";
 import type { GameResult } from "../types/gameResult";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
+  getGameResult,
   getGameResults,
   getUserGameResults,
   getFilteredGameResults,
@@ -40,6 +41,15 @@ export const useUserGameResults = (userId: number | undefined) => {
     isRefreshing: isRefetching,
     refetch,
   };
+};
+
+export const useGameResult = (id: number | null) => {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["gameResult", id],
+    queryFn: () => getGameResult(id as number),
+    enabled: id != null,
+  });
+  return { gameResult: data ?? null, isLoading, isError };
 };
 
 export const useFilteredGameResults = (params: GameResultFilterParams) => {

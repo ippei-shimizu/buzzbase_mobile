@@ -32,3 +32,7 @@ export const updateNote = async (
   });
   return res.data;
 };
+
+export const deleteNote = async (id: number): Promise<void> => {
+  await axiosInstance.delete(`${URL}/${id}`);
+};

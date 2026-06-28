@@ -2,6 +2,7 @@ import type { NoteInput } from "../types/note";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createNote,
+  deleteNote,
   getNote,
   getNotes,
   updateNote,
@@ -44,11 +45,17 @@ export const useNoteMutations = () => {
       queryClient.invalidateQueries({ queryKey: ["note", variables.id] });
     },
   });
+  const remove = useMutation({
+    mutationFn: deleteNote,
+    onSuccess: invalidate,
+  });
 
   return {
     createNote: create.mutateAsync,
     isCreating: create.isPending,
     updateNote: update.mutateAsync,
     isUpdating: update.isPending,
+    deleteNote: remove.mutateAsync,
+    isDeleting: remove.isPending,
   };
 };

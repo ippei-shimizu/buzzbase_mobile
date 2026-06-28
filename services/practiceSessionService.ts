@@ -12,6 +12,13 @@ export const getPracticeSessions = async (params?: {
   return res.data;
 };
 
+export const getPracticeSession = async (
+  id: number,
+): Promise<PracticeSession> => {
+  const res = await axiosInstance.get<PracticeSession>(`${URL}/${id}`);
+  return res.data;
+};
+
 export const getPracticeSessionByDate = async (
   date: string,
 ): Promise<PracticeSession | null> => {

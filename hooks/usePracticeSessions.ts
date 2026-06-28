@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   deletePracticeSession,
+  getPracticeSession,
   getPracticeSessionByDate,
   getPracticeSessions,
   upsertPracticeSession,
@@ -27,6 +28,15 @@ export const usePracticeSessionByDate = (date: string) => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["practiceSession", date],
     queryFn: () => getPracticeSessionByDate(date),
+  });
+  return { session: data ?? null, isLoading, isError };
+};
+
+export const usePracticeSession = (id: number | null) => {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["practiceSession", "id", id],
+    queryFn: () => getPracticeSession(id as number),
+    enabled: id != null,
   });
   return { session: data ?? null, isLoading, isError };
 };
