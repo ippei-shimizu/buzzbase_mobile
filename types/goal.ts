@@ -1,4 +1,4 @@
-export type GoalPeriodType = "season" | "monthly";
+export type GoalPeriodType = "season" | "monthly" | "tournament";
 export type GoalComparison = "greater_than" | "less_than";
 
 export interface Goal {
@@ -6,6 +6,7 @@ export interface Goal {
   title: string;
   period_type: GoalPeriodType;
   season_id: number | null;
+  tournament_id: number | null;
   month_start: string | null;
   deadline: string;
   metric_key: string;
@@ -23,6 +24,7 @@ export interface GoalInput {
   title: string;
   period_type: GoalPeriodType;
   season_id?: number | null;
+  tournament_id?: number | null;
   month_start?: string | null;
   deadline: string;
   metric_key: string;

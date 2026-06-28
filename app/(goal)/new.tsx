@@ -1,4 +1,5 @@
 import type { GoalPeriodType } from "../../types/goal";
+import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { isAxiosError } from "axios";
 import { useRouter } from "expo-router";
@@ -17,23 +18,33 @@ import { GOAL_METRICS } from "@constants/goal";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useGoalMutations } from "@hooks/useGoals";
 import { useMySeasons } from "@hooks/useSeasons";
+import { useTournaments } from "@hooks/useTournaments";
 
 const pad = (value: number): string => String(value).padStart(2, "0");
 const dateString = (date: Date): string =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
+const PERIODS: { key: GoalPeriodType; label: string }[] = [
+  { key: "monthly", label: "月次" },
+  { key: "season", label: "シーズン" },
+  { key: "tournament", label: "大会" },
+];
+
 export default function GoalNewScreen() {
   const router = useRouter();
   const { createGoal, isCreating } = useGoalMutations();
   const { seasons } = useMySeasons();
+  const { tournaments } = useTournaments();
   const { hasEntitlement } = useEntitlement();
   const canSeason = hasEntitlement("season_goals");
+  const canTournament = hasEntitlement("tournament_goals");
 
   const [periodType, setPeriodType] = useState<GoalPeriodType>("monthly");
   const [metricKey, setMetricKey] = useState(GOAL_METRICS[0].key);
   const [target, setTarget] = useState("");
   const [title, setTitle] = useState("");
   const [seasonId, setSeasonId] = useState<number | null>(null);
+  const [tournamentId, setTournamentId] = useState<number | null>(null);
   const [deadline, setDeadline] = useState(() => {
     const date = new Date();
     date.setDate(date.getDate() + 90);
@@ -49,6 +60,9 @@ export default function GoalNewScreen() {
     if (periodType === "season" && !seasonId) {
       return Alert.alert("シーズンを選択してください");
     }
+    if (periodType === "tournament" && !tournamentId) {
+      return Alert.alert("大会を選択してください");
+    }
     const now = new Date();
     const monthStart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`;
     const monthEnd = dateString(
@@ -60,6 +74,7 @@ export default function GoalNewScreen() {
         title: title.trim() || `${metric.label}目標`,
         period_type: periodType,
         season_id: periodType === "season" ? seasonId : null,
+        tournament_id: periodType === "tournament" ? tournamentId : null,
         month_start: periodType === "monthly" ? monthStart : null,
         deadline: periodType === "monthly" ? monthEnd : dateString(deadline),
         metric_key: metricKey,
@@ -79,36 +94,49 @@ export default function GoalNewScreen() {
     }
   };
 
+  const renderDeadline = () => (
+    <>
+      <Text style={styles.label}>期限</Text>
+      <TouchableOpacity
+        style={styles.input}
+        onPress={() => setShowPicker((prev) => !prev)}
+      >
+        <Text style={styles.inputText}>{dateString(deadline)}</Text>
+      </TouchableOpacity>
+      {showPicker ? (
+        <DateTimePicker
+          value={deadline}
+          mode="date"
+          themeVariant="dark"
+          accentColor="#d08000"
+          display={Platform.OS === "ios" ? "inline" : "default"}
+          onChange={(_event, selected) => {
+            if (Platform.OS !== "ios") setShowPicker(false);
+            if (selected) setDeadline(selected);
+          }}
+        />
+      ) : null}
+    </>
+  );
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.label}>種類</Text>
       <View style={styles.row}>
-        <TouchableOpacity
-          style={[styles.seg, periodType === "monthly" && styles.segActive]}
-          onPress={() => setPeriodType("monthly")}
-        >
-          <Text
-            style={[
-              styles.segText,
-              periodType === "monthly" && styles.segTextActive,
-            ]}
-          >
-            月次
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.seg, periodType === "season" && styles.segActive]}
-          onPress={() => setPeriodType("season")}
-        >
-          <Text
-            style={[
-              styles.segText,
-              periodType === "season" && styles.segTextActive,
-            ]}
-          >
-            シーズン{canSeason ? "" : "（Pro）"}
-          </Text>
-        </TouchableOpacity>
+        {PERIODS.map((period) => {
+          const active = periodType === period.key;
+          return (
+            <TouchableOpacity
+              key={period.key}
+              style={[styles.seg, active && styles.segActive]}
+              onPress={() => setPeriodType(period.key)}
+            >
+              <Text style={[styles.segText, active && styles.segTextActive]}>
+                {period.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {periodType === "season" && !canSeason ? (
@@ -119,51 +147,86 @@ export default function GoalNewScreen() {
           </TouchableOpacity>
         </View>
       ) : null}
+      {periodType === "tournament" && !canTournament ? (
+        <View style={styles.proNote}>
+          <Text style={styles.proText}>大会目標は Pro プラン限定です</Text>
+          <TouchableOpacity onPress={() => router.push("/pro")}>
+            <Text style={styles.proLink}>Pro を見る</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       {periodType === "monthly" ? (
         <Text style={styles.hint}>対象期間: 今月（自動設定）</Text>
-      ) : (
+      ) : null}
+
+      {periodType === "season" ? (
         <>
           <Text style={styles.label}>シーズン</Text>
-          <View style={styles.chipWrap}>
-            {seasons.map((season) => {
-              const active = season.id === seasonId;
-              return (
-                <TouchableOpacity
-                  key={season.id}
-                  style={[styles.chip, active && styles.chipActive]}
-                  onPress={() => setSeasonId(season.id)}
-                >
-                  <Text
-                    style={[styles.chipText, active && styles.chipTextActive]}
+          {seasons.length === 0 ? (
+            <TouchableOpacity
+              style={styles.emptyLink}
+              onPress={() => router.push("/(profile)/seasons")}
+            >
+              <Ionicons name="add-circle-outline" size={16} color="#d08000" />
+              <Text style={styles.emptyLinkText}>
+                シーズンがありません。シーズンを登録する
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.chipWrap}>
+              {seasons.map((season) => {
+                const active = season.id === seasonId;
+                return (
+                  <TouchableOpacity
+                    key={season.id}
+                    style={[styles.chip, active && styles.chipActive]}
+                    onPress={() => setSeasonId(season.id)}
                   >
-                    {season.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-          <Text style={styles.label}>期限</Text>
-          <TouchableOpacity
-            style={styles.input}
-            onPress={() => setShowPicker((prev) => !prev)}
-          >
-            <Text style={styles.inputText}>{dateString(deadline)}</Text>
-          </TouchableOpacity>
-          {showPicker ? (
-            <DateTimePicker
-              value={deadline}
-              mode="date"
-              themeVariant="dark"
-              display={Platform.OS === "ios" ? "inline" : "default"}
-              onChange={(_event, selected) => {
-                if (Platform.OS !== "ios") setShowPicker(false);
-                if (selected) setDeadline(selected);
-              }}
-            />
-          ) : null}
+                    <Text
+                      style={[styles.chipText, active && styles.chipTextActive]}
+                    >
+                      {season.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+          {renderDeadline()}
         </>
-      )}
+      ) : null}
+
+      {periodType === "tournament" ? (
+        <>
+          <Text style={styles.label}>大会</Text>
+          {tournaments.length === 0 ? (
+            <Text style={styles.emptyText}>
+              大会がありません。試合記録で大会を登録してください。
+            </Text>
+          ) : (
+            <View style={styles.chipWrap}>
+              {tournaments.map((tournament) => {
+                const active = tournament.id === tournamentId;
+                return (
+                  <TouchableOpacity
+                    key={tournament.id}
+                    style={[styles.chip, active && styles.chipActive]}
+                    onPress={() => setTournamentId(tournament.id)}
+                  >
+                    <Text
+                      style={[styles.chipText, active && styles.chipTextActive]}
+                    >
+                      {tournament.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+          {renderDeadline()}
+        </>
+      ) : null}
 
       <Text style={styles.label}>指標</Text>
       <View style={styles.chipWrap}>
@@ -249,6 +312,22 @@ const styles = StyleSheet.create({
   proText: { color: "#A1A1AA", fontSize: 13 },
   proLink: { color: "#d08000", fontSize: 13, fontWeight: "700" },
   hint: { color: "#71717A", fontSize: 12, marginTop: 8 },
+  emptyLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 8,
+    padding: 12,
+  },
+  emptyLinkText: { color: "#d08000", fontSize: 13, fontWeight: "600" },
+  emptyText: {
+    color: "#A1A1AA",
+    fontSize: 13,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 8,
+    padding: 12,
+  },
   chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
     paddingVertical: 8,
