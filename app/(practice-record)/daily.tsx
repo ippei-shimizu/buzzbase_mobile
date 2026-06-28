@@ -283,6 +283,7 @@ export default function DailyRecordScreen() {
           mode="date"
           maximumDate={new Date()}
           themeVariant="dark"
+          accentColor="#d08000"
           display={Platform.OS === "ios" ? "inline" : "default"}
           onChange={(_event, selected) => {
             if (Platform.OS !== "ios") setShowPicker(false);
