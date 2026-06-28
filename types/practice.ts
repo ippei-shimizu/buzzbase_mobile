@@ -4,10 +4,11 @@ export type PracticeCategory =
   | "defense"
   | "baserunning"
   | "training"
+  | "strength"
   | "care"
   | "other";
 
-export type PracticeUnit = "count" | "minutes" | "distance";
+export type PracticeUnit = "count" | "minutes" | "distance" | "weight_reps";
 
 export type PracticeLogSource = "manual" | "shadow_swing";
 
@@ -27,6 +28,7 @@ export interface PracticeLog {
   practice_menu_id: number | null;
   logged_on: string;
   amount: number | null;
+  weight: number | null;
   menu_name: string;
   unit_label: string | null;
   source: PracticeLogSource;
@@ -80,6 +82,7 @@ export interface PracticeSession {
 export interface PracticeSessionItemInput {
   practice_menu_id: number;
   amount?: number | null;
+  weight?: number | null;
   memo?: string | null;
 }
 

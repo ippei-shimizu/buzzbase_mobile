@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { GameResultDetail } from "@components/game-results/GameResultDetail";
+import { formatPracticeValue } from "@constants/practice";
 import { useGameResult } from "@hooks/useGameResults";
 import { useNote, useNoteMutations } from "@hooks/useNotes";
 import { usePracticeSession } from "@hooks/usePracticeSessions";
@@ -169,7 +170,11 @@ function LinkedPractice({ sessionId }: { sessionId: number }) {
                 <Text style={styles.menuName} numberOfLines={1}>
                   {log.menu_name}
                 </Text>
-                {log.amount != null ? (
+                {log.weight != null ? (
+                  <Text style={styles.menuAmount}>
+                    {formatPracticeValue(log)}
+                  </Text>
+                ) : log.amount != null ? (
                   <Text style={styles.menuAmount}>
                     {formatAmount(log.amount)}
                     <Text style={styles.menuUnit}> {log.unit_label ?? ""}</Text>

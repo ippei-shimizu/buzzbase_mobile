@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { formatPracticeValue } from "@constants/practice";
 import { useNotes } from "@hooks/useNotes";
 import { usePracticeSessions } from "@hooks/usePracticeSessions";
-import { formatAmount } from "@utils/formatAmount";
 import { SectionCard, SectionPlaceholder } from "./SectionCard";
 
 /** 最近の練習タイムライン（日付ごとに当日のメニューと紐付いたノートを同居表示）。 */
@@ -31,8 +31,8 @@ export function RecentPracticeSection() {
               <View key={log.id} style={styles.logRow}>
                 <Text style={styles.name}>
                   {log.menu_name}
-                  {log.amount != null
-                    ? ` ${formatAmount(log.amount)}${log.unit_label ?? ""}`
+                  {formatPracticeValue(log)
+                    ? ` ${formatPracticeValue(log)}`
                     : ""}
                 </Text>
                 {noteByLog.get(log.id) ? (

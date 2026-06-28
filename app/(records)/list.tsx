@@ -12,9 +12,9 @@ import {
   View,
 } from "react-native";
 import { UnderlineTabBar } from "@components/ui/UnderlineTabBar";
+import { formatPracticeValue } from "@constants/practice";
 import { useNotes } from "@hooks/useNotes";
 import { usePracticeSessions } from "@hooks/usePracticeSessions";
-import { formatAmount } from "@utils/formatAmount";
 
 const SEGMENTS = ["練習記録", "野球ノート"];
 
@@ -39,10 +39,10 @@ function PracticeList() {
 
   const summary = (session: PracticeSession): string =>
     session.practice_logs
-      .map(
-        (log) =>
-          `${log.menu_name}${log.amount != null ? ` ${formatAmount(log.amount)}${log.unit_label ?? ""}` : ""}`,
-      )
+      .map((log) => {
+        const value = formatPracticeValue(log);
+        return value ? `${log.menu_name} ${value}` : log.menu_name;
+      })
       .join(" ・ ");
 
   return (

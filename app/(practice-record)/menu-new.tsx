@@ -75,7 +75,15 @@ export default function MenuNewScreen() {
       />
 
       <FieldLabel text="カテゴリ" required />
-      <CategoryPicker value={category} onChange={setCategory} />
+      <CategoryPicker
+        value={category}
+        onChange={(next) => {
+          setCategory(next);
+          // 筋トレは重さ×回数を既定にする。
+          if (next === "strength") setUnit("weight_reps");
+          else if (unit === "weight_reps") setUnit("count");
+        }}
+      />
 
       <FieldLabel text="計測" required />
       <UnitPicker value={unit} onChange={setUnit} />

@@ -88,6 +88,24 @@ const toSelectedItems = (session: PracticeSession | null): SelectedItems => {
   return selected;
 };
 
+// 筋トレ（weight_reps）の重さ(kg)。menu_id ごとに編集途中文字列で保持する。
+const toSelectedWeights = (
+  session: PracticeSession | null,
+): Record<number, string> => {
+  const weights: Record<number, string> = {};
+  session?.practice_logs
+    .filter(
+      (log) =>
+        log.source === "manual" &&
+        log.practice_menu_id != null &&
+        log.weight != null,
+    )
+    .forEach((log) => {
+      weights[log.practice_menu_id as number] = formatAmount(log.weight);
+    });
+  return weights;
+};
+
 function DailyEditor({
   dateString,
   initialSession,
@@ -103,33 +121,51 @@ function DailyEditor({
   const [selected, setSelected] = useState<SelectedItems>(() =>
     toSelectedItems(initialSession),
   );
+  const [weights, setWeights] = useState<Record<number, string>>(() =>
+    toSelectedWeights(initialSession),
+  );
   const [condition, setCondition] = useState<ConditionDraft>(() =>
     toConditionDraft(initialSession),
   );
 
   const favorites = menus.filter((menu) => menu.is_favorite);
 
-  const toggleMenu = (menu: PracticeMenu) =>
+  const toggleMenu = (menu: PracticeMenu) => {
+    const isSelected = menu.id in selected;
     setSelected((prev) => {
-      if (menu.id in prev) {
+      if (isSelected) {
         const next = { ...prev };
         delete next[menu.id];
         return next;
       }
-      return {
-        ...prev,
-        [menu.id]: formatAmount(menu.default_value),
-      };
+      return { ...prev, [menu.id]: formatAmount(menu.default_value) };
     });
+    setWeights((prev) => {
+      const next = { ...prev };
+      if (isSelected) delete next[menu.id];
+      else if (menu.unit === "weight_reps") next[menu.id] = "";
+      return next;
+    });
+  };
 
   const setAmount = (menuId: number, amount: string) =>
     setSelected((prev) => ({ ...prev, [menuId]: amount }));
 
+  const setWeight = (menuId: number, weight: string) =>
+    setWeights((prev) => ({ ...prev, [menuId]: weight }));
+
   const items: PracticeSessionItemInput[] = Object.entries(selected).map(
-    ([menuId, amount]) => ({
-      practice_menu_id: Number(menuId),
-      amount: amount.trim() ? Number(amount) : null,
-    }),
+    ([menuId, amount]) => {
+      const id = Number(menuId);
+      const menu = menus.find((item) => item.id === id);
+      const isWeightReps = menu?.unit === "weight_reps";
+      const weight = weights[id];
+      return {
+        practice_menu_id: id,
+        amount: amount.trim() ? Number(amount) : null,
+        weight: isWeightReps && weight?.trim() ? Number(weight) : null,
+      };
+    },
   );
 
   // 保存後に野球ノートへ進むか、練習記録のみで終えるかを呼び出し側のボタンで分ける。
@@ -174,17 +210,40 @@ function DailyEditor({
           <Text style={styles.menuName}>{menu.name}</Text>
         </TouchableOpacity>
         {isSelected ? (
-          <View style={styles.amountRow}>
-            <TextInput
-              style={styles.amountInput}
-              value={selected[menu.id]}
-              onChangeText={(text) => setAmount(menu.id, text)}
-              keyboardType="numeric"
-              placeholder="0"
-              placeholderTextColor="#71717A"
-            />
-            <Text style={styles.unitLabel}>{menu.unit_label ?? ""}</Text>
-          </View>
+          menu.unit === "weight_reps" ? (
+            <View style={styles.amountRow}>
+              <TextInput
+                style={styles.amountInputSm}
+                value={weights[menu.id] ?? ""}
+                onChangeText={(text) => setWeight(menu.id, text)}
+                keyboardType="numeric"
+                placeholder="0"
+                placeholderTextColor="#71717A"
+              />
+              <Text style={styles.unitLabel}>kg ×</Text>
+              <TextInput
+                style={styles.amountInputSm}
+                value={selected[menu.id]}
+                onChangeText={(text) => setAmount(menu.id, text)}
+                keyboardType="numeric"
+                placeholder="0"
+                placeholderTextColor="#71717A"
+              />
+              <Text style={styles.unitLabel}>回</Text>
+            </View>
+          ) : (
+            <View style={styles.amountRow}>
+              <TextInput
+                style={styles.amountInput}
+                value={selected[menu.id]}
+                onChangeText={(text) => setAmount(menu.id, text)}
+                keyboardType="numeric"
+                placeholder="0"
+                placeholderTextColor="#71717A"
+              />
+              <Text style={styles.unitLabel}>{menu.unit_label ?? ""}</Text>
+            </View>
+          )
         ) : null}
       </View>
     );
@@ -374,6 +433,16 @@ const styles = StyleSheet.create({
   },
   amountInput: {
     width: 120,
+    backgroundColor: "#2E2E2E",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: "#F4F4F4",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  amountInputSm: {
+    width: 72,
     backgroundColor: "#2E2E2E",
     borderRadius: 8,
     paddingHorizontal: 12,
