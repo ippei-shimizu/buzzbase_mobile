@@ -22,7 +22,7 @@ export interface BottomTabItem {
  * BottomTabBar の双方がこれを参照することで、項目・並び順のズレを防ぐ。
  */
 export const BOTTOM_TAB_ITEMS: BottomTabItem[] = [
-  { name: "index", label: "ダッシュボード", href: "/(tabs)", Icon: HomeIcon },
+  { name: "index", label: "ホーム", href: "/(tabs)", Icon: HomeIcon },
   {
     name: "(game-results)",
     label: "試合結果",

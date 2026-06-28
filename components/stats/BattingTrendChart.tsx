@@ -444,6 +444,28 @@ export const BattingTrendChart = ({
           );
         })}
       </View>
+
+      {(granularity === "season" || granularity === "year") &&
+      points.length > 1 ? (
+        <View style={styles.bestRow}>
+          <Ionicons name="star" size={12} color="#FFD43B" />
+          <Text style={styles.bestText}>
+            自己ベスト OPS{" "}
+            {formatRate(
+              points.reduce((best, point) =>
+                point.ops > best.ops ? point : best,
+              ).ops,
+            )}
+            （
+            {
+              points.reduce((best, point) =>
+                point.ops > best.ops ? point : best,
+              ).label
+            }
+            ）
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -460,6 +482,7 @@ const GRANULARITY_OPTIONS: readonly {
   { key: "game", label: "試合" },
   { key: "month", label: "月" },
   { key: "year", label: "年" },
+  { key: "season", label: "シーズン" },
   { key: "recent_games", label: "直近10" },
 ];
 
@@ -527,6 +550,14 @@ const styles = StyleSheet.create({
   chartWrapper: {
     alignItems: "center",
   },
+  bestRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    marginTop: 10,
+  },
+  bestText: { color: "#FFD43B", fontSize: 12, fontWeight: "600" },
   legend: {
     flexDirection: "row",
     justifyContent: "center",

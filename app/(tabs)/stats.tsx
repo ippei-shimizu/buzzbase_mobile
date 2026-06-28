@@ -17,6 +17,7 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
+import { PaywallModal } from "@components/pro/PaywallModal";
 import { AdditionalStatsCard } from "@components/stats/AdditionalStatsCard";
 import { BattingTrendChart } from "@components/stats/BattingTrendChart";
 import { ContactQualityCard } from "@components/stats/ContactQualityCard";
@@ -52,6 +53,7 @@ import {
   useGlobalMenu,
 } from "@components/ui/GlobalMenu";
 import { useAvailableYears } from "@hooks/useAvailableYears";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { useMySeasons } from "@hooks/useSeasons";
 import {
   useAdditionalStats,
@@ -316,6 +318,8 @@ export default function StatsScreen() {
   const pitcherAttributeSummary = usePitcherAttributeSummary(filters);
   const [battingTrendGranularity, setBattingTrendGranularity] =
     useState<BattingTrendGranularity>("game");
+  const { hasEntitlement } = useEntitlement();
+  const [seasonPaywallOpen, setSeasonPaywallOpen] = useState(false);
   const battingTrend = useBattingTrend(filters, battingTrendGranularity);
   const paBreakdown = usePlateAppearanceBreakdown(filters);
   const headlineStats = useHeadlineStats(filters);
@@ -560,6 +564,14 @@ export default function StatsScreen() {
                   points={battingTrend.data.points}
                   granularity={battingTrendGranularity}
                   onGranularityChange={(next) => {
+                    // シーズン粒度は Pro 限定。無料は Paywall を出して切替を止める。
+                    if (
+                      next === "season" &&
+                      !hasEntitlement("season_transition_graph")
+                    ) {
+                      setSeasonPaywallOpen(true);
+                      return;
+                    }
                     trackBattingTrendGranularityChanged(next);
                     setBattingTrendGranularity(next);
                   }}
@@ -828,6 +840,12 @@ export default function StatsScreen() {
         visible={menuVisible}
         opacity={menuOpacity}
         onClose={closeMenu}
+      />
+
+      <PaywallModal
+        isOpen={seasonPaywallOpen}
+        onClose={() => setSeasonPaywallOpen(false)}
+        feature="season_transition_graph"
       />
     </>
   );
