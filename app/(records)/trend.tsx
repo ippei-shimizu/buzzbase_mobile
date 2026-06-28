@@ -94,11 +94,11 @@ export default function MenuTrendScreen() {
 
   const period = PERIODS[segment];
   const buckets =
-    period === "year"
+    (period === "year"
       ? trend.by_year
       : period === "month"
         ? trend.by_month
-        : trend.by_day;
+        : trend.by_day) ?? [];
 
   return (
     <View style={styles.container}>
