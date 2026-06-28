@@ -52,7 +52,7 @@ describe("GlobalMenuOverlay", () => {
     expect(queryByText("設定")).toBeNull();
   });
 
-  it("visible=true のときは3項目を描画する", () => {
+  it("visible=true のときは4項目を描画する", () => {
     const { getByText } = renderWithProviders(
       <GlobalMenuOverlay
         visible
@@ -60,12 +60,29 @@ describe("GlobalMenuOverlay", () => {
         onClose={jest.fn()}
       />,
     );
+    expect(getByText("練習記録")).toBeTruthy();
     expect(getByText("野球ノート")).toBeTruthy();
     expect(getByText("シーズン管理")).toBeTruthy();
     expect(getByText("設定")).toBeTruthy();
   });
 
-  it("「野球ノート」をタップすると notes 画面へ遷移し、onClose も呼ばれる", () => {
+  it("「練習記録」をタップすると記録一覧の練習タブへ遷移する", () => {
+    const onClose = jest.fn();
+    const { getByText } = renderWithProviders(
+      <GlobalMenuOverlay
+        visible
+        opacity={new Animated.Value(1)}
+        onClose={onClose}
+      />,
+    );
+    fireEvent.press(getByText("練習記録"));
+    expect(getRouterSpies().push).toHaveBeenCalledWith(
+      "/(records)/list?tab=practice",
+    );
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("「野球ノート」をタップすると記録一覧のノートタブへ遷移し、onClose も呼ばれる", () => {
     const onClose = jest.fn();
     const { getByText } = renderWithProviders(
       <GlobalMenuOverlay
@@ -75,7 +92,9 @@ describe("GlobalMenuOverlay", () => {
       />,
     );
     fireEvent.press(getByText("野球ノート"));
-    expect(getRouterSpies().push).toHaveBeenCalledWith("/(profile)/notes");
+    expect(getRouterSpies().push).toHaveBeenCalledWith(
+      "/(records)/list?tab=note",
+    );
     expect(onClose).toHaveBeenCalled();
   });
 

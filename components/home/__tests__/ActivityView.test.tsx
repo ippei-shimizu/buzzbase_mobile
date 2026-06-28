@@ -7,7 +7,7 @@ describe("ActivityView", () => {
 
     expect(getByText("継続")).toBeTruthy();
     expect(getByText("今日のやること")).toBeTruthy();
-    expect(getByText("クイック記録")).toBeTruthy();
+    expect(getByText("練習ツール")).toBeTruthy();
     expect(getByText("今日の目標")).toBeTruthy();
     expect(getByText("最近の練習")).toBeTruthy();
   });
