@@ -35,8 +35,14 @@ const styles = StyleSheet.create({
   editRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    marginTop: 8,
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d08000",
+    backgroundColor: "rgba(208,128,0,0.08)",
   },
-  editText: { color: "#d08000", fontSize: 13, fontWeight: "600" },
+  editText: { color: "#d08000", fontSize: 13, fontWeight: "700" },
 });

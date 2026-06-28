@@ -61,6 +61,10 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     marginTop: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d08000",
+    backgroundColor: "rgba(208,128,0,0.08)",
   },
-  listLinkText: { color: "#d08000", fontSize: 13, fontWeight: "600" },
+  listLinkText: { color: "#d08000", fontSize: 13, fontWeight: "700" },
 });
