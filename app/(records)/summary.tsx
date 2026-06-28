@@ -1,9 +1,11 @@
 import type { MenuSummary } from "../../types/practice";
 import { Ionicons } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -129,9 +131,25 @@ function SummaryCard({
   );
 }
 
+const REFRESH_KEYS = ["practiceSummaries", "practiceOverview", "streak"];
+
 export default function PracticeSummaryScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { summaries, isLoading } = usePracticeSummaries();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await queryClient.refetchQueries({
+        predicate: (query) =>
+          REFRESH_KEYS.includes(query.queryKey[0] as string),
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  }, [queryClient]);
 
   if (isLoading) {
     return (
@@ -142,7 +160,17 @@ export default function PracticeSummaryScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#d08000"
+        />
+      }
+    >
       <OverallHeader />
       <Text style={styles.lead}>メニューごとの積み上げ</Text>
       {summaries.length === 0 ? (
