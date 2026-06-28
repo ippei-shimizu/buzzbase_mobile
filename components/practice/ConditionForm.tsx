@@ -35,24 +35,33 @@ interface Props {
   onChange: (next: ConditionDraft) => void;
 }
 
-// emoji は RN で表示されない端末があるため Ionicons を使う。
-const LEVELS: { value: number; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { value: 1, icon: "sad" },
-  { value: 2, icon: "sad-outline" },
-  { value: 3, icon: "happy-outline" },
-  { value: 4, icon: "happy" },
+// emoji は RN で表示されない端末があるため Ionicons を使う。色は悪い→良いで赤→緑。
+const LEVELS: {
+  value: number;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+}[] = [
+  { value: 1, icon: "sad", color: "#ef4444" },
+  { value: 2, icon: "sad-outline", color: "#f59e0b" },
+  { value: 3, icon: "happy-outline", color: "#84cc16" },
+  { value: 4, icon: "happy", color: "#22c55e" },
 ];
+
+const FATIGUE_LABELS = ["かなり疲れ", "やや疲れ", "ふつう", "元気"];
+const PHYSICAL_LABELS = ["不調", "やや不調", "ふつう", "好調"];
 
 function LevelSelector({
   value,
   onChange,
+  labels,
 }: {
   value: number | null;
   onChange: (value: number) => void;
+  labels: string[];
 }) {
   return (
     <View style={styles.levelRow}>
-      {LEVELS.map((level) => {
+      {LEVELS.map((level, index) => {
         const active = level.value === value;
         return (
           <TouchableOpacity
@@ -60,11 +69,12 @@ function LevelSelector({
             style={[styles.levelButton, active && styles.levelButtonActive]}
             onPress={() => onChange(level.value)}
           >
-            <Ionicons
-              name={level.icon}
-              size={24}
-              color={active ? "#FFFFFF" : "#A1A1AA"}
-            />
+            <Ionicons name={level.icon} size={26} color={level.color} />
+            <Text
+              style={[styles.levelLabel, active && styles.levelLabelActive]}
+            >
+              {labels[index]}
+            </Text>
           </TouchableOpacity>
         );
       })}
@@ -86,12 +96,14 @@ export function ConditionForm({ value, onChange }: Props) {
       <LevelSelector
         value={value.fatigue_level}
         onChange={(fatigue_level) => patch({ fatigue_level })}
+        labels={FATIGUE_LABELS}
       />
 
       <Text style={styles.label}>体調</Text>
       <LevelSelector
         value={value.physical_level}
         onChange={(physical_level) => patch({ physical_level })}
+        labels={PHYSICAL_LABELS}
       />
 
       <Text style={styles.label}>睡眠</Text>
@@ -149,16 +161,21 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8,
   },
-  levelRow: { flexDirection: "row", gap: 10 },
+  levelRow: { flexDirection: "row", gap: 8 },
   levelButton: {
-    width: 56,
-    height: 48,
+    flex: 1,
+    paddingVertical: 10,
     borderRadius: 8,
     backgroundColor: "#3A3A3A",
+    borderWidth: 2,
+    borderColor: "transparent",
     alignItems: "center",
     justifyContent: "center",
+    gap: 4,
   },
-  levelButtonActive: { backgroundColor: "#d08000" },
+  levelButtonActive: { borderColor: "#d08000" },
+  levelLabel: { color: "#A1A1AA", fontSize: 11, fontWeight: "600" },
+  levelLabelActive: { color: "#F4F4F4" },
   sleepRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   sleepInput: {
     width: 100,
