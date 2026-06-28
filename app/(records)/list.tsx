@@ -163,6 +163,14 @@ function PracticeList() {
         label="練習を記録"
         onPress={() => router.push("/(practice-record)/daily")}
       />
+      <TouchableOpacity
+        style={styles.summaryLink}
+        onPress={() => router.push("/(records)/summary")}
+      >
+        <Ionicons name="stats-chart" size={16} color="#d08000" />
+        <Text style={styles.summaryLinkText}>メニュー別の積み上げを見る</Text>
+        <Ionicons name="chevron-forward" size={16} color="#d08000" />
+      </TouchableOpacity>
       {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color="#d08000" />
@@ -300,6 +308,20 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   newButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
+  summaryLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    marginTop: -6,
+    marginBottom: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d08000",
+    backgroundColor: "rgba(208,128,0,0.08)",
+  },
+  summaryLinkText: { color: "#d08000", fontSize: 13, fontWeight: "700" },
   monthHeader: {
     color: "#A1A1AA",
     fontSize: 13,

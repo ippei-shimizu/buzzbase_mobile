@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useCallback, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet } from "react-native";
+import { MonthlySummarySection } from "./sections/MonthlySummarySection";
 import { PracticeToolsSection } from "./sections/PracticeToolsSection";
 import { RecentPracticeSection } from "./sections/RecentPracticeSection";
 import { RecordButtonsSection } from "./sections/RecordButtonsSection";
@@ -23,6 +24,7 @@ const REFRESH_QUERY_KEYS = [
   "goals",
   "practiceLogs",
   "practiceSessions",
+  "practiceSummaries",
   "notesV2",
 ];
 
@@ -59,6 +61,7 @@ export function ActivityView() {
       <StreakHeaderSection />
       <TodayTasksSection />
       <PracticeToolsSection />
+      <MonthlySummarySection />
       <TodayGoalSection />
       <RecentPracticeSection />
     </ScrollView>

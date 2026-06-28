@@ -50,6 +50,18 @@ export const formatPracticeValue = (log: {
   return `${reps}${log.unit_label ?? ""}`;
 };
 
+/** 積み上げの量を「12,400本」のように整形する。 */
+export const formatTotalAmount = (
+  amount: number,
+  unitLabel: string | null,
+): string => `${Number(amount).toLocaleString()}${unitLabel ?? ""}`;
+
+/** 総挙上重量を「8.2t」「640kg」のように整形する。 */
+export const formatVolume = (kg: number): string =>
+  kg >= 1000
+    ? `${(kg / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}t`
+    : `${Number(kg).toLocaleString()}kg`;
+
 export const CONDITION_MOODS = ["好調", "普通", "不調"];
 
 export const INJURY_PARTS = [

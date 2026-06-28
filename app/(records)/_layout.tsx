@@ -29,6 +29,10 @@ export default function RecordsLayout() {
           ),
         }}
       />
+      <Stack.Screen
+        name="summary"
+        options={{ title: "メニュー別の積み上げ" }}
+      />
     </Stack>
   );
 }

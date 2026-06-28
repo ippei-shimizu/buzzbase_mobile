@@ -36,6 +36,20 @@ export interface PracticeLog {
   created_at: string;
 }
 
+/** メニュー別の積み上げサマリー。 */
+export interface MenuSummary {
+  practice_menu_id: number | null;
+  menu_name: string;
+  unit: PracticeUnit;
+  unit_label: string | null;
+  total_amount: number;
+  total_volume: number | null;
+  this_month_amount: number;
+  this_month_volume: number | null;
+  days_count: number;
+  last_logged_on: string | null;
+}
+
 export interface Injury {
   part: string;
   memo?: string;
