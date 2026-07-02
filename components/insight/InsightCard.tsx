@@ -1,0 +1,51 @@
+import type { CorrelationInsight } from "../../types/insight";
+import { Ionicons } from "@expo/vector-icons";
+import { StyleSheet, Text, View } from "react-native";
+
+const DIRECTION_ICON: Record<
+  CorrelationInsight["direction"],
+  keyof typeof Ionicons.glyphMap
+> = {
+  positive: "trending-up",
+  negative: "trending-down",
+  unknown: "help-circle-outline",
+};
+
+/**
+ * 相関インサイト1件のカード。
+ * サンプル不足（sufficient=false）は断定せず、非断定トーンで表示する。
+ */
+export function InsightCard({ insight }: { insight: CorrelationInsight }) {
+  const accent = insight.sufficient ? "#d08000" : "#71717A";
+  return (
+    <View style={styles.card}>
+      <View style={styles.header}>
+        <Ionicons
+          name={DIRECTION_ICON[insight.direction]}
+          size={18}
+          color={accent}
+        />
+        <Text style={styles.title}>{insight.title}</Text>
+      </View>
+      <Text style={styles.body}>{insight.body}</Text>
+      <Text style={styles.meta}>
+        {insight.sufficient
+          ? `直近${insight.sample_weeks}週の傾向（因果ではありません）`
+          : "データが集まると分かります"}
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: "#3A3A3A",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  header: { flexDirection: "row", alignItems: "center", gap: 8 },
+  title: { color: "#F4F4F4", fontSize: 15, fontWeight: "700", flex: 1 },
+  body: { color: "#F4F4F4", fontSize: 14, lineHeight: 21, marginTop: 10 },
+  meta: { color: "#A1A1AA", fontSize: 11, marginTop: 10 },
+});
