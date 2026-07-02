@@ -20,18 +20,21 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { ThemePickerField } from "@components/improvement-theme/ThemePickerField";
 import {
   ConditionForm,
   EMPTY_CONDITION_DRAFT,
 } from "@components/practice/ConditionForm";
 import { ProGate } from "@components/pro/ProGate";
-import { PRACTICE_CATEGORIES } from "@constants/practice";
+import { CATEGORY_ICON, PRACTICE_CATEGORIES } from "@constants/practice";
+import { useNextTodoHint } from "@hooks/useNextTodoHint";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
 import {
   usePracticeSessionByDate,
   usePracticeSessionMutations,
 } from "@hooks/usePracticeSessions";
 import { formatAmount } from "@utils/formatAmount";
+import { formatJaFullDate } from "@utils/formatDate";
 
 const toDateString = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
@@ -127,6 +130,10 @@ function DailyEditor({
   const [condition, setCondition] = useState<ConditionDraft>(() =>
     toConditionDraft(initialSession),
   );
+  const [improvementThemeId, setImprovementThemeId] = useState<number | null>(
+    initialSession?.improvement_theme_id ?? null,
+  );
+  const nextTodoHint = useNextTodoHint();
 
   const favorites = menus.filter((menu) => menu.is_favorite);
 
@@ -180,14 +187,21 @@ function DailyEditor({
         logged_on: dateString,
         items,
         condition: hasCondition ? toConditionInput(condition) : null,
+        improvement_theme_id: improvementThemeId,
       });
       if (withNote) {
         router.replace({
           pathname: "/(note)/new",
-          params: { date: dateString, practiceSessionId: String(session.id) },
+          params: {
+            date: dateString,
+            practiceSessionId: String(session.id),
+            ...(improvementThemeId != null
+              ? { improvementThemeId: String(improvementThemeId) }
+              : {}),
+          },
         });
       } else {
-        router.back();
+        router.replace("/(records)/list?tab=practice");
       }
     } catch {
       Alert.alert("保存に失敗しました");
@@ -251,10 +265,21 @@ function DailyEditor({
 
   return (
     <View>
+      {nextTodoHint ? (
+        <View style={styles.hintBanner}>
+          <Ionicons name="arrow-forward-circle" size={16} color="#d08000" />
+          <Text style={styles.hintText}>
+            前回の「次やること」: {nextTodoHint}
+          </Text>
+        </View>
+      ) : null}
+
       <Text style={styles.sectionTitle}>練習メニュー（複数選択可）</Text>
       {favorites.length > 0 ? (
         <View style={styles.group}>
-          <Text style={styles.groupTitle}>★ お気に入り</Text>
+          <Text style={[styles.groupTitle, styles.groupTitleSpacing]}>
+            ★ お気に入り
+          </Text>
           {favorites.map(renderMenu)}
         </View>
       ) : null}
@@ -265,7 +290,14 @@ function DailyEditor({
         if (inCategory.length === 0) return null;
         return (
           <View key={category.key} style={styles.group}>
-            <Text style={styles.groupTitle}>{category.label}</Text>
+            <View style={styles.groupTitleRow}>
+              <Ionicons
+                name={CATEGORY_ICON[category.key]}
+                size={15}
+                color="#d08000"
+              />
+              <Text style={styles.groupTitle}>{category.label}</Text>
+            </View>
             {inCategory.map(renderMenu)}
           </View>
         );
@@ -293,6 +325,12 @@ function DailyEditor({
       >
         <ConditionForm value={condition} onChange={setCondition} />
       </ProGate>
+
+      <Text style={styles.sectionTitle}>取り組む課題（任意）</Text>
+      <ThemePickerField
+        selectedThemeId={improvementThemeId}
+        onChange={setImprovementThemeId}
+      />
 
       <TouchableOpacity
         style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
@@ -333,7 +371,7 @@ export default function DailyRecordScreen() {
         style={styles.dateRow}
         onPress={() => setShowPicker((prev) => !prev)}
       >
-        <Text style={styles.dateText}>{dateString}</Text>
+        <Text style={styles.dateText}>{formatJaFullDate(dateString)}</Text>
         <Ionicons name="calendar-outline" size={18} color="#A1A1AA" />
       </TouchableOpacity>
       {showPicker ? (
@@ -345,7 +383,7 @@ export default function DailyRecordScreen() {
           accentColor="#d08000"
           display={Platform.OS === "ios" ? "inline" : "default"}
           onChange={(_event, selected) => {
-            if (Platform.OS !== "ios") setShowPicker(false);
+            setShowPicker(false);
             if (selected) setDate(selected);
           }}
         />
@@ -413,8 +451,14 @@ const styles = StyleSheet.create({
     color: "#A1A1AA",
     fontSize: 13,
     fontWeight: "700",
+  },
+  groupTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     marginBottom: 8,
   },
+  groupTitleSpacing: { marginBottom: 8 },
   menuItem: {
     backgroundColor: "#3A3A3A",
     borderRadius: 10,
@@ -452,6 +496,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   unitLabel: { color: "#A1A1AA", fontSize: 15 },
+  hintBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 4,
+  },
+  hintText: { color: "#F4F4F4", fontSize: 13, flex: 1 },
   addRow: {
     flexDirection: "row",
     alignItems: "center",

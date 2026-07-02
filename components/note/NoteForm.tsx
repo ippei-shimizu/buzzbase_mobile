@@ -1,4 +1,5 @@
 import type { NoteInput } from "../../types/note";
+import type { ReflectionTemplate } from "../../types/reflectionTemplate";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useEffect, useState } from "react";
@@ -12,9 +13,12 @@ import {
   Alert,
   Platform,
 } from "react-native";
+import { ThemePickerField } from "@components/improvement-theme/ThemePickerField";
 import { useFilteredGameResults } from "@hooks/useGameResults";
 import { usePracticeSessions } from "@hooks/usePracticeSessions";
+import { formatJaFullDate } from "@utils/formatDate";
 import { buildMemoJson } from "../../types/note";
+import { ReflectionTemplateSection } from "./ReflectionTemplateSection";
 
 type OpenPicker = "none" | "practice" | "game";
 
@@ -24,6 +28,9 @@ export interface NoteFormInitial {
   date?: string;
   practiceSessionId?: number | null;
   gameResultId?: number | null;
+  improvementThemeId?: number | null;
+  reflectionTemplateId?: number | null;
+  reflectionAnswers?: { question: string; answer: string }[];
 }
 
 interface Props {
@@ -69,6 +76,23 @@ export function NoteForm({
   const [gameResultId, setGameResultId] = useState<number | null>(
     initial?.gameResultId ?? null,
   );
+  const [improvementThemeId, setImprovementThemeId] = useState<number | null>(
+    initial?.improvementThemeId ?? null,
+  );
+  const [reflectionTemplateId, setReflectionTemplateId] = useState<
+    number | null
+  >(initial?.reflectionTemplateId ?? null);
+  const [templateQuestions, setTemplateQuestions] = useState<string[]>(() =>
+    (initial?.reflectionAnswers ?? []).map((item) => item.question),
+  );
+  const [answers, setAnswers] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      (initial?.reflectionAnswers ?? []).map((item) => [
+        item.question,
+        item.answer,
+      ]),
+    ),
+  );
   const [openPicker, setOpenPicker] = useState<OpenPicker>("none");
 
   // 練習記録の絞り込み日付。
@@ -96,7 +120,7 @@ export function NoteForm({
 
   const practiceLabel = (() => {
     const session = sessions.find((item) => item.id === practiceSessionId);
-    return session ? `${session.logged_on} の練習` : null;
+    return session ? `${formatJaFullDate(session.logged_on)} の練習` : null;
   })();
 
   const gameLabel = (() => {
@@ -104,24 +128,47 @@ export function NoteForm({
       (item) => item.game_result_id === gameResultId,
     );
     if (!game) return null;
-    return `${game.match_result.date_and_time.slice(0, 10)} vs ${game.match_result.opponent_team_name}`;
+    return `${formatJaFullDate(game.match_result.date_and_time.slice(0, 10))} vs ${game.match_result.opponent_team_name}`;
   })();
 
   const filteredSessions = practiceFilter
     ? sessions.filter((item) => item.logged_on === toDateString(practiceFilter))
     : sessions.slice(0, 15);
 
+  const reflectionAnswers = templateQuestions
+    .map((question) => ({ question, answer: (answers[question] ?? "").trim() }))
+    .filter((item) => item.answer.length > 0);
+
+  const handleSelectTemplate = (template: ReflectionTemplate | null) => {
+    setReflectionTemplateId(template?.id ?? null);
+    setTemplateQuestions(template?.questions ?? []);
+  };
+
+  const handleChangeAnswer = (question: string, answer: string) =>
+    setAnswers((prev) => ({ ...prev, [question]: answer }));
+
   const handleSubmit = async () => {
-    if (!memo.trim()) {
-      Alert.alert("メモを入力してください");
+    // 自由メモ or テンプレ回答のどちらかがあれば保存できる。
+    const hasContent = memo.trim().length > 0 || reflectionAnswers.length > 0;
+    if (!hasContent) {
+      Alert.alert("メモか振り返りを入力してください");
       return;
     }
+    // 一覧プレビュー用に、メモ未入力ならテンプレ回答からメモ本文を合成する。
+    const memoText =
+      memo.trim() ||
+      reflectionAnswers
+        .map((item) => `${item.question}: ${item.answer}`)
+        .join("\n");
     await onSubmit({
       title: title.trim() || undefined,
       date: toDateString(date),
-      memo: buildMemoJson(memo.trim()),
+      memo: buildMemoJson(memoText),
       practice_session_id: practiceSessionId,
       game_result_id: gameResultId,
+      improvement_theme_id: improvementThemeId,
+      reflection_template_id: reflectionTemplateId,
+      reflection_answers: reflectionAnswers,
     });
   };
 
@@ -134,7 +181,9 @@ export function NoteForm({
             style={styles.dateRow}
             onPress={() => setShowNoteDate((prev) => !prev)}
           >
-            <Text style={styles.dateText}>{toDateString(date)}</Text>
+            <Text style={styles.dateText}>
+              {formatJaFullDate(toDateString(date))}
+            </Text>
             <Ionicons name="calendar-outline" size={18} color="#A1A1AA" />
           </TouchableOpacity>
           {showNoteDate ? (
@@ -146,7 +195,7 @@ export function NoteForm({
               accentColor="#d08000"
               display={Platform.OS === "ios" ? "inline" : "default"}
               onChange={(_event, selected) => {
-                if (Platform.OS !== "ios") setShowNoteDate(false);
+                setShowNoteDate(false);
                 if (selected) setDate(selected);
               }}
             />
@@ -173,7 +222,19 @@ export function NoteForm({
         placeholderTextColor="#71717A"
       />
 
+      <ReflectionTemplateSection
+        selectedTemplateId={reflectionTemplateId}
+        answers={answers}
+        onSelectTemplate={handleSelectTemplate}
+        onChangeAnswer={handleChangeAnswer}
+      />
+
       <Text style={styles.label}>紐付け（任意）</Text>
+
+      <ThemePickerField
+        selectedThemeId={improvementThemeId}
+        onChange={setImprovementThemeId}
+      />
 
       <TouchableOpacity
         style={styles.linkButton}
@@ -204,7 +265,7 @@ export function NoteForm({
             <Ionicons name="calendar-outline" size={16} color="#A1A1AA" />
             <Text style={styles.filterText}>
               {practiceFilter
-                ? `${toDateString(practiceFilter)} で絞り込み中`
+                ? `${formatJaFullDate(toDateString(practiceFilter))} で絞り込み中`
                 : "日付で絞り込む"}
             </Text>
             {practiceFilter ? (
@@ -222,7 +283,7 @@ export function NoteForm({
               accentColor="#d08000"
               display={Platform.OS === "ios" ? "inline" : "default"}
               onChange={(_event, selected) => {
-                if (Platform.OS !== "ios") setShowPracticeFilter(false);
+                setShowPracticeFilter(false);
                 if (selected) setPracticeFilter(selected);
               }}
             />
@@ -244,7 +305,7 @@ export function NoteForm({
                 }}
               >
                 <Text style={styles.pickerText}>
-                  {session.logged_on}
+                  {formatJaFullDate(session.logged_on)}
                   {session.practice_logs.length > 0
                     ? ` ・ ${session.practice_logs.map((log) => log.menu_name).join(", ")}`
                     : ""}
@@ -301,8 +362,10 @@ export function NoteForm({
                 }}
               >
                 <Text style={styles.pickerText}>
-                  {game.match_result.date_and_time.slice(0, 10)} vs{" "}
-                  {game.match_result.opponent_team_name}
+                  {formatJaFullDate(
+                    game.match_result.date_and_time.slice(0, 10),
+                  )}{" "}
+                  vs {game.match_result.opponent_team_name}
                 </Text>
               </TouchableOpacity>
             ))

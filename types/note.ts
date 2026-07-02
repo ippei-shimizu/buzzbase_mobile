@@ -1,3 +1,5 @@
+import type { ReflectionAnswer } from "./reflectionTemplate";
+
 export interface NoteV2 {
   id: number;
   title: string | null;
@@ -7,6 +9,9 @@ export interface NoteV2 {
   game_result_id: number | null;
   practice_log_id: number | null;
   practice_session_id: number | null;
+  improvement_theme_id: number | null;
+  reflection_template_id: number | null;
+  reflection_answers: ReflectionAnswer[];
 }
 
 export interface NoteInput {
@@ -16,6 +21,9 @@ export interface NoteInput {
   game_result_id?: number | null;
   practice_log_id?: number | null;
   practice_session_id?: number | null;
+  improvement_theme_id?: number | null;
+  reflection_template_id?: number | null;
+  reflection_answers?: ReflectionAnswer[];
 }
 
 /** プレーンテキストを Slate 互換の JSON 文字列にする（v1 ノートと表示互換）。 */

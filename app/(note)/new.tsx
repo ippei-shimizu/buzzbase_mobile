@@ -9,6 +9,7 @@ export default function NoteNewScreen() {
   const params = useLocalSearchParams<{
     practiceSessionId?: string;
     gameResultId?: string;
+    improvementThemeId?: string;
     date?: string;
   }>();
   const { createNote, isCreating } = useNoteMutations();
@@ -24,6 +25,9 @@ export default function NoteNewScreen() {
           ? Number(params.practiceSessionId)
           : null,
         gameResultId: params.gameResultId ? Number(params.gameResultId) : null,
+        improvementThemeId: params.improvementThemeId
+          ? Number(params.improvementThemeId)
+          : null,
       }}
       showDatePicker={!fromPracticeFlow}
       submitLabel="保存"
@@ -31,7 +35,7 @@ export default function NoteNewScreen() {
       onSubmit={async (input) => {
         try {
           await createNote(input);
-          router.back();
+          router.replace("/(records)/list?tab=note");
         } catch {
           Alert.alert("保存に失敗しました");
         }
