@@ -77,6 +77,26 @@ const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     description:
       "体調・気分・睡眠などを細かく記録し、調子の良し悪しの傾向を把握できます。",
   },
+  unlimited_improvement_themes: {
+    title: "取り組む課題を無制限に",
+    description:
+      "複数の課題を同時に設定して、練習やノートをそれぞれの課題に束ねられます。",
+  },
+  correlation_insights: {
+    title: "練習と成績の関係を発見",
+    description:
+      "素振りや睡眠と打率の傾向を、あなたのデータから自動で読み解きます。",
+  },
+  unlimited_reflection_templates: {
+    title: "振り返りテンプレを自由に作成",
+    description:
+      "自分専用の問いかけテンプレをいくつでも作って、振り返りの質を高められます。",
+  },
+  advanced_periodic_review: {
+    title: "週次・月次レポートを詳しく",
+    description:
+      "課題別の取り組みや成績の推移、相関インサイトを含む詳細レポートを受け取れます。",
+  },
 };
 
 const DEFAULT_COPY: PaywallCopy = {
