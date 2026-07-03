@@ -46,10 +46,28 @@ export const useBattingStatsTable = (
   year?: string,
   seasonId?: string,
   tournamentId?: string,
+  startMonth?: string,
+  endMonth?: string,
 ) =>
   useQuery({
-    queryKey: ["battingTable", period, year, seasonId, tournamentId],
-    queryFn: () => getBattingStatsTable(period, year, seasonId, tournamentId),
+    queryKey: [
+      "battingTable",
+      period,
+      year,
+      seasonId,
+      tournamentId,
+      startMonth,
+      endMonth,
+    ],
+    queryFn: () =>
+      getBattingStatsTable(
+        period,
+        year,
+        seasonId,
+        tournamentId,
+        startMonth,
+        endMonth,
+      ),
     staleTime: STATS_STALE_TIME,
     placeholderData: keepPreviousData,
   });
@@ -59,10 +77,28 @@ export const usePitchingStatsTable = (
   year?: string,
   seasonId?: string,
   tournamentId?: string,
+  startMonth?: string,
+  endMonth?: string,
 ) =>
   useQuery({
-    queryKey: ["pitchingTable", period, year, seasonId, tournamentId],
-    queryFn: () => getPitchingStatsTable(period, year, seasonId, tournamentId),
+    queryKey: [
+      "pitchingTable",
+      period,
+      year,
+      seasonId,
+      tournamentId,
+      startMonth,
+      endMonth,
+    ],
+    queryFn: () =>
+      getPitchingStatsTable(
+        period,
+        year,
+        seasonId,
+        tournamentId,
+        startMonth,
+        endMonth,
+      ),
     staleTime: STATS_STALE_TIME,
     placeholderData: keepPreviousData,
   });
@@ -72,10 +108,13 @@ export const useEraTrend = (
   seasonId?: string,
   tournamentId?: string,
   enabled = true,
+  startMonth?: string,
+  endMonth?: string,
 ) =>
   useQuery({
-    queryKey: ["eraTrend", year, seasonId, tournamentId],
-    queryFn: () => getEraTrend(year, seasonId, tournamentId),
+    queryKey: ["eraTrend", year, seasonId, tournamentId, startMonth, endMonth],
+    queryFn: () =>
+      getEraTrend(year, seasonId, tournamentId, startMonth, endMonth),
     enabled,
     staleTime: 0,
     placeholderData: keepPreviousData,
@@ -86,10 +125,28 @@ export const useGameSummary = (
   matchType?: string,
   seasonId?: string,
   tournamentId?: string,
+  startMonth?: string,
+  endMonth?: string,
 ) =>
   useQuery({
-    queryKey: ["gameSummary", year, matchType, seasonId, tournamentId],
-    queryFn: () => getGameSummary(year, matchType, seasonId, tournamentId),
+    queryKey: [
+      "gameSummary",
+      year,
+      matchType,
+      seasonId,
+      tournamentId,
+      startMonth,
+      endMonth,
+    ],
+    queryFn: () =>
+      getGameSummary(
+        year,
+        matchType,
+        seasonId,
+        tournamentId,
+        startMonth,
+        endMonth,
+      ),
     staleTime: STATS_STALE_TIME,
     placeholderData: keepPreviousData,
   });

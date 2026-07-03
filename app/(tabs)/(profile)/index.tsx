@@ -31,6 +31,7 @@ import {
   GlobalMenuOverlay,
   useGlobalMenu,
 } from "@components/ui/GlobalMenu";
+import { useAvailableMonths } from "@hooks/useAvailableMonths";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useUserAwards } from "@hooks/useAwards";
 import { useFilteredGameResults } from "@hooks/useGameResults";
@@ -45,6 +46,7 @@ import { useUserProfileDetail } from "@hooks/useRelationship";
 import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useTournaments } from "@hooks/useTournaments";
+import { monthOptionsFromRecorded } from "@utils/monthOptions";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -62,6 +64,12 @@ export default function ProfileScreen() {
   const [selectedTournamentId, setSelectedTournamentId] = useState<
     string | undefined
   >(undefined);
+  const [selectedStartMonth, setSelectedStartMonth] = useState<
+    string | undefined
+  >(undefined);
+  const [selectedEndMonth, setSelectedEndMonth] = useState<string | undefined>(
+    undefined,
+  );
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const toggleFilter = (id: string) =>
     setActiveFilter((prev) => (prev === id ? null : id));
@@ -70,6 +78,42 @@ export default function ProfileScreen() {
     ...(selectedMatchType ? { matchType: selectedMatchType } : {}),
     ...(selectedSeasonId ? { seasonId: selectedSeasonId } : {}),
     ...(selectedTournamentId ? { tournamentId: selectedTournamentId } : {}),
+    ...(selectedStartMonth ? { startMonth: selectedStartMonth } : {}),
+    ...(selectedEndMonth ? { endMonth: selectedEndMonth } : {}),
+  };
+
+  // 年度と期間（開始/終了月）は排他。年度を選んだら期間を、期間を選んだら年度をクリアする。
+  const handleYearSelect = (value: string | undefined) => {
+    const year = value === "all" ? undefined : value;
+    setSelectedYear(year);
+    if (year) {
+      setSelectedStartMonth(undefined);
+      setSelectedEndMonth(undefined);
+    }
+    setGameCurrentPage(1);
+  };
+
+  // 開始を選ぶと終了が未指定/開始より前のとき終了を同月に合わせ、単月をワンタップで作れる。
+  const handleStartMonthSelect = (value: string | undefined) => {
+    setGameCurrentPage(1);
+    if (!value) {
+      setSelectedStartMonth(undefined);
+      return;
+    }
+    setSelectedStartMonth(value);
+    setSelectedYear(undefined);
+    setSelectedEndMonth((prev) => (!prev || prev < value ? value : prev));
+  };
+
+  const handleEndMonthSelect = (value: string | undefined) => {
+    setGameCurrentPage(1);
+    if (!value) {
+      setSelectedEndMonth(undefined);
+      return;
+    }
+    setSelectedEndMonth(value);
+    setSelectedYear(undefined);
+    setSelectedStartMonth((prev) => (prev && prev > value ? value : prev));
   };
   // 試合タブフィルター
   const [gameSearchQuery, setGameSearchQuery] = useState("");
@@ -109,6 +153,8 @@ export default function ProfileScreen() {
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
   const { years: availableYears } = useAvailableYears();
+  const { months: availableMonths } = useAvailableMonths();
+  const monthOptions = monthOptionsFromRecorded(availableMonths);
   const { data: profileDetail } = useUserProfileDetail(
     profile?.user_id ?? undefined,
   );
@@ -152,6 +198,8 @@ export default function ProfileScreen() {
     match_type: selectedMatchType ?? "全て",
     season_id: selectedSeasonId,
     tournament_id: selectedTournamentId,
+    start_month: selectedStartMonth,
+    end_month: selectedEndMonth,
     search: debouncedGameSearch || undefined,
     sort_by: "date",
     sort_order: gameSortDesc ? "desc" : "asc",
@@ -355,13 +403,30 @@ export default function ProfileScreen() {
                         { key: "all", label: "通算" },
                         ...availableYears.map((y) => ({ key: y, label: y })),
                       ]}
-                      onSelect={(v) => {
-                        setSelectedYear(v === "all" ? undefined : v);
-                        setGameCurrentPage(1);
-                      }}
+                      onSelect={handleYearSelect}
                       isOpen={activeFilter === "year"}
                       onToggle={() => toggleFilter("year")}
                     />
+                    {monthOptions.length > 0 && (
+                      <>
+                        <FilterDropdown
+                          label="開始"
+                          value={selectedStartMonth}
+                          options={monthOptions}
+                          onSelect={handleStartMonthSelect}
+                          isOpen={activeFilter === "startMonth"}
+                          onToggle={() => toggleFilter("startMonth")}
+                        />
+                        <FilterDropdown
+                          label="終了"
+                          value={selectedEndMonth}
+                          options={monthOptions}
+                          onSelect={handleEndMonthSelect}
+                          isOpen={activeFilter === "endMonth"}
+                          onToggle={() => toggleFilter("endMonth")}
+                        />
+                      </>
+                    )}
                     <FilterDropdown
                       label="種別"
                       value={selectedMatchType}
@@ -461,13 +526,30 @@ export default function ProfileScreen() {
                 { key: "all", label: "通算" },
                 ...availableYears.map((y) => ({ key: y, label: y })),
               ]}
-              onSelect={(v) => {
-                setSelectedYear(v === "all" ? undefined : v);
-                setGameCurrentPage(1);
-              }}
+              onSelect={handleYearSelect}
               isOpen={activeFilter === "game-year"}
               onToggle={() => toggleFilter("game-year")}
             />
+            {monthOptions.length > 0 && (
+              <>
+                <FilterDropdown
+                  label="開始"
+                  value={selectedStartMonth}
+                  options={monthOptions}
+                  onSelect={handleStartMonthSelect}
+                  isOpen={activeFilter === "game-startMonth"}
+                  onToggle={() => toggleFilter("game-startMonth")}
+                />
+                <FilterDropdown
+                  label="終了"
+                  value={selectedEndMonth}
+                  options={monthOptions}
+                  onSelect={handleEndMonthSelect}
+                  isOpen={activeFilter === "game-endMonth"}
+                  onToggle={() => toggleFilter("game-endMonth")}
+                />
+              </>
+            )}
             <FilterDropdown
               label="種別"
               value={selectedMatchType}

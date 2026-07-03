@@ -21,6 +21,12 @@ export default function GroupDetailModal() {
   const [selectedTournamentId, setSelectedTournamentId] = useState<
     string | undefined
   >(undefined);
+  const [selectedStartMonth, setSelectedStartMonth] = useState<
+    string | undefined
+  >(undefined);
+  const [selectedEndMonth, setSelectedEndMonth] = useState<string | undefined>(
+    undefined,
+  );
   const year = selectedYear === "通算" ? undefined : selectedYear;
   const matchType =
     selectedMatchType === "全て" ? undefined : selectedMatchType;
@@ -29,6 +35,8 @@ export default function GroupDetailModal() {
     year,
     matchType,
     selectedTournamentId,
+    selectedStartMonth,
+    selectedEndMonth,
   );
 
   if (isLoading || !data) {
@@ -84,11 +92,16 @@ export default function GroupDetailModal() {
           selectedYear={selectedYear}
           selectedMatchType={selectedMatchType}
           selectedTournamentId={selectedTournamentId}
+          selectedStartMonth={selectedStartMonth}
+          selectedEndMonth={selectedEndMonth}
           availableYears={data.available_years ?? []}
+          availableMonths={data.available_months ?? []}
           availableTournaments={data.available_tournaments ?? []}
           onYearChange={setSelectedYear}
           onMatchTypeChange={setSelectedMatchType}
           onTournamentChange={setSelectedTournamentId}
+          onStartMonthChange={setSelectedStartMonth}
+          onEndMonthChange={setSelectedEndMonth}
         />
       </ScrollView>
     </>

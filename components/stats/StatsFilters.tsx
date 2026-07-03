@@ -9,12 +9,14 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
+import { monthOptionsFromRecorded } from "@utils/monthOptions";
 import { FilterResetButton } from "./FilterResetButton";
 
 interface StatsFiltersProps {
   filters: StatsFiltersType;
   onFiltersChange: (filters: StatsFiltersType) => void;
   availableYears: (string | number)[];
+  availableMonths?: string[];
   availableSeasons?: { id: string; name: string }[];
   availableTournaments?: { id: string; name: string }[];
 }
@@ -110,6 +112,7 @@ export const StatsFilters = ({
   filters,
   onFiltersChange,
   availableYears,
+  availableMonths = [],
   availableSeasons = [],
   availableTournaments = [],
 }: StatsFiltersProps) => {
@@ -121,6 +124,51 @@ export const StatsFilters = ({
     { key: "all", label: "通算" },
     ...availableYears.map((y) => ({ key: String(y), label: `${y}` })),
   ];
+
+  const monthOptions = monthOptionsFromRecorded(availableMonths);
+
+  // 年度と期間は排他。実年を選んだら期間を、期間を指定したら年度をクリアする。
+  const handleYearSelect = (value: string | undefined) => {
+    const year = value === "all" ? undefined : value;
+    onFiltersChange(
+      year
+        ? { ...filters, year, startMonth: undefined, endMonth: undefined }
+        : { ...filters, year },
+    );
+  };
+
+  // 開始を選ぶと終了が未指定/開始より前のとき終了を同月に合わせ、単月をワンタップで作れる。
+  const handleStartMonthSelect = (value: string | undefined) => {
+    if (!value) {
+      onFiltersChange({ ...filters, startMonth: undefined });
+      return;
+    }
+    const endMonth =
+      !filters.endMonth || filters.endMonth < value ? value : filters.endMonth;
+    onFiltersChange({
+      ...filters,
+      startMonth: value,
+      endMonth,
+      year: undefined,
+    });
+  };
+
+  const handleEndMonthSelect = (value: string | undefined) => {
+    if (!value) {
+      onFiltersChange({ ...filters, endMonth: undefined });
+      return;
+    }
+    const startMonth =
+      filters.startMonth && filters.startMonth > value
+        ? value
+        : filters.startMonth;
+    onFiltersChange({
+      ...filters,
+      startMonth,
+      endMonth: value,
+      year: undefined,
+    });
+  };
 
   const seasonOptions = availableSeasons.map((s) => ({
     key: s.id,
@@ -136,7 +184,9 @@ export const StatsFilters = ({
     filters.year ||
     filters.matchType ||
     filters.seasonId ||
-    filters.tournamentId
+    filters.tournamentId ||
+    filters.startMonth ||
+    filters.endMonth
   );
   const handleReset = () => {
     setActiveFilter(null);
@@ -149,12 +199,30 @@ export const StatsFilters = ({
         label="年度"
         value={filters.year}
         options={yearOptions}
-        onSelect={(v) =>
-          onFiltersChange({ ...filters, year: v === "all" ? undefined : v })
-        }
+        onSelect={handleYearSelect}
         isOpen={activeFilter === "year"}
         onToggle={() => toggleFilter("year")}
       />
+      {monthOptions.length > 0 && (
+        <>
+          <FilterDropdown
+            label="開始"
+            value={filters.startMonth}
+            options={monthOptions}
+            onSelect={handleStartMonthSelect}
+            isOpen={activeFilter === "startMonth"}
+            onToggle={() => toggleFilter("startMonth")}
+          />
+          <FilterDropdown
+            label="終了"
+            value={filters.endMonth}
+            options={monthOptions}
+            onSelect={handleEndMonthSelect}
+            isOpen={activeFilter === "endMonth"}
+            onToggle={() => toggleFilter("endMonth")}
+          />
+        </>
+      )}
       <FilterDropdown
         label="種別"
         value={filters.matchType}
