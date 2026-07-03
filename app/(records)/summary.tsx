@@ -12,7 +12,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { formatTotalAmount, formatVolume } from "@constants/practice";
+import {
+  CATEGORY_ICON,
+  formatTotalAmount,
+  formatVolume,
+} from "@constants/practice";
+import { usePracticeMenus } from "@hooks/usePracticeMenus";
 import { usePracticeSummaries } from "@hooks/usePracticeSummaries";
 
 const formatMd = (iso: string | null): string => {
@@ -35,9 +40,11 @@ function StatTile({ label, value }: { label: string; value: string }) {
 
 function SummaryCard({
   summary,
+  iconName,
   onPress,
 }: {
   summary: MenuSummary;
+  iconName: keyof typeof Ionicons.glyphMap;
   onPress?: () => void;
 }) {
   const weightReps = isWeightReps(summary);
@@ -54,11 +61,7 @@ function SummaryCard({
     <Wrapper style={styles.card} onPress={onPress}>
       <View style={styles.cardHead}>
         <View style={styles.cardHeadLeft}>
-          <Ionicons
-            name={weightReps ? "barbell" : "fitness"}
-            size={18}
-            color="#d08000"
-          />
+          <Ionicons name={iconName} size={18} color="#d08000" />
           <Text style={styles.menuName}>{summary.menu_name}</Text>
         </View>
         {onPress ? (
@@ -92,7 +95,10 @@ export default function PracticeSummaryScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { summaries, isLoading } = usePracticeSummaries();
+  const { menus } = usePracticeMenus();
   const [refreshing, setRefreshing] = useState(false);
+
+  const categoryById = new Map(menus.map((menu) => [menu.id, menu.category]));
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -134,6 +140,13 @@ export default function PracticeSummaryScreen() {
           <SummaryCard
             key={summary.practice_menu_id ?? summary.menu_name}
             summary={summary}
+            iconName={
+              CATEGORY_ICON[
+                (summary.practice_menu_id != null
+                  ? categoryById.get(summary.practice_menu_id)
+                  : undefined) ?? "other"
+              ]
+            }
             onPress={
               summary.practice_menu_id != null
                 ? () =>

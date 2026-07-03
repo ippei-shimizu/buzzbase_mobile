@@ -24,7 +24,6 @@ export default function MenuNewScreen() {
   const [name, setName] = useState("");
   const [category, setCategory] = useState<PracticeCategory>("batting");
   const [unit, setUnit] = useState<PracticeUnit>("count");
-  const [unitLabel, setUnitLabel] = useState("");
   const [defaultValue, setDefaultValue] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -41,7 +40,8 @@ export default function MenuNewScreen() {
         name: name.trim(),
         category,
         unit,
-        unit_label: unitLabel.trim() || unitMeta.defaultLabel,
+        // 表示ラベルは計測タイプから自動で決める（回数=本、時間=分 など）。
+        unit_label: unitMeta.defaultLabel,
         // 既定値はワンタップ用なので、お気に入り時のみ保持する。
         default_value: isFavorite && defaultValue ? Number(defaultValue) : null,
         is_favorite: isFavorite,
@@ -88,15 +88,6 @@ export default function MenuNewScreen() {
       <FieldLabel text="計測" required />
       <UnitPicker value={unit} onChange={setUnit} />
 
-      <FieldLabel text="単位表示" />
-      <TextInput
-        style={styles.input}
-        value={unitLabel}
-        onChangeText={setUnitLabel}
-        placeholder={`例: ${unitMeta.placeholderValue}${unitMeta.defaultLabel}`}
-        placeholderTextColor="#71717A"
-      />
-
       <View style={styles.favoriteRow}>
         <Text style={styles.favoriteLabel}>
           お気に入りにする（ホームでワンタップ記録）
@@ -120,9 +111,7 @@ export default function MenuNewScreen() {
               placeholder={`例: ${unitMeta.placeholderValue}`}
               placeholderTextColor="#71717A"
             />
-            <Text style={styles.valueUnit}>
-              {unitLabel.trim() || unitMeta.defaultLabel}
-            </Text>
+            <Text style={styles.valueUnit}>{unitMeta.defaultLabel}</Text>
           </View>
           <Text style={styles.hint}>
             ホームのワンタップ記録で使う初期値です。記録時に毎回変更できます。

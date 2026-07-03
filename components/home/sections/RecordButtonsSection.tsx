@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: "#d08000",
     borderRadius: 10,
-    paddingVertical: 18,
+    paddingVertical: 14,
   },
   text: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
   listLink: {

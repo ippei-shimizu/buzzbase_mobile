@@ -65,5 +65,6 @@ export const usePracticeSessionMutations = () => {
     saveSession: upsert.mutateAsync,
     isSaving: upsert.isPending,
     deleteSession: remove.mutateAsync,
+    isDeleting: remove.isPending,
   };
 };

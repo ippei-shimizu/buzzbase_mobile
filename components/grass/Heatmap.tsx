@@ -1,5 +1,5 @@
 import type { ActivityLog } from "../../types/activity";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
 
 interface Props {
@@ -82,6 +82,42 @@ export function Heatmap({
 
   const slot = cellSize + 3;
 
+  const scrollRef = useRef<ScrollView>(null);
+  const viewportWidthRef = useRef(0);
+  const didAutoScrollRef = useRef(false);
+
+  // 今日（範囲内なら今日、無ければ範囲末尾）を含む週列の index。
+  const focusColumnIndex = useMemo(() => {
+    const today = fmt(new Date());
+    const target = today >= from && today <= to ? today : to;
+    for (let index = weeks.length - 1; index >= 0; index -= 1) {
+      if (weeks[index].some((cell) => cell.date === target)) return index;
+    }
+    return weeks.length - 1;
+  }, [weeks, from, to]);
+
+  // 初期表示で対象列がビューポート中央に来るよう一度だけ横スクロールする。
+  const centerOnFocus = (offsetLeft: number) => {
+    if (didAutoScrollRef.current) return;
+    const viewport = viewportWidthRef.current;
+    if (viewport === 0 || focusColumnIndex < 0) return;
+    didAutoScrollRef.current = true;
+    const columnCenter = offsetLeft + focusColumnIndex * slot + slot / 2;
+    scrollRef.current?.scrollTo({
+      x: Math.max(0, columnCenter - viewport / 2),
+      animated: false,
+    });
+  };
+
+  const autoScrollProps = (offsetLeft: number) => ({
+    ref: scrollRef,
+    onLayout: (event: { nativeEvent: { layout: { width: number } } }) => {
+      viewportWidthRef.current = event.nativeEvent.layout.width;
+      centerOnFocus(offsetLeft);
+    },
+    onContentSizeChange: () => centerOnFocus(offsetLeft),
+  });
+
   // 各週列の先頭で月が変わったら、その列の上に月ラベルを出す。
   const monthLabels = useMemo(() => {
     let prevMonth = -1;
@@ -138,7 +174,11 @@ export function Heatmap({
   if (!showLabels && !interactive) {
     if (!scroll) return grid;
     return (
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        {...autoScrollProps(0)}
+      >
         {grid}
       </ScrollView>
     );
@@ -173,7 +213,11 @@ export function Heatmap({
   return (
     <View>
       {scroll ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          {...autoScrollProps(showLabels ? WEEKDAY_COL_WIDTH : 0)}
+        >
           {labelledGrid}
         </ScrollView>
       ) : (

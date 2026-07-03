@@ -1,4 +1,11 @@
-import type { PracticeCategory, PracticeUnit } from "../types/practice";
+import type {
+  PracticeCategory,
+  PracticeLogSource,
+  PracticeUnit,
+} from "../types/practice";
+import type { Ionicons } from "@expo/vector-icons";
+
+type IoniconName = keyof typeof Ionicons.glyphMap;
 
 export const PRACTICE_CATEGORIES: { key: PracticeCategory; label: string }[] = [
   { key: "batting", label: "バッティング" },
@@ -77,3 +84,27 @@ export const INJURY_PARTS = [
 
 export const categoryLabel = (category: PracticeCategory): string =>
   PRACTICE_CATEGORIES.find((c) => c.key === category)?.label ?? category;
+
+/** カテゴリごとの練習アイコン。一覧・詳細でメニューの種類を見分けやすくする。 */
+export const CATEGORY_ICON: Record<PracticeCategory, IoniconName> = {
+  batting: "baseball-outline",
+  pitching: "hand-right-outline",
+  defense: "shield-half-outline",
+  baserunning: "walk-outline",
+  training: "fitness-outline",
+  strength: "barbell-outline",
+  care: "bandage-outline",
+  other: "ellipsis-horizontal-circle-outline",
+};
+
+/**
+ * 練習ログのアイコンを決める。素振りは専用アイコン、それ以外はメニューのカテゴリで振り分ける。
+ * category が不明（メニュー削除済みなど）の場合は「その他」のアイコンにフォールバックする。
+ */
+export const menuIconForLog = (
+  source: PracticeLogSource,
+  category: PracticeCategory | undefined,
+): IoniconName => {
+  if (source === "shadow_swing") return "baseball";
+  return category ? CATEGORY_ICON[category] : CATEGORY_ICON.other;
+};

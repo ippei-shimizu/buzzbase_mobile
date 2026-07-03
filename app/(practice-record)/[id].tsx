@@ -11,21 +11,23 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { GameResultDetail } from "@components/game-results/GameResultDetail";
-import { formatPracticeValue } from "@constants/practice";
-import { useGameResult } from "@hooks/useGameResults";
-import { useNote, useNoteMutations } from "@hooks/useNotes";
-import { usePracticeSession } from "@hooks/usePracticeSessions";
+import { formatPracticeValue, menuIconForLog } from "@constants/practice";
+import { useNotes } from "@hooks/useNotes";
+import { usePracticeMenus } from "@hooks/usePracticeMenus";
+import {
+  usePracticeSession,
+  usePracticeSessionMutations,
+} from "@hooks/usePracticeSessions";
 import { formatAmount } from "@utils/formatAmount";
-import { formatJaFullDate } from "@utils/formatDate";
-import { extractMemoText } from "../../types/note";
+import { extractMemoText, type NoteV2 } from "../../types/note";
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
 const formatJaDate = (iso: string): string => {
   const [year, month, day] = iso.split("-").map(Number);
   const date = new Date(year, month - 1, day);
-  return `${month}月${day}日(${WEEKDAYS[date.getDay()]})`;
+  const yearPrefix = year === new Date().getFullYear() ? "" : `${year}年`;
+  return `${yearPrefix}${month}月${day}日(${WEEKDAYS[date.getDay()]})`;
 };
 
 const LEVEL_META: { icon: keyof typeof Ionicons.glyphMap; color: string }[] = [
@@ -69,7 +71,7 @@ function ConditionCard({ condition }: { condition: ConditionLog }) {
 
   return (
     <View style={styles.conditionCard}>
-      <Text style={styles.subHeader}>コンディション</Text>
+      <Text style={styles.sectionTitle}>コンディション</Text>
       {condition.fatigue_level != null || condition.physical_level != null ? (
         <View style={styles.faceRow}>
           {condition.fatigue_level != null ? (
@@ -115,114 +117,64 @@ function ConditionCard({ condition }: { condition: ConditionLog }) {
   );
 }
 
-function LinkedPractice({ sessionId }: { sessionId: number }) {
+function LinkedNotes({ sessionId }: { sessionId: number }) {
   const router = useRouter();
-  const { session, isLoading } = usePracticeSession(sessionId);
-  if (isLoading) return <ActivityIndicator color="#d08000" />;
-  if (!session) return null;
-
-  const logs = session.practice_logs;
+  const { notes } = useNotes();
+  const linkedNotes = notes.filter(
+    (note: NoteV2) => note.practice_session_id === sessionId,
+  );
+  if (linkedNotes.length === 0) return null;
 
   return (
-    <View style={styles.practiceCard}>
-      <View style={styles.practiceHeader}>
-        <View style={styles.practiceHeaderLeft}>
-          <View style={styles.practiceHeaderIcon}>
-            <Ionicons name="fitness" size={20} color="#FFFFFF" />
-          </View>
-          <View>
-            <Text style={styles.cardLabel}>紐付けた練習</Text>
-            <Text style={styles.practiceDate}>
-              {formatJaDate(session.logged_on)}
-            </Text>
-          </View>
-        </View>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() =>
-            router.push({
-              pathname: "/(practice-record)/daily",
-              params: { date: session.logged_on },
-            })
-          }
-        >
-          <Ionicons name="create-outline" size={14} color="#d08000" />
-          <Text style={styles.cardLink}>編集</Text>
-        </TouchableOpacity>
-      </View>
-
-      {logs.length === 0 ? (
-        <Text style={styles.muted}>メニューの記録はありません</Text>
-      ) : (
-        <>
-          <Text style={styles.menuCount}>{logs.length}種類のメニュー</Text>
-          <View style={styles.menuList}>
-            {logs.map((log) => (
-              <View key={log.id} style={styles.menuRow}>
-                <View style={styles.menuIcon}>
-                  <Ionicons
-                    name={
-                      log.source === "shadow_swing" ? "baseball" : "barbell"
-                    }
-                    size={16}
-                    color="#d08000"
-                  />
-                </View>
-                <Text style={styles.menuName} numberOfLines={1}>
-                  {log.menu_name}
-                </Text>
-                {log.weight != null ? (
-                  <Text style={styles.menuAmount}>
-                    {formatPracticeValue(log)}
-                  </Text>
-                ) : log.amount != null ? (
-                  <Text style={styles.menuAmount}>
-                    {formatAmount(log.amount)}
-                    <Text style={styles.menuUnit}> {log.unit_label ?? ""}</Text>
-                  </Text>
-                ) : null}
+    <View style={styles.noteSection}>
+      <Text style={styles.sectionTitle}>紐づく野球ノート</Text>
+      {linkedNotes.map((note) => {
+        const body = extractMemoText(note.memo);
+        return (
+          <TouchableOpacity
+            key={note.id}
+            style={styles.noteCard}
+            onPress={() => router.push(`/(note)/${note.id}`)}
+          >
+            <View style={styles.noteCardHeader}>
+              <View style={styles.noteIcon}>
+                <Ionicons name="document-text" size={16} color="#d08000" />
               </View>
-            ))}
-          </View>
-        </>
-      )}
-
-      {session.condition ? (
-        <ConditionCard condition={session.condition} />
-      ) : null}
+              <Text style={styles.noteTitle} numberOfLines={1}>
+                {note.title || "無題のノート"}
+              </Text>
+              <Ionicons name="chevron-forward" size={18} color="#A1A1AA" />
+            </View>
+            {body ? (
+              <Text style={styles.noteBody} numberOfLines={3}>
+                {body}
+              </Text>
+            ) : null}
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
 
-function LinkedGame({ gameId }: { gameId: number }) {
-  const { gameResult, isLoading } = useGameResult(gameId);
-  if (isLoading) return <ActivityIndicator color="#d08000" />;
-  if (!gameResult) return null;
-
-  return (
-    <View style={styles.gameSection}>
-      <Text style={[styles.cardLabel, styles.gameLabel]}>紐付けた試合記録</Text>
-      <GameResultDetail game={gameResult} scroll={false} />
-    </View>
-  );
-}
-
-export default function NoteDetailScreen() {
+export default function PracticeSessionDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const noteId = Number(id);
-  const { note, isLoading } = useNote(noteId);
-  const { deleteNote, isDeleting } = useNoteMutations();
+  const sessionId = Number(id);
+  const { session, isLoading } = usePracticeSession(sessionId);
+  const { deleteSession, isDeleting } = usePracticeSessionMutations();
+  const { menus } = usePracticeMenus();
+  const categoryById = new Map(menus.map((menu) => [menu.id, menu.category]));
 
   const handleDelete = () => {
-    Alert.alert("削除確認", "このノートを削除しますか？", [
+    Alert.alert("削除確認", "この練習記録を削除しますか？", [
       { text: "キャンセル", style: "cancel" },
       {
         text: "削除",
         style: "destructive",
         onPress: async () => {
           try {
-            await deleteNote(noteId);
+            await deleteSession(sessionId);
             router.back();
           } catch {
             Alert.alert("削除に失敗しました");
@@ -239,25 +191,28 @@ export default function NoteDetailScreen() {
       </View>
     );
   }
-  if (!note) {
+  if (!session) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>ノートが見つかりません</Text>
+        <Text style={styles.errorText}>練習記録が見つかりません</Text>
       </View>
     );
   }
+
+  const logs = session.practice_logs;
 
   return (
     <>
       <Stack.Screen
         options={{
+          title: "練習の記録",
           headerRight: () => (
             <View style={styles.headerActions}>
               <TouchableOpacity
                 onPress={() =>
                   router.push({
-                    pathname: "/(note)/edit",
-                    params: { id: String(noteId) },
+                    pathname: "/(practice-record)/daily",
+                    params: { date: session.logged_on },
                   })
                 }
               >
@@ -274,16 +229,66 @@ export default function NoteDetailScreen() {
         style={styles.container}
         contentContainerStyle={styles.content}
       >
-        <Text style={styles.date}>{formatJaFullDate(note.date)}</Text>
-        {note.title ? <Text style={styles.title}>{note.title}</Text> : null}
-        <Text style={styles.memo}>{extractMemoText(note.memo)}</Text>
+        <View style={styles.dateHeader}>
+          <Text style={styles.dateLabel}>練習日</Text>
+          <Text style={styles.date}>{formatJaDate(session.logged_on)}</Text>
+        </View>
 
-        {note.practice_session_id != null ? (
-          <LinkedPractice sessionId={note.practice_session_id} />
+        {session.memo ? (
+          <Text style={styles.sessionMemo}>{session.memo}</Text>
         ) : null}
-        {note.game_result_id != null ? (
-          <LinkedGame gameId={note.game_result_id} />
+
+        <Text style={styles.sectionTitle}>
+          メニュー{logs.length > 0 ? `（${logs.length}種類）` : ""}
+        </Text>
+        {logs.length === 0 ? (
+          <Text style={styles.muted}>メニューの記録はありません</Text>
+        ) : (
+          <View style={styles.menuList}>
+            {logs.map((log) => (
+              <View key={log.id} style={styles.menuRow}>
+                <View style={styles.menuIcon}>
+                  <Ionicons
+                    name={menuIconForLog(
+                      log.source,
+                      log.practice_menu_id != null
+                        ? categoryById.get(log.practice_menu_id)
+                        : undefined,
+                    )}
+                    size={16}
+                    color="#d08000"
+                  />
+                </View>
+                <View style={styles.menuBody}>
+                  <Text style={styles.menuName} numberOfLines={1}>
+                    {log.menu_name}
+                  </Text>
+                  {log.memo ? (
+                    <Text style={styles.menuMemo} numberOfLines={2}>
+                      {log.memo}
+                    </Text>
+                  ) : null}
+                </View>
+                {log.weight != null ? (
+                  <Text style={styles.menuAmount}>
+                    {formatPracticeValue(log)}
+                  </Text>
+                ) : log.amount != null ? (
+                  <Text style={styles.menuAmount}>
+                    {formatAmount(log.amount)}
+                    <Text style={styles.menuUnit}> {log.unit_label ?? ""}</Text>
+                  </Text>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {session.condition ? (
+          <ConditionCard condition={session.condition} />
         ) : null}
+
+        <LinkedNotes sessionId={sessionId} />
       </ScrollView>
     </>
   );
@@ -300,62 +305,34 @@ const styles = StyleSheet.create({
   },
   errorText: { color: "#A1A1AA", fontSize: 15 },
   headerActions: { flexDirection: "row", gap: 16, paddingRight: 4 },
-  date: { color: "#A1A1AA", fontSize: 13, fontWeight: "700" },
-  title: {
+
+  dateHeader: { marginBottom: 4 },
+  dateLabel: { color: "#A1A1AA", fontSize: 12, fontWeight: "700" },
+  date: {
     color: "#F4F4F4",
     fontSize: 20,
-    fontWeight: "700",
-    marginTop: 6,
+    fontWeight: "800",
+    marginTop: 2,
   },
-  memo: {
+  sessionMemo: {
     color: "#F4F4F4",
     fontSize: 15,
     lineHeight: 22,
-    marginTop: 12,
+    marginTop: 16,
   },
-  cardLabel: { color: "#A1A1AA", fontSize: 12, fontWeight: "700" },
-  gameLabel: { marginBottom: 10 },
-  cardLink: { color: "#d08000", fontSize: 13, fontWeight: "600" },
-  muted: { color: "#A1A1AA", fontSize: 13, marginTop: 10 },
-  gameSection: { marginTop: 20 },
 
-  practiceCard: {
-    backgroundColor: "#3A3A3A",
-    borderRadius: 14,
-    padding: 16,
-    marginTop: 20,
-  },
-  practiceHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  practiceHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-  practiceHeaderIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#d08000",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  practiceDate: {
-    color: "#F4F4F4",
-    fontSize: 16,
-    fontWeight: "700",
-    marginTop: 2,
-  },
-  editButton: { flexDirection: "row", alignItems: "center", gap: 3 },
-  menuCount: {
+  sectionTitle: {
     color: "#A1A1AA",
     fontSize: 12,
-    fontWeight: "600",
-    marginTop: 14,
-    marginBottom: 4,
+    fontWeight: "700",
+    marginTop: 24,
+    marginBottom: 10,
   },
+  muted: { color: "#A1A1AA", fontSize: 13 },
+
   menuList: {
-    backgroundColor: "#2E2E2E",
-    borderRadius: 10,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 12,
     paddingHorizontal: 12,
   },
   menuRow: {
@@ -364,7 +341,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#3A3A3A",
+    borderBottomColor: "#2E2E2E",
   },
   menuIcon: {
     width: 30,
@@ -374,26 +351,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  menuName: { color: "#F4F4F4", fontSize: 15, fontWeight: "600", flex: 1 },
+  menuBody: { flex: 1 },
+  menuName: { color: "#F4F4F4", fontSize: 15, fontWeight: "600" },
+  menuMemo: { color: "#A1A1AA", fontSize: 12, lineHeight: 17, marginTop: 2 },
   menuAmount: { color: "#d08000", fontSize: 18, fontWeight: "800" },
   menuUnit: { color: "#A1A1AA", fontSize: 12, fontWeight: "600" },
 
-  conditionCard: {
-    marginTop: 16,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: "#2E2E2E",
-  },
-  subHeader: {
-    color: "#A1A1AA",
-    fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 10,
-  },
+  conditionCard: { marginTop: 8 },
   faceRow: { flexDirection: "row", gap: 10 },
   faceTile: {
     flex: 1,
-    backgroundColor: "#2E2E2E",
+    backgroundColor: "#3A3A3A",
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: "center",
@@ -406,7 +374,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#2E2E2E",
+    backgroundColor: "#3A3A3A",
     borderRadius: 14,
     paddingVertical: 6,
     paddingHorizontal: 10,
@@ -428,5 +396,29 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     marginTop: 10,
     fontStyle: "italic",
+  },
+
+  noteSection: { marginTop: 8 },
+  noteCard: {
+    backgroundColor: "#3A3A3A",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+  },
+  noteCardHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
+  noteIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: "rgba(208,128,0,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  noteTitle: { color: "#F4F4F4", fontSize: 15, fontWeight: "700", flex: 1 },
+  noteBody: {
+    color: "#A1A1AA",
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 8,
   },
 });
