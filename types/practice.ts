@@ -19,7 +19,6 @@ export interface PracticeMenu {
   unit: PracticeUnit;
   unit_label: string | null;
   default_value: number | null;
-  is_favorite: boolean;
   sort_order: number;
 }
 
@@ -102,7 +101,6 @@ export interface PracticeMenuInput {
   unit: PracticeUnit;
   unit_label?: string;
   default_value?: number | null;
-  is_favorite?: boolean;
 }
 
 export interface PracticeLogInput {

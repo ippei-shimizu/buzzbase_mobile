@@ -31,7 +31,6 @@ const battingMenu = {
   unit: "count",
   unit_label: "本",
   default_value: 200,
-  is_favorite: false,
   sort_order: 0,
 };
 

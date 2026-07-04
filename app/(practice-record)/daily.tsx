@@ -135,8 +135,6 @@ function DailyEditor({
   );
   const nextTodoHint = useNextTodoHint();
 
-  const favorites = menus.filter((menu) => menu.is_favorite);
-
   const toggleMenu = (menu: PracticeMenu) => {
     const isSelected = menu.id in selected;
     setSelected((prev) => {
@@ -275,14 +273,6 @@ function DailyEditor({
       ) : null}
 
       <Text style={styles.sectionTitle}>練習メニュー（複数選択可）</Text>
-      {favorites.length > 0 ? (
-        <View style={styles.group}>
-          <Text style={[styles.groupTitle, styles.groupTitleSpacing]}>
-            ★ お気に入り
-          </Text>
-          {favorites.map(renderMenu)}
-        </View>
-      ) : null}
       {PRACTICE_CATEGORIES.map((category) => {
         const inCategory = menus.filter(
           (menu) => menu.category === category.key,
@@ -458,7 +448,6 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 8,
   },
-  groupTitleSpacing: { marginBottom: 8 },
   menuItem: {
     backgroundColor: "#3A3A3A",
     borderRadius: 10,

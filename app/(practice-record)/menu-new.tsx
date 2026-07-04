@@ -8,7 +8,6 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  Switch,
   StyleSheet,
   Alert,
 } from "react-native";
@@ -25,7 +24,6 @@ export default function MenuNewScreen() {
   const [category, setCategory] = useState<PracticeCategory>("batting");
   const [unit, setUnit] = useState<PracticeUnit>("count");
   const [defaultValue, setDefaultValue] = useState("");
-  const [isFavorite, setIsFavorite] = useState(false);
 
   const unitMeta =
     PRACTICE_UNITS.find((item) => item.key === unit) ?? PRACTICE_UNITS[0];
@@ -42,9 +40,8 @@ export default function MenuNewScreen() {
         unit,
         // 表示ラベルは計測タイプから自動で決める（回数=本、時間=分 など）。
         unit_label: unitMeta.defaultLabel,
-        // 既定値はワンタップ用なので、お気に入り時のみ保持する。
-        default_value: isFavorite && defaultValue ? Number(defaultValue) : null,
-        is_favorite: isFavorite,
+        // 記録時のプリセット量（日次記録やスケジュールの初期値に使う）。任意。
+        default_value: defaultValue ? Number(defaultValue) : null,
       });
       router.back();
     } catch (error) {
@@ -88,36 +85,21 @@ export default function MenuNewScreen() {
       <FieldLabel text="計測" required />
       <UnitPicker value={unit} onChange={setUnit} />
 
-      <View style={styles.favoriteRow}>
-        <Text style={styles.favoriteLabel}>
-          お気に入りにする（ホームでワンタップ記録）
-        </Text>
-        <Switch
-          value={isFavorite}
-          onValueChange={setIsFavorite}
-          trackColor={{ true: "#d08000", false: "#52525B" }}
+      <FieldLabel text="初期値（任意）" />
+      <View style={styles.valueRow}>
+        <TextInput
+          style={[styles.input, styles.valueInput]}
+          value={defaultValue}
+          onChangeText={setDefaultValue}
+          keyboardType="numeric"
+          placeholder={`例: ${unitMeta.placeholderValue}`}
+          placeholderTextColor="#71717A"
         />
+        <Text style={styles.valueUnit}>{unitMeta.defaultLabel}</Text>
       </View>
-
-      {isFavorite ? (
-        <>
-          <FieldLabel text="ワンタップ用の初期値" />
-          <View style={styles.valueRow}>
-            <TextInput
-              style={[styles.input, styles.valueInput]}
-              value={defaultValue}
-              onChangeText={setDefaultValue}
-              keyboardType="numeric"
-              placeholder={`例: ${unitMeta.placeholderValue}`}
-              placeholderTextColor="#71717A"
-            />
-            <Text style={styles.valueUnit}>{unitMeta.defaultLabel}</Text>
-          </View>
-          <Text style={styles.hint}>
-            ホームのワンタップ記録で使う初期値です。記録時に毎回変更できます。
-          </Text>
-        </>
-      ) : null}
+      <Text style={styles.hint}>
+        記録するときに初期表示される量です。毎回変更できます。
+      </Text>
 
       <TouchableOpacity
         style={[styles.saveButton, isCreating && styles.saveButtonDisabled]}
@@ -145,13 +127,6 @@ const styles = StyleSheet.create({
   valueInput: { flex: 1 },
   valueUnit: { color: "#A1A1AA", fontSize: 15 },
   hint: { color: "#71717A", fontSize: 12, marginTop: 6 },
-  favoriteRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 24,
-  },
-  favoriteLabel: { color: "#F4F4F4", fontSize: 14 },
   saveButton: {
     backgroundColor: "#d08000",
     borderRadius: 8,

@@ -18,9 +18,6 @@ export function MenuCard({ menu, onPress }: Props) {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <View style={styles.left}>
-        {menu.is_favorite ? (
-          <Ionicons name="star" size={14} color="#d08000" />
-        ) : null}
         <Text style={styles.name}>
           {menu.name}
           <Text style={styles.value}>{valueLabel}</Text>
