@@ -111,7 +111,8 @@ export default function GoalNewScreen() {
           accentColor="#d08000"
           display={Platform.OS === "ios" ? "inline" : "default"}
           onChange={(_event, selected) => {
-            if (Platform.OS !== "ios") setShowPicker(false);
+            // 日付を選んだら（iOS の inline 含め）カレンダーを閉じる。
+            setShowPicker(false);
             if (selected) setDeadline(selected);
           }}
         />

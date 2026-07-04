@@ -1,24 +1,38 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { GoalProgressBar } from "@components/goal/GoalProgressBar";
+import { GOAL_PERIOD_LABELS, GOAL_PERIOD_ORDER } from "@constants/goal";
 import { useGoals } from "@hooks/useGoals";
 import { SectionCard, SectionPlaceholder } from "./SectionCard";
 
-/** 今日の目標進捗。 */
+/** 目標管理（月次・シーズン・大会の種類別に進捗を表示）。 */
 export function TodayGoalSection() {
   const router = useRouter();
   const { goals } = useGoals();
 
   return (
-    <SectionCard title="今日の目標">
+    <SectionCard title="目標管理">
       {goals.length === 0 ? (
         <SectionPlaceholder message="目標を設定すると、達成度がここに表示されます" />
       ) : (
-        goals
-          .slice(0, 3)
-          .map((goal) => <GoalProgressBar key={goal.id} goal={goal} />)
+        GOAL_PERIOD_ORDER.map((periodType) => {
+          const inType = goals.filter(
+            (goal) => goal.period_type === periodType,
+          );
+          if (inType.length === 0) return null;
+          return (
+            <View key={periodType} style={styles.group}>
+              <Text style={styles.groupLabel}>
+                {GOAL_PERIOD_LABELS[periodType]}
+              </Text>
+              {inType.map((goal) => (
+                <GoalProgressBar key={goal.id} goal={goal} />
+              ))}
+            </View>
+          );
+        })
       )}
       <TouchableOpacity
         style={styles.editRow}
@@ -32,6 +46,13 @@ export function TodayGoalSection() {
 }
 
 const styles = StyleSheet.create({
+  group: { marginBottom: 8 },
+  groupLabel: {
+    color: "#A1A1AA",
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 6,
+  },
   editRow: {
     flexDirection: "row",
     alignItems: "center",

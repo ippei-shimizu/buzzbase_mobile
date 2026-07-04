@@ -11,6 +11,7 @@ import {
   Alert,
 } from "react-native";
 import { GoalProgressBar } from "@components/goal/GoalProgressBar";
+import { GOAL_PERIOD_LABELS, GOAL_PERIOD_ORDER } from "@constants/goal";
 import { useGoalMutations, useGoals } from "@hooks/useGoals";
 
 export default function GoalListScreen() {
@@ -39,16 +40,31 @@ export default function GoalListScreen() {
           目標を設定すると、達成度がここに表示されます
         </Text>
       ) : (
-        goals.map((goal) => (
-          <View key={goal.id} style={styles.card}>
-            <View style={styles.cardBar}>
-              <GoalProgressBar goal={goal} />
+        GOAL_PERIOD_ORDER.map((periodType) => {
+          const inType = goals.filter(
+            (goal) => goal.period_type === periodType,
+          );
+          if (inType.length === 0) return null;
+          return (
+            <View key={periodType} style={styles.group}>
+              <Text style={styles.groupLabel}>
+                {GOAL_PERIOD_LABELS[periodType]}
+              </Text>
+              {inType.map((goal) => (
+                <View key={goal.id} style={styles.card}>
+                  <View style={styles.cardBar}>
+                    <GoalProgressBar goal={goal} />
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleDelete(goal.id, goal.title)}
+                  >
+                    <Ionicons name="trash-outline" size={18} color="#71717A" />
+                  </TouchableOpacity>
+                </View>
+              ))}
             </View>
-            <TouchableOpacity onPress={() => handleDelete(goal.id, goal.title)}>
-              <Ionicons name="trash-outline" size={18} color="#71717A" />
-            </TouchableOpacity>
-          </View>
-        ))
+          );
+        })
       )}
 
       <TouchableOpacity
@@ -80,6 +96,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 8,
+    marginBottom: 8,
+  },
+  group: { marginBottom: 16 },
+  groupLabel: {
+    color: "#A1A1AA",
+    fontSize: 13,
+    fontWeight: "700",
     marginBottom: 8,
   },
   cardBar: { flex: 1 },

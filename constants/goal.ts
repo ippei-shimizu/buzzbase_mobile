@@ -1,4 +1,18 @@
-import type { GoalComparison } from "../types/goal";
+import type { GoalComparison, GoalPeriodType } from "../types/goal";
+
+/** 目標の種類（期間タイプ）の表示ラベル。 */
+export const GOAL_PERIOD_LABELS: Record<GoalPeriodType, string> = {
+  monthly: "月次",
+  season: "シーズン",
+  tournament: "大会",
+};
+
+/** 目標を種類別に並べるときの表示順。 */
+export const GOAL_PERIOD_ORDER: GoalPeriodType[] = [
+  "monthly",
+  "season",
+  "tournament",
+];
 
 export interface GoalMetric {
   key: string;

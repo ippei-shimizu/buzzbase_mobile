@@ -51,6 +51,12 @@ export default function ReflectTemplateListScreen() {
     ]);
   };
 
+  const handleEdit = (template: ReflectionTemplate) =>
+    router.push({
+      pathname: "/(reflect-template)/new",
+      params: { id: String(template.id) },
+    });
+
   if (isLoading) {
     return (
       <View style={styles.centered}>
@@ -64,12 +70,21 @@ export default function ReflectTemplateListScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.sectionTitle}>プリセット</Text>
         {presets.map((template) => (
-          <View key={template.id} style={styles.card}>
-            <Text style={styles.cardTitle}>{template.title}</Text>
+          <TouchableOpacity
+            key={template.id}
+            style={styles.card}
+            activeOpacity={0.6}
+            accessibilityRole="button"
+            onPress={() => handleEdit(template)}
+          >
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>{template.title}</Text>
+              <Ionicons name="pencil" size={16} color="#A1A1AA" />
+            </View>
             <Text style={styles.cardQuestions}>
               {template.questions.join("・")}
             </Text>
-          </View>
+          </TouchableOpacity>
         ))}
 
         <Text style={[styles.sectionTitle, styles.customTitle]}>
@@ -81,17 +96,27 @@ export default function ReflectTemplateListScreen() {
           </Text>
         ) : (
           custom.map((template) => (
-            <View key={template.id} style={styles.card}>
+            <TouchableOpacity
+              key={template.id}
+              style={styles.card}
+              activeOpacity={0.6}
+              accessibilityRole="button"
+              onPress={() => handleEdit(template)}
+            >
               <View style={styles.cardHeader}>
                 <Text style={styles.cardTitle}>{template.title}</Text>
-                <TouchableOpacity onPress={() => handleDelete(template)}>
+                <Ionicons name="pencil" size={16} color="#A1A1AA" />
+                <TouchableOpacity
+                  onPress={() => handleDelete(template)}
+                  hitSlop={8}
+                >
                   <Ionicons name="trash-outline" size={18} color="#A1A1AA" />
                 </TouchableOpacity>
               </View>
               <Text style={styles.cardQuestions}>
                 {template.questions.join("・")}
               </Text>
-            </View>
+            </TouchableOpacity>
           ))
         )}
 
@@ -135,7 +160,7 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: 12,
   },
   cardTitle: { color: "#F4F4F4", fontSize: 15, fontWeight: "700", flex: 1 },
   cardQuestions: {

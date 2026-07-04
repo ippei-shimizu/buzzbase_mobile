@@ -1,7 +1,9 @@
+import type { ReflectionTemplate } from "../../types/reflectionTemplate";
 import { Ionicons as Icon } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
@@ -10,19 +12,46 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useReflectionTemplateMutations } from "@hooks/useReflectionTemplates";
+import {
+  useReflectionTemplateMutations,
+  useReflectionTemplates,
+} from "@hooks/useReflectionTemplates";
 
-export default function ReflectTemplateNewScreen() {
+export default function ReflectTemplateFormScreen() {
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { templates, isLoading } = useReflectionTemplates();
+  const editing = id
+    ? templates.find((template) => template.id === Number(id))
+    : undefined;
+
+  // 編集モードでテンプレ取得待ちの間はスピナー（初期値を正しく埋めるため）。
+  if (id && isLoading && !editing) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#d08000" />
+      </View>
+    );
+  }
+
+  return <TemplateForm key={editing?.id ?? "new"} template={editing} />;
+}
+
+/** 作成・編集の共通フォーム。template があれば編集、なければ新規作成。 */
+function TemplateForm({ template }: { template?: ReflectionTemplate }) {
   const router = useRouter();
-  const { createTemplate, isCreating } = useReflectionTemplateMutations();
-  const [title, setTitle] = useState("");
-  const [questions, setQuestions] = useState<string[]>(["", "", ""]);
+  const { createTemplate, isCreating, updateTemplate, isUpdating } =
+    useReflectionTemplateMutations();
+  const [title, setTitle] = useState(template?.title ?? "");
+  const [questions, setQuestions] = useState<string[]>(
+    template && template.questions.length > 0
+      ? template.questions
+      : ["", "", ""],
+  );
+  const isSaving = isCreating || isUpdating;
 
   const setQuestion = (index: number, value: string) =>
     setQuestions((prev) => prev.map((item, i) => (i === index ? value : item)));
-
   const addQuestion = () => setQuestions((prev) => [...prev, ""]);
-
   const removeQuestion = (index: number) =>
     setQuestions((prev) => prev.filter((_, i) => i !== index));
 
@@ -40,10 +69,17 @@ export default function ReflectTemplateNewScreen() {
       return;
     }
     try {
-      await createTemplate({
-        title: trimmedTitle,
-        questions: trimmedQuestions,
-      });
+      if (template) {
+        await updateTemplate({
+          id: template.id,
+          input: { title: trimmedTitle, questions: trimmedQuestions },
+        });
+      } else {
+        await createTemplate({
+          title: trimmedTitle,
+          questions: trimmedQuestions,
+        });
+      }
       router.back();
     } catch {
       Alert.alert("保存に失敗しました");
@@ -52,6 +88,9 @@ export default function ReflectTemplateNewScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Stack.Screen
+        options={{ title: template ? "テンプレを編集" : "テンプレを作る" }}
+      />
       <Text style={styles.label}>テンプレ名</Text>
       <TextInput
         style={styles.input}
@@ -85,9 +124,9 @@ export default function ReflectTemplateNewScreen() {
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.saveButton, isCreating && styles.saveButtonDisabled]}
+        style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
         onPress={handleSubmit}
-        disabled={isCreating}
+        disabled={isSaving}
       >
         <Text style={styles.saveButtonText}>保存</Text>
       </TouchableOpacity>
@@ -97,6 +136,12 @@ export default function ReflectTemplateNewScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#2E2E2E" },
+  centered: {
+    flex: 1,
+    backgroundColor: "#2E2E2E",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   content: { padding: 16, paddingBottom: 40 },
   label: {
     color: "#A1A1AA",
