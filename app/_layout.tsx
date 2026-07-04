@@ -33,6 +33,12 @@ Sentry.init({
   sendDefaultPii: false,
 });
 
+// アプリ起動時とディープリンク時のアンカー（初期ルート）をホーム（タブ）に固定する。
+// これが無いと、開発時のナビゲーション状態復元などでホーム以外の画面が最初に開くことがある。
+export const unstable_settings = {
+  initialRouteName: "(tabs)",
+};
+
 configureGoogleSignIn();
 
 const revenueCatApiKey =
