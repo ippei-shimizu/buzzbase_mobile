@@ -22,6 +22,7 @@ import { TodayTasksSection } from "./sections/TodayTasksSection";
 const REFRESH_QUERY_KEYS = [
   "practiceMenus",
   "streak",
+  "shadowSwingStats",
   "activityLogs",
   "schedules",
   "goals",
