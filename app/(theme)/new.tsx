@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   },
   chipActive: { backgroundColor: "#d08000" },
   chipText: { color: "#F4F4F4", fontSize: 13 },
-  chipTextActive: { color: "#1A1A1A", fontWeight: "700" },
+  chipTextActive: { color: "#F4F4F4", fontWeight: "700" },
   saveButton: {
     backgroundColor: "#d08000",
     borderRadius: 8,

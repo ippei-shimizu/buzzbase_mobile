@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 24,
   },
-  primaryButtonText: { color: "#1A1A1A", fontSize: 15, fontWeight: "700" },
+  primaryButtonText: { color: "#F4F4F4", fontSize: 15, fontWeight: "700" },
   achieveButton: {
     backgroundColor: "#3A3A3A",
     borderRadius: 8,

@@ -75,7 +75,7 @@ export default function ThemeListScreen() {
         )}
 
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-          <Ionicons name="add" size={20} color="#1A1A1A" />
+          <Ionicons name="add" size={20} color="#F4F4F4" />
           <Text style={styles.addButtonText}>新しい課題に取り組む</Text>
         </TouchableOpacity>
 
@@ -117,7 +117,7 @@ function ThemeCard({
         <Text style={styles.cardTitle}>{theme.title}</Text>
         {theme.status === "achieved" ? (
           <View style={styles.badge}>
-            <Ionicons name="trophy" size={12} color="#1A1A1A" />
+            <Ionicons name="trophy" size={12} color="#F4F4F4" />
             <Text style={styles.badgeText}>克服</Text>
           </View>
         ) : null}
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
   },
-  badgeText: { color: "#1A1A1A", fontSize: 11, fontWeight: "700" },
+  badgeText: { color: "#F4F4F4", fontSize: 11, fontWeight: "700" },
   addButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -185,5 +185,5 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     marginTop: 4,
   },
-  addButtonText: { color: "#1A1A1A", fontSize: 15, fontWeight: "700" },
+  addButtonText: { color: "#F4F4F4", fontSize: 15, fontWeight: "700" },
 });

@@ -96,7 +96,7 @@ export default function ReflectTemplateListScreen() {
         )}
 
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-          <Ionicons name="add" size={20} color="#1A1A1A" />
+          <Ionicons name="add" size={20} color="#F4F4F4" />
           <Text style={styles.addButtonText}>テンプレを作る</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -155,5 +155,5 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     marginTop: 4,
   },
-  addButtonText: { color: "#1A1A1A", fontSize: 15, fontWeight: "700" },
+  addButtonText: { color: "#F4F4F4", fontSize: 15, fontWeight: "700" },
 });

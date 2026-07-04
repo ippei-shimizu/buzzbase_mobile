@@ -43,7 +43,7 @@ export function ProComingSoonCard({
         <BlurView intensity={14} tint="dark" style={StyleSheet.absoluteFill} />
         <View style={styles.overlay}>
           <View style={styles.badge}>
-            <Ionicons name="lock-closed" size={13} color="#1A1A1A" />
+            <Ionicons name="lock-closed" size={13} color="#F4F4F4" />
             <Text style={styles.badgeText}>Pro プラン (準備中)</Text>
           </View>
         </View>
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   badgeText: {
-    color: "#1A1A1A",
+    color: "#F4F4F4",
     fontSize: 13,
     fontWeight: "600",
   },
