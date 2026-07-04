@@ -1,5 +1,6 @@
 import type { ReflectionTemplate } from "../../types/reflectionTemplate";
 import { Ionicons } from "@expo/vector-icons";
+import { isAxiosError } from "axios";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -46,7 +47,18 @@ export default function ReflectTemplateListScreen() {
       {
         text: "削除",
         style: "destructive",
-        onPress: () => deleteTemplate(template.id),
+        onPress: async () => {
+          try {
+            await deleteTemplate(template.id);
+          } catch (error) {
+            // ノートで使用中は 422 でサーバーが理由を返す。それを見せる。
+            const message =
+              isAxiosError(error) && error.response?.data?.error
+                ? error.response.data.error
+                : "削除に失敗しました";
+            Alert.alert(message);
+          }
+        },
       },
     ]);
   };
