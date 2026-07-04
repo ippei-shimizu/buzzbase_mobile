@@ -11,7 +11,7 @@ import {
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
 import { server } from "../../../jest-setup-msw";
 import { DEFAULT_PRO_STATUS } from "../../../types/pro";
-import InsightScreen from "../index";
+import InsightScreen from "../insights";
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 jest.mock("expo-router", () => {

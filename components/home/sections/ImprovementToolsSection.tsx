@@ -21,7 +21,7 @@ const TOOLS: Tool[] = [
     icon: "trending-up",
     label: "相関インサイト",
     description: "練習と成績の傾向を見る",
-    href: "/(insight)",
+    href: "/(insight)/insights",
   },
   {
     icon: "document-text-outline",
