@@ -277,7 +277,7 @@ export default function GameResultsScreen() {
 
   // 年度と期間は排他。実年を選んだら期間をクリアする。
   const handleSummaryYearSelect = (value: string | undefined) => {
-    const year = value === "all" ? undefined : value;
+    const year = value;
     setSummaryYear(year);
     if (year) {
       setSummaryStartMonth(undefined);
@@ -426,7 +426,7 @@ export default function GameResultsScreen() {
 
   // 年度と期間は排他。実年を選んだら期間をクリアする。
   const handleListYearSelect = (value: string | undefined) => {
-    const year = value === "all" ? undefined : value;
+    const year = value;
     setSelectedYear(year);
     if (year) {
       setSelectedStartMonth(undefined);

@@ -99,7 +99,7 @@ export default function UserProfileScreen() {
 
   // 年度と期間（開始/終了月）は排他。年度を選んだら期間を、期間を選んだら年度をクリアする。
   const handleYearSelect = (value: string | undefined) => {
-    const year = value === "all" ? undefined : value;
+    const year = value;
     setSelectedYear(year);
     if (year) {
       setSelectedStartMonth(undefined);

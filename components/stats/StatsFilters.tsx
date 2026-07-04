@@ -139,7 +139,7 @@ export const StatsFilters = ({
 
   // 年度と期間は排他。実年を選んだら期間を、期間を指定したら年度をクリアする。
   const handleYearSelect = (value: string | undefined) => {
-    const year = value === "all" ? undefined : value;
+    const year = value;
     onFiltersChange(
       year
         ? { ...filters, year, startMonth: undefined, endMonth: undefined }
