@@ -122,6 +122,13 @@ function RootLayoutInner() {
         <Stack.Screen name="(goal)" options={{ headerShown: false }} />
         <Stack.Screen name="(note)" options={{ headerShown: false }} />
         <Stack.Screen name="(records)" options={{ headerShown: false }} />
+        <Stack.Screen name="(theme)" options={{ headerShown: false }} />
+        <Stack.Screen name="(insight)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(reflect-template)"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="(review)" options={{ headerShown: false }} />
         <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen
           name="game-result-detail"
