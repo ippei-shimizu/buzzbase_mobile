@@ -5,8 +5,15 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { usePracticeLogMutations } from "@hooks/usePracticeLogs";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
+import { useSnackbarStore } from "@stores/snackbarStore";
 import { formatAmount } from "@utils/formatAmount";
 import { SectionCard } from "./SectionCard";
+
+/** メニュー名＋既定値を「素振り 200本」のように表示用に整形する。 */
+const menuLabel = (menu: PracticeMenu): string =>
+  menu.default_value != null
+    ? `${menu.name} ${formatAmount(menu.default_value)}${menu.unit_label ?? ""}`
+    : menu.name;
 
 const todayString = (): string => {
   const date = new Date();
@@ -23,17 +30,23 @@ export function PracticeToolsSection() {
   const router = useRouter();
   const { menus } = usePracticeMenus();
   const { createLog, isCreating } = usePracticeLogMutations();
+  const showSnackbar = useSnackbarStore((state) => state.show);
   const favorites = menus.filter((menu) => menu.is_favorite).slice(0, 3);
 
   const quickLog = async (menu: PracticeMenu) => {
+    // 記録できたか/失敗したかをユーザーに必ずフィードバックする（無反応だと気付けない）。
     try {
       await createLog({
         practice_menu_id: menu.id,
         logged_on: todayString(),
         amount: menu.default_value,
       });
+      showSnackbar({
+        type: "success",
+        message: `今日の練習に「${menuLabel(menu)}」を記録しました`,
+      });
     } catch {
-      // ワンタップ記録の失敗は静かに無視（一覧で気付ける）。
+      showSnackbar({ type: "error", message: "記録に失敗しました" });
     }
   };
 
@@ -53,17 +66,12 @@ export function PracticeToolsSection() {
             {favorites.map((menu) => (
               <TouchableOpacity
                 key={menu.id}
-                style={styles.favChip}
+                style={[styles.favChip, isCreating && styles.favChipDisabled]}
                 disabled={isCreating}
                 onPress={() => quickLog(menu)}
               >
                 <Ionicons name="add" size={14} color="#d08000" />
-                <Text style={styles.favText}>
-                  {menu.name}
-                  {menu.default_value != null
-                    ? ` ${formatAmount(menu.default_value)}${menu.unit_label ?? ""}`
-                    : ""}
-                </Text>
+                <Text style={styles.favText}>{menuLabel(menu)}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -101,5 +109,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
+  favChipDisabled: { opacity: 0.5 },
   favText: { color: "#F4F4F4", fontSize: 13, fontWeight: "600" },
 });
