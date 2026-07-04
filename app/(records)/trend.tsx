@@ -8,6 +8,15 @@ import {
   Text,
   View,
 } from "react-native";
+import Svg, {
+  Path,
+  Circle,
+  Line,
+  Text as SvgText,
+  Defs,
+  LinearGradient,
+  Stop,
+} from "react-native-svg";
 import { UnderlineTabBar } from "@components/ui/UnderlineTabBar";
 import { formatTotalAmount, formatVolume } from "@constants/practice";
 import { useMenuTrend } from "@hooks/usePracticeSummaries";
@@ -32,7 +41,23 @@ const periodLabel = (period: Period, value: string): string => {
   return `${parts[1]}/${parts[2]}`;
 };
 
-function TrendBars({
+const CHART_WIDTH = 300;
+const CHART_HEIGHT = 160;
+const PADDING_LEFT = 40;
+const PADDING_RIGHT = 14;
+const PADDING_TOP = 16;
+const PADDING_BOTTOM = 26;
+const PLOT_WIDTH = CHART_WIDTH - PADDING_LEFT - PADDING_RIGHT;
+const PLOT_HEIGHT = CHART_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
+
+/** Y軸目盛りなど、値を短く表示する（1万以上は k 表記）。 */
+const axisLabel = (value: number): string =>
+  value >= 10_000
+    ? `${Math.round(value / 1000).toLocaleString()}k`
+    : Number(value).toLocaleString();
+
+/** メニューの推移を折れ線グラフで表示する（成績画面と同じ SVG 折れ線方式）。 */
+function TrendLine({
   trend,
   period,
   buckets,
@@ -43,31 +68,109 @@ function TrendBars({
 }) {
   const limit = period === "day" ? 14 : period === "month" ? 12 : 6;
   const shown = buckets.slice(0, limit).reverse(); // 古い→新しい
-  const max = Math.max(...shown.map((b) => bucketValue(trend, b)), 1);
-
   if (shown.length === 0) return null;
 
+  const values = shown.map((bucket) => bucketValue(trend, bucket));
+  const max = Math.max(...values, 1);
+
+  const getX = (index: number) =>
+    PADDING_LEFT +
+    (shown.length === 1
+      ? PLOT_WIDTH / 2
+      : (index / (shown.length - 1)) * PLOT_WIDTH);
+  const getY = (value: number) =>
+    PADDING_TOP + PLOT_HEIGHT - (value / max) * PLOT_HEIGHT;
+
+  const linePath = values
+    .map(
+      (value, index) =>
+        `${index === 0 ? "M" : "L"} ${getX(index)},${getY(value)}`,
+    )
+    .join(" ");
+  const areaPath = `${linePath} L ${getX(shown.length - 1)},${PADDING_TOP + PLOT_HEIGHT} L ${getX(0)},${PADDING_TOP + PLOT_HEIGHT} Z`;
+
+  // X軸ラベルは詰まらないよう間引く（先頭・末尾は必ず表示）。
+  const labelStep = Math.ceil(shown.length / 6);
+  const yTicks = [0, max];
+
   return (
-    <View style={styles.barsRow}>
-      {shown.map((bucket) => {
-        const value = bucketValue(trend, bucket);
-        const ratio = value / max;
-        return (
-          <View key={bucket.period} style={styles.barCol}>
-            <View style={styles.barTrack}>
-              <View
-                style={[
-                  styles.barFill,
-                  { height: `${Math.max(ratio * 100, value > 0 ? 4 : 0)}%` },
-                ]}
-              />
-            </View>
-            <Text style={styles.barLabel} numberOfLines={1}>
+    <View style={styles.chartWrapper}>
+      <Svg
+        width={CHART_WIDTH}
+        height={CHART_HEIGHT}
+        viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
+      >
+        <Defs>
+          <LinearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0%" stopColor="#d08000" stopOpacity={0.28} />
+            <Stop offset="100%" stopColor="#d08000" stopOpacity={0.02} />
+          </LinearGradient>
+        </Defs>
+
+        {yTicks.map((tick) => (
+          <React.Fragment key={`y-${tick}`}>
+            <Line
+              x1={PADDING_LEFT}
+              y1={getY(tick)}
+              x2={CHART_WIDTH - PADDING_RIGHT}
+              y2={getY(tick)}
+              stroke="#424242"
+              strokeWidth={0.5}
+            />
+            <SvgText
+              x={PADDING_LEFT - 6}
+              y={getY(tick) + 3}
+              textAnchor="end"
+              fill="#71717A"
+              fontSize={10}
+            >
+              {axisLabel(tick)}
+            </SvgText>
+          </React.Fragment>
+        ))}
+
+        <Path d={areaPath} fill="url(#trendGrad)" />
+        <Path
+          d={linePath}
+          fill="none"
+          stroke="#d08000"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {shown.map((bucket, index) => (
+          <React.Fragment key={`pt-${bucket.period}`}>
+            <Circle
+              cx={getX(index)}
+              cy={getY(values[index])}
+              r={4}
+              fill="#d08000"
+            />
+            <Circle
+              cx={getX(index)}
+              cy={getY(values[index])}
+              r={2}
+              fill="#F4F4F4"
+            />
+          </React.Fragment>
+        ))}
+
+        {shown.map((bucket, index) =>
+          index % labelStep === 0 || index === shown.length - 1 ? (
+            <SvgText
+              key={`xl-${bucket.period}`}
+              x={getX(index)}
+              y={CHART_HEIGHT - 6}
+              textAnchor="middle"
+              fill="#A1A1AA"
+              fontSize={10}
+            >
               {periodLabel(period, bucket.period)}
-            </Text>
-          </View>
-        );
-      })}
+            </SvgText>
+          ) : null,
+        )}
+      </Svg>
     </View>
   );
 }
@@ -118,7 +221,7 @@ export default function MenuTrendScreen() {
         ) : (
           <>
             <View style={styles.card}>
-              <TrendBars trend={trend} period={period} buckets={buckets} />
+              <TrendLine trend={trend} period={period} buckets={buckets} />
             </View>
             <View style={styles.listCard}>
               {buckets.map((bucket) => (
@@ -163,24 +266,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 16,
   },
-  barsRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    height: 140,
-    gap: 4,
-  },
-  barCol: { flex: 1, alignItems: "center", height: "100%" },
-  barTrack: {
-    flex: 1,
-    width: 16,
-    backgroundColor: "#2E2E2E",
-    borderRadius: 4,
-    justifyContent: "flex-end",
-    overflow: "hidden",
-  },
-  barFill: { width: "100%", backgroundColor: "#d08000", borderRadius: 4 },
-  barLabel: { color: "#A1A1AA", fontSize: 10, marginTop: 6 },
+  chartWrapper: { alignItems: "center" },
   listCard: {
     backgroundColor: "#3A3A3A",
     borderRadius: 12,

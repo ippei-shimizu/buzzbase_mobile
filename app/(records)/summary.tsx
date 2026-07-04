@@ -100,6 +100,11 @@ export default function PracticeSummaryScreen() {
 
   const categoryById = new Map(menus.map((menu) => [menu.id, menu.category]));
 
+  // 最後に記録した日が新しいメニュー順に並べる（未記録は末尾）。
+  const sortedSummaries = [...summaries].sort((a, b) =>
+    (b.last_logged_on ?? "").localeCompare(a.last_logged_on ?? ""),
+  );
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -133,10 +138,10 @@ export default function PracticeSummaryScreen() {
       }
     >
       <Text style={styles.lead}>メニューごとの積み上げ</Text>
-      {summaries.length === 0 ? (
+      {sortedSummaries.length === 0 ? (
         <Text style={styles.empty}>まだ練習記録がありません</Text>
       ) : (
-        summaries.map((summary) => (
+        sortedSummaries.map((summary) => (
           <SummaryCard
             key={summary.practice_menu_id ?? summary.menu_name}
             summary={summary}
