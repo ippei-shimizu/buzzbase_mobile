@@ -40,3 +40,25 @@ export const extractMemoText = (memo: string | null): string => {
     return memo;
   }
 };
+
+/**
+ * テンプレ回答からメモ本文を合成する。見出しを【】で囲み、本文を改行下・
+ * 回答間を空行で区切る。メモ未入力時の一覧プレビュー本文として使う。
+ */
+export const buildReflectionMemoText = (answers: ReflectionAnswer[]): string =>
+  answers.map((item) => `【${item.question}】\n${item.answer}`).join("\n\n");
+
+/**
+ * メモ本文がテンプレ回答から自動合成されたもの（新旧フォーマット）かを判定する。
+ * 編集時に合成メモを自由メモ欄へ流し込まないための判別に使う。
+ */
+export const isReflectionMemo = (
+  memoText: string,
+  answers: ReflectionAnswer[],
+): boolean => {
+  if (answers.length === 0) return false;
+  const legacy = answers
+    .map((item) => `${item.question}: ${item.answer}`)
+    .join("\n");
+  return memoText === buildReflectionMemoText(answers) || memoText === legacy;
+};

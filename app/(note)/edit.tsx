@@ -3,7 +3,7 @@ import React from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
 import { NoteForm } from "@components/note/NoteForm";
 import { useNote, useNoteMutations } from "@hooks/useNotes";
-import { extractMemoText } from "../../types/note";
+import { extractMemoText, isReflectionMemo } from "../../types/note";
 
 export default function NoteEditScreen() {
   const router = useRouter();
@@ -28,11 +28,17 @@ export default function NoteEditScreen() {
     );
   }
 
+  // テンプレ由来（合成済み）メモは自由メモ欄に流し込まず、テンプレ回答を
+  // 編集して保存時に再合成させる（二重表示・回答とメモの乖離を防ぐ）。
+  const memoText = extractMemoText(note.memo);
+  const answers = note.reflection_answers ?? [];
+  const editableMemo = isReflectionMemo(memoText, answers) ? "" : memoText;
+
   return (
     <NoteForm
       initial={{
         title: note.title ?? "",
-        memo: extractMemoText(note.memo),
+        memo: editableMemo,
         date: note.date,
         practiceSessionId: note.practice_session_id,
         gameResultId: note.game_result_id,
