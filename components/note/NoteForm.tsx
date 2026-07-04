@@ -155,11 +155,12 @@ export function NoteForm({
       return;
     }
     // 一覧プレビュー用に、メモ未入力ならテンプレ回答からメモ本文を合成する。
+    // 見出しを【】で囲み、本文を改行下・回答間を空行で区切って読みやすくする。
     const memoText =
       memo.trim() ||
       reflectionAnswers
-        .map((item) => `${item.question}: ${item.answer}`)
-        .join("\n");
+        .map((item) => `【${item.question}】\n${item.answer}`)
+        .join("\n\n");
     await onSubmit({
       title: title.trim() || undefined,
       date: toDateString(date),
