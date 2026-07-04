@@ -46,6 +46,10 @@ jest.mock("@hooks/useAvailableYears", () => ({
     mockUseAvailableYears(userId),
 }));
 
+jest.mock("@hooks/useAvailableMonths", () => ({
+  useAvailableMonths: () => ({ months: [], isLoading: false }),
+}));
+
 jest.mock("@hooks/useMasterData", () => ({
   useTeams: () => ({ data: [] }),
   usePrefectures: () => ({ data: [] }),

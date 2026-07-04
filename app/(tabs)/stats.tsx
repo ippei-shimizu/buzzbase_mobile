@@ -51,6 +51,7 @@ import {
   GlobalMenuOverlay,
   useGlobalMenu,
 } from "@components/ui/GlobalMenu";
+import { useAvailableMonths } from "@hooks/useAvailableMonths";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useMySeasons } from "@hooks/useSeasons";
 import {
@@ -77,6 +78,7 @@ import {
   trackProFeatureTapped,
   trackStatsFilterChanged,
 } from "@utils/analytics";
+import { monthOptionsFromRecorded } from "@utils/monthOptions";
 
 type ActiveTab = "batting" | "pitching";
 
@@ -103,14 +105,31 @@ function TableFilterDropdown({
   onToggle: () => void;
 }) {
   const selectedLabel = options.find((o) => o.key === value)?.label ?? "全て";
+  // 「全て」以外を選択中は primary で強調し、絞り込み中だと一目で分かるようにする。
+  const isFiltered = value !== undefined;
 
   return (
     <View style={{ zIndex: isOpen ? 100 : 0 }}>
-      <TouchableOpacity style={tableFilterStyles.button} onPress={onToggle}>
-        <Text style={tableFilterStyles.buttonText}>
+      <TouchableOpacity
+        style={[
+          tableFilterStyles.button,
+          isFiltered && tableFilterStyles.buttonActive,
+        ]}
+        onPress={onToggle}
+      >
+        <Text
+          style={[
+            tableFilterStyles.buttonText,
+            isFiltered && tableFilterStyles.buttonTextActive,
+          ]}
+        >
           {label}: {selectedLabel}
         </Text>
-        <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+        <Ionicons
+          name="chevron-down"
+          size={14}
+          color={isFiltered ? "#d08000" : "#A1A1AA"}
+        />
       </TouchableOpacity>
 
       {isOpen && (
@@ -211,6 +230,8 @@ const tableFilterStyles = StyleSheet.create({
     paddingVertical: 6,
   },
   buttonText: { color: "#F4F4F4", fontSize: 12, fontWeight: "500" },
+  buttonActive: { borderColor: "#d08000" },
+  buttonTextActive: { color: "#d08000" },
   overlayBg: {
     position: "absolute" as const,
     top: -500,
@@ -250,16 +271,23 @@ export default function StatsScreen() {
   // フィルター変更時、変わったキーだけを計測してから state を更新する。
   const handleFiltersChange = useCallback(
     (next: StatsFiltersType) => {
-      (["year", "matchType", "seasonId", "tournamentId"] as const).forEach(
-        (key) => {
-          if (filters[key] !== next[key]) {
-            trackStatsFilterChanged({
-              filter_key: key,
-              filter_value: next[key] ?? null,
-            });
-          }
-        },
-      );
+      (
+        [
+          "year",
+          "matchType",
+          "seasonId",
+          "tournamentId",
+          "startMonth",
+          "endMonth",
+        ] as const
+      ).forEach((key) => {
+        if (filters[key] !== next[key]) {
+          trackStatsFilterChanged({
+            filter_key: key,
+            filter_value: next[key] ?? null,
+          });
+        }
+      });
       setFilters(next);
     },
     [filters],
@@ -275,17 +303,61 @@ export default function StatsScreen() {
   const [tableTournamentId, setTableTournamentId] = useState<
     string | undefined
   >(undefined);
+  const [tableStartMonth, setTableStartMonth] = useState<string | undefined>(
+    undefined,
+  );
+  const [tableEndMonth, setTableEndMonth] = useState<string | undefined>(
+    undefined,
+  );
   const [tableActiveFilter, setTableActiveFilter] = useState<string | null>(
     null,
   );
   const toggleTableFilter = (id: string) =>
     setTableActiveFilter((prev) => (prev === id ? null : id));
-  const hasTableFilter = !!(tableYear || tableSeasonId || tableTournamentId);
+  const hasTableFilter = !!(
+    tableYear ||
+    tableSeasonId ||
+    tableTournamentId ||
+    tableStartMonth ||
+    tableEndMonth
+  );
   const resetTableFilters = () => {
     setTableActiveFilter(null);
     setTableYear(undefined);
     setTableSeasonId(undefined);
     setTableTournamentId(undefined);
+    setTableStartMonth(undefined);
+    setTableEndMonth(undefined);
+  };
+
+  // 年度と期間は排他。実年を選んだら期間をクリアする。
+  const handleTableYearSelect = (value: string | undefined) => {
+    setTableYear(value);
+    if (value) {
+      setTableStartMonth(undefined);
+      setTableEndMonth(undefined);
+    }
+  };
+
+  // 開始を選ぶと終了が未指定/開始より前のとき終了を同月に合わせ、単月をワンタップで作れる。
+  const handleTableStartMonthSelect = (value: string | undefined) => {
+    if (!value) {
+      setTableStartMonth(undefined);
+      return;
+    }
+    setTableStartMonth(value);
+    setTableEndMonth((prev) => (!prev || prev < value ? value : prev));
+    setTableYear(undefined);
+  };
+
+  const handleTableEndMonthSelect = (value: string | undefined) => {
+    if (!value) {
+      setTableEndMonth(undefined);
+      return;
+    }
+    setTableEndMonth(value);
+    setTableStartMonth((prev) => (prev && prev > value ? value : prev));
+    setTableYear(undefined);
   };
 
   const { menuVisible, menuOpacity, openMenu, closeMenu } = useGlobalMenu();
@@ -300,6 +372,7 @@ export default function StatsScreen() {
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
   const { years: availableYears } = useAvailableYears();
+  const { months } = useAvailableMonths();
   const hitDirections = useHitDirections(filters);
   const hitLocations = useHitLocations(filters);
   const countSituations = useCountSituations(
@@ -328,18 +401,24 @@ export default function StatsScreen() {
     tableYear,
     tableSeasonId,
     tableTournamentId,
+    tableStartMonth,
+    tableEndMonth,
   );
   const pitchingTable = usePitchingStatsTable(
     pitchingPeriod,
     tableYear,
     tableSeasonId,
     tableTournamentId,
+    tableStartMonth,
+    tableEndMonth,
   );
   const eraTrend = useEraTrend(
     filters.year,
     filters.seasonId,
     filters.tournamentId,
     activeTab === "pitching",
+    filters.startMonth,
+    filters.endMonth,
   );
   const isLoading =
     hitDirections.isLoading ||
@@ -413,21 +492,35 @@ export default function StatsScreen() {
   const handleBattingPeriodChange = useCallback(
     (period: StatsPeriod) => {
       setBattingPeriod(period);
-      if (period !== "yearly" && !tableYear && !tableSeasonId) {
+      // 期間フィルタが有効なときは年度への自動フォールバックで排他を崩さない。
+      if (
+        period !== "yearly" &&
+        !tableYear &&
+        !tableSeasonId &&
+        !tableStartMonth &&
+        !tableEndMonth
+      ) {
         setTableYear(currentYear);
       }
     },
-    [tableYear, tableSeasonId],
+    [tableYear, tableSeasonId, tableStartMonth, tableEndMonth],
   );
 
   const handlePitchingPeriodChange = useCallback(
     (period: StatsPeriod) => {
       setPitchingPeriod(period);
-      if (period !== "yearly" && !tableYear && !tableSeasonId) {
+      // 期間フィルタが有効なときは年度への自動フォールバックで排他を崩さない。
+      if (
+        period !== "yearly" &&
+        !tableYear &&
+        !tableSeasonId &&
+        !tableStartMonth &&
+        !tableEndMonth
+      ) {
         setTableYear(currentYear);
       }
     },
-    [tableYear, tableSeasonId],
+    [tableYear, tableSeasonId, tableStartMonth, tableEndMonth],
   );
 
   const yearOptions = availableYears.map((y) => ({
@@ -444,6 +537,8 @@ export default function StatsScreen() {
     key: String(t.id),
     label: t.name,
   }));
+
+  const monthOptions = monthOptionsFromRecorded(months);
 
   const currentPeriod =
     activeTab === "batting" ? battingPeriod : pitchingPeriod;
@@ -521,6 +616,7 @@ export default function StatsScreen() {
             filters={filters}
             onFiltersChange={handleFiltersChange}
             availableYears={availableYears}
+            availableMonths={months}
             availableSeasons={seasons.map((s) => ({
               id: String(s.id),
               name: s.name,
@@ -705,10 +801,30 @@ export default function StatsScreen() {
                   label="年度"
                   value={tableYear}
                   options={yearOptions}
-                  onSelect={setTableYear}
+                  onSelect={handleTableYearSelect}
                   isOpen={tableActiveFilter === "tableYear"}
                   onToggle={() => toggleTableFilter("tableYear")}
                 />
+                {monthOptions.length > 0 && (
+                  <>
+                    <TableFilterDropdown
+                      label="開始"
+                      value={tableStartMonth}
+                      options={monthOptions}
+                      onSelect={handleTableStartMonthSelect}
+                      isOpen={tableActiveFilter === "tableStartMonth"}
+                      onToggle={() => toggleTableFilter("tableStartMonth")}
+                    />
+                    <TableFilterDropdown
+                      label="終了"
+                      value={tableEndMonth}
+                      options={monthOptions}
+                      onSelect={handleTableEndMonthSelect}
+                      isOpen={tableActiveFilter === "tableEndMonth"}
+                      onToggle={() => toggleTableFilter("tableEndMonth")}
+                    />
+                  </>
+                )}
                 {seasonOptions.length > 0 && (
                   <TableFilterDropdown
                     label="シーズン"
@@ -769,10 +885,30 @@ export default function StatsScreen() {
                   label="年度"
                   value={tableYear}
                   options={yearOptions}
-                  onSelect={setTableYear}
+                  onSelect={handleTableYearSelect}
                   isOpen={tableActiveFilter === "tableYear"}
                   onToggle={() => toggleTableFilter("tableYear")}
                 />
+                {monthOptions.length > 0 && (
+                  <>
+                    <TableFilterDropdown
+                      label="開始"
+                      value={tableStartMonth}
+                      options={monthOptions}
+                      onSelect={handleTableStartMonthSelect}
+                      isOpen={tableActiveFilter === "tableStartMonth"}
+                      onToggle={() => toggleTableFilter("tableStartMonth")}
+                    />
+                    <TableFilterDropdown
+                      label="終了"
+                      value={tableEndMonth}
+                      options={monthOptions}
+                      onSelect={handleTableEndMonthSelect}
+                      isOpen={tableActiveFilter === "tableEndMonth"}
+                      onToggle={() => toggleTableFilter("tableEndMonth")}
+                    />
+                  </>
+                )}
                 {seasonOptions.length > 0 && (
                   <TableFilterDropdown
                     label="シーズン"

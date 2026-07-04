@@ -14,6 +14,9 @@ export const defaultHandlers = [
   http.get(`${API_V1_URL}/teams`, () => HttpResponse.json([])),
   http.get(`${API_V1_URL}/positions`, () => HttpResponse.json([])),
   http.get(`${API_V1_URL}/tournaments`, () => HttpResponse.json([])),
+  http.get(`${API_V1_URL}/match_results/available_months`, () =>
+    HttpResponse.json([]),
+  ),
 ];
 
 /**

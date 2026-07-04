@@ -1,11 +1,11 @@
-import axiosInstance from "@utils/axiosInstance";
-import { API_BASE_URL } from "@constants/api";
+import type { BattingStats, PitchingStats } from "../types/dashboard";
 import type {
   UserProfile,
   UserProfileDetail,
   StatsFilters,
 } from "../types/profile";
-import type { BattingStats, PitchingStats } from "../types/dashboard";
+import { API_BASE_URL } from "@constants/api";
+import axiosInstance from "@utils/axiosInstance";
 
 export const getCurrentUserProfile = async (): Promise<UserProfile> => {
   const response = await axiosInstance.get<UserProfile>("/user");
@@ -27,6 +27,8 @@ export const getProfileBattingStats = async (
   if (filters.seasonId) params.append("season_id", filters.seasonId);
   if (filters.tournamentId)
     params.append("tournament_id", filters.tournamentId);
+  if (filters.startMonth) params.append("start_month", filters.startMonth);
+  if (filters.endMonth) params.append("end_month", filters.endMonth);
 
   const response = await axiosInstance.get<BattingStats>(
     `${API_BASE_URL}/api/v2/dashboard/batting_stats?${params.toString()}`,
@@ -45,6 +47,8 @@ export const getUserBattingStats = async (
   if (filters.seasonId) params.append("season_id", filters.seasonId);
   if (filters.tournamentId)
     params.append("tournament_id", filters.tournamentId);
+  if (filters.startMonth) params.append("start_month", filters.startMonth);
+  if (filters.endMonth) params.append("end_month", filters.endMonth);
 
   const response = await axiosInstance.get<BattingStats>(
     `${API_BASE_URL}/api/v2/dashboard/batting_stats?${params.toString()}`,
@@ -63,6 +67,8 @@ export const getUserPitchingStats = async (
   if (filters.seasonId) params.append("season_id", filters.seasonId);
   if (filters.tournamentId)
     params.append("tournament_id", filters.tournamentId);
+  if (filters.startMonth) params.append("start_month", filters.startMonth);
+  if (filters.endMonth) params.append("end_month", filters.endMonth);
 
   const response = await axiosInstance.get<PitchingStats>(
     `${API_BASE_URL}/api/v2/dashboard/pitching_stats?${params.toString()}`,
@@ -92,6 +98,8 @@ export const getProfilePitchingStats = async (
   if (filters.seasonId) params.append("season_id", filters.seasonId);
   if (filters.tournamentId)
     params.append("tournament_id", filters.tournamentId);
+  if (filters.startMonth) params.append("start_month", filters.startMonth);
+  if (filters.endMonth) params.append("end_month", filters.endMonth);
 
   const response = await axiosInstance.get<PitchingStats>(
     `${API_BASE_URL}/api/v2/dashboard/pitching_stats?${params.toString()}`,

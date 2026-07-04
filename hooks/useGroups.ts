@@ -31,10 +31,21 @@ export const useGroupDetail = (
   year?: string,
   matchType?: string,
   tournamentId?: string,
+  startMonth?: string,
+  endMonth?: string,
 ) => {
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
-    queryKey: ["group", id, year, matchType, tournamentId],
-    queryFn: () => getGroupDetail(id!, year, matchType, tournamentId),
+    queryKey: [
+      "group",
+      id,
+      year,
+      matchType,
+      tournamentId,
+      startMonth,
+      endMonth,
+    ],
+    queryFn: () =>
+      getGroupDetail(id!, year, matchType, tournamentId, startMonth, endMonth),
     enabled: !!id,
   });
 

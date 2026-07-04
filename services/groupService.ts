@@ -1,4 +1,3 @@
-import axiosInstance from "@utils/axiosInstance";
 import type {
   Group,
   GroupDetail,
@@ -7,6 +6,7 @@ import type {
   InviteLinkResponse,
   InviteLinkInfo,
 } from "../types/group";
+import axiosInstance from "@utils/axiosInstance";
 
 export const getGroups = async (): Promise<Group[]> => {
   const response = await axiosInstance.get<Group[]>("/groups");
@@ -18,11 +18,15 @@ export const getGroupDetail = async (
   year?: string,
   matchType?: string,
   tournamentId?: string,
+  startMonth?: string,
+  endMonth?: string,
 ): Promise<GroupDetail> => {
   const params = new URLSearchParams();
   if (year) params.append("year", year);
   if (matchType) params.append("match_type", matchType);
   if (tournamentId) params.append("tournament_id", tournamentId);
+  if (startMonth) params.append("start_month", startMonth);
+  if (endMonth) params.append("end_month", endMonth);
   const query = params.toString();
   const response = await axiosInstance.get<GroupDetail>(
     `/groups/${id}${query ? `?${query}` : ""}`,

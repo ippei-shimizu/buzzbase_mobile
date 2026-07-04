@@ -30,12 +30,14 @@ import {
   GlobalMenuOverlay,
   useGlobalMenu,
 } from "@components/ui/GlobalMenu";
+import { useAvailableMonths } from "@hooks/useAvailableMonths";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useFilteredGameResults } from "@hooks/useGameResults";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useGameSummary } from "@hooks/useStats";
 import { useTournaments } from "@hooks/useTournaments";
 import { MATCH_TYPE_OPTIONS } from "@utils/matchType";
+import { monthOptionsFromRecorded } from "@utils/monthOptions";
 import { useGameRecordStore } from "../../../stores/gameRecordStore";
 
 type ScreenTab = "summary" | "list";
@@ -83,14 +85,28 @@ function FilterDropdown({
   onToggle: () => void;
 }) {
   const selectedLabel = options.find((o) => o.key === value)?.label ?? "全て";
+  // 「全て」以外を選択中は primary で強調し、絞り込み中だと一目で分かるようにする。
+  const isFiltered = value !== undefined;
 
   return (
     <View style={{ zIndex: isOpen ? 100 : 0 }}>
-      <TouchableOpacity style={filterStyles.button} onPress={onToggle}>
-        <Text style={filterStyles.buttonText}>
+      <TouchableOpacity
+        style={[filterStyles.button, isFiltered && filterStyles.buttonActive]}
+        onPress={onToggle}
+      >
+        <Text
+          style={[
+            filterStyles.buttonText,
+            isFiltered && filterStyles.buttonTextActive,
+          ]}
+        >
           {label}: {selectedLabel}
         </Text>
-        <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+        <Ionicons
+          name="chevron-down"
+          size={14}
+          color={isFiltered ? "#d08000" : "#A1A1AA"}
+        />
       </TouchableOpacity>
 
       {isOpen && (
@@ -165,6 +181,12 @@ const filterStyles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
   },
+  buttonActive: {
+    borderColor: "#d08000",
+  },
+  buttonTextActive: {
+    color: "#d08000",
+  },
   overlayBg: {
     position: "absolute" as const,
     top: -500,
@@ -213,6 +235,8 @@ export default function GameResultsScreen() {
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
   const { years: availableYears } = useAvailableYears();
+  const { months: availableMonths } = useAvailableMonths();
+  const monthOptions = monthOptionsFromRecorded(availableMonths);
   const { menuVisible, menuOpacity, openMenu, closeMenu } = useGlobalMenu();
   const params = useLocalSearchParams<{ tab?: string }>();
 
@@ -239,16 +263,56 @@ export default function GameResultsScreen() {
   const [summaryTournamentId, setSummaryTournamentId] = useState<
     string | undefined
   >(undefined);
+  const [summaryStartMonth, setSummaryStartMonth] = useState<
+    string | undefined
+  >(undefined);
+  const [summaryEndMonth, setSummaryEndMonth] = useState<string | undefined>(
+    undefined,
+  );
   const [summaryActiveFilter, setSummaryActiveFilter] = useState<string | null>(
     null,
   );
   const toggleSummaryFilter = (id: string) =>
     setSummaryActiveFilter((prev) => (prev === id ? null : id));
+
+  // 年度と期間は排他。実年を選んだら期間をクリアする。
+  const handleSummaryYearSelect = (value: string | undefined) => {
+    const year = value;
+    setSummaryYear(year);
+    if (year) {
+      setSummaryStartMonth(undefined);
+      setSummaryEndMonth(undefined);
+    }
+  };
+
+  // 開始を選ぶと終了が未指定/開始より前のとき終了を同月に合わせ、単月をワンタップで作れる。
+  const handleSummaryStartMonthSelect = (value: string | undefined) => {
+    if (!value) {
+      setSummaryStartMonth(undefined);
+      return;
+    }
+    setSummaryStartMonth(value);
+    setSummaryEndMonth((prev) => (!prev || prev < value ? value : prev));
+    setSummaryYear(undefined);
+  };
+
+  const handleSummaryEndMonthSelect = (value: string | undefined) => {
+    if (!value) {
+      setSummaryEndMonth(undefined);
+      return;
+    }
+    setSummaryEndMonth(value);
+    setSummaryStartMonth((prev) => (prev && prev > value ? value : prev));
+    setSummaryYear(undefined);
+  };
+
   const gameSummary = useGameSummary(
     summaryYear,
     summaryMatchType,
     summarySeasonId,
     summaryTournamentId,
+    summaryStartMonth,
+    summaryEndMonth,
   );
   const [summaryRefreshing, setSummaryRefreshing] = useState(false);
   const onSummaryRefresh = useCallback(async () => {
@@ -287,6 +351,12 @@ export default function GameResultsScreen() {
   const [selectedTournamentId, setSelectedTournamentId] = useState<
     string | undefined
   >(undefined);
+  const [selectedStartMonth, setSelectedStartMonth] = useState<
+    string | undefined
+  >(undefined);
+  const [selectedEndMonth, setSelectedEndMonth] = useState<string | undefined>(
+    undefined,
+  );
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const toggleFilter = (id: string) =>
     setActiveFilter((prev) => (prev === id ? null : id));
@@ -318,6 +388,8 @@ export default function GameResultsScreen() {
     match_type: selectedMatchType ?? "全て",
     season_id: selectedSeasonId,
     tournament_id: selectedTournamentId,
+    start_month: selectedStartMonth,
+    end_month: selectedEndMonth,
     search: debouncedSearch || undefined,
     sort_by: "date",
     sort_order: sortDesc ? "desc" : "asc",
@@ -351,6 +423,43 @@ export default function GameResultsScreen() {
   const scrollToTop = useCallback(() => {
     scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, []);
+
+  // 年度と期間は排他。実年を選んだら期間をクリアする。
+  const handleListYearSelect = (value: string | undefined) => {
+    const year = value;
+    setSelectedYear(year);
+    if (year) {
+      setSelectedStartMonth(undefined);
+      setSelectedEndMonth(undefined);
+    }
+    setCurrentPage(1);
+    scrollToTop();
+  };
+
+  // 開始を選ぶと終了が未指定/開始より前のとき終了を同月に合わせ、単月をワンタップで作れる。
+  const handleListStartMonthSelect = (value: string | undefined) => {
+    if (!value) {
+      setSelectedStartMonth(undefined);
+    } else {
+      setSelectedStartMonth(value);
+      setSelectedEndMonth((prev) => (!prev || prev < value ? value : prev));
+      setSelectedYear(undefined);
+    }
+    setCurrentPage(1);
+    scrollToTop();
+  };
+
+  const handleListEndMonthSelect = (value: string | undefined) => {
+    if (!value) {
+      setSelectedEndMonth(undefined);
+    } else {
+      setSelectedEndMonth(value);
+      setSelectedStartMonth((prev) => (prev && prev > value ? value : prev));
+      setSelectedYear(undefined);
+    }
+    setCurrentPage(1);
+    scrollToTop();
+  };
 
   // ページ変更時の先頭スクロール。currentPage state の変化だけを監視すると
   // データ再フェッチ中にスクロールが走ってリスト再描画で無効化されることがある。
@@ -407,18 +516,31 @@ export default function GameResultsScreen() {
         <FilterDropdown
           label="年度"
           value={selectedYear}
-          options={[
-            { key: "all", label: "通算" },
-            ...availableYears.map((y) => ({ key: y, label: y })),
-          ]}
-          onSelect={(v) => {
-            setSelectedYear(v === "all" ? undefined : v);
-            setCurrentPage(1);
-            scrollToTop();
-          }}
+          options={[...availableYears.map((y) => ({ key: y, label: y }))]}
+          onSelect={handleListYearSelect}
           isOpen={activeFilter === "year"}
           onToggle={() => toggleFilter("year")}
         />
+        {monthOptions.length > 0 && (
+          <>
+            <FilterDropdown
+              label="開始"
+              value={selectedStartMonth}
+              options={monthOptions}
+              onSelect={handleListStartMonthSelect}
+              isOpen={activeFilter === "startMonth"}
+              onToggle={() => toggleFilter("startMonth")}
+            />
+            <FilterDropdown
+              label="終了"
+              value={selectedEndMonth}
+              options={monthOptions}
+              onSelect={handleListEndMonthSelect}
+              isOpen={activeFilter === "endMonth"}
+              onToggle={() => toggleFilter("endMonth")}
+            />
+          </>
+        )}
         <FilterDropdown
           label="種別"
           value={selectedMatchType}
@@ -469,7 +591,9 @@ export default function GameResultsScreen() {
               selectedYear ||
               selectedMatchType ||
               selectedSeasonId ||
-              selectedTournamentId
+              selectedTournamentId ||
+              selectedStartMonth ||
+              selectedEndMonth
             )
           }
           onPress={() => {
@@ -478,6 +602,8 @@ export default function GameResultsScreen() {
             setSelectedMatchType(undefined);
             setSelectedSeasonId(undefined);
             setSelectedTournamentId(undefined);
+            setSelectedStartMonth(undefined);
+            setSelectedEndMonth(undefined);
             setCurrentPage(1);
             scrollToTop();
           }}
@@ -524,7 +650,6 @@ export default function GameResultsScreen() {
   );
 
   const summaryYearOptions = [
-    { key: "all", label: "通算" },
     ...availableYears.map((y) => ({ key: y, label: y })),
   ];
 
@@ -609,10 +734,30 @@ export default function GameResultsScreen() {
               label="年度"
               value={summaryYear}
               options={summaryYearOptions}
-              onSelect={(v) => setSummaryYear(v === "all" ? undefined : v)}
+              onSelect={handleSummaryYearSelect}
               isOpen={summaryActiveFilter === "summaryYear"}
               onToggle={() => toggleSummaryFilter("summaryYear")}
             />
+            {monthOptions.length > 0 && (
+              <>
+                <FilterDropdown
+                  label="開始"
+                  value={summaryStartMonth}
+                  options={monthOptions}
+                  onSelect={handleSummaryStartMonthSelect}
+                  isOpen={summaryActiveFilter === "summaryStartMonth"}
+                  onToggle={() => toggleSummaryFilter("summaryStartMonth")}
+                />
+                <FilterDropdown
+                  label="終了"
+                  value={summaryEndMonth}
+                  options={monthOptions}
+                  onSelect={handleSummaryEndMonthSelect}
+                  isOpen={summaryActiveFilter === "summaryEndMonth"}
+                  onToggle={() => toggleSummaryFilter("summaryEndMonth")}
+                />
+              </>
+            )}
             <FilterDropdown
               label="種別"
               value={summaryMatchType}
@@ -651,7 +796,9 @@ export default function GameResultsScreen() {
                   summaryYear ||
                   summaryMatchType ||
                   summarySeasonId ||
-                  summaryTournamentId
+                  summaryTournamentId ||
+                  summaryStartMonth ||
+                  summaryEndMonth
                 )
               }
               onPress={() => {
@@ -660,11 +807,17 @@ export default function GameResultsScreen() {
                 setSummaryMatchType(undefined);
                 setSummarySeasonId(undefined);
                 setSummaryTournamentId(undefined);
+                setSummaryStartMonth(undefined);
+                setSummaryEndMonth(undefined);
               }}
             />
           </View>
           <Text style={styles.activeFilterLabel}>
-            {summaryYear ? `${summaryYear}年` : "通算"}
+            {summaryYear
+              ? `${summaryYear}年`
+              : summaryStartMonth || summaryEndMonth
+                ? `${monthOptions.find((o) => o.key === summaryStartMonth)?.label ?? "指定なし"} 〜 ${monthOptions.find((o) => o.key === summaryEndMonth)?.label ?? "指定なし"}`
+                : "通算"}
             {summaryMatchType
               ? ` / ${MATCH_TYPE_OPTIONS.find((o) => o.key === summaryMatchType)?.label ?? summaryMatchType}`
               : ""}
