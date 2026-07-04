@@ -336,7 +336,6 @@ export const StatsOverview = ({
         label="年度"
         value={f.selectedYear}
         options={[
-          { key: "all", label: "通算" },
           ...availableYears.map((y) => ({ key: y, label: y })),
         ]}
         onSelect={(v) => f.setSelectedYear(v === "all" ? undefined : v)}

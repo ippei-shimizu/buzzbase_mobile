@@ -379,7 +379,6 @@ export default function UserProfileScreen() {
                         label="年度"
                         value={selectedYear}
                         options={[
-                          { key: "all", label: "通算" },
                           ...availableYears.map((y) => ({
                             key: y,
                             label: y,
@@ -469,7 +468,6 @@ export default function UserProfileScreen() {
                     label="年度"
                     value={selectedYear}
                     options={[
-                      { key: "all", label: "通算" },
                       ...availableYears.map((y) => ({ key: y, label: y })),
                     ]}
                     onSelect={handleYearSelect}

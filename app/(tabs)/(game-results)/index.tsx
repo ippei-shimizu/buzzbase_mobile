@@ -497,7 +497,6 @@ export default function GameResultsScreen() {
           label="年度"
           value={selectedYear}
           options={[
-            { key: "all", label: "通算" },
             ...availableYears.map((y) => ({ key: y, label: y })),
           ]}
           onSelect={handleListYearSelect}
@@ -633,7 +632,6 @@ export default function GameResultsScreen() {
   );
 
   const summaryYearOptions = [
-    { key: "all", label: "通算" },
     ...availableYears.map((y) => ({ key: y, label: y })),
   ];
 

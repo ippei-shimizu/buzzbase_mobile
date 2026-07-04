@@ -121,7 +121,6 @@ export const StatsFilters = ({
     setActiveFilter((prev) => (prev === id ? null : id));
 
   const yearOptions = [
-    { key: "all", label: "通算" },
     ...availableYears.map((y) => ({ key: String(y), label: `${y}` })),
   ];
 
