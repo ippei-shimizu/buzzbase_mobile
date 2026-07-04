@@ -417,8 +417,8 @@ export default function StatsScreen() {
     filters.seasonId,
     filters.tournamentId,
     activeTab === "pitching",
-    tableStartMonth,
-    tableEndMonth,
+    filters.startMonth,
+    filters.endMonth,
   );
   const isLoading =
     hitDirections.isLoading ||
