@@ -521,9 +521,7 @@ export default function ProfileScreen() {
             <FilterDropdown
               label="年度"
               value={selectedYear}
-              options={[
-                ...availableYears.map((y) => ({ key: y, label: y })),
-              ]}
+              options={[...availableYears.map((y) => ({ key: y, label: y }))]}
               onSelect={handleYearSelect}
               isOpen={activeFilter === "game-year"}
               onToggle={() => toggleFilter("game-year")}
