@@ -7,11 +7,13 @@ import {
   FilterDropdown,
   MATCH_TYPE_OPTIONS,
 } from "@components/ui/FilterDropdown";
+import { useAvailableMonths } from "@hooks/useAvailableMonths";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useProfileStats } from "@hooks/useProfileStats";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useTournaments } from "@hooks/useTournaments";
 import { formatRate, formatEra } from "@utils/formatStats";
+import { monthOptionsFromRecorded } from "@utils/monthOptions";
 import {
   normalizeBattingStats,
   normalizePitchingStats,
@@ -266,16 +268,49 @@ function useStatsFilter(prefix: string) {
   const [selectedTournamentId, setSelectedTournamentId] = useState<
     string | undefined
   >(undefined);
+  const [selectedStartMonth, setSelectedStartMonth] = useState<
+    string | undefined
+  >(undefined);
+  const [selectedEndMonth, setSelectedEndMonth] = useState<string | undefined>(
+    undefined,
+  );
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   const toggleFilter = (id: string) =>
     setActiveFilter((prev) => (prev === id ? null : id));
 
+  // 年度と期間は排他。実年を選んだら期間を、期間を指定したら年度をクリアする。
+  const selectYear = (value: string | undefined) => {
+    const year = value === "all" ? undefined : value;
+    setSelectedYear(year);
+    if (year) {
+      setSelectedStartMonth(undefined);
+      setSelectedEndMonth(undefined);
+    }
+  };
+  // 開始を選ぶと終了が未指定/開始より前のとき終了を同月に合わせ、単月をワンタップで作れる。
+  const selectStartMonth = (value: string | undefined) => {
+    setSelectedStartMonth(value);
+    if (value) {
+      setSelectedYear(undefined);
+      setSelectedEndMonth((prev) => (!prev || prev < value ? value : prev));
+    }
+  };
+  const selectEndMonth = (value: string | undefined) => {
+    setSelectedEndMonth(value);
+    if (value) {
+      setSelectedYear(undefined);
+      setSelectedStartMonth((prev) => (prev && prev > value ? value : prev));
+    }
+  };
+
   const hasFilters = !!(
     selectedYear ||
     selectedMatchType ||
     selectedSeasonId ||
-    selectedTournamentId
+    selectedTournamentId ||
+    selectedStartMonth ||
+    selectedEndMonth
   );
 
   const filters: StatsFilters = {
@@ -283,17 +318,23 @@ function useStatsFilter(prefix: string) {
     ...(selectedMatchType ? { matchType: selectedMatchType } : {}),
     ...(selectedSeasonId ? { seasonId: selectedSeasonId } : {}),
     ...(selectedTournamentId ? { tournamentId: selectedTournamentId } : {}),
+    ...(selectedStartMonth ? { startMonth: selectedStartMonth } : {}),
+    ...(selectedEndMonth ? { endMonth: selectedEndMonth } : {}),
   };
 
   return {
     selectedYear,
-    setSelectedYear,
+    selectYear,
     selectedMatchType,
     setSelectedMatchType,
     selectedSeasonId,
     setSelectedSeasonId,
     selectedTournamentId,
     setSelectedTournamentId,
+    selectedStartMonth,
+    selectStartMonth,
+    selectedEndMonth,
+    selectEndMonth,
     activeFilter,
     toggleFilter,
     hasFilters,
@@ -322,6 +363,8 @@ export const StatsOverview = ({
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
   const { years: availableYears } = useAvailableYears();
+  const { months: availableMonths } = useAvailableMonths();
+  const monthOptions = monthOptionsFromRecorded(availableMonths);
 
   const battingStats =
     batting.hasFilters && filteredBatting ? filteredBatting : defaultBatting;
@@ -335,13 +378,31 @@ export const StatsOverview = ({
       <FilterDropdown
         label="年度"
         value={f.selectedYear}
-        options={[
-          ...availableYears.map((y) => ({ key: y, label: y })),
-        ]}
-        onSelect={(v) => f.setSelectedYear(v === "all" ? undefined : v)}
+        options={[...availableYears.map((y) => ({ key: y, label: y }))]}
+        onSelect={f.selectYear}
         isOpen={f.activeFilter === "year"}
         onToggle={() => f.toggleFilter("year")}
       />
+      {monthOptions.length > 0 && (
+        <>
+          <FilterDropdown
+            label="開始"
+            value={f.selectedStartMonth}
+            options={monthOptions}
+            onSelect={f.selectStartMonth}
+            isOpen={f.activeFilter === "startMonth"}
+            onToggle={() => f.toggleFilter("startMonth")}
+          />
+          <FilterDropdown
+            label="終了"
+            value={f.selectedEndMonth}
+            options={monthOptions}
+            onSelect={f.selectEndMonth}
+            isOpen={f.activeFilter === "endMonth"}
+            onToggle={() => f.toggleFilter("endMonth")}
+          />
+        </>
+      )}
       <FilterDropdown
         label="種別"
         value={f.selectedMatchType}
