@@ -29,10 +29,18 @@ const WEEKDAY_COL_WIDTH = 22;
 
 type Cell = { date: string | null; log: ActivityLog | null };
 
+const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
+
 const pad = (value: number): string => String(value).padStart(2, "0");
 const toDate = (value: string): Date => new Date(`${value}T00:00:00`);
 const fmt = (date: Date): string =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+
+/** "YYYY-MM-DD" を「2026年7月4日(火)」の年月日表記にする。 */
+const formatJaDate = (iso: string): string => {
+  const date = toDate(iso);
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日(${WEEKDAYS[date.getDay()]})`;
+};
 
 const describe = (log: ActivityLog | null): string => {
   if (!log) return "未記録";
@@ -226,7 +234,7 @@ export function Heatmap({
       {interactive ? (
         <Text style={styles.caption}>
           {selected?.date
-            ? `${selected.date} ・ ${describe(selected.log)}`
+            ? `${formatJaDate(selected.date)} ・ ${describe(selected.log)}`
             : "セルをタップすると日付と内容が見られます"}
         </Text>
       ) : null}
