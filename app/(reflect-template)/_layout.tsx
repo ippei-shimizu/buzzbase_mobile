@@ -14,7 +14,9 @@ export default function ReflectTemplateLayout() {
         contentStyle: { backgroundColor: "#2E2E2E" },
         headerLeft: () => (
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() =>
+              router.canGoBack() ? router.back() : router.replace("/(tabs)")
+            }
             style={{ padding: 8 }}
           >
             <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
