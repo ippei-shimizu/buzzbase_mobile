@@ -105,14 +105,31 @@ function TableFilterDropdown({
   onToggle: () => void;
 }) {
   const selectedLabel = options.find((o) => o.key === value)?.label ?? "全て";
+  // 「全て」以外を選択中は primary で強調し、絞り込み中だと一目で分かるようにする。
+  const isFiltered = value !== undefined;
 
   return (
     <View style={{ zIndex: isOpen ? 100 : 0 }}>
-      <TouchableOpacity style={tableFilterStyles.button} onPress={onToggle}>
-        <Text style={tableFilterStyles.buttonText}>
+      <TouchableOpacity
+        style={[
+          tableFilterStyles.button,
+          isFiltered && tableFilterStyles.buttonActive,
+        ]}
+        onPress={onToggle}
+      >
+        <Text
+          style={[
+            tableFilterStyles.buttonText,
+            isFiltered && tableFilterStyles.buttonTextActive,
+          ]}
+        >
           {label}: {selectedLabel}
         </Text>
-        <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+        <Ionicons
+          name="chevron-down"
+          size={14}
+          color={isFiltered ? "#d08000" : "#A1A1AA"}
+        />
       </TouchableOpacity>
 
       {isOpen && (
@@ -213,6 +230,8 @@ const tableFilterStyles = StyleSheet.create({
     paddingVertical: 6,
   },
   buttonText: { color: "#F4F4F4", fontSize: 12, fontWeight: "500" },
+  buttonActive: { borderColor: "#d08000" },
+  buttonTextActive: { color: "#d08000" },
   overlayBg: {
     position: "absolute" as const,
     top: -500,

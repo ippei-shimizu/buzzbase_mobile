@@ -85,14 +85,28 @@ function FilterDropdown({
   onToggle: () => void;
 }) {
   const selectedLabel = options.find((o) => o.key === value)?.label ?? "全て";
+  // 「全て」以外を選択中は primary で強調し、絞り込み中だと一目で分かるようにする。
+  const isFiltered = value !== undefined;
 
   return (
     <View style={{ zIndex: isOpen ? 100 : 0 }}>
-      <TouchableOpacity style={filterStyles.button} onPress={onToggle}>
-        <Text style={filterStyles.buttonText}>
+      <TouchableOpacity
+        style={[filterStyles.button, isFiltered && filterStyles.buttonActive]}
+        onPress={onToggle}
+      >
+        <Text
+          style={[
+            filterStyles.buttonText,
+            isFiltered && filterStyles.buttonTextActive,
+          ]}
+        >
           {label}: {selectedLabel}
         </Text>
-        <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+        <Ionicons
+          name="chevron-down"
+          size={14}
+          color={isFiltered ? "#d08000" : "#A1A1AA"}
+        />
       </TouchableOpacity>
 
       {isOpen && (
@@ -166,6 +180,12 @@ const filterStyles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 12,
     fontWeight: "500",
+  },
+  buttonActive: {
+    borderColor: "#d08000",
+  },
+  buttonTextActive: {
+    color: "#d08000",
   },
   overlayBg: {
     position: "absolute" as const,
@@ -496,9 +516,7 @@ export default function GameResultsScreen() {
         <FilterDropdown
           label="年度"
           value={selectedYear}
-          options={[
-            ...availableYears.map((y) => ({ key: y, label: y })),
-          ]}
+          options={[...availableYears.map((y) => ({ key: y, label: y }))]}
           onSelect={handleListYearSelect}
           isOpen={activeFilter === "year"}
           onToggle={() => toggleFilter("year")}
