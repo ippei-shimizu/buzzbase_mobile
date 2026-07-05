@@ -46,8 +46,14 @@ const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     description: "31日以上前にアップロードしたメディアもいつでも閲覧可能です。",
   },
   unlimited_schedules: {
-    title: "自主練スケジュールを無制限に作成",
-    description: "複数のメニューを並行管理して、計画的に練習できます。",
+    title: "練習プランの割り当てを無制限に",
+    description:
+      "曜日固定も特定日の予定も、いくつでも登録して計画的に練習できます。",
+  },
+  unlimited_menu_sets: {
+    title: "メニューセットを無制限に作成",
+    description:
+      "よく組む練習をセットにして、割り当てや週プランでそのまま使い回せます。",
   },
   unlimited_monthly_goals: {
     title: "月次目標を複数管理",
