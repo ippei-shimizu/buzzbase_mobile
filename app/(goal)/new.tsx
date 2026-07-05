@@ -52,6 +52,16 @@ const COMPARISONS: { key: GoalComparison; label: string }[] = [
   { key: "less_than", label: "以下" },
 ];
 
+// 目標タイプの説明。選択中のタイプの説明を画面上部に表示する。
+const KIND_DESCRIPTIONS: Record<GoalKind, string> = {
+  numeric:
+    "打率・練習日数など、アプリが自動で集計する数値で進捗を測る目標です。",
+  qualitative:
+    "「この大会で優勝する」など数値で測れない目標を、達成・未達で管理します。",
+  manual:
+    "球速・体重など自由な指標を作り、現在値を自分で入力して進捗を管理します。",
+};
+
 export default function GoalFormScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { goals, isLoading } = useGoals();
@@ -255,11 +265,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
           );
         })}
       </View>
-      {isQualitative ? (
-        <Text style={styles.hint}>
-          達成・未達で管理します（例: この大会で優勝する）
-        </Text>
-      ) : null}
+      <Text style={styles.kindDescription}>{KIND_DESCRIPTIONS[kind]}</Text>
 
       <Text style={styles.label}>種類</Text>
       <View style={styles.row}>
@@ -586,6 +592,16 @@ const styles = StyleSheet.create({
   proText: { color: "#A1A1AA", fontSize: 13 },
   proLink: { color: "#d08000", fontSize: 13, fontWeight: "700" },
   hint: { color: "#71717A", fontSize: 12, marginTop: 8 },
+  kindDescription: {
+    color: "#A1A1AA",
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 8,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
   emptyLink: {
     flexDirection: "row",
     alignItems: "center",
