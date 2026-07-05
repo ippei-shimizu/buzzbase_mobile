@@ -1,4 +1,10 @@
-export type GoalPeriodType = "season" | "monthly" | "tournament";
+export type GoalPeriodType =
+  | "season"
+  | "monthly"
+  | "tournament"
+  | "weekly"
+  | "yearly"
+  | "custom";
 export type GoalComparison = "greater_than" | "less_than";
 /**
  * numeric: 指標を自動集計する数値目標 / qualitative: 達成・未達で管理する定性目標 /

@@ -36,8 +36,22 @@ const pad = (value: number): string => String(value).padStart(2, "0");
 const dateString = (date: Date): string =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
+// 今週（月曜〜日曜）の開始・終了日を返す。
+const weekRange = (base: Date): { start: string; end: string } => {
+  const day = base.getDay(); // 0=日
+  const diffToMonday = day === 0 ? 6 : day - 1;
+  const start = new Date(base);
+  start.setDate(base.getDate() - diffToMonday);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  return { start: dateString(start), end: dateString(end) };
+};
+
 const PERIODS: { key: GoalPeriodType; label: string }[] = [
+  { key: "weekly", label: "週次" },
   { key: "monthly", label: "月次" },
+  { key: "yearly", label: "年間" },
+  { key: "custom", label: "カスタム期間" },
   { key: "tournament", label: "大会" },
   { key: "season", label: "シーズン" },
 ];
@@ -130,6 +144,13 @@ function GoalForm({ editing }: { editing?: Goal }) {
     return date;
   });
   const [showPicker, setShowPicker] = useState(false);
+  // カスタム期間の開始日。
+  const [startDate, setStartDate] = useState(() =>
+    editing?.month_start
+      ? new Date(`${editing.month_start}T00:00:00`)
+      : new Date(),
+  );
+  const [showStartPicker, setShowStartPicker] = useState(false);
 
   const metric =
     GOAL_METRICS.find((item) => item.key === metricKey) ?? GOAL_METRICS[0];
@@ -158,11 +179,33 @@ function GoalForm({ editing }: { editing?: Goal }) {
     if (periodType === "tournament" && !tournamentId) {
       return Alert.alert("大会を選択してください");
     }
+    if (periodType === "custom" && startDate > deadline) {
+      return Alert.alert("終了日は開始日以降にしてください");
+    }
+
+    // 期間タイプごとに開始日(month_start)と期限(deadline)を決める。
     const now = new Date();
-    const monthStart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`;
-    const monthEnd = dateString(
-      new Date(now.getFullYear(), now.getMonth() + 1, 0),
-    );
+    const year = now.getFullYear();
+    const range: { start: string | null; end: string } = (() => {
+      if (periodType === "monthly") {
+        return {
+          start: `${year}-${pad(now.getMonth() + 1)}-01`,
+          end: dateString(new Date(year, now.getMonth() + 1, 0)),
+        };
+      }
+      if (periodType === "weekly") {
+        const week = weekRange(now);
+        return { start: week.start, end: week.end };
+      }
+      if (periodType === "yearly") {
+        return { start: `${year}-01-01`, end: `${year}-12-31` };
+      }
+      if (periodType === "custom") {
+        return { start: dateString(startDate), end: dateString(deadline) };
+      }
+      // season / tournament は開始日を持たず、期限のみ。
+      return { start: null, end: dateString(deadline) };
+    })();
 
     const numericPart = isManual
       ? {
@@ -186,8 +229,8 @@ function GoalForm({ editing }: { editing?: Goal }) {
       period_type: periodType,
       season_id: periodType === "season" ? seasonId : null,
       tournament_id: periodType === "tournament" ? tournamentId : null,
-      month_start: periodType === "monthly" ? monthStart : null,
-      deadline: periodType === "monthly" ? monthEnd : dateString(deadline),
+      month_start: range.start,
+      deadline: range.end,
       // 定性目標は指標・目標値を持たない。
       ...(isQualitative ? {} : numericPart),
     };
@@ -269,22 +312,22 @@ function GoalForm({ editing }: { editing?: Goal }) {
       <Text style={styles.kindDescription}>{KIND_DESCRIPTIONS[kind]}</Text>
 
       <Text style={styles.label}>種類</Text>
-      <View style={styles.row}>
+      <View style={styles.chipWrap}>
         {PERIODS.map((period) => {
           const active = periodType === period.key;
           return (
             <TouchableOpacity
               key={period.key}
               style={[
-                styles.seg,
-                active && styles.segActive,
+                styles.chip,
+                active && styles.chipActive,
                 editing && !active && styles.segLocked,
               ]}
               // 編集では種類を変更不可（Pro制限回避防止・集計整合のため）。
               disabled={Boolean(editing)}
               onPress={() => setPeriodType(period.key)}
             >
-              <Text style={[styles.segText, active && styles.segTextActive]}>
+              <Text style={[styles.chipText, active && styles.chipTextActive]}>
                 {period.label}
               </Text>
             </TouchableOpacity>
@@ -311,6 +354,38 @@ function GoalForm({ editing }: { editing?: Goal }) {
 
       {periodType === "monthly" ? (
         <Text style={styles.hint}>対象期間: 今月（自動設定）</Text>
+      ) : null}
+      {periodType === "weekly" ? (
+        <Text style={styles.hint}>対象期間: 今週 月〜日（自動設定）</Text>
+      ) : null}
+      {periodType === "yearly" ? (
+        <Text style={styles.hint}>対象期間: 今年 1月〜12月（自動設定）</Text>
+      ) : null}
+
+      {periodType === "custom" ? (
+        <>
+          <Text style={styles.label}>開始日</Text>
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => setShowStartPicker((prev) => !prev)}
+          >
+            <Text style={styles.inputText}>{dateString(startDate)}</Text>
+          </TouchableOpacity>
+          {showStartPicker ? (
+            <DateTimePicker
+              value={startDate}
+              mode="date"
+              themeVariant="dark"
+              accentColor="#d08000"
+              display={Platform.OS === "ios" ? "inline" : "default"}
+              onChange={(_event, selected) => {
+                setShowStartPicker(false);
+                if (selected) setStartDate(selected);
+              }}
+            />
+          ) : null}
+          {renderDeadline()}
+        </>
       ) : null}
 
       {periodType === "season" ? (
