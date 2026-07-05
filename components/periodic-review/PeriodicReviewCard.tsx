@@ -6,7 +6,9 @@ const periodLabel = (review: PeriodicReview): string =>
   review.period_type === "weekly" ? "今週の振り返り" : "今月の振り返り";
 
 // 打率などの小数は先頭の 0 を省いて .XXX 表記にする。
-const fmt3 = (value: number): string => value.toFixed(3).replace(/^0\./, ".");
+// 旧レポートには新指標（出塁率/長打率/OPS）が無いため、欠損値は "-" を返す。
+const fmt3 = (value: number | null | undefined): string =>
+  value == null ? "-" : value.toFixed(3).replace(/^0\./, ".");
 
 /**
  * 週次 / 月次レポートのカード。
