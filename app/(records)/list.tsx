@@ -28,11 +28,10 @@ const parseDate = (iso: string): Date => {
   return new Date(year, month - 1, day);
 };
 const monthKey = (iso: string): string => iso.slice(0, 7);
+// 月ラベルは常に年付き（例: 2026年7月）。
 const monthLabel = (iso: string): string => {
   const [year, month] = iso.split("-").map(Number);
-  return year === new Date().getFullYear()
-    ? `${month}月`
-    : `${year}年${month}月`;
+  return `${year}年${month}月`;
 };
 
 // 月見出しを挟みながら、日付降順のリストを描画用に並べる。
@@ -52,6 +51,83 @@ function withMonthHeaders<T extends { id: number }>(
     rows.push({ item, key: `i-${item.id}` });
   });
   return rows;
+}
+
+// 未フィルタ時に1ヶ月ずつ表示するための月ページング。monthIndex 0 が最新月。
+function useMonthPagination<T>(items: T[], dateOf: (item: T) => string) {
+  const months = useMemo(() => {
+    const set = new Set(items.map((item) => monthKey(dateOf(item))));
+    return Array.from(set).sort((a, b) => b.localeCompare(a));
+  }, [items, dateOf]);
+  const [monthIndex, setMonthIndex] = useState(0);
+  const safeIndex = Math.min(monthIndex, Math.max(0, months.length - 1));
+  const currentMonth = months[safeIndex] ?? null;
+  const currentItems = useMemo(
+    () =>
+      currentMonth
+        ? items.filter((item) => monthKey(dateOf(item)) === currentMonth)
+        : [],
+    [items, dateOf, currentMonth],
+  );
+  return {
+    months,
+    monthIndex: safeIndex,
+    setMonthIndex,
+    currentItems,
+    currentMonthLabel: currentMonth ? monthLabel(`${currentMonth}-01`) : "",
+  };
+}
+
+// 月ナビ（◀ 前月 / 「2026年7月・N件」 / 翌月 ▶）。両端でボタンを無効化する。
+function MonthPaginator({
+  label,
+  count,
+  index,
+  total,
+  onChange,
+}: {
+  label: string;
+  count: number;
+  index: number;
+  total: number;
+  onChange: (next: number) => void;
+}) {
+  const atOldest = index >= total - 1;
+  const atNewest = index <= 0;
+  return (
+    <View style={styles.monthNav}>
+      <TouchableOpacity
+        disabled={atOldest}
+        onPress={() => onChange(index + 1)}
+        accessibilityRole="button"
+        accessibilityLabel="前の月"
+        hitSlop={8}
+      >
+        <Ionicons
+          name="chevron-back"
+          size={22}
+          color={atOldest ? "#52525B" : "#d08000"}
+        />
+      </TouchableOpacity>
+      <Text style={styles.monthNavLabel}>
+        {label}
+        <Text style={styles.monthNavCount}>{`　${count}件`}</Text>
+      </Text>
+      <TouchableOpacity
+        disabled={atNewest}
+        onPress={() => onChange(index - 1)}
+        accessibilityRole="button"
+        accessibilityLabel="次の月"
+        hitSlop={8}
+      >
+        <Ionicons
+          name="chevron-forward"
+          size={22}
+          color={atNewest ? "#52525B" : "#d08000"}
+        />
+      </TouchableOpacity>
+    </View>
+  );
 }
 
 const LEVEL_FACE: ({
@@ -333,10 +409,23 @@ function PracticeList() {
     [menus],
   );
 
+  const isFiltered =
+    query.trim() !== "" || fromDate !== null || toDate !== null;
   const filtered = sessions.filter(
     (session) =>
       sessionMatchesQuery(session, query) &&
       inDateRange(session.logged_on, fromDate, toDate),
+  );
+  const pager = useMonthPagination(sessions, (session) => session.logged_on);
+
+  const renderRow = (session: PracticeSession) => (
+    <PracticeRow
+      key={session.id}
+      session={session}
+      hasNote={noteSessionIds.has(session.id)}
+      categoryById={categoryById}
+      onPress={() => router.push(`/(practice-record)/${session.id}`)}
+    />
   );
 
   return (
@@ -368,22 +457,30 @@ function PracticeList() {
         </View>
       ) : sessions.length === 0 ? (
         <Text style={styles.empty}>まだ練習記録がありません</Text>
-      ) : filtered.length === 0 ? (
-        <Text style={styles.empty}>該当する練習記録がありません</Text>
-      ) : (
-        withMonthHeaders(filtered, (session) => session.logged_on).map((row) =>
-          "header" in row ? (
-            <MonthHeader key={row.key} label={row.header} />
-          ) : (
-            <PracticeRow
-              key={row.key}
-              session={row.item}
-              hasNote={noteSessionIds.has(row.item.id)}
-              categoryById={categoryById}
-              onPress={() => router.push(`/(practice-record)/${row.item.id}`)}
-            />
-          ),
+      ) : isFiltered ? (
+        filtered.length === 0 ? (
+          <Text style={styles.empty}>該当する練習記録がありません</Text>
+        ) : (
+          withMonthHeaders(filtered, (session) => session.logged_on).map(
+            (row) =>
+              "header" in row ? (
+                <MonthHeader key={row.key} label={row.header} />
+              ) : (
+                renderRow(row.item)
+              ),
+          )
         )
+      ) : (
+        <>
+          <MonthPaginator
+            label={pager.currentMonthLabel}
+            count={pager.currentItems.length}
+            index={pager.monthIndex}
+            total={pager.months.length}
+            onChange={pager.setMonthIndex}
+          />
+          {pager.currentItems.map(renderRow)}
+        </>
       )}
     </>
   );
@@ -442,9 +539,20 @@ function NoteList() {
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
 
+  const isFiltered =
+    query.trim() !== "" || fromDate !== null || toDate !== null;
   const filtered = notes.filter(
     (note) =>
       noteMatchesQuery(note, query) && inDateRange(note.date, fromDate, toDate),
+  );
+  const pager = useMonthPagination(notes, (note) => note.date);
+
+  const renderRow = (note: NoteV2) => (
+    <NoteRow
+      key={note.id}
+      note={note}
+      onPress={() => router.push(`/(note)/${note.id}`)}
+    />
   );
 
   return (
@@ -468,20 +576,29 @@ function NoteList() {
         </View>
       ) : notes.length === 0 ? (
         <Text style={styles.empty}>まだ野球ノートがありません</Text>
-      ) : filtered.length === 0 ? (
-        <Text style={styles.empty}>該当する野球ノートがありません</Text>
-      ) : (
-        withMonthHeaders(filtered, (note) => note.date).map((row) =>
-          "header" in row ? (
-            <MonthHeader key={row.key} label={row.header} />
-          ) : (
-            <NoteRow
-              key={row.key}
-              note={row.item}
-              onPress={() => router.push(`/(note)/${row.item.id}`)}
-            />
-          ),
+      ) : isFiltered ? (
+        filtered.length === 0 ? (
+          <Text style={styles.empty}>該当する野球ノートがありません</Text>
+        ) : (
+          withMonthHeaders(filtered, (note) => note.date).map((row) =>
+            "header" in row ? (
+              <MonthHeader key={row.key} label={row.header} />
+            ) : (
+              renderRow(row.item)
+            ),
+          )
         )
+      ) : (
+        <>
+          <MonthPaginator
+            label={pager.currentMonthLabel}
+            count={pager.currentItems.length}
+            index={pager.monthIndex}
+            total={pager.months.length}
+            onChange={pager.setMonthIndex}
+          />
+          {pager.currentItems.map(renderRow)}
+        </>
       )}
     </>
   );
@@ -510,6 +627,18 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 40 },
   centered: { paddingVertical: 48, alignItems: "center" },
   empty: { color: "#A1A1AA", fontSize: 14, textAlign: "center", marginTop: 40 },
+  monthNav: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#3A3A3A",
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginBottom: 12,
+  },
+  monthNavLabel: { color: "#F4F4F4", fontSize: 15, fontWeight: "700" },
+  monthNavCount: { color: "#A1A1AA", fontSize: 12, fontWeight: "400" },
   newButton: {
     flexDirection: "row",
     alignItems: "center",
