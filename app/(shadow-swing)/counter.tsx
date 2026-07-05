@@ -1,3 +1,4 @@
+import { useAudioPlayer, setAudioModeAsync } from "expo-audio";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -16,28 +17,41 @@ export default function ShadowSwingCounterScreen() {
     target: string;
     interval: string;
     vibration: string;
+    sound: string;
   }>();
   const { completeSession } = useShadowSwingMutations();
 
   const targetCount = Number(params.target) || 0;
   const intervalMs = (Number(params.interval) || 2) * 1000;
   const useVibration = params.vibration === "1";
+  const useSound = params.sound === "1";
   const sessionId = Number(params.sessionId);
+
+  const beep = useAudioPlayer(require("../../assets/sounds/beep.wav"));
 
   const [count, setCount] = useState(0);
   const [running, setRunning] = useState(true);
   const [elapsed, setElapsed] = useState(0);
   const finishedRef = useRef(false);
 
-  // インターバルごとに自動カウントアップ（＋バイブ）。
+  // マナーモードでもビープが鳴るようにする。
+  useEffect(() => {
+    if (useSound) void setAudioModeAsync({ playsInSilentMode: true });
+  }, [useSound]);
+
+  // インターバルごとに自動カウントアップ（＋音・バイブ）。
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => {
       setCount((prev) => prev + 1);
+      if (useSound) {
+        beep.seekTo(0);
+        beep.play();
+      }
       if (useVibration) Vibration.vibrate(40);
     }, intervalMs);
     return () => clearInterval(id);
-  }, [running, intervalMs, useVibration]);
+  }, [running, intervalMs, useVibration, useSound, beep]);
 
   // 経過時間。
   useEffect(() => {

@@ -13,7 +13,7 @@ import {
   useShadowSwingStats,
 } from "@hooks/useShadowSwing";
 
-const INTERVALS = [1.0, 1.5, 2.0, 3.0];
+const INTERVALS = [1.0, 1.5, 2.0, 3.0, 4, 5, 6, 7, 8, 9, 10];
 
 export default function ShadowSwingSetupScreen() {
   const router = useRouter();
@@ -22,6 +22,7 @@ export default function ShadowSwingSetupScreen() {
   const [target, setTarget] = useState("200");
   const [interval, setIntervalValue] = useState(2.0);
   const [vibration, setVibration] = useState(true);
+  const [sound, setSound] = useState(true);
 
   const handleStart = async () => {
     const targetCount = Number(target);
@@ -38,6 +39,7 @@ export default function ShadowSwingSetupScreen() {
           target: String(targetCount),
           interval: String(interval),
           vibration: vibration ? "1" : "0",
+          sound: sound ? "1" : "0",
         },
       });
     } catch {
@@ -74,6 +76,29 @@ export default function ShadowSwingSetupScreen() {
                 style={[styles.optionText, active && styles.optionTextActive]}
               >
                 {value.toFixed(1)}秒
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <Text style={styles.label}>音</Text>
+      <View style={styles.optionRow}>
+        {[
+          { key: true, label: "あり" },
+          { key: false, label: "なし" },
+        ].map((item) => {
+          const active = item.key === sound;
+          return (
+            <TouchableOpacity
+              key={String(item.key)}
+              style={[styles.option, active && styles.optionActive]}
+              onPress={() => setSound(item.key)}
+            >
+              <Text
+                style={[styles.optionText, active && styles.optionTextActive]}
+              >
+                {item.label}
               </Text>
             </TouchableOpacity>
           );

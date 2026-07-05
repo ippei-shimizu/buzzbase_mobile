@@ -18,7 +18,7 @@ export default function ShadowSwingLayout() {
       <Stack.Screen
         name="setup"
         options={{
-          title: "素振りカウンター",
+          title: "素振りカウントタイマー",
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => router.back()}

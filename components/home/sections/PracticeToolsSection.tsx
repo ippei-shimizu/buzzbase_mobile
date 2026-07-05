@@ -5,7 +5,7 @@ import { Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SectionCard } from "./SectionCard";
 
 /**
- * 練習ツール（素振りタイマー）。
+ * 練習ツール（素振りカウントタイマー）。
  * 主記録導線（練習を記録 / 野球ノート）は最上部の RecordButtonsSection に分離している。
  */
 export function PracticeToolsSection() {
@@ -18,7 +18,7 @@ export function PracticeToolsSection() {
         onPress={() => router.push("/(shadow-swing)/setup")}
       >
         <Ionicons name="timer-outline" size={20} color="#FFFFFF" />
-        <Text style={styles.swingText}>素振りタイマー</Text>
+        <Text style={styles.swingText}>素振りカウントタイマー</Text>
       </TouchableOpacity>
     </SectionCard>
   );
