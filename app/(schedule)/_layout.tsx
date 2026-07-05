@@ -30,7 +30,20 @@ export default function ScheduleLayout() {
         }}
       />
       <Stack.Screen name="new" options={{ title: "割り当て" }} />
-      <Stack.Screen name="calendar" options={{ title: "カレンダー" }} />
+      <Stack.Screen
+        name="calendar"
+        options={{
+          title: "カレンダー",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ padding: 8 }}
+            >
+              <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
       <Stack.Screen name="weekly" options={{ title: "今週のプラン" }} />
     </Stack>
   );
