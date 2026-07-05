@@ -1,4 +1,9 @@
-import type { Goal, GoalKind, GoalPeriodType } from "../../types/goal";
+import type {
+  Goal,
+  GoalComparison,
+  GoalKind,
+  GoalPeriodType,
+} from "../../types/goal";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { isAxiosError } from "axios";
@@ -39,6 +44,12 @@ const PERIODS: { key: GoalPeriodType; label: string }[] = [
 const KINDS: { key: GoalKind; label: string }[] = [
   { key: "numeric", label: "数値目標" },
   { key: "qualitative", label: "達成目標" },
+  { key: "manual", label: "自由指標" },
+];
+
+const COMPARISONS: { key: GoalComparison; label: string }[] = [
+  { key: "greater_than", label: "以上" },
+  { key: "less_than", label: "以下" },
 ];
 
 export default function GoalFormScreen() {
@@ -83,6 +94,17 @@ function GoalForm({ editing }: { editing?: Goal }) {
   const [target, setTarget] = useState(
     editing?.target_value != null ? String(editing.target_value) : "",
   );
+  // 自由指標（manual）用: 指標名・単位・現在値・条件はユーザーが定義する。
+  const [customLabel, setCustomLabel] = useState(
+    editing?.custom_metric_label ?? "",
+  );
+  const [customUnit, setCustomUnit] = useState(editing?.custom_unit ?? "");
+  const [manualCurrent, setManualCurrent] = useState(
+    editing?.kind === "manual" ? String(editing.manual_current_value) : "",
+  );
+  const [comparison, setComparison] = useState<GoalComparison>(
+    editing?.comparison_type ?? "greater_than",
+  );
   const [title, setTitle] = useState(editing?.title ?? "");
   const [seasonId, setSeasonId] = useState<number | null>(
     editing?.season_id ?? null,
@@ -102,11 +124,16 @@ function GoalForm({ editing }: { editing?: Goal }) {
     GOAL_METRICS.find((item) => item.key === metricKey) ?? GOAL_METRICS[0];
 
   const isQualitative = kind === "qualitative";
-  const isMenuMetric = !isQualitative && metricKey === "menu_practice_days";
+  const isManual = kind === "manual";
+  const isMenuMetric =
+    !isQualitative && !isManual && metricKey === "menu_practice_days";
 
   const handleSave = async () => {
     if (isQualitative && !title.trim()) {
       return Alert.alert("目標を入力してください");
+    }
+    if (isManual && !customLabel.trim()) {
+      return Alert.alert("指標名を入力してください");
     }
     if (!isQualitative && !target) {
       return Alert.alert("目標値を入力してください");
@@ -126,8 +153,24 @@ function GoalForm({ editing }: { editing?: Goal }) {
       new Date(now.getFullYear(), now.getMonth() + 1, 0),
     );
 
+    const numericPart = isManual
+      ? {
+          custom_metric_label: customLabel.trim(),
+          custom_unit: customUnit.trim() || null,
+          target_value: Number(target),
+          comparison_type: comparison,
+          manual_current_value: Number(manualCurrent || 0),
+        }
+      : {
+          metric_key: metricKey,
+          target_value: Number(target),
+          comparison_type: metric.comparison,
+          practice_menu_id: isMenuMetric ? practiceMenuId : null,
+        };
+
     const input = {
-      title: title.trim() || `${metric.label}目標`,
+      title:
+        title.trim() || (isManual ? customLabel.trim() : `${metric.label}目標`),
       kind,
       period_type: periodType,
       season_id: periodType === "season" ? seasonId : null,
@@ -135,14 +178,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
       month_start: periodType === "monthly" ? monthStart : null,
       deadline: periodType === "monthly" ? monthEnd : dateString(deadline),
       // 定性目標は指標・目標値を持たない。
-      ...(isQualitative
-        ? {}
-        : {
-            metric_key: metricKey,
-            target_value: Number(target),
-            comparison_type: metric.comparison,
-            practice_menu_id: isMenuMetric ? practiceMenuId : null,
-          }),
+      ...(isQualitative ? {} : numericPart),
     };
 
     try {
@@ -340,7 +376,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
         </>
       ) : null}
 
-      {isQualitative ? null : (
+      {isQualitative || isManual ? null : (
         <>
           <Text style={styles.label}>指標</Text>
           {GOAL_METRIC_CATEGORIES.map((category) => (
@@ -409,7 +445,54 @@ function GoalForm({ editing }: { editing?: Goal }) {
               条件: {metric.comparison === "less_than" ? "以下" : "以上"}
             </Text>
           )}
+        </>
+      )}
 
+      {isManual ? (
+        <>
+          <Text style={styles.label}>指標名</Text>
+          <TextInput
+            style={styles.input}
+            value={customLabel}
+            onChangeText={setCustomLabel}
+            placeholder="例: 球速 / 遠投距離 / 体重"
+            placeholderTextColor="#71717A"
+          />
+          <Text style={styles.label}>単位（任意）</Text>
+          <TextInput
+            style={styles.input}
+            value={customUnit}
+            onChangeText={setCustomUnit}
+            placeholder="例: km/h"
+            placeholderTextColor="#71717A"
+          />
+          <Text style={styles.label}>条件</Text>
+          <View style={styles.row}>
+            {COMPARISONS.map((item) => {
+              const active = comparison === item.key;
+              return (
+                <TouchableOpacity
+                  key={item.key}
+                  style={[styles.seg, active && styles.segActive]}
+                  onPress={() => setComparison(item.key)}
+                >
+                  <Text
+                    style={[styles.segText, active && styles.segTextActive]}
+                  >
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <Text style={styles.hint}>
+            現在値は手入力で更新します（自動集計はしません）。
+          </Text>
+        </>
+      ) : null}
+
+      {isQualitative ? null : (
+        <>
           <Text style={styles.label}>目標値</Text>
           <TextInput
             style={styles.input}
@@ -419,6 +502,19 @@ function GoalForm({ editing }: { editing?: Goal }) {
             placeholder={metric.decimal ? "例: 0.300" : "例: 20"}
             placeholderTextColor="#71717A"
           />
+          {isManual ? (
+            <>
+              <Text style={styles.label}>現在値</Text>
+              <TextInput
+                style={styles.input}
+                value={manualCurrent}
+                onChangeText={setManualCurrent}
+                keyboardType="numeric"
+                placeholder="例: 125"
+                placeholderTextColor="#71717A"
+              />
+            </>
+          ) : null}
         </>
       )}
 
@@ -430,7 +526,11 @@ function GoalForm({ editing }: { editing?: Goal }) {
         value={title}
         onChangeText={setTitle}
         placeholder={
-          isQualitative ? "例: この大会で優勝する" : `${metric.label}目標`
+          isQualitative
+            ? "例: この大会で優勝する"
+            : isManual
+              ? customLabel.trim() || "指標名の目標"
+              : `${metric.label}目標`
         }
         placeholderTextColor="#71717A"
       />

@@ -34,6 +34,15 @@ export function GoalProgressBar({ goal }: { goal: Goal }) {
     );
   }
 
+  // 自由指標は指標名・単位をユーザー定義値で表示する。
+  const isManual = goal.kind === "manual";
+  const unit = isManual ? (goal.custom_unit ?? "") : "";
+  const metricText = isManual
+    ? (goal.custom_metric_label ?? "")
+    : goal.metric_key === "menu_practice_days" && goal.practice_menu_name
+      ? `${goal.practice_menu_name} 継続日数`
+      : metricLabel(goal.metric_key);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -53,6 +62,7 @@ export function GoalProgressBar({ goal }: { goal: Goal }) {
           <Text style={styles.valueLabel}>現在</Text>
           <Text style={styles.currentValue}>
             {formatMetricValue(goal.metric_key, goal.current_value)}
+            {unit}
           </Text>
         </View>
         <Ionicons name="arrow-forward" size={14} color="#71717A" />
@@ -60,15 +70,13 @@ export function GoalProgressBar({ goal }: { goal: Goal }) {
           <Text style={styles.valueLabel}>目標</Text>
           <Text style={styles.targetValue}>
             {formatMetricValue(goal.metric_key, goal.target_value ?? 0)}
+            {unit}
             {goal.comparison_type === "less_than" ? " 以下" : ""}
           </Text>
         </View>
       </View>
       <Text style={styles.meta}>
-        {goal.metric_key === "menu_practice_days" && goal.practice_menu_name
-          ? `${goal.practice_menu_name} 継続日数`
-          : metricLabel(goal.metric_key)}{" "}
-        ・ 残り{goal.days_remaining}日
+        {metricText} ・ 残り{goal.days_remaining}日
       </Text>
     </View>
   );
