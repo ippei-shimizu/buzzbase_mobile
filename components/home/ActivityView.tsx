@@ -25,6 +25,7 @@ const REFRESH_QUERY_KEYS = [
   "shadowSwingStats",
   "activityLogs",
   "schedules",
+  "plans",
   "goals",
   "practiceLogs",
   "practiceSessions",

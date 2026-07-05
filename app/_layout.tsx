@@ -125,6 +125,7 @@ function RootLayoutInner() {
         />
         <Stack.Screen name="(shadow-swing)" options={{ headerShown: false }} />
         <Stack.Screen name="(schedule)" options={{ headerShown: false }} />
+        <Stack.Screen name="(menu-set)" options={{ headerShown: false }} />
         <Stack.Screen name="(goal)" options={{ headerShown: false }} />
         <Stack.Screen name="(note)" options={{ headerShown: false }} />
         <Stack.Screen name="(records)" options={{ headerShown: false }} />

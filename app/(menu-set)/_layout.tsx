@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import { TouchableOpacity } from "react-native";
 
-export default function ScheduleLayout() {
+export default function MenuSetLayout() {
   const router = useRouter();
 
   return (
@@ -18,7 +18,7 @@ export default function ScheduleLayout() {
       <Stack.Screen
         name="list"
         options={{
-          title: "練習プラン",
+          title: "メニューセット",
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => router.back()}
@@ -29,9 +29,7 @@ export default function ScheduleLayout() {
           ),
         }}
       />
-      <Stack.Screen name="new" options={{ title: "割り当て" }} />
-      <Stack.Screen name="calendar" options={{ title: "カレンダー" }} />
-      <Stack.Screen name="weekly" options={{ title: "今週のプラン" }} />
+      <Stack.Screen name="edit" options={{ title: "メニューセット" }} />
     </Stack>
   );
 }
