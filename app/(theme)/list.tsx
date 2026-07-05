@@ -111,21 +111,45 @@ function ThemeCard({
   theme: ImprovementTheme;
   onPress: () => void;
 }) {
+  const achieved = theme.status === "achieved";
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>{theme.title}</Text>
-        {theme.status === "achieved" ? (
+        <View style={styles.cardTitleWrap}>
+          <Text style={styles.cardTitle} numberOfLines={2}>
+            {theme.title}
+          </Text>
+          <View style={styles.categoryChip}>
+            <Text style={styles.categoryChipText}>
+              {themeCategoryLabel(theme.category)}
+            </Text>
+          </View>
+        </View>
+        {achieved ? (
           <View style={styles.badge}>
             <Ionicons name="trophy" size={12} color="#F4F4F4" />
             <Text style={styles.badgeText}>克服</Text>
           </View>
-        ) : null}
+        ) : (
+          <Ionicons name="chevron-forward" size={18} color="#71717A" />
+        )}
       </View>
-      <Text style={styles.cardMeta}>
-        {themeCategoryLabel(theme.category)}・取組{theme.active_days}日・練習
-        {theme.practice_logs_count}・ノート{theme.notes_count}
-      </Text>
+      <View style={styles.statRow}>
+        <View style={styles.statChip}>
+          <Ionicons name="flame-outline" size={13} color="#d08000" />
+          <Text style={styles.statText}>取組 {theme.active_days}日</Text>
+        </View>
+        <View style={styles.statChip}>
+          <Ionicons name="barbell-outline" size={13} color="#d08000" />
+          <Text style={styles.statText}>
+            練習 {theme.practice_logs_count}件
+          </Text>
+        </View>
+        <View style={styles.statChip}>
+          <Ionicons name="document-text-outline" size={13} color="#d08000" />
+          <Text style={styles.statText}>ノート {theme.notes_count}件</Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -160,11 +184,36 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
+    gap: 8,
   },
-  cardTitle: { color: "#F4F4F4", fontSize: 16, fontWeight: "700", flex: 1 },
-  cardMeta: { color: "#A1A1AA", fontSize: 12, marginTop: 8 },
+  cardTitleWrap: { flex: 1, gap: 6 },
+  cardTitle: { color: "#F4F4F4", fontSize: 16, fontWeight: "700" },
+  categoryChip: {
+    alignSelf: "flex-start",
+    backgroundColor: "#2E2E2E",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  categoryChipText: { color: "#A1A1AA", fontSize: 11, fontWeight: "600" },
+  statRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+  },
+  statChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#2E2E2E",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  statText: { color: "#D4D4D8", fontSize: 12, fontWeight: "600" },
   badge: {
     flexDirection: "row",
     alignItems: "center",

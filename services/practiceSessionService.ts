@@ -7,6 +7,7 @@ const URL = `${API_BASE_URL}/api/v2/practice_sessions`;
 export const getPracticeSessions = async (params?: {
   from?: string;
   to?: string;
+  improvement_theme_id?: number;
 }): Promise<PracticeSession[]> => {
   const res = await axiosInstance.get<PracticeSession[]>(URL, { params });
   return res.data;

@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
@@ -13,6 +14,9 @@ import {
   useImprovementThemeMutations,
   useImprovementThemes,
 } from "@hooks/useImprovementThemes";
+import { useNotes } from "@hooks/useNotes";
+import { usePracticeSessions } from "@hooks/usePracticeSessions";
+import { formatJaFullDate } from "@utils/formatDate";
 
 const todayString = (): string => {
   const now = new Date();
@@ -25,6 +29,8 @@ export default function ThemeDetailScreen() {
   const themeId = Number(id);
   const { themes, isLoading } = useImprovementThemes();
   const { updateTheme, deleteTheme } = useImprovementThemeMutations();
+  const { sessions } = usePracticeSessions({ improvement_theme_id: themeId });
+  const { notes } = useNotes({ improvement_theme_id: themeId });
   const theme = themes.find((item) => item.id === themeId) ?? null;
 
   if (isLoading) {
@@ -87,6 +93,49 @@ export default function ThemeDetailScreen() {
         <Stat label="練習" value={`${theme.practice_logs_count}`} />
         <Stat label="ノート" value={`${theme.notes_count}`} />
       </View>
+
+      <Text style={styles.sectionHeading}>紐づく練習記録</Text>
+      {sessions.length === 0 ? (
+        <Text style={styles.linkedEmpty}>まだありません</Text>
+      ) : (
+        sessions.map((session) => (
+          <TouchableOpacity
+            key={session.id}
+            style={styles.linkedRow}
+            onPress={() => router.push(`/(practice-record)/${session.id}`)}
+          >
+            <Ionicons name="barbell-outline" size={16} color="#d08000" />
+            <Text style={styles.linkedRowText} numberOfLines={1}>
+              {formatJaFullDate(session.logged_on)}
+              {session.practice_logs?.length
+                ? ` ・ ${session.practice_logs
+                    .map((log) => log.menu_name)
+                    .join("、")}`
+                : ""}
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color="#71717A" />
+          </TouchableOpacity>
+        ))
+      )}
+
+      <Text style={styles.sectionHeading}>紐づく野球ノート</Text>
+      {notes.length === 0 ? (
+        <Text style={styles.linkedEmpty}>まだありません</Text>
+      ) : (
+        notes.map((note) => (
+          <TouchableOpacity
+            key={note.id}
+            style={styles.linkedRow}
+            onPress={() => router.push(`/(note)/${note.id}`)}
+          >
+            <Ionicons name="document-text-outline" size={16} color="#d08000" />
+            <Text style={styles.linkedRowText} numberOfLines={1}>
+              {formatJaFullDate(note.date)} ・ {note.title || "無題のノート"}
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color="#71717A" />
+          </TouchableOpacity>
+        ))
+      )}
 
       <TouchableOpacity
         style={styles.primaryButton}
@@ -159,6 +208,29 @@ const styles = StyleSheet.create({
   },
   statValue: { color: "#d08000", fontSize: 20, fontWeight: "700" },
   statLabel: { color: "#A1A1AA", fontSize: 12, marginTop: 4 },
+  sectionHeading: {
+    color: "#F4F4F4",
+    fontSize: 14,
+    fontWeight: "700",
+    marginTop: 24,
+    marginBottom: 8,
+  },
+  linkedEmpty: {
+    color: "#71717A",
+    fontSize: 13,
+    paddingVertical: 8,
+  },
+  linkedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  linkedRowText: { color: "#F4F4F4", fontSize: 13, flex: 1 },
   primaryButton: {
     backgroundColor: "#d08000",
     borderRadius: 8,

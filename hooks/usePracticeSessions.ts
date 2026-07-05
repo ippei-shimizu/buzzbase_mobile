@@ -10,6 +10,7 @@ import {
 export const usePracticeSessions = (params?: {
   from?: string;
   to?: string;
+  improvement_theme_id?: number;
 }) => {
   const { data, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ["practiceSessions", params ?? {}],

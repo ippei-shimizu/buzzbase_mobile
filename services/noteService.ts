@@ -8,6 +8,7 @@ export const getNotes = async (params?: {
   date?: string;
   practice_log_id?: number;
   game_result_id?: number;
+  improvement_theme_id?: number;
 }): Promise<NoteV2[]> => {
   const res = await axiosInstance.get<NoteV2[]>(URL, { params });
   return res.data;

@@ -11,6 +11,7 @@ import {
 export const useNotes = (params?: {
   date?: string;
   practice_log_id?: number;
+  improvement_theme_id?: number;
 }) => {
   const { data, isLoading } = useQuery({
     queryKey: ["notesV2", params ?? {}],
