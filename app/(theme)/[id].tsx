@@ -82,7 +82,8 @@ export default function ThemeDetailScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>{theme.title}</Text>
       <Text style={styles.meta}>
-        {themeCategoryLabel(theme.category)}・{theme.started_on} 開始
+        {themeCategoryLabel(theme.category)}・
+        {formatJaFullDate(theme.started_on)} 開始
       </Text>
       {theme.purpose ? (
         <Text style={styles.purpose}>{theme.purpose}</Text>
