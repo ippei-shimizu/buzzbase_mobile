@@ -15,6 +15,8 @@ export interface Goal {
   metric_key: string | null;
   target_value: number | null;
   comparison_type: GoalComparison;
+  practice_menu_id: number | null;
+  practice_menu_name: string | null;
   is_achieved: boolean;
   is_finalized: boolean;
   achieved_value: number | null;
@@ -34,4 +36,5 @@ export interface GoalInput {
   metric_key?: string | null;
   target_value?: number | null;
   comparison_type?: GoalComparison;
+  practice_menu_id?: number | null;
 }

@@ -43,6 +43,12 @@ export const GOAL_METRICS: GoalMetric[] = [
     unit: "試合",
     comparison: "greater_than",
   },
+  {
+    key: "menu_practice_days",
+    label: "メニュー継続日数",
+    unit: "日",
+    comparison: "greater_than",
+  },
   // 打撃
   {
     key: "batting_average",
@@ -123,7 +129,12 @@ export const GOAL_METRIC_CATEGORIES: {
   {
     key: "practice",
     label: "練習・試合",
-    keys: ["practice_days", "total_swing_count", "game_count"],
+    keys: [
+      "practice_days",
+      "total_swing_count",
+      "game_count",
+      "menu_practice_days",
+    ],
   },
   {
     key: "batting",

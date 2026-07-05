@@ -22,6 +22,7 @@ import {
 } from "@constants/goal";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useGoalMutations, useGoals } from "@hooks/useGoals";
+import { usePracticeMenus } from "@hooks/usePracticeMenus";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useTournaments } from "@hooks/useTournaments";
 
@@ -63,6 +64,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
   const { createGoal, isCreating, updateGoal, isUpdating } = useGoalMutations();
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
+  const { menus } = usePracticeMenus();
   const { hasEntitlement } = useEntitlement();
   const canSeason = hasEntitlement("season_goals");
   const canTournament = hasEntitlement("tournament_goals");
@@ -75,8 +77,11 @@ function GoalForm({ editing }: { editing?: Goal }) {
   const [metricKey, setMetricKey] = useState(
     editing?.metric_key ?? GOAL_METRICS[0].key,
   );
+  const [practiceMenuId, setPracticeMenuId] = useState<number | null>(
+    editing?.practice_menu_id ?? null,
+  );
   const [target, setTarget] = useState(
-    editing ? String(editing.target_value) : "",
+    editing?.target_value != null ? String(editing.target_value) : "",
   );
   const [title, setTitle] = useState(editing?.title ?? "");
   const [seasonId, setSeasonId] = useState<number | null>(
@@ -97,6 +102,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
     GOAL_METRICS.find((item) => item.key === metricKey) ?? GOAL_METRICS[0];
 
   const isQualitative = kind === "qualitative";
+  const isMenuMetric = !isQualitative && metricKey === "menu_practice_days";
 
   const handleSave = async () => {
     if (isQualitative && !title.trim()) {
@@ -104,6 +110,9 @@ function GoalForm({ editing }: { editing?: Goal }) {
     }
     if (!isQualitative && !target) {
       return Alert.alert("目標値を入力してください");
+    }
+    if (isMenuMetric && !practiceMenuId) {
+      return Alert.alert("対象の練習メニューを選択してください");
     }
     if (periodType === "season" && !seasonId) {
       return Alert.alert("シーズンを選択してください");
@@ -132,6 +141,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
             metric_key: metricKey,
             target_value: Number(target),
             comparison_type: metric.comparison,
+            practice_menu_id: isMenuMetric ? practiceMenuId : null,
           }),
     };
 
@@ -359,9 +369,46 @@ function GoalForm({ editing }: { editing?: Goal }) {
               </View>
             </View>
           ))}
-          <Text style={styles.hint}>
-            条件: {metric.comparison === "less_than" ? "以下" : "以上"}
-          </Text>
+
+          {isMenuMetric ? (
+            <>
+              <Text style={styles.label}>対象の練習メニュー</Text>
+              {menus.length === 0 ? (
+                <Text style={styles.emptyText}>
+                  練習メニューがありません。練習記録で登録してください。
+                </Text>
+              ) : (
+                <View style={styles.chipWrap}>
+                  {menus.map((menu) => {
+                    const active = menu.id === practiceMenuId;
+                    return (
+                      <TouchableOpacity
+                        key={menu.id}
+                        style={[styles.chip, active && styles.chipActive]}
+                        onPress={() => setPracticeMenuId(menu.id)}
+                      >
+                        <Text
+                          style={[
+                            styles.chipText,
+                            active && styles.chipTextActive,
+                          ]}
+                        >
+                          {menu.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+              <Text style={styles.hint}>
+                期間内にこのメニューを実施した「日数」を数えます。
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.hint}>
+              条件: {metric.comparison === "less_than" ? "以下" : "以上"}
+            </Text>
+          )}
 
           <Text style={styles.label}>目標値</Text>
           <TextInput

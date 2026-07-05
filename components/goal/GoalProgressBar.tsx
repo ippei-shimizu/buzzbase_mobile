@@ -65,7 +65,10 @@ export function GoalProgressBar({ goal }: { goal: Goal }) {
         </View>
       </View>
       <Text style={styles.meta}>
-        {metricLabel(goal.metric_key)} ・ 残り{goal.days_remaining}日
+        {goal.metric_key === "menu_practice_days" && goal.practice_menu_name
+          ? `${goal.practice_menu_name} 継続日数`
+          : metricLabel(goal.metric_key)}{" "}
+        ・ 残り{goal.days_remaining}日
       </Text>
     </View>
   );
