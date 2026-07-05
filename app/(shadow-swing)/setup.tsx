@@ -107,7 +107,7 @@ export default function ShadowSwingSetupScreen() {
         })}
       </View>
 
-      <Text style={styles.label}>カウント読み上げ（10本ごと）</Text>
+      <Text style={styles.label}>カウント読み上げ</Text>
       <View style={styles.optionRow}>
         {[
           { key: true, label: "あり" },

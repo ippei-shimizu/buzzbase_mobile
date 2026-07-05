@@ -11,9 +11,6 @@ import {
 } from "react-native";
 import { useShadowSwingMutations } from "@hooks/useShadowSwing";
 
-// 読み上げは 10 本ごと（短いインターバルで詰まらないように）。
-const VOICE_EVERY = 10;
-
 export default function ShadowSwingCounterScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -41,12 +38,13 @@ export default function ShadowSwingCounterScreen() {
   const finishedRef = useRef(false);
   const countRef = useRef(0);
 
-  // マナーモードでも音が鳴るようにする。
+  // マナーモードでも音・読み上げが鳴るようにする（どちらかが有効なら設定）。
   useEffect(() => {
-    if (useSound) void setAudioModeAsync({ playsInSilentMode: true });
-  }, [useSound]);
+    if (useSound || useVoice)
+      void setAudioModeAsync({ playsInSilentMode: true });
+  }, [useSound, useVoice]);
 
-  // インターバルごとに自動カウントアップ（＋笛・バイブ・読み上げ）。
+  // インターバルごとに自動カウントアップ（＋笛・バイブ・1本ごとの読み上げ）。
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => {
@@ -58,7 +56,9 @@ export default function ShadowSwingCounterScreen() {
         whistle.play();
       }
       if (useVibration) Vibration.vibrate(40);
-      if (useVoice && next % VOICE_EVERY === 0) {
+      if (useVoice) {
+        // 前の読み上げが残っていても最新の本数に切り替える。
+        Speech.stop();
         Speech.speak(String(next), { language: "ja-JP" });
       }
     }, intervalMs);
