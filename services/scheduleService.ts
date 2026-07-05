@@ -16,6 +16,16 @@ export const createSchedule = async (
   return res.data;
 };
 
+export const updateSchedule = async (
+  id: number,
+  input: ScheduleInput,
+): Promise<Schedule> => {
+  const res = await axiosInstance.patch<Schedule>(`${URL}/${id}`, {
+    schedule: input,
+  });
+  return res.data;
+};
+
 export const deleteSchedule = async (id: number): Promise<void> => {
   await axiosInstance.delete(`${URL}/${id}`);
 };

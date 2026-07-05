@@ -1,3 +1,5 @@
+import type { EventType } from "../types/schedule";
+
 export const WEEK_DAYS: { num: number; label: string }[] = [
   { num: 1, label: "月" },
   { num: 2, label: "火" },
@@ -16,3 +18,17 @@ export const dayLabels = (daysOfWeek: string): string =>
         WEEK_DAYS.find((day) => day.num === Number(value))?.label ?? "",
     )
     .join("・");
+
+export const EVENT_TYPES: {
+  value: EventType;
+  label: string;
+  color: string;
+}[] = [
+  { value: "self_practice", label: "自主練", color: "#22C55E" },
+  { value: "practice", label: "チーム練習", color: "#3B82F6" },
+  { value: "game", label: "試合", color: "#EF4444" },
+  { value: "other", label: "その他", color: "#A1A1AA" },
+];
+
+export const eventTypeMeta = (value: EventType) =>
+  EVENT_TYPES.find((event) => event.value === value) ?? EVENT_TYPES[0];
