@@ -71,8 +71,8 @@ export function ActivityView() {
       <TodayGoalSection />
       <StreakHeaderSection />
       <PeriodicReviewBanner />
-      <RecentPracticeSection />
       <MonthlySummarySection />
+      <RecentPracticeSection />
       <PracticeToolsSection />
       <ImprovementToolsSection />
     </ScrollView>
