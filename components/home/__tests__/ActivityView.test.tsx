@@ -2,13 +2,13 @@ import { renderWithProviders } from "../../../__tests__/test-utils/renderWithPro
 import { ActivityView } from "../ActivityView";
 
 describe("ActivityView", () => {
-  it("活動面の5セクションを表示する", () => {
+  it("活動面の主要セクションを表示する", () => {
     const { getByText } = renderWithProviders(<ActivityView />);
 
     expect(getByText("継続")).toBeTruthy();
     expect(getByText("今日のやること")).toBeTruthy();
     expect(getByText("練習ツール")).toBeTruthy();
-    expect(getByText("今日の目標")).toBeTruthy();
+    expect(getByText("目標管理")).toBeTruthy();
     expect(getByText("最近の練習")).toBeTruthy();
   });
 });

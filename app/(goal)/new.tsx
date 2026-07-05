@@ -15,7 +15,11 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
-import { GOAL_METRICS } from "@constants/goal";
+import {
+  GOAL_METRIC_CATEGORIES,
+  GOAL_METRICS,
+  metricsInCategory,
+} from "@constants/goal";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useGoalMutations, useGoals } from "@hooks/useGoals";
 import { useMySeasons } from "@hooks/useSeasons";
@@ -278,22 +282,29 @@ function GoalForm({ editing }: { editing?: Goal }) {
       ) : null}
 
       <Text style={styles.label}>指標</Text>
-      <View style={styles.chipWrap}>
-        {GOAL_METRICS.map((item) => {
-          const active = item.key === metricKey;
-          return (
-            <TouchableOpacity
-              key={item.key}
-              style={[styles.chip, active && styles.chipActive]}
-              onPress={() => setMetricKey(item.key)}
-            >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      {GOAL_METRIC_CATEGORIES.map((category) => (
+        <View key={category.key} style={styles.metricGroup}>
+          <Text style={styles.metricGroupLabel}>{category.label}</Text>
+          <View style={styles.chipWrap}>
+            {metricsInCategory(category.keys).map((item) => {
+              const active = item.key === metricKey;
+              return (
+                <TouchableOpacity
+                  key={item.key}
+                  style={[styles.chip, active && styles.chipActive]}
+                  onPress={() => setMetricKey(item.key)}
+                >
+                  <Text
+                    style={[styles.chipText, active && styles.chipTextActive]}
+                  >
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      ))}
       <Text style={styles.hint}>
         条件: {metric.comparison === "less_than" ? "以下" : "以上"}
       </Text>
@@ -385,6 +396,13 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  metricGroup: { marginTop: 12 },
+  metricGroupLabel: {
+    color: "#71717A",
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 6,
+  },
   chip: {
     paddingVertical: 8,
     paddingHorizontal: 14,

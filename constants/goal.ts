@@ -112,6 +112,45 @@ export const GOAL_METRICS: GoalMetric[] = [
   { key: "saves", label: "セーブ", unit: "個", comparison: "greater_than" },
 ];
 
+export type GoalMetricCategory = "practice" | "batting" | "pitching";
+
+/** 指標選択のカテゴリ（表示順・見出し・所属キー）。 */
+export const GOAL_METRIC_CATEGORIES: {
+  key: GoalMetricCategory;
+  label: string;
+  keys: string[];
+}[] = [
+  {
+    key: "practice",
+    label: "練習・試合",
+    keys: ["practice_days", "total_swing_count", "game_count"],
+  },
+  {
+    key: "batting",
+    label: "打撃",
+    keys: [
+      "batting_average",
+      "on_base_percentage",
+      "slugging_percentage",
+      "ops",
+      "hits",
+      "home_runs",
+      "runs_batted_in",
+      "runs_scored",
+      "stolen_bases",
+    ],
+  },
+  {
+    key: "pitching",
+    label: "投手",
+    keys: ["era", "whip", "strikeouts", "wins", "saves"],
+  },
+];
+
+/** カテゴリの所属キーに対応する指標を GOAL_METRICS の順で返す。 */
+export const metricsInCategory = (keys: string[]): GoalMetric[] =>
+  GOAL_METRICS.filter((metric) => keys.includes(metric.key));
+
 export const metricLabel = (key: string): string =>
   GOAL_METRICS.find((metric) => metric.key === key)?.label ?? key;
 
