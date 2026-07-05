@@ -52,11 +52,22 @@ export default function GoalListScreen() {
               </Text>
               {inType.map((goal) => (
                 <View key={goal.id} style={styles.card}>
-                  <View style={styles.cardBar}>
+                  <TouchableOpacity
+                    style={styles.cardBar}
+                    activeOpacity={0.6}
+                    accessibilityRole="button"
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(goal)/new",
+                        params: { id: String(goal.id) },
+                      })
+                    }
+                  >
                     <GoalProgressBar goal={goal} />
-                  </View>
+                  </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => handleDelete(goal.id, goal.title)}
+                    hitSlop={8}
                   >
                     <Ionicons name="trash-outline" size={18} color="#71717A" />
                   </TouchableOpacity>

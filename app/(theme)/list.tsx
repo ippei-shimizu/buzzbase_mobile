@@ -75,7 +75,7 @@ export default function ThemeListScreen() {
         )}
 
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-          <Ionicons name="add" size={20} color="#F4F4F4" />
+          <Ionicons name="add" size={18} color="#FFFFFF" />
           <Text style={styles.addButtonText}>新しい課題に取り組む</Text>
         </TouchableOpacity>
 
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#d08000",
     borderRadius: 8,
     paddingVertical: 14,
-    marginTop: 4,
+    marginTop: 12,
   },
-  addButtonText: { color: "#F4F4F4", fontSize: 15, fontWeight: "700" },
+  addButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
 });

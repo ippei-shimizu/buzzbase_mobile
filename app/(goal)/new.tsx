@@ -1,8 +1,8 @@
-import type { GoalPeriodType } from "../../types/goal";
+import type { Goal, GoalPeriodType } from "../../types/goal";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { isAxiosError } from "axios";
-import { useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   View,
@@ -13,10 +13,11 @@ import {
   StyleSheet,
   Alert,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { GOAL_METRICS } from "@constants/goal";
 import { useEntitlement } from "@hooks/useEntitlement";
-import { useGoalMutations } from "@hooks/useGoals";
+import { useGoalMutations, useGoals } from "@hooks/useGoals";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useTournaments } from "@hooks/useTournaments";
 
@@ -30,22 +31,52 @@ const PERIODS: { key: GoalPeriodType; label: string }[] = [
   { key: "tournament", label: "大会" },
 ];
 
-export default function GoalNewScreen() {
+export default function GoalFormScreen() {
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { goals, isLoading } = useGoals();
+  const editing = id ? goals.find((goal) => goal.id === Number(id)) : undefined;
+
+  // 編集モードで目標取得待ちの間はスピナー（初期値を正しく埋めるため）。
+  if (id && isLoading && !editing) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#d08000" />
+      </View>
+    );
+  }
+
+  return <GoalForm key={editing?.id ?? "new"} editing={editing} />;
+}
+
+/** 作成・編集の共通フォーム。editing があれば編集（種類・シーズン・大会は固定）。 */
+function GoalForm({ editing }: { editing?: Goal }) {
   const router = useRouter();
-  const { createGoal, isCreating } = useGoalMutations();
+  const { createGoal, isCreating, updateGoal, isUpdating } = useGoalMutations();
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
   const { hasEntitlement } = useEntitlement();
   const canSeason = hasEntitlement("season_goals");
   const canTournament = hasEntitlement("tournament_goals");
+  const isSaving = isCreating || isUpdating;
 
-  const [periodType, setPeriodType] = useState<GoalPeriodType>("monthly");
-  const [metricKey, setMetricKey] = useState(GOAL_METRICS[0].key);
-  const [target, setTarget] = useState("");
-  const [title, setTitle] = useState("");
-  const [seasonId, setSeasonId] = useState<number | null>(null);
-  const [tournamentId, setTournamentId] = useState<number | null>(null);
+  const [periodType, setPeriodType] = useState<GoalPeriodType>(
+    editing?.period_type ?? "monthly",
+  );
+  const [metricKey, setMetricKey] = useState(
+    editing?.metric_key ?? GOAL_METRICS[0].key,
+  );
+  const [target, setTarget] = useState(
+    editing ? String(editing.target_value) : "",
+  );
+  const [title, setTitle] = useState(editing?.title ?? "");
+  const [seasonId, setSeasonId] = useState<number | null>(
+    editing?.season_id ?? null,
+  );
+  const [tournamentId, setTournamentId] = useState<number | null>(
+    editing?.tournament_id ?? null,
+  );
   const [deadline, setDeadline] = useState(() => {
+    if (editing) return new Date(`${editing.deadline}T00:00:00`);
     const date = new Date();
     date.setDate(date.getDate() + 90);
     return date;
@@ -69,18 +100,24 @@ export default function GoalNewScreen() {
       new Date(now.getFullYear(), now.getMonth() + 1, 0),
     );
 
+    const input = {
+      title: title.trim() || `${metric.label}目標`,
+      period_type: periodType,
+      season_id: periodType === "season" ? seasonId : null,
+      tournament_id: periodType === "tournament" ? tournamentId : null,
+      month_start: periodType === "monthly" ? monthStart : null,
+      deadline: periodType === "monthly" ? monthEnd : dateString(deadline),
+      metric_key: metricKey,
+      target_value: Number(target),
+      comparison_type: metric.comparison,
+    };
+
     try {
-      await createGoal({
-        title: title.trim() || `${metric.label}目標`,
-        period_type: periodType,
-        season_id: periodType === "season" ? seasonId : null,
-        tournament_id: periodType === "tournament" ? tournamentId : null,
-        month_start: periodType === "monthly" ? monthStart : null,
-        deadline: periodType === "monthly" ? monthEnd : dateString(deadline),
-        metric_key: metricKey,
-        target_value: Number(target),
-        comparison_type: metric.comparison,
-      });
+      if (editing) {
+        await updateGoal({ id: editing.id, input });
+      } else {
+        await createGoal(input);
+      }
       router.back();
     } catch (error) {
       if (isAxiosError(error) && error.response?.status === 403) {
@@ -122,6 +159,9 @@ export default function GoalNewScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Stack.Screen
+        options={{ title: editing ? "目標を編集" : "新しい目標" }}
+      />
       <Text style={styles.label}>種類</Text>
       <View style={styles.row}>
         {PERIODS.map((period) => {
@@ -129,7 +169,13 @@ export default function GoalNewScreen() {
           return (
             <TouchableOpacity
               key={period.key}
-              style={[styles.seg, active && styles.segActive]}
+              style={[
+                styles.seg,
+                active && styles.segActive,
+                editing && !active && styles.segLocked,
+              ]}
+              // 編集では種類を変更不可（Pro制限回避防止・集計整合のため）。
+              disabled={Boolean(editing)}
               onPress={() => setPeriodType(period.key)}
             >
               <Text style={[styles.segText, active && styles.segTextActive]}>
@@ -182,6 +228,7 @@ export default function GoalNewScreen() {
                   <TouchableOpacity
                     key={season.id}
                     style={[styles.chip, active && styles.chipActive]}
+                    disabled={Boolean(editing)}
                     onPress={() => setSeasonId(season.id)}
                   >
                     <Text
@@ -213,6 +260,7 @@ export default function GoalNewScreen() {
                   <TouchableOpacity
                     key={tournament.id}
                     style={[styles.chip, active && styles.chipActive]}
+                    disabled={Boolean(editing)}
                     onPress={() => setTournamentId(tournament.id)}
                   >
                     <Text
@@ -270,11 +318,11 @@ export default function GoalNewScreen() {
       />
 
       <TouchableOpacity
-        style={[styles.saveButton, isCreating && styles.saveButtonDisabled]}
+        style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
         onPress={handleSave}
-        disabled={isCreating}
+        disabled={isSaving}
       >
-        <Text style={styles.saveButtonText}>保存</Text>
+        <Text style={styles.saveButtonText}>{editing ? "更新" : "保存"}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -282,6 +330,12 @@ export default function GoalNewScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#2E2E2E" },
+  centered: {
+    flex: 1,
+    backgroundColor: "#2E2E2E",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   content: { padding: 16, paddingBottom: 40 },
   label: {
     color: "#A1A1AA",
@@ -299,6 +353,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#3A3A3A",
   },
   segActive: { backgroundColor: "#d08000" },
+  segLocked: { opacity: 0.4 },
   segText: { color: "#A1A1AA", fontSize: 14, fontWeight: "600" },
   segTextActive: { color: "#FFFFFF" },
   proNote: {

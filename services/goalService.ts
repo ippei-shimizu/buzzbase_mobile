@@ -19,6 +19,14 @@ export const createGoal = async (input: GoalInput): Promise<Goal> => {
   return res.data;
 };
 
+export const updateGoal = async (
+  id: number,
+  input: GoalInput,
+): Promise<Goal> => {
+  const res = await axiosInstance.patch<Goal>(`${URL}/${id}`, { goal: input });
+  return res.data;
+};
+
 export const deleteGoal = async (id: number): Promise<void> => {
   await axiosInstance.delete(`${URL}/${id}`);
 };

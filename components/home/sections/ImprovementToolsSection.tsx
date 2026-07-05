@@ -14,7 +14,7 @@ const TOOLS: Tool[] = [
   {
     icon: "flag-outline",
     label: "取り組む課題",
-    description: "課題を決めて練習を束ねる",
+    description: "課題を決めて練習を積み重ねる",
     href: "/(theme)/list",
   },
   {
