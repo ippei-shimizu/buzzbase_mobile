@@ -23,6 +23,7 @@ import {
 import {
   GOAL_METRIC_CATEGORIES,
   GOAL_METRICS,
+  metricExample,
   metricsInCategory,
 } from "@constants/goal";
 import { useEntitlement } from "@hooks/useEntitlement";
@@ -37,8 +38,8 @@ const dateString = (date: Date): string =>
 
 const PERIODS: { key: GoalPeriodType; label: string }[] = [
   { key: "monthly", label: "月次" },
-  { key: "season", label: "シーズン" },
   { key: "tournament", label: "大会" },
+  { key: "season", label: "シーズン" },
 ];
 
 const KINDS: { key: GoalKind; label: string }[] = [
@@ -536,7 +537,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
             ? "例: この大会で優勝する"
             : isManual
               ? customLabel.trim() || "指標名の目標"
-              : `${metric.label}目標`
+              : metricExample(metricKey) || `${metric.label}目標`
         }
         placeholderTextColor="#71717A"
       />

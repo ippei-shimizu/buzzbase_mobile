@@ -10,8 +10,8 @@ export const GOAL_PERIOD_LABELS: Record<GoalPeriodType, string> = {
 /** 目標を種類別に並べるときの表示順。 */
 export const GOAL_PERIOD_ORDER: GoalPeriodType[] = [
   "monthly",
-  "season",
   "tournament",
+  "season",
 ];
 
 export interface GoalMetric {
@@ -117,6 +117,31 @@ export const GOAL_METRICS: GoalMetric[] = [
   { key: "wins", label: "勝利", unit: "勝", comparison: "greater_than" },
   { key: "saves", label: "セーブ", unit: "個", comparison: "greater_than" },
 ];
+
+/** 数値目標タイトルのプレースホルダー例（指標別）。 */
+const GOAL_METRIC_EXAMPLES: Record<string, string> = {
+  practice_days: "例: 今月20日練習する",
+  total_swing_count: "例: 今月2000本素振り",
+  game_count: "例: 今シーズン15試合出場",
+  menu_practice_days: "例: このメニューを20日継続",
+  batting_average: "例: 打率.320を目指す",
+  on_base_percentage: "例: 出塁率.400を目指す",
+  slugging_percentage: "例: 長打率.500を目指す",
+  ops: "例: OPS.850を目指す",
+  hits: "例: 安打30本",
+  home_runs: "例: 本塁打10本",
+  runs_batted_in: "例: 打点20点",
+  runs_scored: "例: 得点20点",
+  stolen_bases: "例: 盗塁10個",
+  era: "例: 防御率2.50以下",
+  whip: "例: WHIP1.20以下",
+  strikeouts: "例: 奪三振50個",
+  wins: "例: 今シーズン5勝",
+  saves: "例: 10セーブ",
+};
+
+export const metricExample = (key: string): string =>
+  GOAL_METRIC_EXAMPLES[key] ?? "";
 
 export type GoalMetricCategory = "practice" | "batting" | "pitching";
 
