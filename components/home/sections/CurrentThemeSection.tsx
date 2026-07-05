@@ -41,10 +41,34 @@ export function CurrentThemeSection() {
                 <Text style={styles.title} numberOfLines={1}>
                   {theme.title}
                 </Text>
-                <Text style={styles.meta}>
-                  取組{theme.active_days}日・練習{theme.practice_logs_count}
-                  ・ノート{theme.notes_count}
-                </Text>
+                <View style={styles.statRow}>
+                  <View style={styles.statChip}>
+                    <Ionicons name="flame-outline" size={12} color="#d08000" />
+                    <Text style={styles.statText}>
+                      取組 {theme.active_days}日
+                    </Text>
+                  </View>
+                  <View style={styles.statChip}>
+                    <Ionicons
+                      name="barbell-outline"
+                      size={12}
+                      color="#d08000"
+                    />
+                    <Text style={styles.statText}>
+                      練習 {theme.practice_logs_count}
+                    </Text>
+                  </View>
+                  <View style={styles.statChip}>
+                    <Ionicons
+                      name="document-text-outline"
+                      size={12}
+                      color="#d08000"
+                    />
+                    <Text style={styles.statText}>
+                      ノート {theme.notes_count}
+                    </Text>
+                  </View>
+                </View>
               </View>
               <Ionicons name="chevron-forward" size={16} color="#71717A" />
             </TouchableOpacity>
@@ -77,14 +101,29 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderTopColor: "#4A4A4A",
     borderTopWidth: 1,
   },
-  rowFirst: { borderTopWidth: 0, paddingTop: 8 },
+  rowFirst: { borderTopWidth: 0, paddingTop: 10 },
   rowMain: { flex: 1 },
   title: { color: "#F4F4F4", fontSize: 16, fontWeight: "700" },
-  meta: { color: "#A1A1AA", fontSize: 12, marginTop: 4 },
+  statRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 8,
+  },
+  statChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "#2E2E2E",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  statText: { color: "#D4D4D8", fontSize: 11, fontWeight: "600" },
   empty: { color: "#A1A1AA", fontSize: 13, lineHeight: 20, marginTop: 8 },
   manage: {
     flexDirection: "row",
