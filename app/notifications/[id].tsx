@@ -12,6 +12,7 @@ import {
 import { WebView } from "react-native-webview";
 import { useManagementNotice } from "@hooks/useNotifications";
 import { openExternalUrlPreferringNativeApp } from "@utils/externalAppLinks";
+import { formatJaFullDate } from "@utils/formatDate";
 import { markdownToHtml } from "@utils/markdownToHtml";
 
 export default function NoticeDetailScreen() {
@@ -90,7 +91,9 @@ export default function NoticeDetailScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>{notice.title}</Text>
-      <Text style={styles.date}>{notice.published_at}</Text>
+      <Text style={styles.date}>
+        {formatJaFullDate(notice.published_at.slice(0, 10))}
+      </Text>
       <WebView
         originWhitelist={["*"]}
         source={{ html: bodyHtml }}
