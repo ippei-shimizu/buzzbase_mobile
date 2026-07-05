@@ -1,5 +1,6 @@
 import { useAudioPlayer, setAudioModeAsync } from "expo-audio";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as Speech from "expo-speech";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
@@ -10,6 +11,9 @@ import {
 } from "react-native";
 import { useShadowSwingMutations } from "@hooks/useShadowSwing";
 
+// 読み上げは 10 本ごと（短いインターバルで詰まらないように）。
+const VOICE_EVERY = 10;
+
 export default function ShadowSwingCounterScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -18,6 +22,7 @@ export default function ShadowSwingCounterScreen() {
     interval: string;
     vibration: string;
     sound: string;
+    voice: string;
   }>();
   const { completeSession } = useShadowSwingMutations();
 
@@ -25,33 +30,40 @@ export default function ShadowSwingCounterScreen() {
   const intervalMs = (Number(params.interval) || 2) * 1000;
   const useVibration = params.vibration === "1";
   const useSound = params.sound === "1";
+  const useVoice = params.voice === "1";
   const sessionId = Number(params.sessionId);
 
-  const beep = useAudioPlayer(require("../../assets/sounds/beep.wav"));
+  const whistle = useAudioPlayer(require("../../assets/sounds/whistle.wav"));
 
   const [count, setCount] = useState(0);
   const [running, setRunning] = useState(true);
   const [elapsed, setElapsed] = useState(0);
   const finishedRef = useRef(false);
+  const countRef = useRef(0);
 
-  // マナーモードでもビープが鳴るようにする。
+  // マナーモードでも音が鳴るようにする。
   useEffect(() => {
     if (useSound) void setAudioModeAsync({ playsInSilentMode: true });
   }, [useSound]);
 
-  // インターバルごとに自動カウントアップ（＋音・バイブ）。
+  // インターバルごとに自動カウントアップ（＋笛・バイブ・読み上げ）。
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => {
-      setCount((prev) => prev + 1);
+      countRef.current += 1;
+      const next = countRef.current;
+      setCount(next);
       if (useSound) {
-        beep.seekTo(0);
-        beep.play();
+        whistle.seekTo(0);
+        whistle.play();
       }
       if (useVibration) Vibration.vibrate(40);
+      if (useVoice && next % VOICE_EVERY === 0) {
+        Speech.speak(String(next), { language: "ja-JP" });
+      }
     }, intervalMs);
     return () => clearInterval(id);
-  }, [running, intervalMs, useVibration, useSound, beep]);
+  }, [running, intervalMs, useVibration, useSound, useVoice, whistle]);
 
   // 経過時間。
   useEffect(() => {

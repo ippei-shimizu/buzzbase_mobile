@@ -23,6 +23,7 @@ export default function ShadowSwingSetupScreen() {
   const [interval, setIntervalValue] = useState(2.0);
   const [vibration, setVibration] = useState(true);
   const [sound, setSound] = useState(true);
+  const [voice, setVoice] = useState(false);
 
   const handleStart = async () => {
     const targetCount = Number(target);
@@ -40,6 +41,7 @@ export default function ShadowSwingSetupScreen() {
           interval: String(interval),
           vibration: vibration ? "1" : "0",
           sound: sound ? "1" : "0",
+          voice: voice ? "1" : "0",
         },
       });
     } catch {
@@ -82,7 +84,7 @@ export default function ShadowSwingSetupScreen() {
         })}
       </View>
 
-      <Text style={styles.label}>音</Text>
+      <Text style={styles.label}>笛の音</Text>
       <View style={styles.optionRow}>
         {[
           { key: true, label: "あり" },
@@ -94,6 +96,29 @@ export default function ShadowSwingSetupScreen() {
               key={String(item.key)}
               style={[styles.option, active && styles.optionActive]}
               onPress={() => setSound(item.key)}
+            >
+              <Text
+                style={[styles.optionText, active && styles.optionTextActive]}
+              >
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <Text style={styles.label}>カウント読み上げ（10本ごと）</Text>
+      <View style={styles.optionRow}>
+        {[
+          { key: true, label: "あり" },
+          { key: false, label: "なし" },
+        ].map((item) => {
+          const active = item.key === voice;
+          return (
+            <TouchableOpacity
+              key={String(item.key)}
+              style={[styles.option, active && styles.optionActive]}
+              onPress={() => setVoice(item.key)}
             >
               <Text
                 style={[styles.optionText, active && styles.optionTextActive]}

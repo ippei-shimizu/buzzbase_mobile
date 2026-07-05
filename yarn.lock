@@ -4832,6 +4832,11 @@ expo-server@^55.0.11:
   resolved "https://registry.yarnpkg.com/expo-server/-/expo-server-55.0.11.tgz#6850ea1aac47a735fd7908023fe9be8b75fc49d9"
   integrity sha512-AxRdHqcv0H1g4s923vu+5n1Nrhne23bjXbP+Vl7+Lwfpe7MG9PuU1IS95IJK6a+7BVV1mRN6QlZvs8Yv7EEXNQ==
 
+expo-speech@~55.0.15:
+  version "55.0.15"
+  resolved "https://registry.yarnpkg.com/expo-speech/-/expo-speech-55.0.15.tgz#237671c8b19eb061c0bc01f290b5f8b95b71bcc3"
+  integrity sha512-3yXDKFgV3SGW1BS3zj2JzHlnclwCEa/RAxPxZeXkB8RKMZaWDun9gBHooMgVKIrqGpwdG7UnoEGCg3dHol+E8g==
+
 expo-status-bar@~55.0.6:
   version "55.0.6"
   resolved "https://registry.yarnpkg.com/expo-status-bar/-/expo-status-bar-55.0.6.tgz#ae54f85e9aff081480f87e902c29ffc26343aa3f"
