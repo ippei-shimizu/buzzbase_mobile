@@ -48,6 +48,7 @@ export default function NoteEditScreen() {
       }}
       submitLabel="更新"
       isSubmitting={isUpdating}
+      templateLocked
       onSubmit={async (input) => {
         try {
           await updateNote({ id: noteId, input });

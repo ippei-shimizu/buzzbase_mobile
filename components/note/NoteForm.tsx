@@ -40,6 +40,8 @@ interface Props {
   submitLabel: string;
   isSubmitting: boolean;
   onSubmit: (input: NoteInput) => Promise<void> | void;
+  /** 編集時はテンプレ変更で回答が消えるのを防ぐため、テンプレ選択を固定する。 */
+  templateLocked?: boolean;
 }
 
 const todayString = (): string => {
@@ -61,6 +63,7 @@ export function NoteForm({
   submitLabel,
   isSubmitting,
   onSubmit,
+  templateLocked = false,
 }: Props) {
   const { sessions } = usePracticeSessions();
 
@@ -223,6 +226,7 @@ export function NoteForm({
         answers={answers}
         onSelectTemplate={handleSelectTemplate}
         onChangeAnswer={handleChangeAnswer}
+        locked={templateLocked}
       />
 
       <Text style={styles.label}>紐付け（任意）</Text>
