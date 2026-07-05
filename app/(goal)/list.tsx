@@ -17,13 +17,21 @@ import { useGoalMutations, useGoals } from "@hooks/useGoals";
 export default function GoalListScreen() {
   const router = useRouter();
   const { goals, isLoading } = useGoals();
-  const { deleteGoal } = useGoalMutations();
+  const { deleteGoal, achieveGoal, unachieveGoal } = useGoalMutations();
 
   const handleDelete = (id: number, title: string) =>
     Alert.alert("削除しますか？", title, [
       { text: "キャンセル", style: "cancel" },
       { text: "削除", style: "destructive", onPress: () => deleteGoal(id) },
     ]);
+
+  const handleToggleAchieve = async (id: number, achieved: boolean) => {
+    try {
+      await (achieved ? unachieveGoal(id) : achieveGoal(id));
+    } catch {
+      Alert.alert("更新に失敗しました");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -65,6 +73,28 @@ export default function GoalListScreen() {
                   >
                     <GoalProgressBar goal={goal} />
                   </TouchableOpacity>
+                  {goal.kind === "qualitative" ? (
+                    <TouchableOpacity
+                      onPress={() =>
+                        handleToggleAchieve(goal.id, goal.is_achieved)
+                      }
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        goal.is_achieved ? "達成を取り消す" : "達成にする"
+                      }
+                    >
+                      <Ionicons
+                        name={
+                          goal.is_achieved
+                            ? "checkmark-circle"
+                            : "checkmark-circle-outline"
+                        }
+                        size={24}
+                        color={goal.is_achieved ? "#d08000" : "#71717A"}
+                      />
+                    </TouchableOpacity>
+                  ) : null}
                   <TouchableOpacity
                     onPress={() => handleDelete(goal.id, goal.title)}
                     hitSlop={8}

@@ -1,9 +1,11 @@
 import type { GoalInput } from "../types/goal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  achieveGoal,
   createGoal,
   deleteGoal,
   getGoals,
+  unachieveGoal,
   updateGoal,
 } from "../services/goalService";
 
@@ -27,6 +29,14 @@ export const useGoalMutations = () => {
     onSuccess: invalidate,
   });
   const remove = useMutation({ mutationFn: deleteGoal, onSuccess: invalidate });
+  const achieve = useMutation({
+    mutationFn: achieveGoal,
+    onSuccess: invalidate,
+  });
+  const unachieve = useMutation({
+    mutationFn: unachieveGoal,
+    onSuccess: invalidate,
+  });
 
   return {
     createGoal: create.mutateAsync,
@@ -34,5 +44,7 @@ export const useGoalMutations = () => {
     updateGoal: update.mutateAsync,
     isUpdating: update.isPending,
     deleteGoal: remove.mutateAsync,
+    achieveGoal: achieve.mutateAsync,
+    unachieveGoal: unachieve.mutateAsync,
   };
 };

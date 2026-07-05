@@ -1,16 +1,19 @@
 export type GoalPeriodType = "season" | "monthly" | "tournament";
 export type GoalComparison = "greater_than" | "less_than";
+/** numeric: 指標を自動集計する数値目標 / qualitative: 達成・未達で管理する定性目標。 */
+export type GoalKind = "numeric" | "qualitative";
 
 export interface Goal {
   id: number;
   title: string;
+  kind: GoalKind;
   period_type: GoalPeriodType;
   season_id: number | null;
   tournament_id: number | null;
   month_start: string | null;
   deadline: string;
-  metric_key: string;
-  target_value: number;
+  metric_key: string | null;
+  target_value: number | null;
   comparison_type: GoalComparison;
   is_achieved: boolean;
   is_finalized: boolean;
@@ -22,12 +25,13 @@ export interface Goal {
 
 export interface GoalInput {
   title: string;
+  kind: GoalKind;
   period_type: GoalPeriodType;
   season_id?: number | null;
   tournament_id?: number | null;
   month_start?: string | null;
   deadline: string;
-  metric_key: string;
-  target_value: number;
-  comparison_type: GoalComparison;
+  metric_key?: string | null;
+  target_value?: number | null;
+  comparison_type?: GoalComparison;
 }

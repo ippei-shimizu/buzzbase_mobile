@@ -5,6 +5,35 @@ import { View, Text, StyleSheet } from "react-native";
 import { formatMetricValue, metricLabel } from "../../constants/goal";
 
 export function GoalProgressBar({ goal }: { goal: Goal }) {
+  // 定性目標は指標を持たず、達成/未達で表示する。
+  if (goal.kind === "qualitative") {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.titleRow}>
+            <Ionicons name="flag" size={14} color="#d08000" />
+            <Text style={styles.title} numberOfLines={2}>
+              {goal.title}
+            </Text>
+          </View>
+          <View
+            style={[styles.statusChip, goal.is_achieved && styles.statusDone]}
+          >
+            <Text
+              style={[
+                styles.statusText,
+                goal.is_achieved && styles.statusTextDone,
+              ]}
+            >
+              {goal.is_achieved ? "達成" : "未達成"}
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.meta}>残り{goal.days_remaining}日</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -30,7 +59,7 @@ export function GoalProgressBar({ goal }: { goal: Goal }) {
         <View style={styles.valueBlock}>
           <Text style={styles.valueLabel}>目標</Text>
           <Text style={styles.targetValue}>
-            {formatMetricValue(goal.metric_key, goal.target_value)}
+            {formatMetricValue(goal.metric_key, goal.target_value ?? 0)}
             {goal.comparison_type === "less_than" ? " 以下" : ""}
           </Text>
         </View>
@@ -52,6 +81,15 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: "row", alignItems: "center", gap: 6, flex: 1 },
   title: { color: "#F4F4F4", fontSize: 14, fontWeight: "600", flex: 1 },
   percent: { color: "#d08000", fontSize: 14, fontWeight: "700" },
+  statusChip: {
+    backgroundColor: "#2E2E2E",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  statusDone: { backgroundColor: "#d08000" },
+  statusText: { color: "#A1A1AA", fontSize: 12, fontWeight: "700" },
+  statusTextDone: { color: "#F4F4F4" },
   track: {
     height: 8,
     borderRadius: 4,

@@ -1,4 +1,4 @@
-import type { Goal, GoalPeriodType } from "../../types/goal";
+import type { Goal, GoalKind, GoalPeriodType } from "../../types/goal";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { isAxiosError } from "axios";
@@ -35,6 +35,11 @@ const PERIODS: { key: GoalPeriodType; label: string }[] = [
   { key: "tournament", label: "大会" },
 ];
 
+const KINDS: { key: GoalKind; label: string }[] = [
+  { key: "numeric", label: "数値目標" },
+  { key: "qualitative", label: "達成目標" },
+];
+
 export default function GoalFormScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { goals, isLoading } = useGoals();
@@ -63,6 +68,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
   const canTournament = hasEntitlement("tournament_goals");
   const isSaving = isCreating || isUpdating;
 
+  const [kind, setKind] = useState<GoalKind>(editing?.kind ?? "numeric");
   const [periodType, setPeriodType] = useState<GoalPeriodType>(
     editing?.period_type ?? "monthly",
   );
@@ -90,8 +96,15 @@ function GoalForm({ editing }: { editing?: Goal }) {
   const metric =
     GOAL_METRICS.find((item) => item.key === metricKey) ?? GOAL_METRICS[0];
 
+  const isQualitative = kind === "qualitative";
+
   const handleSave = async () => {
-    if (!target) return Alert.alert("目標値を入力してください");
+    if (isQualitative && !title.trim()) {
+      return Alert.alert("目標を入力してください");
+    }
+    if (!isQualitative && !target) {
+      return Alert.alert("目標値を入力してください");
+    }
     if (periodType === "season" && !seasonId) {
       return Alert.alert("シーズンを選択してください");
     }
@@ -106,14 +119,20 @@ function GoalForm({ editing }: { editing?: Goal }) {
 
     const input = {
       title: title.trim() || `${metric.label}目標`,
+      kind,
       period_type: periodType,
       season_id: periodType === "season" ? seasonId : null,
       tournament_id: periodType === "tournament" ? tournamentId : null,
       month_start: periodType === "monthly" ? monthStart : null,
       deadline: periodType === "monthly" ? monthEnd : dateString(deadline),
-      metric_key: metricKey,
-      target_value: Number(target),
-      comparison_type: metric.comparison,
+      // 定性目標は指標・目標値を持たない。
+      ...(isQualitative
+        ? {}
+        : {
+            metric_key: metricKey,
+            target_value: Number(target),
+            comparison_type: metric.comparison,
+          }),
     };
 
     try {
@@ -166,6 +185,36 @@ function GoalForm({ editing }: { editing?: Goal }) {
       <Stack.Screen
         options={{ title: editing ? "目標を編集" : "新しい目標" }}
       />
+
+      <Text style={styles.label}>目標タイプ</Text>
+      <View style={styles.row}>
+        {KINDS.map((item) => {
+          const active = kind === item.key;
+          return (
+            <TouchableOpacity
+              key={item.key}
+              style={[
+                styles.seg,
+                active && styles.segActive,
+                editing && !active && styles.segLocked,
+              ]}
+              // タイプは作成後に変更不可（集計/達成管理の整合のため）。
+              disabled={Boolean(editing)}
+              onPress={() => setKind(item.key)}
+            >
+              <Text style={[styles.segText, active && styles.segTextActive]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      {isQualitative ? (
+        <Text style={styles.hint}>
+          達成・未達で管理します（例: この大会で優勝する）
+        </Text>
+      ) : null}
+
       <Text style={styles.label}>種類</Text>
       <View style={styles.row}>
         {PERIODS.map((period) => {
@@ -281,50 +330,61 @@ function GoalForm({ editing }: { editing?: Goal }) {
         </>
       ) : null}
 
-      <Text style={styles.label}>指標</Text>
-      {GOAL_METRIC_CATEGORIES.map((category) => (
-        <View key={category.key} style={styles.metricGroup}>
-          <Text style={styles.metricGroupLabel}>{category.label}</Text>
-          <View style={styles.chipWrap}>
-            {metricsInCategory(category.keys).map((item) => {
-              const active = item.key === metricKey;
-              return (
-                <TouchableOpacity
-                  key={item.key}
-                  style={[styles.chip, active && styles.chipActive]}
-                  onPress={() => setMetricKey(item.key)}
-                >
-                  <Text
-                    style={[styles.chipText, active && styles.chipTextActive]}
-                  >
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-      ))}
-      <Text style={styles.hint}>
-        条件: {metric.comparison === "less_than" ? "以下" : "以上"}
+      {isQualitative ? null : (
+        <>
+          <Text style={styles.label}>指標</Text>
+          {GOAL_METRIC_CATEGORIES.map((category) => (
+            <View key={category.key} style={styles.metricGroup}>
+              <Text style={styles.metricGroupLabel}>{category.label}</Text>
+              <View style={styles.chipWrap}>
+                {metricsInCategory(category.keys).map((item) => {
+                  const active = item.key === metricKey;
+                  return (
+                    <TouchableOpacity
+                      key={item.key}
+                      style={[styles.chip, active && styles.chipActive]}
+                      onPress={() => setMetricKey(item.key)}
+                    >
+                      <Text
+                        style={[
+                          styles.chipText,
+                          active && styles.chipTextActive,
+                        ]}
+                      >
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          ))}
+          <Text style={styles.hint}>
+            条件: {metric.comparison === "less_than" ? "以下" : "以上"}
+          </Text>
+
+          <Text style={styles.label}>目標値</Text>
+          <TextInput
+            style={styles.input}
+            value={target}
+            onChangeText={setTarget}
+            keyboardType="numeric"
+            placeholder={metric.decimal ? "例: 0.300" : "例: 20"}
+            placeholderTextColor="#71717A"
+          />
+        </>
+      )}
+
+      <Text style={styles.label}>
+        {isQualitative ? "目標" : "タイトル（任意）"}
       </Text>
-
-      <Text style={styles.label}>目標値</Text>
-      <TextInput
-        style={styles.input}
-        value={target}
-        onChangeText={setTarget}
-        keyboardType="numeric"
-        placeholder={metric.decimal ? "例: 0.300" : "例: 20"}
-        placeholderTextColor="#71717A"
-      />
-
-      <Text style={styles.label}>タイトル（任意）</Text>
       <TextInput
         style={styles.input}
         value={title}
         onChangeText={setTitle}
-        placeholder={`${metric.label}目標`}
+        placeholder={
+          isQualitative ? "例: この大会で優勝する" : `${metric.label}目標`
+        }
         placeholderTextColor="#71717A"
       />
 

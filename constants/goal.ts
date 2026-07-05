@@ -151,10 +151,13 @@ export const GOAL_METRIC_CATEGORIES: {
 export const metricsInCategory = (keys: string[]): GoalMetric[] =>
   GOAL_METRICS.filter((metric) => keys.includes(metric.key));
 
-export const metricLabel = (key: string): string =>
-  GOAL_METRICS.find((metric) => metric.key === key)?.label ?? key;
+export const metricLabel = (key: string | null): string =>
+  GOAL_METRICS.find((metric) => metric.key === key)?.label ?? key ?? "";
 
-export const formatMetricValue = (key: string, value: number): string => {
+export const formatMetricValue = (
+  key: string | null,
+  value: number,
+): string => {
   const metric = GOAL_METRICS.find((item) => item.key === key);
   if (metric?.decimal) return value.toFixed(3).replace(/^0\./, ".");
   return String(Math.round(value));

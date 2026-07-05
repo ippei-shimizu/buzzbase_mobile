@@ -30,3 +30,15 @@ export const updateGoal = async (
 export const deleteGoal = async (id: number): Promise<void> => {
   await axiosInstance.delete(`${URL}/${id}`);
 };
+
+/** 定性目標を達成にする。 */
+export const achieveGoal = async (id: number): Promise<Goal> => {
+  const res = await axiosInstance.post<Goal>(`${URL}/${id}/achievement`);
+  return res.data;
+};
+
+/** 定性目標の達成を取り消す。 */
+export const unachieveGoal = async (id: number): Promise<Goal> => {
+  const res = await axiosInstance.delete<Goal>(`${URL}/${id}/achievement`);
+  return res.data;
+};
