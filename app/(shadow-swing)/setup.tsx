@@ -51,6 +51,11 @@ export default function ShadowSwingSetupScreen() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.intro}>
+        設定したインターバルで自動的にカウントアップし、素振りの本数を練習記録に
+        保存します。笛の音や読み上げでテンポを取りながら振れます。
+      </Text>
+
       <Text style={styles.label}>目標本数</Text>
       <View style={styles.targetRow}>
         <TextInput
@@ -83,6 +88,10 @@ export default function ShadowSwingSetupScreen() {
           );
         })}
       </View>
+
+      <Text style={styles.hint}>
+        「笛の音」と「カウント読み上げ」はどちらか一方のみ選べます。
+      </Text>
 
       <Text style={styles.label}>笛の音</Text>
       <View style={styles.optionRow}>
@@ -180,12 +189,26 @@ export default function ShadowSwingSetupScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#2E2E2E", padding: 16 },
+  intro: {
+    color: "#D4D4D8",
+    fontSize: 13,
+    lineHeight: 20,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 10,
+    padding: 12,
+  },
   label: {
     color: "#A1A1AA",
     fontSize: 13,
     fontWeight: "600",
     marginTop: 16,
     marginBottom: 8,
+  },
+  hint: {
+    color: "#71717A",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 16,
   },
   targetRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   targetInput: {
