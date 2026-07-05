@@ -20,11 +20,22 @@ export interface PeriodicReviewSummary {
     sleep_hours_avg: number | null;
     fatigue_level_avg: number | null;
   };
+  // 成績（打撃・投手）は全ユーザーに返る。登板が無い期間は投手各値が null。
   batting?: {
     batting_average: number;
+    on_base_percentage: number;
+    slugging_percentage: number;
+    ops: number;
     previous_batting_average: number;
     delta: number;
   };
+  pitching?: {
+    innings_pitched: number;
+    era: number | null;
+    whip: number | null;
+    k_per_9: number | null;
+  };
+  // 以下は Pro のみ返る詳細部。
   insight?: CorrelationInsight | null;
 }
 
