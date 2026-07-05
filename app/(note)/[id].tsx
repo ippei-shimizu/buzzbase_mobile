@@ -18,7 +18,7 @@ import { useNote, useNoteMutations } from "@hooks/useNotes";
 import { usePracticeSession } from "@hooks/usePracticeSessions";
 import { formatAmount } from "@utils/formatAmount";
 import { formatJaFullDate } from "@utils/formatDate";
-import { extractMemoText } from "../../types/note";
+import { extractMemoText, isReflectionMemo } from "../../types/note";
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -247,6 +247,12 @@ export default function NoteDetailScreen() {
     );
   }
 
+  const memoText = extractMemoText(note.memo);
+  const reflectionAnswers = note.reflection_answers ?? [];
+  // 合成由来メモ（テンプレのみのノート）は下のテンプレ回答表示と重複するため隠す。
+  const showFreeMemo =
+    memoText.length > 0 && !isReflectionMemo(memoText, reflectionAnswers);
+
   return (
     <>
       <Stack.Screen
@@ -276,7 +282,19 @@ export default function NoteDetailScreen() {
       >
         <Text style={styles.date}>{formatJaFullDate(note.date)}</Text>
         {note.title ? <Text style={styles.title}>{note.title}</Text> : null}
-        <Text style={styles.memo}>{extractMemoText(note.memo)}</Text>
+        {showFreeMemo ? <Text style={styles.memo}>{memoText}</Text> : null}
+        {reflectionAnswers.length > 0 ? (
+          <View style={styles.reflection}>
+            {reflectionAnswers.map((item) => (
+              <View key={item.question} style={styles.reflectionItem}>
+                <Text style={styles.reflectionQuestion}>
+                  【{item.question}】
+                </Text>
+                <Text style={styles.reflectionAnswer}>{item.answer}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
         {note.practice_session_id != null ? (
           <LinkedPractice sessionId={note.practice_session_id} />
@@ -312,6 +330,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     marginTop: 12,
+  },
+  reflection: { marginTop: 12, gap: 16 },
+  reflectionItem: { gap: 4 },
+  reflectionQuestion: {
+    color: "#d08000",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  reflectionAnswer: {
+    color: "#F4F4F4",
+    fontSize: 15,
+    lineHeight: 22,
   },
   cardLabel: { color: "#A1A1AA", fontSize: 12, fontWeight: "700" },
   gameLabel: { marginBottom: 10 },
