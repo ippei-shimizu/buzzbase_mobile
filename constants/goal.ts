@@ -39,7 +39,7 @@ export const GOAL_METRICS: GoalMetric[] = [
   },
   {
     key: "game_count",
-    label: "試合数",
+    label: "出場試合数",
     unit: "試合",
     comparison: "greater_than",
   },
