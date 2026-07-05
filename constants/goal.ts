@@ -195,6 +195,11 @@ export const formatMetricValue = (
   value: number,
 ): string => {
   const metric = GOAL_METRICS.find((item) => item.key === key);
-  if (metric?.decimal) return value.toFixed(3).replace(/^0\./, ".");
+  if (metric?.decimal) {
+    // 率系は 1 未満なら .XXX（3桁）、1 以上は小数第1位まで（例: 400.0）。
+    return Math.abs(value) < 1
+      ? value.toFixed(3).replace(/^(-?)0\./, "$1.")
+      : value.toFixed(1);
+  }
   return String(Math.round(value));
 };
