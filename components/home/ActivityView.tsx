@@ -63,16 +63,17 @@ export function ActivityView() {
         />
       }
     >
-      <PeriodicReviewBanner />
+      {/* 提案A: 記録 → 今日 → 継続（報酬）→ 振り返り → ツール/深掘り の順。 */}
       <RecordButtonsSection />
-      <StreakHeaderSection />
-      <CurrentThemeSection />
       <TodayTasksSection />
+      <CurrentThemeSection />
+      <TodayGoalSection />
+      <StreakHeaderSection />
+      <PeriodicReviewBanner />
+      <RecentPracticeSection />
+      <MonthlySummarySection />
       <PracticeToolsSection />
       <ImprovementToolsSection />
-      <MonthlySummarySection />
-      <TodayGoalSection />
-      <RecentPracticeSection />
     </ScrollView>
   );
 }
