@@ -148,6 +148,14 @@ export default function CalendarScreen() {
             );
           })
         )}
+
+        <TouchableOpacity
+          style={styles.addRow}
+          onPress={() => router.push(`/(schedule)/new?date=${selected}`)}
+        >
+          <Ionicons name="add" size={16} color="#d08000" />
+          <Text style={styles.addText}>この日に予定を追加</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -210,4 +218,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   detailTitle: { color: "#F4F4F4", fontSize: 14, flex: 1 },
+  addRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d08000",
+    backgroundColor: "rgba(208,128,0,0.08)",
+  },
+  addText: { color: "#d08000", fontSize: 13, fontWeight: "700" },
 });
