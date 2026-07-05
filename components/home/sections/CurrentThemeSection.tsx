@@ -55,7 +55,7 @@ export function CurrentThemeSection() {
             accessibilityRole="button"
             onPress={() => router.push("/(theme)/list")}
           >
-            <Ionicons name="add" size={16} color="#d08000" />
+            <Ionicons name="add" size={14} color="#d08000" />
             <Text style={styles.manageText}>課題を追加・管理</Text>
           </TouchableOpacity>
         </>
@@ -90,11 +90,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 3,
-    paddingTop: 12,
-    marginTop: 4,
-    borderTopColor: "#4A4A4A",
-    borderTopWidth: 1,
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d08000",
+    backgroundColor: "rgba(208,128,0,0.08)",
   },
-  manageText: { color: "#d08000", fontSize: 13, fontWeight: "600" },
+  manageText: { color: "#d08000", fontSize: 13, fontWeight: "700" },
 });

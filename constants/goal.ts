@@ -22,7 +22,9 @@ export interface GoalMetric {
   decimal?: boolean;
 }
 
+// バックエンド Goal::METRIC_KEYS / MetricCalculator と対応（自動集計できる指標）。
 export const GOAL_METRICS: GoalMetric[] = [
+  // 練習・試合
   {
     key: "practice_days",
     label: "練習日数",
@@ -41,9 +43,24 @@ export const GOAL_METRICS: GoalMetric[] = [
     unit: "試合",
     comparison: "greater_than",
   },
+  // 打撃
   {
     key: "batting_average",
     label: "打率",
+    unit: "",
+    comparison: "greater_than",
+    decimal: true,
+  },
+  {
+    key: "on_base_percentage",
+    label: "出塁率",
+    unit: "",
+    comparison: "greater_than",
+    decimal: true,
+  },
+  {
+    key: "slugging_percentage",
+    label: "長打率",
     unit: "",
     comparison: "greater_than",
     decimal: true,
@@ -55,6 +72,22 @@ export const GOAL_METRICS: GoalMetric[] = [
     comparison: "greater_than",
     decimal: true,
   },
+  { key: "hits", label: "安打", unit: "本", comparison: "greater_than" },
+  { key: "home_runs", label: "本塁打", unit: "本", comparison: "greater_than" },
+  {
+    key: "runs_batted_in",
+    label: "打点",
+    unit: "点",
+    comparison: "greater_than",
+  },
+  { key: "runs_scored", label: "得点", unit: "点", comparison: "greater_than" },
+  {
+    key: "stolen_bases",
+    label: "盗塁",
+    unit: "個",
+    comparison: "greater_than",
+  },
+  // 投手
   {
     key: "era",
     label: "防御率",
@@ -62,6 +95,21 @@ export const GOAL_METRICS: GoalMetric[] = [
     comparison: "less_than",
     decimal: true,
   },
+  {
+    key: "whip",
+    label: "WHIP",
+    unit: "",
+    comparison: "less_than",
+    decimal: true,
+  },
+  {
+    key: "strikeouts",
+    label: "奪三振",
+    unit: "個",
+    comparison: "greater_than",
+  },
+  { key: "wins", label: "勝利", unit: "勝", comparison: "greater_than" },
+  { key: "saves", label: "セーブ", unit: "個", comparison: "greater_than" },
 ];
 
 export const metricLabel = (key: string): string =>
