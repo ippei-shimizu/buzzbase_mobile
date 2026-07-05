@@ -95,7 +95,11 @@ export default function ShadowSwingSetupScreen() {
             <TouchableOpacity
               key={String(item.key)}
               style={[styles.option, active && styles.optionActive]}
-              onPress={() => setSound(item.key)}
+              // 笛と読み上げは排他。笛をONにしたら読み上げをOFFにする。
+              onPress={() => {
+                setSound(item.key);
+                if (item.key) setVoice(false);
+              }}
             >
               <Text
                 style={[styles.optionText, active && styles.optionTextActive]}
@@ -118,7 +122,11 @@ export default function ShadowSwingSetupScreen() {
             <TouchableOpacity
               key={String(item.key)}
               style={[styles.option, active && styles.optionActive]}
-              onPress={() => setVoice(item.key)}
+              // 笛と読み上げは排他。読み上げをONにしたら笛をOFFにする。
+              onPress={() => {
+                setVoice(item.key);
+                if (item.key) setSound(false);
+              }}
             >
               <Text
                 style={[styles.optionText, active && styles.optionTextActive]}
