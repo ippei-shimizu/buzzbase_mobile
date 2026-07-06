@@ -81,26 +81,38 @@ export default function GoalListScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.tabBar}>
-        {TABS.map((item) => {
-          const active = item.key === tab;
-          return (
-            <TouchableOpacity
-              key={item.key}
-              style={[styles.tab, active && styles.tabActive]}
-              onPress={() => setTab(item.key)}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-            >
-              <Text style={[styles.tabText, active && styles.tabTextActive]}>
-                {item.label}
-              </Text>
-              <Text style={[styles.tabCount, active && styles.tabCountActive]}>
-                {goalsByTab[item.key].length}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => router.push("/(goal)/new")}
+        >
+          <Ionicons name="add" size={18} color="#FFFFFF" />
+          <Text style={styles.addButtonText}>新しい目標を追加</Text>
+        </TouchableOpacity>
+
+        <View style={styles.tabBar}>
+          {TABS.map((item) => {
+            const active = item.key === tab;
+            return (
+              <TouchableOpacity
+                key={item.key}
+                style={[styles.tab, active && styles.tabActive]}
+                onPress={() => setTab(item.key)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+              >
+                <Text style={[styles.tabText, active && styles.tabTextActive]}>
+                  {item.label}
+                </Text>
+                <Text
+                  style={[styles.tabCount, active && styles.tabCountActive]}
+                >
+                  {goalsByTab[item.key].length}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -171,14 +183,6 @@ export default function GoalListScreen() {
             );
           })
         )}
-
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => router.push("/(goal)/new")}
-        >
-          <Ionicons name="add" size={18} color="#FFFFFF" />
-          <Text style={styles.addButtonText}>新しい目標を追加</Text>
-        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -193,13 +197,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#2E2E2E",
   },
-  tabBar: {
-    flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 4,
-  },
+  header: { paddingHorizontal: 16, paddingTop: 12, gap: 12 },
+  tabBar: { flexDirection: "row", gap: 8, paddingBottom: 4 },
   tab: {
     flex: 1,
     flexDirection: "row",
@@ -247,7 +246,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#d08000",
     borderRadius: 8,
     paddingVertical: 14,
-    marginTop: 12,
   },
   addButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
 });
