@@ -54,7 +54,11 @@ export function ImprovementToolsSection() {
       {TOOLS.map((tool, index) => (
         <TouchableOpacity
           key={tool.label}
-          style={[styles.row, index > 0 && styles.rowBorder]}
+          style={[
+            styles.row,
+            index > 0 && styles.rowBorder,
+            index === TOOLS.length - 1 && styles.rowLast,
+          ]}
           onPress={() => router.push(tool.href)}
         >
           <Ionicons name={tool.icon} size={20} color="#d08000" />
@@ -77,6 +81,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   rowBorder: { borderTopWidth: 1, borderTopColor: "#2E2E2E" },
+  // 最終行の下パディングを削り、カード下端の余白を左右（16px）と揃える。
+  rowLast: { paddingBottom: 0 },
   textWrap: { flex: 1 },
   label: { color: "#F4F4F4", fontSize: 14, fontWeight: "600" },
   description: { color: "#A1A1AA", fontSize: 12, marginTop: 2 },
