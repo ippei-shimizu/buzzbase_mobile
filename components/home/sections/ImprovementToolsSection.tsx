@@ -18,9 +18,15 @@ const TOOLS: Tool[] = [
     href: "/(theme)/list",
   },
   {
+    icon: "trophy-outline",
+    label: "目標管理",
+    description: "目標を立てて達成状況を追う",
+    href: "/(goal)/list",
+  },
+  {
     icon: "trending-up",
-    label: "相関インサイト",
-    description: "練習と成績の傾向を見る",
+    label: "練習と成績のつながり",
+    description: "何が成績に効いているかを見る",
     href: "/(insight)/insights",
   },
   {
@@ -38,7 +44,7 @@ const TOOLS: Tool[] = [
 ];
 
 /**
- * 上達ループ機能（課題・相関インサイト・振り返りテンプレ・レポート）への導線。
+ * 上達ループ機能（課題・練習と成績のつながり・振り返りテンプレ・レポート）への導線。
  */
 export function ImprovementToolsSection() {
   const router = useRouter();

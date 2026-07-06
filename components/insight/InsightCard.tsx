@@ -12,7 +12,7 @@ const DIRECTION_ICON: Record<
 };
 
 /**
- * 相関インサイト1件のカード。
+ * 「練習と成績のつながり」1件のカード。
  * サンプル不足（sufficient=false）は断定せず、非断定トーンで表示する。
  */
 export function InsightCard({ insight }: { insight: CorrelationInsight }) {

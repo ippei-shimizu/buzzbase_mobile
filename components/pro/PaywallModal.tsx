@@ -101,7 +101,7 @@ const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
   advanced_periodic_review: {
     title: "週次・月次レポートを詳しく",
     description:
-      "課題別の取り組みや成績の推移、相関インサイトを含む詳細レポートを受け取れます。",
+      "課題別の取り組みや成績の推移、練習と成績のつながりを含む詳細レポートを受け取れます。",
   },
 };
 

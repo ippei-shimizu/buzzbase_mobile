@@ -24,7 +24,10 @@ export default function InsightLayout() {
         ),
       }}
     >
-      <Stack.Screen name="insights" options={{ title: "相関インサイト" }} />
+      <Stack.Screen
+        name="insights"
+        options={{ title: "練習と成績のつながり" }}
+      />
     </Stack>
   );
 }
