@@ -1,6 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useCallback, useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { BackToTopButton } from "@components/ui/BackToTopButton";
+import { useBackToTop } from "@hooks/useBackToTop";
 import { CurrentThemeSection } from "./sections/CurrentThemeSection";
 import { ImprovementToolsSection } from "./sections/ImprovementToolsSection";
 import { MonthlySummarySection } from "./sections/MonthlySummarySection";
@@ -38,6 +40,8 @@ const REFRESH_QUERY_KEYS = [
 export function ActivityView() {
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { scrollRef, showBackToTop, handleScroll, scrollToTop } =
+    useBackToTop();
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -52,34 +56,43 @@ export function ActivityView() {
   }, [queryClient]);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={onRefresh}
-          tintColor="#d08000"
-        />
-      }
-    >
-      {/* 提案A: 記録 → 今日 → 継続（報酬）→ 振り返り → ツール/深掘り の順。 */}
-      <RecordButtonsSection />
-      <TodayTasksSection />
-      <CurrentThemeSection />
-      <TodayGoalSection />
-      <StreakHeaderSection />
-      <PeriodicReviewBanner />
-      <MonthlySummarySection />
-      <RecentPracticeSection />
-      <PracticeToolsSection />
-      <ImprovementToolsSection />
-    </ScrollView>
+    <View style={styles.wrapper}>
+      <ScrollView
+        ref={scrollRef}
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={64}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor="#d08000"
+          />
+        }
+      >
+        {/* 提案A: 記録 → 今日 → 継続（報酬）→ 振り返り → ツール/深掘り の順。 */}
+        <RecordButtonsSection />
+        <TodayTasksSection />
+        <CurrentThemeSection />
+        <TodayGoalSection />
+        <StreakHeaderSection />
+        <PeriodicReviewBanner />
+        <MonthlySummarySection />
+        <RecentPracticeSection />
+        <PracticeToolsSection />
+        <ImprovementToolsSection />
+      </ScrollView>
+      <BackToTopButton visible={showBackToTop} onPress={scrollToTop} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
