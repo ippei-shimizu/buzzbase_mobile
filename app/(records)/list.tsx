@@ -21,6 +21,7 @@ import { useNotes } from "@hooks/useNotes";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
 import { usePracticeSessions } from "@hooks/usePracticeSessions";
 import { useTags } from "@hooks/useTags";
+import { tagLabel } from "../../types/tag";
 
 const SEGMENTS = ["練習記録", "野球ノート"];
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
@@ -184,7 +185,7 @@ const sessionMatchesQuery = (
 const noteMatchesQuery = (note: NoteV2, query: string): boolean => {
   const term = normalize(query);
   if (!term) return true;
-  const tagNames = note.tags?.map((tag) => tag.name).join(" ") ?? "";
+  const tagNames = note.tags?.map((tag) => tagLabel(tag.name)).join(" ") ?? "";
   return [note.date, note.title ?? "", note.memo_preview, tagNames]
     .join(" ")
     .toLowerCase()
@@ -293,7 +294,7 @@ function RecordSearchBar({
                     active && styles.tagFilterTextActive,
                   ]}
                 >
-                  {tag.name}
+                  {tagLabel(tag.name)}
                 </Text>
               </TouchableOpacity>
             );
@@ -569,7 +570,7 @@ function NoteRow({ note, onPress }: { note: NoteV2; onPress: () => void }) {
           <View style={styles.tagChipRow}>
             {note.tags.map((tag) => (
               <View key={tag.id} style={styles.noteTagChip}>
-                <Text style={styles.noteTagChipText}>{tag.name}</Text>
+                <Text style={styles.noteTagChipText}>{tagLabel(tag.name)}</Text>
               </View>
             ))}
           </View>

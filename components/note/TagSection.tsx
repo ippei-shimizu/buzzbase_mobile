@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import { useTags, useTagMutations } from "@hooks/useTags";
+import { tagLabel } from "../../types/tag";
 
 interface Props {
   selectedIds: number[];
@@ -33,7 +34,8 @@ export function TagSection({ selectedIds, onChange }: Props) {
   };
 
   const handleAdd = async () => {
-    const name = newTag.trim();
+    // 入力で先頭に付けた # は保存名から取り除く（表示時に付与するため）。
+    const name = newTag.trim().replace(/^#+/, "").trim();
     if (!name || isCreating) return;
     // 同名が既にあれば作成せず選択に加えるだけ。
     const existing = tags.find((tag) => tag.name === name);
@@ -68,7 +70,7 @@ export function TagSection({ selectedIds, onChange }: Props) {
               onPress={() => toggle(tag.id)}
             >
               <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                {tag.name}
+                {tagLabel(tag.name)}
               </Text>
             </TouchableOpacity>
           );

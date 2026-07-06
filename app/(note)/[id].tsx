@@ -19,6 +19,7 @@ import { usePracticeSession } from "@hooks/usePracticeSessions";
 import { formatAmount } from "@utils/formatAmount";
 import { formatJaFullDate } from "@utils/formatDate";
 import { extractMemoText, isReflectionMemo } from "../../types/note";
+import { tagLabel } from "../../types/tag";
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -286,7 +287,7 @@ export default function NoteDetailScreen() {
           <View style={styles.tagRow}>
             {note.tags.map((tag) => (
               <View key={tag.id} style={styles.tagChip}>
-                <Text style={styles.tagChipText}>{tag.name}</Text>
+                <Text style={styles.tagChipText}>{tagLabel(tag.name)}</Text>
               </View>
             ))}
           </View>
