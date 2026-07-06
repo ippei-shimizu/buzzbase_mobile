@@ -29,7 +29,9 @@ export function GoalProgressBar({ goal }: { goal: Goal }) {
             </Text>
           </View>
         </View>
-        <Text style={styles.meta}>残り{goal.days_remaining}日</Text>
+        <Text style={styles.meta}>
+          {goal.is_finalized ? "確定済み" : `残り${goal.days_remaining}日`}
+        </Text>
       </View>
     );
   }
@@ -76,7 +78,8 @@ export function GoalProgressBar({ goal }: { goal: Goal }) {
         </View>
       </View>
       <Text style={styles.meta}>
-        {metricText} ・ 残り{goal.days_remaining}日
+        {metricText} ・{" "}
+        {goal.is_finalized ? "確定済み" : `残り${goal.days_remaining}日`}
       </Text>
     </View>
   );

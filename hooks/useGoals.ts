@@ -4,6 +4,7 @@ import {
   achieveGoal,
   createGoal,
   deleteGoal,
+  getGoalHistory,
   getGoals,
   unachieveGoal,
   updateGoal,
@@ -17,10 +18,21 @@ export const useGoals = () => {
   return { goals: data ?? [], isLoading, isError, refetch };
 };
 
+/** 確定済み（期限到来）の目標履歴。達成・未達タブの表示に使う。 */
+export const useGoalHistory = () => {
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["goalHistory"],
+    queryFn: getGoalHistory,
+  });
+  return { goals: data ?? [], isLoading, isError, refetch };
+};
+
 export const useGoalMutations = () => {
   const queryClient = useQueryClient();
-  const invalidate = () =>
+  const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["goals"] });
+    queryClient.invalidateQueries({ queryKey: ["goalHistory"] });
+  };
 
   const create = useMutation({ mutationFn: createGoal, onSuccess: invalidate });
   const update = useMutation({
