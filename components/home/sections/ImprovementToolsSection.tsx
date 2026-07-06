@@ -44,13 +44,13 @@ const TOOLS: Tool[] = [
 ];
 
 /**
- * 上達ループ機能（課題・練習と成績のつながり・振り返りテンプレ・レポート）への導線。
+ * 上達サイクル機能（課題・目標・練習と成績のつながり・振り返りテンプレ・レポート）への導線。
  */
 export function ImprovementToolsSection() {
   const router = useRouter();
 
   return (
-    <SectionCard title="上達を深める">
+    <SectionCard title="上達サイクルをまわす">
       {TOOLS.map((tool, index) => (
         <TouchableOpacity
           key={tool.label}
