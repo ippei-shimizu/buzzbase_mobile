@@ -28,7 +28,9 @@ export function TodayGoalSection() {
                 {GOAL_PERIOD_LABELS[periodType]}
               </Text>
               {inType.map((goal) => (
-                <GoalProgressBar key={goal.id} goal={goal} />
+                <View key={goal.id} style={styles.goalCard}>
+                  <GoalProgressBar goal={goal} compact />
+                </View>
               ))}
             </View>
           );
@@ -52,6 +54,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
     marginBottom: 6,
+  },
+  goalCard: {
+    backgroundColor: "#2E2E2E",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 8,
   },
   editRow: {
     flexDirection: "row",

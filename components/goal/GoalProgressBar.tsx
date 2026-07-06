@@ -4,11 +4,20 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { formatMetricValue, metricLabel } from "../../constants/goal";
 
-export function GoalProgressBar({ goal }: { goal: Goal }) {
+export function GoalProgressBar({
+  goal,
+  compact = false,
+}: {
+  goal: Goal;
+  /** ホームのミニカード用に、現在→目標と残り日数を1行にまとめて高さを抑える。 */
+  compact?: boolean;
+}) {
+  const containerStyle = compact ? styles.containerCompact : styles.container;
+
   // 定性目標は指標を持たず、達成/未達で表示する。
   if (goal.kind === "qualitative") {
     return (
-      <View style={styles.container}>
+      <View style={containerStyle}>
         <View style={styles.header}>
           <View style={styles.titleRow}>
             <Ionicons name="flag" size={14} color="#d08000" />
@@ -45,8 +54,16 @@ export function GoalProgressBar({ goal }: { goal: Goal }) {
       ? `${goal.practice_menu_name} 継続日数`
       : metricLabel(goal.metric_key);
 
+  const currentText = `${formatMetricValue(goal.metric_key, goal.current_value)}${unit}`;
+  const targetText = `${formatMetricValue(goal.metric_key, goal.target_value ?? 0)}${unit}${
+    goal.comparison_type === "less_than" ? " 以下" : ""
+  }`;
+  const remainingText = goal.is_finalized
+    ? "確定済み"
+    : `残り${goal.days_remaining}日`;
+
   return (
-    <View style={styles.container}>
+    <View style={containerStyle}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Ionicons name="flag" size={14} color="#d08000" />
@@ -59,34 +76,35 @@ export function GoalProgressBar({ goal }: { goal: Goal }) {
       <View style={styles.track}>
         <View style={[styles.fill, { width: `${goal.progress_percent}%` }]} />
       </View>
-      <View style={styles.valuesRow}>
-        <View style={styles.valueBlock}>
-          <Text style={styles.valueLabel}>現在</Text>
-          <Text style={styles.currentValue}>
-            {formatMetricValue(goal.metric_key, goal.current_value)}
-            {unit}
+      {compact ? (
+        <Text style={styles.meta}>
+          現在 {currentText} → 目標 {targetText} ・ {remainingText}
+        </Text>
+      ) : (
+        <>
+          <View style={styles.valuesRow}>
+            <View style={styles.valueBlock}>
+              <Text style={styles.valueLabel}>現在</Text>
+              <Text style={styles.currentValue}>{currentText}</Text>
+            </View>
+            <Ionicons name="arrow-forward" size={14} color="#71717A" />
+            <View style={styles.valueBlock}>
+              <Text style={styles.valueLabel}>目標</Text>
+              <Text style={styles.targetValue}>{targetText}</Text>
+            </View>
+          </View>
+          <Text style={styles.meta}>
+            {metricText} ・ {remainingText}
           </Text>
-        </View>
-        <Ionicons name="arrow-forward" size={14} color="#71717A" />
-        <View style={styles.valueBlock}>
-          <Text style={styles.valueLabel}>目標</Text>
-          <Text style={styles.targetValue}>
-            {formatMetricValue(goal.metric_key, goal.target_value ?? 0)}
-            {unit}
-            {goal.comparison_type === "less_than" ? " 以下" : ""}
-          </Text>
-        </View>
-      </View>
-      <Text style={styles.meta}>
-        {metricText} ・{" "}
-        {goal.is_finalized ? "確定済み" : `残り${goal.days_remaining}日`}
-      </Text>
+        </>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { paddingVertical: 8 },
+  containerCompact: { paddingVertical: 2 },
   header: {
     flexDirection: "row",
     alignItems: "center",
