@@ -19,8 +19,8 @@ const TOOLS: Tool[] = [
   },
   {
     icon: "trophy-outline",
-    label: "目標管理",
-    description: "目標を立てて達成状況を追う",
+    label: "目標を立てる",
+    description: "目標を決めて達成状況を追う",
     href: "/(goal)/list",
   },
   {
