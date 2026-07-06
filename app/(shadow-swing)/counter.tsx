@@ -9,6 +9,13 @@ import {
   Vibration,
   StyleSheet,
 } from "react-native";
+import {
+  Easing,
+  cancelAnimation,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { CircularTimer } from "@components/shadow-swing/CircularTimer";
 import { useShadowSwingMutations } from "@hooks/useShadowSwing";
 
 export default function ShadowSwingCounterScreen() {
@@ -38,19 +45,40 @@ export default function ShadowSwingCounterScreen() {
   const finishedRef = useRef(false);
   const countRef = useRef(0);
 
+  // 円形タイマーの針。1インターバルで 0→1 を1周する。
+  const sweep = useSharedValue(0);
+  const startSweep = useCallback(() => {
+    sweep.value = 0;
+    sweep.value = withTiming(1, {
+      duration: intervalMs,
+      easing: Easing.linear,
+    });
+  }, [sweep, intervalMs]);
+
   // マナーモードでも音・読み上げが鳴るようにする（どちらかが有効なら設定）。
   useEffect(() => {
     if (useSound || useVoice)
       void setAudioModeAsync({ playsInSilentMode: true });
   }, [useSound, useVoice]);
 
-  // インターバルごとに自動カウントアップ（＋笛・バイブ・1本ごとの読み上げ）。
+  // 実行/一時停止に合わせて円形タイマーの針を開始・停止する。
+  useEffect(() => {
+    if (!running) {
+      cancelAnimation(sweep);
+      return;
+    }
+    startSweep();
+    return () => cancelAnimation(sweep);
+  }, [running, startSweep, sweep]);
+
+  // インターバルごとに自動カウントアップ（＋笛・バイブ・1本ごとの読み上げ・針リセット）。
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => {
       countRef.current += 1;
       const next = countRef.current;
       setCount(next);
+      startSweep();
       if (useSound) {
         whistle.seekTo(0);
         whistle.play();
@@ -63,7 +91,15 @@ export default function ShadowSwingCounterScreen() {
       }
     }, intervalMs);
     return () => clearInterval(id);
-  }, [running, intervalMs, useVibration, useSound, useVoice, whistle]);
+  }, [
+    running,
+    intervalMs,
+    useVibration,
+    useSound,
+    useVoice,
+    whistle,
+    startSweep,
+  ]);
 
   // 経過時間。
   useEffect(() => {
@@ -103,10 +139,7 @@ export default function ShadowSwingCounterScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.count}>
-        {count}
-        <Text style={styles.target}> / {targetCount}</Text>
-      </Text>
+      <CircularTimer sweep={sweep} count={count} targetCount={targetCount} />
       <View style={styles.barTrack}>
         <View style={[styles.barFill, { width: `${progress * 100}%` }]} />
       </View>
@@ -142,8 +175,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
   },
-  count: { color: "#F4F4F4", fontSize: 72, fontWeight: "800" },
-  target: { color: "#A1A1AA", fontSize: 32, fontWeight: "600" },
   barTrack: {
     width: "100%",
     height: 10,
