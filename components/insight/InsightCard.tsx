@@ -1,6 +1,6 @@
 import type { CorrelationInsight } from "../../types/insight";
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const DIRECTION_ICON: Record<
   CorrelationInsight["direction"],
@@ -15,7 +15,13 @@ const DIRECTION_ICON: Record<
  * 「練習と成績のつながり」1件のカード。
  * サンプル不足（sufficient=false）は断定せず、非断定トーンで表示する。
  */
-export function InsightCard({ insight }: { insight: CorrelationInsight }) {
+export function InsightCard({
+  insight,
+  onDelete,
+}: {
+  insight: CorrelationInsight;
+  onDelete?: () => void;
+}) {
   const accent = insight.sufficient ? "#d08000" : "#71717A";
   return (
     <View style={styles.card}>
@@ -26,6 +32,11 @@ export function InsightCard({ insight }: { insight: CorrelationInsight }) {
           color={accent}
         />
         <Text style={styles.title}>{insight.title}</Text>
+        {onDelete ? (
+          <TouchableOpacity onPress={onDelete} hitSlop={8}>
+            <Ionicons name="trash-outline" size={16} color="#A1A1AA" />
+          </TouchableOpacity>
+        ) : null}
       </View>
       <Text style={styles.body}>{insight.body}</Text>
       <Text style={styles.meta}>

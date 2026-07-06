@@ -1,14 +1,21 @@
+import type { CorrelationInsight } from "../../types/insight";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { InsightCard } from "@components/insight/InsightCard";
 import { ProComingSoonCard } from "@components/stats/ProComingSoonCard";
-import { useCorrelationInsights } from "@hooks/useCorrelationInsights";
+import {
+  useCorrelationInsights,
+  useInsightCombinationMutations,
+} from "@hooks/useCorrelationInsights";
 import { useEntitlement } from "@hooks/useEntitlement";
 
 export default function InsightScreen() {
@@ -16,6 +23,19 @@ export default function InsightScreen() {
   const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const isPro = hasEntitlement("correlation_insights");
   const { insights, isLoading } = useCorrelationInsights({ enabled: isPro });
+  const { deleteCombination } = useInsightCombinationMutations();
+
+  const confirmDelete = (insight: CorrelationInsight) => {
+    if (insight.id == null) return;
+    Alert.alert("この組み合わせを削除しますか？", insight.title, [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "削除",
+        style: "destructive",
+        onPress: () => deleteCombination(insight.id as number),
+      },
+    ]);
+  };
 
   if (isProLoading) {
     return (
@@ -46,17 +66,42 @@ export default function InsightScreen() {
     );
   }
 
+  const customs = insights.filter((insight) => insight.id != null);
+  const presets = insights.filter((insight) => insight.id == null);
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.lead}>
         あなたの練習・コンディションと成績の傾向です。因果ではなく、続けるほど精度が上がります。
       </Text>
+      <TouchableOpacity
+        style={styles.createButton}
+        onPress={() => router.push("/(insight)/create")}
+      >
+        <Ionicons name="add" size={18} color="#FFFFFF" />
+        <Text style={styles.createButtonText}>組み合わせを作る</Text>
+      </TouchableOpacity>
       {isLoading ? (
         <ActivityIndicator size="large" color="#d08000" style={styles.loader} />
       ) : (
-        insights.map((insight) => (
-          <InsightCard key={insight.key} insight={insight} />
-        ))
+        <>
+          {customs.length > 0 ? (
+            <>
+              <Text style={styles.sectionHeading}>自作</Text>
+              {customs.map((insight) => (
+                <InsightCard
+                  key={insight.key}
+                  insight={insight}
+                  onDelete={() => confirmDelete(insight)}
+                />
+              ))}
+            </>
+          ) : null}
+          <Text style={styles.sectionHeading}>おすすめ</Text>
+          {presets.map((insight) => (
+            <InsightCard key={insight.key} insight={insight} />
+          ))}
+        </>
       )}
     </ScrollView>
   );
@@ -75,4 +120,21 @@ const styles = StyleSheet.create({
   loader: { marginTop: 24 },
   dummy: { padding: 20 },
   dummyText: { color: "#F4F4F4", fontSize: 14 },
+  createButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#d08000",
+    borderRadius: 8,
+    paddingVertical: 12,
+    marginBottom: 20,
+  },
+  createButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
+  sectionHeading: {
+    color: "#A1A1AA",
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
 });
