@@ -45,6 +45,7 @@ export default function NoteEditScreen() {
         improvementThemeId: note.improvement_theme_id,
         reflectionTemplateId: note.reflection_template_id,
         reflectionAnswers: note.reflection_answers,
+        tagIds: note.tags?.map((tag) => tag.id) ?? [],
       }}
       submitLabel="更新"
       isSubmitting={isUpdating}

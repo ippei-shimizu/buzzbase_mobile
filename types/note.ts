@@ -1,4 +1,5 @@
 import type { ReflectionAnswer } from "./reflectionTemplate";
+import type { Tag } from "./tag";
 
 export interface NoteV2 {
   id: number;
@@ -12,6 +13,7 @@ export interface NoteV2 {
   improvement_theme_id: number | null;
   reflection_template_id: number | null;
   reflection_answers: ReflectionAnswer[];
+  tags: Tag[];
 }
 
 export interface NoteInput {
@@ -24,6 +26,7 @@ export interface NoteInput {
   improvement_theme_id?: number | null;
   reflection_template_id?: number | null;
   reflection_answers?: ReflectionAnswer[];
+  tag_ids?: number[];
 }
 
 /** プレーンテキストを Slate 互換の JSON 文字列にする（v1 ノートと表示互換）。 */

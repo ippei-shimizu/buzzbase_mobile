@@ -19,6 +19,7 @@ import { usePracticeSessions } from "@hooks/usePracticeSessions";
 import { formatJaFullDate } from "@utils/formatDate";
 import { buildMemoJson, buildReflectionMemoText } from "../../types/note";
 import { ReflectionTemplateSection } from "./ReflectionTemplateSection";
+import { TagSection } from "./TagSection";
 
 type OpenPicker = "none" | "practice" | "game";
 
@@ -31,6 +32,7 @@ export interface NoteFormInitial {
   improvementThemeId?: number | null;
   reflectionTemplateId?: number | null;
   reflectionAnswers?: { question: string; answer: string }[];
+  tagIds?: number[];
 }
 
 interface Props {
@@ -85,6 +87,7 @@ export function NoteForm({
   const [reflectionTemplateId, setReflectionTemplateId] = useState<
     number | null
   >(initial?.reflectionTemplateId ?? null);
+  const [tagIds, setTagIds] = useState<number[]>(initial?.tagIds ?? []);
   const [templateQuestions, setTemplateQuestions] = useState<string[]>(() =>
     (initial?.reflectionAnswers ?? []).map((item) => item.question),
   );
@@ -168,6 +171,7 @@ export function NoteForm({
       improvement_theme_id: improvementThemeId,
       reflection_template_id: reflectionTemplateId,
       reflection_answers: reflectionAnswers,
+      tag_ids: tagIds,
     });
   };
 
@@ -228,6 +232,8 @@ export function NoteForm({
         onChangeAnswer={handleChangeAnswer}
         locked={templateLocked}
       />
+
+      <TagSection selectedIds={tagIds} onChange={setTagIds} />
 
       <Text style={styles.label}>紐付け（任意）</Text>
 
