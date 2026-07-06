@@ -28,6 +28,7 @@ export default function InsightLayout() {
         name="insights"
         options={{ title: "練習と成績のつながり" }}
       />
+      <Stack.Screen name="create" options={{ title: "組み合わせを作る" }} />
     </Stack>
   );
 }
