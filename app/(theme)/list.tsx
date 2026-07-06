@@ -1,7 +1,10 @@
-import type { ImprovementTheme } from "../../types/improvementTheme";
+import type {
+  ImprovementTheme,
+  ImprovementThemeStatus,
+} from "../../types/improvementTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -16,20 +19,40 @@ import { themeCategoryLabel } from "@constants/improvementTheme";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useImprovementThemes } from "@hooks/useImprovementThemes";
 
+const TABS: { key: ImprovementThemeStatus; label: string }[] = [
+  { key: "open", label: "取組中" },
+  { key: "achieved", label: "克服" },
+  { key: "archived", label: "アーカイブ" },
+];
+
+const EMPTY_MESSAGE: Record<ImprovementThemeStatus, string> = {
+  open: "いま取り組む課題を決めると、練習やノートがその課題に束ねられます。",
+  achieved: "克服した課題はまだありません。",
+  archived: "アーカイブした課題はありません。",
+};
+
 export default function ThemeListScreen() {
   const router = useRouter();
   const { themes, isLoading, refetch, isRefreshing } = useImprovementThemes();
   const { hasEntitlement } = useEntitlement();
   const [isPaywallOpen, setPaywallOpen] = useState(false);
+  const [tab, setTab] = useState<ImprovementThemeStatus>("open");
 
-  const openThemes = themes.filter((theme) => theme.status === "open");
-  const historyThemes = themes.filter((theme) => theme.status !== "open");
+  const themesByStatus = useMemo(() => {
+    const buckets: Record<ImprovementThemeStatus, ImprovementTheme[]> = {
+      open: [],
+      achieved: [],
+      archived: [],
+    };
+    for (const theme of themes) buckets[theme.status].push(theme);
+    return buckets;
+  }, [themes]);
 
   const handleAdd = () => {
     // 無料は取組中1つまで。2つ目は Pro 訴求。
     if (
       !hasEntitlement("unlimited_improvement_themes") &&
-      openThemes.length >= 1
+      themesByStatus.open.length >= 1
     ) {
       setPaywallOpen(true);
       return;
@@ -45,8 +68,41 @@ export default function ThemeListScreen() {
     );
   }
 
+  const visibleThemes = themesByStatus[tab];
+
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
+          <Ionicons name="add" size={18} color="#FFFFFF" />
+          <Text style={styles.addButtonText}>新しい課題に取り組む</Text>
+        </TouchableOpacity>
+
+        <View style={styles.tabBar}>
+          {TABS.map((item) => {
+            const active = item.key === tab;
+            return (
+              <TouchableOpacity
+                key={item.key}
+                style={[styles.tab, active && styles.tabActive]}
+                onPress={() => setTab(item.key)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+              >
+                <Text style={[styles.tabText, active && styles.tabTextActive]}>
+                  {item.label}
+                </Text>
+                <Text
+                  style={[styles.tabCount, active && styles.tabCountActive]}
+                >
+                  {themesByStatus[item.key].length}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
@@ -57,15 +113,12 @@ export default function ThemeListScreen() {
           />
         }
       >
-        <Text style={styles.sectionTitle}>取組中の課題</Text>
-        {openThemes.length === 0 ? (
+        {visibleThemes.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>
-              いま取り組む課題を決めると、練習やノートがその課題に束ねられます。
-            </Text>
+            <Text style={styles.emptyText}>{EMPTY_MESSAGE[tab]}</Text>
           </View>
         ) : (
-          openThemes.map((theme) => (
+          visibleThemes.map((theme) => (
             <ThemeCard
               key={theme.id}
               theme={theme}
@@ -73,26 +126,6 @@ export default function ThemeListScreen() {
             />
           ))
         )}
-
-        <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-          <Ionicons name="add" size={18} color="#FFFFFF" />
-          <Text style={styles.addButtonText}>新しい課題に取り組む</Text>
-        </TouchableOpacity>
-
-        {historyThemes.length > 0 ? (
-          <>
-            <Text style={[styles.sectionTitle, styles.historyTitle]}>
-              克服・アーカイブ
-            </Text>
-            {historyThemes.map((theme) => (
-              <ThemeCard
-                key={theme.id}
-                theme={theme}
-                onPress={() => router.push(`/(theme)/${theme.id}`)}
-              />
-            ))}
-          </>
-        ) : null}
       </ScrollView>
 
       <PaywallModal
@@ -162,14 +195,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  content: { padding: 16, paddingBottom: 40 },
-  sectionTitle: {
-    color: "#F4F4F4",
-    fontSize: 15,
-    fontWeight: "700",
-    marginBottom: 12,
+  header: { paddingHorizontal: 16, paddingTop: 12, gap: 12 },
+  tabBar: { flexDirection: "row", gap: 8, paddingBottom: 4 },
+  tab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: "#3A3A3A",
   },
-  historyTitle: { marginTop: 28 },
+  tabActive: { backgroundColor: "#d08000" },
+  tabText: { color: "#A1A1AA", fontSize: 14, fontWeight: "700" },
+  tabTextActive: { color: "#FFFFFF" },
+  tabCount: { color: "#71717A", fontSize: 12, fontWeight: "700" },
+  tabCountActive: { color: "#FFFFFF" },
+  content: { padding: 16, paddingBottom: 40 },
   empty: {
     backgroundColor: "#3A3A3A",
     borderRadius: 12,
@@ -232,7 +275,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#d08000",
     borderRadius: 8,
     paddingVertical: 14,
-    marginTop: 12,
   },
   addButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
 });
