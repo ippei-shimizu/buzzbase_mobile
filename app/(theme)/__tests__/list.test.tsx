@@ -54,6 +54,6 @@ describe("課題テーマ一覧", () => {
     await waitFor(() => {
       expect(getByText("肩の開きを抑える")).toBeTruthy();
     });
-    expect(getByText(/取組5日/)).toBeTruthy();
+    expect(getByText(/取組 5日/)).toBeTruthy();
   });
 });
