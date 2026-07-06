@@ -72,7 +72,7 @@ export default function InsightScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.lead}>
-        あなたの練習・コンディションと成績の傾向です。因果ではなく、続けるほど精度が上がります。
+        あなたの練習・コンディションと成績の傾向です。必ずそうなるとは限りませんが、続けるほど精度が上がります。
       </Text>
       <TouchableOpacity
         style={styles.createButton}

@@ -41,7 +41,7 @@ export function InsightCard({
       <Text style={styles.body}>{insight.body}</Text>
       <Text style={styles.meta}>
         {insight.sufficient
-          ? `直近${insight.sample_weeks}週の傾向（因果ではありません）`
+          ? `直近${insight.sample_weeks}週の傾向（必ずそうとは限りません）`
           : "データが集まると分かります"}
       </Text>
     </View>
