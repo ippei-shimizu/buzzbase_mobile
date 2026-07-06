@@ -1,5 +1,6 @@
 import type { NoteV2 } from "../../types/note";
 import type { PracticeCategory, PracticeSession } from "../../types/practice";
+import type { Tag } from "../../types/tag";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -19,6 +20,7 @@ import { formatPracticeValue, menuIconForLog } from "@constants/practice";
 import { useNotes } from "@hooks/useNotes";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
 import { usePracticeSessions } from "@hooks/usePracticeSessions";
+import { useTags } from "@hooks/useTags";
 
 const SEGMENTS = ["練習記録", "野球ノート"];
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
@@ -182,10 +184,17 @@ const sessionMatchesQuery = (
 const noteMatchesQuery = (note: NoteV2, query: string): boolean => {
   const term = normalize(query);
   if (!term) return true;
-  return [note.date, note.title ?? "", note.memo_preview]
+  const tagNames = note.tags?.map((tag) => tag.name).join(" ") ?? "";
+  return [note.date, note.title ?? "", note.memo_preview, tagNames]
     .join(" ")
     .toLowerCase()
     .includes(term);
+};
+
+// 選択タグのいずれかを含めば一致（OR）。未選択は全件通す。
+const noteMatchesTags = (note: NoteV2, tagIds: number[]): boolean => {
+  if (tagIds.length === 0) return true;
+  return note.tags?.some((tag) => tagIds.includes(tag.id)) ?? false;
 };
 
 function RecordSearchBar({
@@ -196,6 +205,9 @@ function RecordSearchBar({
   onFromChange,
   onToChange,
   placeholder,
+  availableTags,
+  selectedTagIds,
+  onToggleTag,
 }: {
   query: string;
   onQueryChange: (value: string) => void;
@@ -204,6 +216,9 @@ function RecordSearchBar({
   onFromChange: (value: Date | null) => void;
   onToChange: (value: Date | null) => void;
   placeholder: string;
+  availableTags?: Tag[];
+  selectedTagIds?: number[];
+  onToggleTag?: (id: number) => void;
 }) {
   const [picker, setPicker] = useState<null | "from" | "to">(null);
   const hasDate = fromDate != null || toDate != null;
@@ -261,6 +276,30 @@ function RecordSearchBar({
           </TouchableOpacity>
         ) : null}
       </View>
+
+      {availableTags && availableTags.length > 0 ? (
+        <View style={styles.tagFilterRow}>
+          {availableTags.map((tag) => {
+            const active = selectedTagIds?.includes(tag.id) ?? false;
+            return (
+              <TouchableOpacity
+                key={tag.id}
+                style={[styles.tagFilterChip, active && styles.tagFilterActive]}
+                onPress={() => onToggleTag?.(tag.id)}
+              >
+                <Text
+                  style={[
+                    styles.tagFilterText,
+                    active && styles.tagFilterTextActive,
+                  ]}
+                >
+                  {tag.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      ) : null}
 
       {picker ? (
         <DateTimePicker
@@ -526,6 +565,15 @@ function NoteRow({ note, onPress }: { note: NoteV2; onPress: () => void }) {
           </Text>
         ) : null}
         <NoteLinkChip note={note} />
+        {note.tags?.length ? (
+          <View style={styles.tagChipRow}>
+            {note.tags.map((tag) => (
+              <View key={tag.id} style={styles.noteTagChip}>
+                <Text style={styles.noteTagChipText}>{tag.name}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
       </TouchableOpacity>
     </View>
   );
@@ -534,16 +582,28 @@ function NoteRow({ note, onPress }: { note: NoteV2; onPress: () => void }) {
 function NoteList() {
   const router = useRouter();
   const { notes, isLoading } = useNotes();
+  const { tags } = useTags();
 
   const [query, setQuery] = useState("");
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+
+  const toggleTag = (id: number) =>
+    setSelectedTagIds((prev) =>
+      prev.includes(id) ? prev.filter((tag) => tag !== id) : [...prev, id],
+    );
 
   const isFiltered =
-    query.trim() !== "" || fromDate !== null || toDate !== null;
+    query.trim() !== "" ||
+    fromDate !== null ||
+    toDate !== null ||
+    selectedTagIds.length > 0;
   const filtered = notes.filter(
     (note) =>
-      noteMatchesQuery(note, query) && inDateRange(note.date, fromDate, toDate),
+      noteMatchesQuery(note, query) &&
+      inDateRange(note.date, fromDate, toDate) &&
+      noteMatchesTags(note, selectedTagIds),
   );
   const pager = useMonthPagination(notes, (note) => note.date);
 
@@ -568,7 +628,10 @@ function NoteList() {
         toDate={toDate}
         onFromChange={setFromDate}
         onToChange={setToDate}
-        placeholder="タイトル・本文で検索"
+        placeholder="タイトル・本文・タグで検索"
+        availableTags={tags}
+        selectedTagIds={selectedTagIds}
+        onToggleTag={toggleTag}
       />
       {isLoading ? (
         <View style={styles.centered}>
@@ -770,4 +833,27 @@ const styles = StyleSheet.create({
   practiceChipText: { color: "#d08000", fontSize: 12, fontWeight: "600" },
   gameChip: { backgroundColor: "rgba(59,130,246,0.15)" },
   gameChipText: { color: "#93c5fd", fontSize: 12, fontWeight: "600" },
+  tagChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 },
+  noteTagChip: {
+    backgroundColor: "#3A3A3A",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  noteTagChipText: { color: "#D4D4D8", fontSize: 12, fontWeight: "600" },
+  tagFilterRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 10,
+  },
+  tagFilterChip: {
+    backgroundColor: "#3A3A3A",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  tagFilterActive: { backgroundColor: "#d08000" },
+  tagFilterText: { color: "#A1A1AA", fontSize: 12, fontWeight: "600" },
+  tagFilterTextActive: { color: "#F4F4F4" },
 });

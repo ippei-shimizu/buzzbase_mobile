@@ -282,6 +282,15 @@ export default function NoteDetailScreen() {
       >
         <Text style={styles.date}>{formatJaFullDate(note.date)}</Text>
         {note.title ? <Text style={styles.title}>{note.title}</Text> : null}
+        {note.tags?.length ? (
+          <View style={styles.tagRow}>
+            {note.tags.map((tag) => (
+              <View key={tag.id} style={styles.tagChip}>
+                <Text style={styles.tagChipText}>{tag.name}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
         {showFreeMemo ? <Text style={styles.memo}>{memoText}</Text> : null}
         {reflectionAnswers.length > 0 ? (
           <View style={styles.reflection}>
@@ -325,6 +334,14 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 6,
   },
+  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 },
+  tagChip: {
+    backgroundColor: "#3A3A3A",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  tagChipText: { color: "#D4D4D8", fontSize: 12, fontWeight: "600" },
   memo: {
     color: "#F4F4F4",
     fontSize: 15,
