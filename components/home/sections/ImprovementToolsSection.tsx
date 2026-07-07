@@ -30,12 +30,6 @@ const TOOLS: Tool[] = [
     href: "/(insight)/insights",
   },
   {
-    icon: "document-text-outline",
-    label: "振り返りテンプレ",
-    description: "問いかけで振り返る",
-    href: "/(reflect-template)/list",
-  },
-  {
     icon: "sparkles-outline",
     label: "振り返りレポート",
     description: "週次・月次のまとめ",
@@ -44,7 +38,7 @@ const TOOLS: Tool[] = [
 ];
 
 /**
- * 上達サイクル機能（課題・目標・練習と成績のつながり・振り返りテンプレ・レポート）への導線。
+ * 上達サイクル機能（課題・目標・練習と成績のつながり・振り返りレポート）への導線。
  */
 export function ImprovementToolsSection() {
   const router = useRouter();
