@@ -12,7 +12,12 @@ import {
 import { GoalProgressBar } from "@components/goal/GoalProgressBar";
 import { GOAL_PERIOD_LABELS } from "@constants/goal";
 import { useGoalHistory, useGoalMutations, useGoals } from "@hooks/useGoals";
-import { formatJaFullDate } from "@utils/formatDate";
+
+// "YYYY-MM-DD" を Stat ボックスに収まる "YYYY/M/D" へ整形する。
+const formatDeadline = (iso: string): string => {
+  const [year, month, day] = iso.split("-").map(Number);
+  return `${year}/${month}/${day}`;
+};
 
 export default function GoalDetailScreen() {
   const router = useRouter();
@@ -105,7 +110,7 @@ export default function GoalDetailScreen() {
           label="残り"
           value={goal.is_finalized ? "確定済み" : `${goal.days_remaining}日`}
         />
-        <Stat label="期限" value={formatJaFullDate(goal.deadline)} />
+        <Stat label="期限" value={formatDeadline(goal.deadline)} />
       </View>
 
       {canToggleAchieve ? (
@@ -133,7 +138,9 @@ export default function GoalDetailScreen() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
@@ -167,6 +174,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#3A3A3A",
     borderRadius: 12,
     paddingVertical: 16,
+    paddingHorizontal: 8,
     alignItems: "center",
   },
   statValue: { color: "#d08000", fontSize: 16, fontWeight: "700" },
