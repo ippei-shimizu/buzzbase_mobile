@@ -622,6 +622,16 @@ function NoteList() {
         label="野球ノートを記録"
         onPress={() => router.push("/(note)/new")}
       />
+      <TouchableOpacity
+        style={styles.templateLink}
+        onPress={() => router.push("/(reflect-template)/list")}
+        accessibilityRole="button"
+        accessibilityLabel="振り返りテンプレを管理"
+      >
+        <Ionicons name="document-text-outline" size={15} color="#d08000" />
+        <Text style={styles.templateLinkText}>振り返りテンプレを管理</Text>
+        <Ionicons name="chevron-forward" size={14} color="#71717A" />
+      </TouchableOpacity>
       <RecordSearchBar
         query={query}
         onQueryChange={setQuery}
@@ -714,6 +724,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   newButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
+  templateLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+    marginTop: -4,
+    marginBottom: 16,
+  },
+  templateLinkText: {
+    color: "#d08000",
+    fontSize: 13,
+    fontWeight: "600",
+  },
   summaryLink: {
     flexDirection: "row",
     alignItems: "center",
