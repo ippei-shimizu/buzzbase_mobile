@@ -30,6 +30,7 @@ export default function GoalLayout() {
         }}
       />
       <Stack.Screen name="new" options={{ title: "新しい目標" }} />
+      <Stack.Screen name="[id]" options={{ title: "目標の詳細" }} />
     </Stack>
   );
 }

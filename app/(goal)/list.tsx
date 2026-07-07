@@ -40,7 +40,7 @@ export default function GoalListScreen() {
   const router = useRouter();
   const { goals: activeGoals, isLoading } = useGoals();
   const { goals: historyGoals, isLoading: isHistoryLoading } = useGoalHistory();
-  const { deleteGoal, achieveGoal, unachieveGoal } = useGoalMutations();
+  const { achieveGoal, unachieveGoal } = useGoalMutations();
   const [tab, setTab] = useState<GoalTab>("in_progress");
 
   const goalsByTab = useMemo(() => {
@@ -54,12 +54,6 @@ export default function GoalListScreen() {
     }
     return buckets;
   }, [activeGoals, historyGoals]);
-
-  const handleDelete = (id: number, title: string) =>
-    Alert.alert("削除しますか？", title, [
-      { text: "キャンセル", style: "cancel" },
-      { text: "削除", style: "destructive", onPress: () => deleteGoal(id) },
-    ]);
 
   const handleToggleAchieve = async (id: number, achieved: boolean) => {
     try {
@@ -135,10 +129,9 @@ export default function GoalListScreen() {
                       style={styles.cardBar}
                       activeOpacity={0.6}
                       accessibilityRole="button"
-                      disabled={goal.is_finalized}
                       onPress={() =>
                         router.push({
-                          pathname: "/(goal)/new",
+                          pathname: "/(goal)/[id]",
                           params: { id: String(goal.id) },
                         })
                       }
@@ -167,16 +160,6 @@ export default function GoalListScreen() {
                         />
                       </TouchableOpacity>
                     ) : null}
-                    <TouchableOpacity
-                      onPress={() => handleDelete(goal.id, goal.title)}
-                      hitSlop={8}
-                    >
-                      <Ionicons
-                        name="trash-outline"
-                        size={18}
-                        color="#71717A"
-                      />
-                    </TouchableOpacity>
                   </View>
                 ))}
               </View>
