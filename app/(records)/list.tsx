@@ -618,10 +618,6 @@ function NoteList() {
 
   return (
     <>
-      <NewRecordButton
-        label="野球ノートを記録"
-        onPress={() => router.push("/(note)/new")}
-      />
       <TouchableOpacity
         style={styles.templateLink}
         onPress={() => router.push("/(reflect-template)/list")}
@@ -632,6 +628,10 @@ function NoteList() {
         <Text style={styles.templateLinkText}>振り返りテンプレを管理</Text>
         <Ionicons name="chevron-forward" size={14} color="#71717A" />
       </TouchableOpacity>
+      <NewRecordButton
+        label="野球ノートを記録"
+        onPress={() => router.push("/(note)/new")}
+      />
       <RecordSearchBar
         query={query}
         onQueryChange={setQuery}
@@ -729,8 +729,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     alignSelf: "flex-end",
-    marginTop: -4,
-    marginBottom: 16,
+    marginBottom: 10,
   },
   templateLinkText: {
     color: "#d08000",
