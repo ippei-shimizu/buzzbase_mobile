@@ -728,7 +728,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    alignSelf: "flex-start",
+    alignSelf: "flex-end",
     marginTop: -4,
     marginBottom: 16,
   },
