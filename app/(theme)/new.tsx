@@ -1,6 +1,8 @@
-import { useRouter } from "expo-router";
+import type { ImprovementTheme } from "../../types/improvementTheme";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
@@ -10,26 +12,58 @@ import {
   View,
 } from "react-native";
 import { THEME_CATEGORIES } from "@constants/improvementTheme";
-import { useImprovementThemeMutations } from "@hooks/useImprovementThemes";
+import {
+  useImprovementThemeMutations,
+  useImprovementThemes,
+} from "@hooks/useImprovementThemes";
 
-export default function ThemeNewScreen() {
+export default function ThemeFormScreen() {
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { themes, isLoading } = useImprovementThemes();
+  const editing = id
+    ? themes.find((theme) => theme.id === Number(id))
+    : undefined;
+
+  // 編集モードで課題取得待ちの間はスピナー（初期値を正しく埋めるため）。
+  if (id && isLoading && !editing) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#d08000" />
+      </View>
+    );
+  }
+
+  return <ThemeForm key={editing?.id ?? "new"} editing={editing} />;
+}
+
+/** 作成・編集の共通フォーム。editing があれば編集モード。 */
+function ThemeForm({ editing }: { editing?: ImprovementTheme }) {
   const router = useRouter();
-  const { createTheme, isCreating } = useImprovementThemeMutations();
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<string | null>("batting");
-  const [purpose, setPurpose] = useState("");
+  const { createTheme, isCreating, updateTheme, isUpdating } =
+    useImprovementThemeMutations();
+  const [title, setTitle] = useState(editing?.title ?? "");
+  const [category, setCategory] = useState<string | null>(
+    editing?.category ?? "batting",
+  );
+  const [purpose, setPurpose] = useState(editing?.purpose ?? "");
+  const isSaving = isCreating || isUpdating;
 
   const handleSubmit = async () => {
     if (!title.trim()) {
       Alert.alert("課題のタイトルを入力してください");
       return;
     }
+    const input = {
+      title: title.trim(),
+      category,
+      purpose: purpose.trim() || null,
+    };
     try {
-      await createTheme({
-        title: title.trim(),
-        category,
-        purpose: purpose.trim() || null,
-      });
+      if (editing) {
+        await updateTheme({ id: editing.id, input });
+      } else {
+        await createTheme(input);
+      }
       router.back();
     } catch {
       Alert.alert("保存に失敗しました");
@@ -38,6 +72,9 @@ export default function ThemeNewScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Stack.Screen
+        options={{ title: editing ? "課題を編集" : "課題を決める" }}
+      />
       <Text style={styles.label}>いま取り組む課題</Text>
       <TextInput
         style={styles.input}
@@ -78,11 +115,13 @@ export default function ThemeNewScreen() {
       />
 
       <TouchableOpacity
-        style={[styles.saveButton, isCreating && styles.saveButtonDisabled]}
+        style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
         onPress={handleSubmit}
-        disabled={isCreating}
+        disabled={isSaving}
       >
-        <Text style={styles.saveButtonText}>この課題に取り組む</Text>
+        <Text style={styles.saveButtonText}>
+          {editing ? "更新" : "この課題に取り組む"}
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -90,6 +129,12 @@ export default function ThemeNewScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#2E2E2E" },
+  centered: {
+    flex: 1,
+    backgroundColor: "#2E2E2E",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   content: { padding: 16, paddingBottom: 40 },
   label: {
     color: "#A1A1AA",

@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
@@ -80,6 +80,27 @@ export default function ThemeDetailScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                onPress={() =>
+                  router.push({
+                    pathname: "/(theme)/new",
+                    params: { id: String(themeId) },
+                  })
+                }
+              >
+                <Ionicons name="create-outline" size={22} color="#F4F4F4" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleDelete}>
+                <Ionicons name="trash-outline" size={22} color="#F31260" />
+              </TouchableOpacity>
+            </View>
+          ),
+        }}
+      />
       <Text style={styles.title}>{theme.title}</Text>
       <Text style={styles.meta}>
         {themeCategoryLabel(theme.category)}・
@@ -165,10 +186,6 @@ export default function ThemeDetailScreen() {
           <Text style={styles.secondaryButtonText}>アーカイブ</Text>
         </TouchableOpacity>
       ) : null}
-
-      <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-        <Text style={styles.deleteButtonText}>削除</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -258,10 +275,5 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   secondaryButtonText: { color: "#F4F4F4", fontSize: 15 },
-  deleteButton: {
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 12,
-  },
-  deleteButtonText: { color: "#EF4444", fontSize: 14 },
+  headerActions: { flexDirection: "row", gap: 16, paddingRight: 4 },
 });
