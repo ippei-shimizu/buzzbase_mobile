@@ -1,7 +1,8 @@
+import type { PeriodicReview } from "../../types/periodicReview";
 import { useEffect } from "react";
 import {
   ActivityIndicator,
-  ScrollView,
+  FlatList,
   StyleSheet,
   Text,
   View,
@@ -37,17 +38,18 @@ export default function ReviewListScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {reviews.length === 0 ? (
+    <FlatList
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      data={reviews}
+      keyExtractor={(review: PeriodicReview) => String(review.id)}
+      renderItem={({ item }) => <PeriodicReviewCard review={item} />}
+      ListEmptyComponent={
         <Text style={styles.emptyText}>
           週末・月末に、その期間のがんばりと成績の振り返りがここに届きます。
         </Text>
-      ) : (
-        reviews.map((review) => (
-          <PeriodicReviewCard key={review.id} review={review} />
-        ))
-      )}
-    </ScrollView>
+      }
+    />
   );
 }
 
