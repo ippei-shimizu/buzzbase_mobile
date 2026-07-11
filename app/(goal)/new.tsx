@@ -184,9 +184,14 @@ function GoalForm({ editing }: { editing?: Goal }) {
     }
 
     // 期間タイプごとに開始日(month_start)と期限(deadline)を決める。
-    const now = new Date();
-    const year = now.getFullYear();
+    // 編集時、monthly/weekly/yearly は現在時刻基準の自動算出だと編集のたびに
+    // 対象期間がズレてしまうため、既存の値をそのまま保つ（period_type は編集不可）。
     const range: { start: string | null; end: string } = (() => {
+      if (editing && ["monthly", "weekly", "yearly"].includes(periodType)) {
+        return { start: editing.month_start, end: editing.deadline };
+      }
+      const now = new Date();
+      const year = now.getFullYear();
       if (periodType === "monthly") {
         return {
           start: `${year}-${pad(now.getMonth() + 1)}-01`,
