@@ -179,7 +179,10 @@ function GoalForm({ editing }: { editing?: Goal }) {
     if (periodType === "tournament" && !tournamentId) {
       return Alert.alert("大会を選択してください");
     }
-    if (periodType === "custom" && startDate > deadline) {
+    if (
+      periodType === "custom" &&
+      dateString(startDate) > dateString(deadline)
+    ) {
       return Alert.alert("終了日は開始日以降にしてください");
     }
 
