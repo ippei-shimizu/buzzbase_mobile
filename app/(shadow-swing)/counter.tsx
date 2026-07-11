@@ -124,6 +124,7 @@ export default function ShadowSwingCounterScreen() {
       if (finishedRef.current) return;
       finishedRef.current = true;
       setRunning(false);
+      Speech.stop();
       try {
         await completeSession({ id: sessionId, swingCount: swing });
       } catch {
@@ -161,7 +162,11 @@ export default function ShadowSwingCounterScreen() {
       <View style={styles.buttons}>
         <TouchableOpacity
           style={styles.secondaryButton}
-          onPress={() => setRunning((prev) => !prev)}
+          onPress={() => {
+            // 一時停止で読み上げが途中でも続いてしまうのを防ぐ。
+            if (running) Speech.stop();
+            setRunning((prev) => !prev);
+          }}
         >
           <Text style={styles.secondaryText}>
             {running ? "一時停止" : "再開"}
