@@ -248,7 +248,10 @@ export function NoteForm({
       >
         <Ionicons name="barbell-outline" size={18} color="#d08000" />
         <Text style={styles.linkButtonText}>
-          {practiceLabel ?? "練習記録に紐付け"}
+          {practiceLabel ??
+            (practiceSessionId != null
+              ? "練習記録に紐付け済み"
+              : "練習記録に紐付け")}
         </Text>
         {practiceSessionId != null ? (
           <TouchableOpacity onPress={() => setPracticeSessionId(null)}>
