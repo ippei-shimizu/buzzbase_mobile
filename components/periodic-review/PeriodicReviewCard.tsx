@@ -44,10 +44,12 @@ export function PeriodicReviewCard({ review }: { review: PeriodicReview }) {
             <Metric label="長打率" value={fmt3(batting.slugging_percentage)} />
             <Metric label="OPS" value={fmt3(batting.ops)} />
           </View>
-          <Text style={styles.trend}>
-            打率 前期間比 {batting.delta >= 0 ? "+" : ""}
-            {fmt3(batting.delta)}
-          </Text>
+          {batting.delta != null ? (
+            <Text style={styles.trend}>
+              打率 前期間比 {batting.delta >= 0 ? "+" : ""}
+              {fmt3(batting.delta)}
+            </Text>
+          ) : null}
         </>
       ) : null}
 
