@@ -7,8 +7,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  FlatList,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -37,13 +37,19 @@ const monthLabel = (iso: string): string => {
   return `${year}年${month}月`;
 };
 
+// FlatList の1行。月見出し or 実データ。
+type ListRow<T> = { header: string; key: string } | { item: T; key: string };
+
+// useMonthPagination / useMemo の依存を安定させるためモジュールスコープに置く。
+const sessionDateOf = (session: PracticeSession): string => session.logged_on;
+const noteDateOf = (note: NoteV2): string => note.date;
+
 // 月見出しを挟みながら、日付降順のリストを描画用に並べる。
 function withMonthHeaders<T extends { id: number }>(
   items: T[],
   dateOf: (item: T) => string,
-): ({ header: string; key: string } | { item: T; key: string })[] {
-  const rows: ({ header: string; key: string } | { item: T; key: string })[] =
-    [];
+): ListRow<T>[] {
+  const rows: ListRow<T>[] = [];
   let last: string | null = null;
   items.forEach((item) => {
     const key = monthKey(dateOf(item));
@@ -439,10 +445,14 @@ function PracticeList() {
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
 
-  const noteSessionIds = new Set(
-    notes
-      .map((note) => note.practice_session_id)
-      .filter((id): id is number => id != null),
+  const noteSessionIds = useMemo(
+    () =>
+      new Set(
+        notes
+          .map((note) => note.practice_session_id)
+          .filter((id): id is number => id != null),
+      ),
+    [notes],
   );
   const categoryById = useMemo(
     () => new Map(menus.map((menu) => [menu.id, menu.category])),
@@ -451,16 +461,28 @@ function PracticeList() {
 
   const isFiltered =
     query.trim() !== "" || fromDate !== null || toDate !== null;
-  const filtered = sessions.filter(
-    (session) =>
-      sessionMatchesQuery(session, query) &&
-      inDateRange(session.logged_on, fromDate, toDate),
+  const filtered = useMemo(
+    () =>
+      sessions.filter(
+        (session) =>
+          sessionMatchesQuery(session, query) &&
+          inDateRange(session.logged_on, fromDate, toDate),
+      ),
+    [sessions, query, fromDate, toDate],
   );
-  const pager = useMonthPagination(sessions, (session) => session.logged_on);
+  const pager = useMonthPagination(sessions, sessionDateOf);
+
+  // 絞り込みで全期間を展開しても重くならないよう FlatList で仮想化して描画する。
+  const rows = useMemo<ListRow<PracticeSession>[]>(
+    () =>
+      isFiltered
+        ? withMonthHeaders(filtered, sessionDateOf)
+        : pager.currentItems.map((item) => ({ item, key: `i-${item.id}` })),
+    [isFiltered, filtered, pager.currentItems],
+  );
 
   const renderRow = (session: PracticeSession) => (
     <PracticeRow
-      key={session.id}
       session={session}
       hasNote={noteSessionIds.has(session.id)}
       categoryById={categoryById}
@@ -468,7 +490,7 @@ function PracticeList() {
     />
   );
 
-  return (
+  const header = (
     <>
       <NewRecordButton
         label="練習を記録"
@@ -491,38 +513,44 @@ function PracticeList() {
         onToChange={setToDate}
         placeholder="メニュー名・メモで検索"
       />
-      {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#d08000" />
-        </View>
-      ) : sessions.length === 0 ? (
-        <Text style={styles.empty}>まだ練習記録がありません</Text>
-      ) : isFiltered ? (
-        filtered.length === 0 ? (
-          <Text style={styles.empty}>該当する練習記録がありません</Text>
-        ) : (
-          withMonthHeaders(filtered, (session) => session.logged_on).map(
-            (row) =>
-              "header" in row ? (
-                <MonthHeader key={row.key} label={row.header} />
-              ) : (
-                renderRow(row.item)
-              ),
-          )
-        )
-      ) : (
-        <>
-          <MonthPaginator
-            label={pager.currentMonthLabel}
-            count={pager.currentItems.length}
-            index={pager.monthIndex}
-            total={pager.months.length}
-            onChange={pager.setMonthIndex}
-          />
-          {pager.currentItems.map(renderRow)}
-        </>
-      )}
+      {!isLoading && !isFiltered && sessions.length > 0 ? (
+        <MonthPaginator
+          label={pager.currentMonthLabel}
+          count={pager.currentItems.length}
+          index={pager.monthIndex}
+          total={pager.months.length}
+          onChange={pager.setMonthIndex}
+        />
+      ) : null}
     </>
+  );
+
+  const empty = isLoading ? (
+    <View style={styles.centered}>
+      <ActivityIndicator size="large" color="#d08000" />
+    </View>
+  ) : sessions.length === 0 ? (
+    <Text style={styles.empty}>まだ練習記録がありません</Text>
+  ) : (
+    <Text style={styles.empty}>該当する練習記録がありません</Text>
+  );
+
+  return (
+    <FlatList
+      data={rows}
+      keyExtractor={(row) => row.key}
+      renderItem={({ item: row }) =>
+        "header" in row ? (
+          <MonthHeader label={row.header} />
+        ) : (
+          renderRow(row.item)
+        )
+      }
+      ListHeaderComponent={header}
+      ListEmptyComponent={empty}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    />
   );
 }
 
@@ -600,23 +628,32 @@ function NoteList() {
     fromDate !== null ||
     toDate !== null ||
     selectedTagIds.length > 0;
-  const filtered = notes.filter(
-    (note) =>
-      noteMatchesQuery(note, query) &&
-      inDateRange(note.date, fromDate, toDate) &&
-      noteMatchesTags(note, selectedTagIds),
+  const filtered = useMemo(
+    () =>
+      notes.filter(
+        (note) =>
+          noteMatchesQuery(note, query) &&
+          inDateRange(note.date, fromDate, toDate) &&
+          noteMatchesTags(note, selectedTagIds),
+      ),
+    [notes, query, fromDate, toDate, selectedTagIds],
   );
-  const pager = useMonthPagination(notes, (note) => note.date);
+  const pager = useMonthPagination(notes, noteDateOf);
+
+  // 絞り込みで全期間を展開しても重くならないよう FlatList で仮想化して描画する。
+  const rows = useMemo<ListRow<NoteV2>[]>(
+    () =>
+      isFiltered
+        ? withMonthHeaders(filtered, noteDateOf)
+        : pager.currentItems.map((item) => ({ item, key: `i-${item.id}` })),
+    [isFiltered, filtered, pager.currentItems],
+  );
 
   const renderRow = (note: NoteV2) => (
-    <NoteRow
-      key={note.id}
-      note={note}
-      onPress={() => router.push(`/(note)/${note.id}`)}
-    />
+    <NoteRow note={note} onPress={() => router.push(`/(note)/${note.id}`)} />
   );
 
-  return (
+  const header = (
     <>
       <TouchableOpacity
         style={styles.templateLink}
@@ -644,37 +681,44 @@ function NoteList() {
         selectedTagIds={selectedTagIds}
         onToggleTag={toggleTag}
       />
-      {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#d08000" />
-        </View>
-      ) : notes.length === 0 ? (
-        <Text style={styles.empty}>まだ野球ノートがありません</Text>
-      ) : isFiltered ? (
-        filtered.length === 0 ? (
-          <Text style={styles.empty}>該当する野球ノートがありません</Text>
-        ) : (
-          withMonthHeaders(filtered, (note) => note.date).map((row) =>
-            "header" in row ? (
-              <MonthHeader key={row.key} label={row.header} />
-            ) : (
-              renderRow(row.item)
-            ),
-          )
-        )
-      ) : (
-        <>
-          <MonthPaginator
-            label={pager.currentMonthLabel}
-            count={pager.currentItems.length}
-            index={pager.monthIndex}
-            total={pager.months.length}
-            onChange={pager.setMonthIndex}
-          />
-          {pager.currentItems.map(renderRow)}
-        </>
-      )}
+      {!isLoading && !isFiltered && notes.length > 0 ? (
+        <MonthPaginator
+          label={pager.currentMonthLabel}
+          count={pager.currentItems.length}
+          index={pager.monthIndex}
+          total={pager.months.length}
+          onChange={pager.setMonthIndex}
+        />
+      ) : null}
     </>
+  );
+
+  const empty = isLoading ? (
+    <View style={styles.centered}>
+      <ActivityIndicator size="large" color="#d08000" />
+    </View>
+  ) : notes.length === 0 ? (
+    <Text style={styles.empty}>まだ野球ノートがありません</Text>
+  ) : (
+    <Text style={styles.empty}>該当する野球ノートがありません</Text>
+  );
+
+  return (
+    <FlatList
+      data={rows}
+      keyExtractor={(row) => row.key}
+      renderItem={({ item: row }) =>
+        "header" in row ? (
+          <MonthHeader label={row.header} />
+        ) : (
+          renderRow(row.item)
+        )
+      }
+      ListHeaderComponent={header}
+      ListEmptyComponent={empty}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    />
   );
 }
 
@@ -689,9 +733,7 @@ export default function RecordsScreen() {
         selectedIndex={segment}
         onSelect={setSegment}
       />
-      <ScrollView contentContainerStyle={styles.content}>
-        {segment === 0 ? <PracticeList /> : <NoteList />}
-      </ScrollView>
+      {segment === 0 ? <PracticeList /> : <NoteList />}
     </View>
   );
 }
