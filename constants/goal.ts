@@ -196,16 +196,21 @@ export const metricsInCategory = (keys: string[]): GoalMetric[] =>
 export const metricLabel = (key: string | null): string =>
   GOAL_METRICS.find((metric) => metric.key === key)?.label ?? key ?? "";
 
+// 防御率・WHIP は 1 以上でも小数第2位まで見せたい（打率系と違い ".XXX" 表記の慣習が無いため）。
+const TWO_DECIMAL_METRIC_KEYS = new Set(["era", "whip"]);
+
 export const formatMetricValue = (
   key: string | null,
   value: number,
 ): string => {
   const metric = GOAL_METRICS.find((item) => item.key === key);
-  if (metric?.decimal) {
-    // 率系は 1 未満なら .XXX（3桁）、1 以上は小数第1位まで（例: 400.0）。
-    return Math.abs(value) < 1
-      ? value.toFixed(3).replace(/^(-?)0\./, "$1.")
-      : value.toFixed(1);
+  if (!metric?.decimal) return String(Math.round(value));
+
+  if (key != null && TWO_DECIMAL_METRIC_KEYS.has(key)) {
+    return value.toFixed(2);
   }
-  return String(Math.round(value));
+  // 打率系は 1 未満なら .XXX（3桁）、1 以上（OPS 等）も 3桁小数のまま見せる。
+  return Math.abs(value) < 1
+    ? value.toFixed(3).replace(/^(-?)0\./, "$1.")
+    : value.toFixed(3);
 };
