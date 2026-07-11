@@ -548,6 +548,7 @@ function PracticeList() {
       }
       ListHeaderComponent={header}
       ListEmptyComponent={empty}
+      style={styles.list}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     />
@@ -716,6 +717,7 @@ function NoteList() {
       }
       ListHeaderComponent={header}
       ListEmptyComponent={empty}
+      style={styles.list}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     />
@@ -740,6 +742,8 @@ export default function RecordsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#2E2E2E" },
+  // FlatList は境界サイズが無いと可視ウィンドウを正しく計算できず仮想化が効かないため明示する。
+  list: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
   centered: { paddingVertical: 48, alignItems: "center" },
   empty: { color: "#A1A1AA", fontSize: 14, textAlign: "center", marginTop: 40 },
