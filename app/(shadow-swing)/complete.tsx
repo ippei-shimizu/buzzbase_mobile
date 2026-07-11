@@ -13,7 +13,7 @@ export default function ShadowSwingCompleteScreen() {
     <View style={styles.container}>
       <Ionicons name="checkmark-circle" size={56} color="#17C964" />
       <Text style={styles.title}>
-        {Number(swingCount).toLocaleString()}本 達成！
+        {(Number(swingCount) || 0).toLocaleString()}本 達成！
       </Text>
       <Text style={styles.subtitle}>練習記録に保存しました</Text>
 
