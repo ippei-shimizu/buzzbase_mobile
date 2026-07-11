@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Speech from "expo-speech";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  BackHandler,
   View,
   Text,
   TouchableOpacity,
@@ -54,6 +55,16 @@ export default function ShadowSwingCounterScreen() {
       easing: Easing.linear,
     });
   }, [sweep, intervalMs]);
+
+  // Android の物理戻るボタンをブロックする（gestureEnabled: false と対称）。
+  // 完了処理を経ずに離脱するとカウント中のセッションがサーバーに中途半端なまま残るため。
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => true,
+    );
+    return () => subscription.remove();
+  }, []);
 
   // マナーモードでも音・読み上げが鳴るようにする（どちらかが有効なら設定）。
   useEffect(() => {
