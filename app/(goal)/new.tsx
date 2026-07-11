@@ -475,7 +475,13 @@ function GoalForm({ editing }: { editing?: Goal }) {
                   return (
                     <TouchableOpacity
                       key={item.key}
-                      style={[styles.chip, active && styles.chipActive]}
+                      style={[
+                        styles.chip,
+                        active && styles.chipActive,
+                        editing && !active && styles.segLocked,
+                      ]}
+                      // 指標も編集不可（切り替えると既存の目標値が新指標に対して無意味になるため）。
+                      disabled={Boolean(editing)}
                       onPress={() => setMetricKey(item.key)}
                     >
                       <Text
