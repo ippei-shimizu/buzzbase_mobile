@@ -163,7 +163,7 @@ export function NoteForm({
     // 一覧プレビュー用に、メモ未入力ならテンプレ回答からメモ本文を合成する。
     const memoText = memo.trim() || buildReflectionMemoText(reflectionAnswers);
     await onSubmit({
-      title: title.trim() || undefined,
+      title: title.trim() || null,
       date: toDateString(date),
       memo: buildMemoJson(memoText),
       practice_session_id: practiceSessionId,

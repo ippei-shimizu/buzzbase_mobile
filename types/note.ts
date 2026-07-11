@@ -17,7 +17,9 @@ export interface NoteV2 {
 }
 
 export interface NoteInput {
-  title?: string;
+  // 空文字での保存は「タイトルを消す」操作。undefined だと JSON からキーごと落ちて
+  // サーバーが旧値を保持するため、クリアは null で明示的に送る。
+  title?: string | null;
   date: string;
   memo: string; // Slate 形式の JSON 文字列
   game_result_id?: number | null;
