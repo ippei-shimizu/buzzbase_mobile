@@ -5,16 +5,18 @@ import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { GoalProgressBar } from "@components/goal/GoalProgressBar";
 import { GOAL_PERIOD_LABELS, GOAL_PERIOD_ORDER } from "@constants/goal";
 import { useGoals } from "@hooks/useGoals";
-import { SectionCard, SectionPlaceholder } from "./SectionCard";
+import { SectionCard, SectionError, SectionPlaceholder } from "./SectionCard";
 
 /** 目標管理（月次・シーズン・大会の種類別に進捗を表示）。 */
 export function TodayGoalSection() {
   const router = useRouter();
-  const { goals } = useGoals();
+  const { goals, isError, refetch } = useGoals();
 
   return (
     <SectionCard title="目標管理">
-      {goals.length === 0 ? (
+      {isError ? (
+        <SectionError onRetry={() => void refetch()} />
+      ) : goals.length === 0 ? (
         <SectionPlaceholder message="目標を設定すると、達成度がここに表示されます" />
       ) : (
         GOAL_PERIOD_ORDER.map((periodType) => {

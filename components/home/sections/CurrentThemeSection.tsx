@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useImprovementThemes } from "@hooks/useImprovementThemes";
+import { SectionError } from "./SectionCard";
 
 /**
  * ホームの「取り組んでいる課題」カード。
@@ -10,7 +11,9 @@ import { useImprovementThemes } from "@hooks/useImprovementThemes";
  */
 export function CurrentThemeSection() {
   const router = useRouter();
-  const { themes, isLoading } = useImprovementThemes({ status: "open" });
+  const { themes, isLoading, isError, refetch } = useImprovementThemes({
+    status: "open",
+  });
 
   if (isLoading) return null;
 
@@ -21,7 +24,11 @@ export function CurrentThemeSection() {
         <Text style={styles.headerText}>取り組んでいる課題</Text>
       </View>
 
-      {themes.length === 0 ? (
+      {isError ? (
+        <View style={styles.errorWrap}>
+          <SectionError onRetry={() => void refetch()} />
+        </View>
+      ) : themes.length === 0 ? (
         <TouchableOpacity onPress={() => router.push("/(theme)/list")}>
           <Text style={styles.empty}>
             いま取り組む課題を決めると、練習やノートがその課題に束ねられます。
@@ -125,6 +132,7 @@ const styles = StyleSheet.create({
   },
   statText: { color: "#D4D4D8", fontSize: 11, fontWeight: "600" },
   empty: { color: "#A1A1AA", fontSize: 13, lineHeight: 20, marginTop: 8 },
+  errorWrap: { marginTop: 8 },
   manage: {
     flexDirection: "row",
     alignItems: "center",

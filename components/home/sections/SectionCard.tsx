@@ -1,5 +1,5 @@
 import React, { type ReactNode } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 interface Props {
   title: string;
@@ -24,6 +24,23 @@ export function SectionPlaceholder({ message }: { message: string }) {
   return <Text style={styles.placeholder}>{message}</Text>;
 }
 
+/** 取得失敗を空状態と区別して表示し、リトライ導線を提供する。 */
+export function SectionError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <View style={styles.errorRow}>
+      <Text style={styles.errorText}>読み込みに失敗しました</Text>
+      <TouchableOpacity
+        onPress={onRetry}
+        accessibilityRole="button"
+        accessibilityLabel="再試行"
+        hitSlop={8}
+      >
+        <Text style={styles.retryText}>再試行</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#3A3A3A",
@@ -41,4 +58,12 @@ const styles = StyleSheet.create({
     color: "#A1A1AA",
     fontSize: 13,
   },
+  errorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  errorText: { color: "#A1A1AA", fontSize: 13 },
+  retryText: { color: "#d08000", fontSize: 13, fontWeight: "700" },
 });

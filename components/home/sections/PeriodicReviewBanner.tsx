@@ -9,8 +9,28 @@ import { usePeriodicReviews } from "@hooks/usePeriodicReviews";
  */
 export function PeriodicReviewBanner() {
   const router = useRouter();
-  const { reviews } = usePeriodicReviews();
+  const { reviews, isError, refetch } = usePeriodicReviews();
   const unread = reviews.filter((review) => !review.read);
+
+  // 取得失敗を「未読なし」と同一視しない。タップで再試行できる控えめなバナーを出す。
+  if (isError) {
+    return (
+      <TouchableOpacity
+        style={[styles.banner, styles.bannerError]}
+        onPress={() => void refetch()}
+        accessibilityRole="button"
+        accessibilityLabel="振り返りレポートの再取得"
+      >
+        <Ionicons name="alert-circle-outline" size={18} color="#A1A1AA" />
+        <View style={styles.textWrap}>
+          <Text style={styles.errorTitle}>
+            振り返りレポートを取得できませんでした
+          </Text>
+          <Text style={styles.errorSub}>タップで再試行</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  }
 
   if (unread.length === 0) return null;
 
@@ -42,4 +62,7 @@ const styles = StyleSheet.create({
   textWrap: { flex: 1 },
   title: { color: "#F4F4F4", fontSize: 14, fontWeight: "700" },
   sub: { color: "#F4F4F4", fontSize: 12, marginTop: 2 },
+  bannerError: { backgroundColor: "#3A3A3A" },
+  errorTitle: { color: "#A1A1AA", fontSize: 13, fontWeight: "600" },
+  errorSub: { color: "#d08000", fontSize: 12, marginTop: 2 },
 });
