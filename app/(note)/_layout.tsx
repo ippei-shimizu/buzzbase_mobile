@@ -15,7 +15,9 @@ export default function NoteLayout() {
         // 各画面はグループの起点として push されるため自動の戻るが出ない。明示する。
         headerLeft: () => (
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() =>
+              router.canGoBack() ? router.back() : router.replace("/(tabs)")
+            }
             style={{ padding: 8 }}
           >
             <Ionicons name="chevron-back" size={24} color="#F4F4F4" />

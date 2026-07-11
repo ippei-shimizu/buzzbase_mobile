@@ -21,7 +21,9 @@ export default function ShadowSwingLayout() {
           title: "素振りカウントタイマー",
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() =>
+                router.canGoBack() ? router.back() : router.replace("/(tabs)")
+              }
               style={{ padding: 8 }}
             >
               <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
