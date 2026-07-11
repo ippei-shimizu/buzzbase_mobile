@@ -32,7 +32,13 @@ export default function InsightScreen() {
       {
         text: "削除",
         style: "destructive",
-        onPress: () => deleteCombination(insight.id as number),
+        onPress: async () => {
+          try {
+            await deleteCombination(insight.id as number);
+          } catch {
+            Alert.alert("削除に失敗しました");
+          }
+        },
       },
     ]);
   };
