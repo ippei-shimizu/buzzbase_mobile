@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import {
   getPeriodicReviews,
   markPeriodicReviewRead,
@@ -25,8 +26,18 @@ export const usePeriodicReviewMutations = () => {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["periodicReviews"] }),
   });
+  // 複数件の未読を一括で既読化する。一括APIが無いため個別リクエストを並列実行するが、
+  // invalidate はまとめて1回だけ行う（1件ごとの再フェッチの重複を防ぐ）。
+  const markReadMany = useCallback(
+    async (ids: number[]) => {
+      await Promise.allSettled(ids.map((id) => markPeriodicReviewRead(id)));
+      await queryClient.invalidateQueries({ queryKey: ["periodicReviews"] });
+    },
+    [queryClient],
+  );
   return {
     markRead: markRead.mutateAsync,
     isMarking: markRead.isPending,
+    markReadMany,
   };
 };

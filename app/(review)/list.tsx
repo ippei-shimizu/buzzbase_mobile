@@ -14,17 +14,19 @@ import {
 
 export default function ReviewListScreen() {
   const { reviews, isLoading } = usePeriodicReviews();
-  const { markRead } = usePeriodicReviewMutations();
+  const { markReadMany } = usePeriodicReviewMutations();
 
   // 一覧を開いた時点で未読を既読化する（未読バッジの解消）。
+  // 個別ミューテーションを並列発火すると未読件数分の再フェッチが起きるため、
+  // 全件の完了を待ってから invalidate を1回にまとめる。
   useEffect(() => {
-    reviews
+    const unreadIds = reviews
       .filter((review) => !review.read)
-      .forEach((review) => {
-        void markRead(review.id);
-      });
-    // markRead は安定参照、reviews の未読分のみを対象にする
-  }, [reviews, markRead]);
+      .map((review) => review.id);
+    if (unreadIds.length === 0) return;
+    void markReadMany(unreadIds);
+    // markReadMany は安定参照、reviews の未読分のみを対象にする
+  }, [reviews, markReadMany]);
 
   if (isLoading) {
     return (
