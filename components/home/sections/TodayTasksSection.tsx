@@ -1,7 +1,8 @@
 import type { Plan, PlanMenu } from "../../../types/plan";
+import type { PresetMenu } from "../../../types/practice";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -9,15 +10,38 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { PlanMenuRow } from "@components/schedule/PlanMenuRow";
 import { eventTypeMeta } from "@constants/schedule";
-import { useDayPlan } from "@hooks/usePlans";
+import {
+  dayPlanMenuKey,
+  useDayPlan,
+  useToggleDayPlanMenu,
+} from "@hooks/usePlans";
 import { todayIso } from "@utils/planDate";
 import { SectionCard, SectionPlaceholder } from "./SectionCard";
 
 /** 今日のやること（当日の予定＝繰り返し ∪ 単発を集約表示）。 */
 export function TodayTasksSection() {
   const router = useRouter();
-  const { plans, isLoading } = useDayPlan(todayIso());
+  const today = todayIso();
+  const { plans, isLoading } = useDayPlan(today);
+  const { toggleMenu, togglingMenuKey } = useToggleDayPlanMenu(today);
+
+  // 今日の全予定メニューを practice_menu_id で dedupe（先勝ち）し、記録画面のプリセットに使う。
+  const presetMenus = useMemo<PresetMenu[]>(() => {
+    const byId = new Map<number, PresetMenu>();
+    plans.forEach((plan) =>
+      plan.menus.forEach((menu) => {
+        if (!byId.has(menu.practice_menu_id)) {
+          byId.set(menu.practice_menu_id, {
+            practice_menu_id: menu.practice_menu_id,
+            target_value: menu.target_value,
+          });
+        }
+      }),
+    );
+    return [...byId.values()];
+  }, [plans]);
 
   return (
     <SectionCard title="今日のやること">
@@ -27,16 +51,46 @@ export function TodayTasksSection() {
         <SectionPlaceholder message="今日の予定はありません" />
       ) : (
         plans.map((plan) => (
-          <PlanBlock key={plan.id} plan={plan} router={router} />
+          <PlanBlock
+            key={plan.id}
+            plan={plan}
+            router={router}
+            onToggleMenu={(menu) =>
+              toggleMenu({
+                scheduleId: plan.id,
+                practiceMenuId: menu.practice_menu_id,
+                done: menu.done,
+              })
+            }
+            togglingMenuKey={togglingMenuKey}
+          />
         ))
       )}
 
+      {presetMenus.length > 0 ? (
+        <TouchableOpacity
+          style={styles.recordButton}
+          onPress={() =>
+            router.push({
+              pathname: "/(practice-record)/daily",
+              params: {
+                date: todayIso(),
+                presetMenus: JSON.stringify(presetMenus),
+              },
+            })
+          }
+        >
+          <Ionicons name="create-outline" size={16} color="#FFFFFF" />
+          <Text style={styles.recordButtonText}>今日の練習を記録する</Text>
+        </TouchableOpacity>
+      ) : null}
+
       <TouchableOpacity
         style={styles.addRow}
-        onPress={() => router.push("/(schedule)/new")}
+        onPress={() => router.push(`/(schedule)/new?date=${today}`)}
       >
         <Ionicons name="add" size={16} color="#d08000" />
-        <Text style={styles.addText}>今日やることを足す</Text>
+        <Text style={styles.addText}>今日やることを登録</Text>
       </TouchableOpacity>
 
       <View style={styles.footerRow}>
@@ -44,14 +98,14 @@ export function TodayTasksSection() {
           style={styles.footerLink}
           onPress={() => router.push("/(schedule)/calendar")}
         >
-          <Ionicons name="calendar-outline" size={14} color="#A1A1AA" />
+          <Ionicons name="calendar-outline" size={18} color="#d08000" />
           <Text style={styles.footerText}>カレンダー</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.footerLink}
-          onPress={() => router.push("/(schedule)/list")}
+          onPress={() => router.push("/(menu-set)/list")}
         >
-          <Ionicons name="list-outline" size={14} color="#A1A1AA" />
+          <Ionicons name="list-outline" size={18} color="#d08000" />
           <Text style={styles.footerText}>プランを管理</Text>
         </TouchableOpacity>
       </View>
@@ -61,30 +115,42 @@ export function TodayTasksSection() {
 
 type RouterType = ReturnType<typeof useRouter>;
 
-function PlanBlock({ plan, router }: { plan: Plan; router: RouterType }) {
+function PlanBlock({
+  plan,
+  router,
+  onToggleMenu,
+  togglingMenuKey,
+}: {
+  plan: Plan;
+  router: RouterType;
+  onToggleMenu: (menu: PlanMenu) => void;
+  togglingMenuKey: string | null;
+}) {
   const meta = eventTypeMeta(plan.event_type);
   const isGame = plan.event_type === "game";
 
   return (
     <View style={styles.block}>
       <View style={styles.blockHeader}>
-        {plan.event_type !== "self_practice" ? (
+        <View style={styles.badgeRow}>
           <View style={[styles.badge, { backgroundColor: `${meta.color}22` }]}>
             <View style={[styles.dot, { backgroundColor: meta.color }]} />
             <Text style={[styles.badgeText, { color: meta.color }]}>
               {meta.label}
             </Text>
           </View>
-        ) : null}
-        {plan.scheduled_time ? (
-          <Text style={styles.time}>{plan.scheduled_time}</Text>
-        ) : null}
-        <Text style={styles.blockTitle} numberOfLines={1}>
-          {plan.title ?? "予定"}
-        </Text>
-        {plan.done ? (
-          <Ionicons name="checkmark-circle" size={16} color="#22C55E" />
-        ) : null}
+        </View>
+        <View style={styles.titleRow}>
+          {plan.scheduled_time ? (
+            <Text style={styles.time}>{plan.scheduled_time}</Text>
+          ) : null}
+          <Text style={styles.blockTitle} numberOfLines={1}>
+            {plan.title ?? "予定"}
+          </Text>
+          {plan.done ? (
+            <Ionicons name="checkmark-circle" size={16} color="#4a8e32" />
+          ) : null}
+        </View>
       </View>
 
       {isGame ? (
@@ -97,44 +163,20 @@ function PlanBlock({ plan, router }: { plan: Plan; router: RouterType }) {
       ) : null}
 
       {plan.menus.map((menu) => (
-        <MenuRow key={menu.practice_menu_id} menu={menu} router={router} />
+        <PlanMenuRow
+          key={menu.practice_menu_id}
+          menu={menu}
+          onToggle={onToggleMenu}
+          isToggling={
+            togglingMenuKey === dayPlanMenuKey(plan.id, menu.practice_menu_id)
+          }
+        />
       ))}
 
       {plan.menu_set_id ? (
         <Text style={styles.setHint}>「{plan.title}」より</Text>
       ) : null}
     </View>
-  );
-}
-
-function MenuRow({ menu, router }: { menu: PlanMenu; router: RouterType }) {
-  const amount =
-    menu.target_value != null
-      ? `${menu.target_value}${menu.unit_label ?? ""}`
-      : "";
-  return (
-    <TouchableOpacity
-      style={styles.menuRow}
-      onPress={() => router.push("/(practice-record)/daily")}
-    >
-      <Ionicons
-        name={menu.done ? "checkbox" : "square-outline"}
-        size={18}
-        color={menu.done ? "#22C55E" : "#71717A"}
-      />
-      <Text
-        style={[styles.menuName, menu.done && styles.menuNameDone]}
-        numberOfLines={1}
-      >
-        {menu.name ?? "メニュー"}
-        {amount ? `  ${amount}` : ""}
-      </Text>
-      {menu.done ? (
-        <Text style={styles.doneLabel}>済</Text>
-      ) : (
-        <Text style={styles.recordLabel}>記録</Text>
-      )}
-    </TouchableOpacity>
   );
 }
 
@@ -146,10 +188,17 @@ const styles = StyleSheet.create({
     borderBottomColor: "#4A4A4A",
   },
   blockHeader: {
+    gap: 4,
+    paddingBottom: 4,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  titleRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingBottom: 4,
   },
   badge: {
     flexDirection: "row",
@@ -172,36 +221,49 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(239,68,68,0.12)",
   },
   gameButtonText: { color: "#EF4444", fontSize: 13, fontWeight: "700" },
-  menuRow: {
+  setHint: { color: "#71717A", fontSize: 11, marginTop: 2 },
+  recordButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingVertical: 5,
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 8,
+    paddingVertical: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d08000",
+    backgroundColor: "#d08000",
   },
-  menuName: { color: "#F4F4F4", fontSize: 14, flex: 1 },
-  menuNameDone: { color: "#A1A1AA" },
-  doneLabel: { color: "#22C55E", fontSize: 12, fontWeight: "700" },
-  recordLabel: { color: "#d08000", fontSize: 12, fontWeight: "700" },
-  setHint: { color: "#71717A", fontSize: 11, marginTop: 2 },
+  recordButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
   addRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    marginTop: 12,
-    paddingVertical: 10,
+    marginTop: 8,
+    paddingVertical: 14,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#d08000",
     backgroundColor: "rgba(208,128,0,0.08)",
   },
-  addText: { color: "#d08000", fontSize: 13, fontWeight: "700" },
+  addText: { color: "#d08000", fontSize: 14, fontWeight: "700" },
   footerRow: {
     flexDirection: "row",
-    justifyContent: "center",
-    gap: 20,
-    marginTop: 10,
+    gap: 8,
+    marginTop: 8,
   },
-  footerLink: { flexDirection: "row", alignItems: "center", gap: 5 },
-  footerText: { color: "#A1A1AA", fontSize: 12, fontWeight: "600" },
+  footerLink: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#52525B",
+    backgroundColor: "#3A3A3A",
+  },
+  footerText: { color: "#F4F4F4", fontSize: 13, fontWeight: "600" },
 });

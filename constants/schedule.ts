@@ -24,10 +24,10 @@ export const EVENT_TYPES: {
   label: string;
   color: string;
 }[] = [
-  { value: "self_practice", label: "自主練", color: "#22C55E" },
+  { value: "self_practice", label: "自主練", color: "#4a8e32" },
   { value: "practice", label: "チーム練習", color: "#3B82F6" },
   { value: "game", label: "試合", color: "#EF4444" },
-  { value: "other", label: "その他", color: "#A1A1AA" },
+  { value: "other", label: "その他", color: "#52525B" },
 ];
 
 export const eventTypeMeta = (value: EventType) =>

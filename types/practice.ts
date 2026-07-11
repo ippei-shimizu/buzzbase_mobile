@@ -22,9 +22,16 @@ export interface PracticeMenu {
   sort_order: number;
 }
 
+/** 練習記録画面へ事前選択メニュー（目標量つき）を渡すためのパラメータ項目。 */
+export interface PresetMenu {
+  practice_menu_id: number;
+  target_value: number | null;
+}
+
 export interface PracticeLog {
   id: number;
   practice_menu_id: number | null;
+  schedule_id: number | null;
   logged_on: string;
   amount: number | null;
   weight: number | null;
@@ -105,6 +112,7 @@ export interface PracticeMenuInput {
 
 export interface PracticeLogInput {
   practice_menu_id: number;
+  schedule_id?: number | null;
   logged_on: string;
   amount?: number | null;
   memo?: string | null;

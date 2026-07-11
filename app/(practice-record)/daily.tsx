@@ -3,6 +3,7 @@ import type {
   PracticeMenu,
   PracticeSession,
   PracticeSessionItemInput,
+  PresetMenu,
 } from "../../types/practice";
 import type { ConditionDraft } from "@components/practice/ConditionForm";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,7 +28,6 @@ import {
 } from "@components/practice/ConditionForm";
 import { ProGate } from "@components/pro/ProGate";
 import { CATEGORY_ICON, PRACTICE_CATEGORIES } from "@constants/practice";
-import { useNextTodoHint } from "@hooks/useNextTodoHint";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
 import {
   usePracticeSessionByDate,
@@ -113,28 +113,40 @@ function DailyEditor({
   dateString,
   initialSession,
   menus,
+  presetMenus,
 }: {
   dateString: string;
   initialSession: PracticeSession | null;
   menus: PracticeMenu[];
+  presetMenus: PresetMenu[];
 }) {
   const router = useRouter();
   const { saveSession, isSaving } = usePracticeSessionMutations();
 
-  const [selected, setSelected] = useState<SelectedItems>(() =>
-    toSelectedItems(initialSession),
-  );
-  const [weights, setWeights] = useState<Record<number, string>>(() =>
-    toSelectedWeights(initialSession),
-  );
+  // 既存の記録済み量を優先しつつ、未選択のプリセットメニューを目標量つきで追加する。
+  const [selected, setSelected] = useState<SelectedItems>(() => {
+    const base = toSelectedItems(initialSession);
+    presetMenus.forEach((preset) => {
+      if (preset.practice_menu_id in base) return;
+      base[preset.practice_menu_id] = formatAmount(preset.target_value);
+    });
+    return base;
+  });
+  const [weights, setWeights] = useState<Record<number, string>>(() => {
+    const base = toSelectedWeights(initialSession);
+    presetMenus.forEach((preset) => {
+      if (preset.practice_menu_id in base) return;
+      const menu = menus.find((item) => item.id === preset.practice_menu_id);
+      if (menu?.unit === "weight_reps") base[preset.practice_menu_id] = "";
+    });
+    return base;
+  });
   const [condition, setCondition] = useState<ConditionDraft>(() =>
     toConditionDraft(initialSession),
   );
   const [improvementThemeId, setImprovementThemeId] = useState<number | null>(
     initialSession?.improvement_theme_id ?? null,
   );
-  const nextTodoHint = useNextTodoHint();
-
   const toggleMenu = (menu: PracticeMenu) => {
     const isSelected = menu.id in selected;
     setSelected((prev) => {
@@ -263,15 +275,6 @@ function DailyEditor({
 
   return (
     <View>
-      {nextTodoHint ? (
-        <View style={styles.hintBanner}>
-          <Ionicons name="arrow-forward-circle" size={16} color="#d08000" />
-          <Text style={styles.hintText}>
-            前回の「次やること」: {nextTodoHint}
-          </Text>
-        </View>
-      ) : null}
-
       <Text style={styles.sectionTitle}>練習メニュー（複数選択可）</Text>
       {PRACTICE_CATEGORIES.map((category) => {
         const inCategory = menus.filter(
@@ -341,12 +344,25 @@ function DailyEditor({
 }
 
 export default function DailyRecordScreen() {
-  const params = useLocalSearchParams<{ date?: string }>();
+  const params = useLocalSearchParams<{
+    date?: string;
+    presetMenus?: string;
+  }>();
   const [date, setDate] = useState(() =>
     params.date ? parseDateString(params.date) : new Date(),
   );
   const [showPicker, setShowPicker] = useState(false);
   const dateString = useMemo(() => toDateString(date), [date]);
+
+  // 日付ピッカーで別日に切り替えたらプリセットを注入しない（元の日付のみ有効）。
+  const presetMenus = useMemo<PresetMenu[]>(() => {
+    if (!params.presetMenus || dateString !== params.date) return [];
+    try {
+      return JSON.parse(params.presetMenus) as PresetMenu[];
+    } catch {
+      return [];
+    }
+  }, [params.presetMenus, params.date, dateString]);
 
   const { menus, isLoading: isMenusLoading } = usePracticeMenus();
   const { session, isLoading: isSessionLoading } =
@@ -403,6 +419,7 @@ export default function DailyRecordScreen() {
           dateString={dateString}
           initialSession={session}
           menus={menus}
+          presetMenus={presetMenus}
         />
       )}
     </ScrollView>
@@ -485,17 +502,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   unitLabel: { color: "#A1A1AA", fontSize: 15 },
-  hintBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "#3A3A3A",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 4,
-  },
-  hintText: { color: "#F4F4F4", fontSize: 13, flex: 1 },
   addRow: {
     flexDirection: "row",
     alignItems: "center",

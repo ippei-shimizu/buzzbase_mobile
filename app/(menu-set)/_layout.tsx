@@ -18,6 +18,34 @@ export default function MenuSetLayout() {
       <Stack.Screen
         name="list"
         options={{
+          title: "練習プラン",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ padding: 8 }}
+            >
+              <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="[id]"
+        options={{
+          title: "セットの詳細",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ padding: 8 }}
+            >
+              <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="edit"
+        options={{
           title: "メニューセット",
           headerLeft: () => (
             <TouchableOpacity
@@ -29,7 +57,6 @@ export default function MenuSetLayout() {
           ),
         }}
       />
-      <Stack.Screen name="edit" options={{ title: "メニューセット" }} />
     </Stack>
   );
 }

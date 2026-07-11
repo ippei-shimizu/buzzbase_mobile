@@ -1,4 +1,6 @@
+import type { PracticeMenu } from "../../types/practice";
 import type { EventType, ScheduleInput } from "../../types/schedule";
+import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { isAxiosError } from "axios";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -19,6 +21,8 @@ import { useEntitlement } from "@hooks/useEntitlement";
 import { useMenuSets } from "@hooks/useMenuSets";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
 import { useSchedules, useScheduleMutations } from "@hooks/useSchedules";
+import { formatAmount } from "@utils/formatAmount";
+import { formatJaFullDate } from "@utils/formatDate";
 import { fromIsoDate, toIsoDate } from "@utils/planDate";
 
 type Recurrence = "single" | "weekly";
@@ -37,9 +41,15 @@ const parseTime = (value: string | null): Date => {
 
 export default function ScheduleFormScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string; date?: string }>();
+  const params = useLocalSearchParams<{
+    id?: string;
+    date?: string;
+    singleOnly?: string;
+  }>();
   const editingId = params.id ? Number(params.id) : null;
   const prefillDate = params.date ?? null;
+  // 週プランの「＋」は日付が確定した文脈なので「この日だけ」に固定し、毎週への切替を出さない。
+  const singleOnly = params.singleOnly === "1";
 
   const { schedules } = useSchedules();
   const editing = editingId
@@ -54,7 +64,7 @@ export default function ScheduleFormScreen() {
   const canCustomize = hasEntitlement("custom_notification_messages");
 
   const [recurrence, setRecurrence] = useState<Recurrence>(
-    editing?.planned_on || prefillDate ? "single" : "weekly",
+    singleOnly || editing?.planned_on || prefillDate ? "single" : "weekly",
   );
   const [eventType, setEventType] = useState<EventType>(
     editing?.event_type ?? "self_practice",
@@ -81,11 +91,14 @@ export default function ScheduleFormScreen() {
   const [menuSetId, setMenuSetId] = useState<number | null>(
     editing?.menu_set_id ?? null,
   );
-  const [selectedMenus, setSelectedMenus] = useState<number[]>(
-    editing?.menu_set_id
-      ? []
-      : (editing?.menus.map((menu) => menu.practice_menu_id) ?? []),
-  );
+  const [menuAmounts, setMenuAmounts] = useState<Record<number, string>>(() => {
+    if (editing?.menu_set_id) return {};
+    const initial: Record<number, string> = {};
+    editing?.menus.forEach((menu) => {
+      initial[menu.practice_menu_id] = formatAmount(menu.target_value);
+    });
+    return initial;
+  });
   const [notify, setNotify] = useState(editing?.notification_enabled ?? true);
   const [message, setMessage] = useState(editing?.notification_message ?? "");
 
@@ -93,10 +106,17 @@ export default function ScheduleFormScreen() {
     setDays((prev) =>
       prev.includes(num) ? prev.filter((day) => day !== num) : [...prev, num],
     );
-  const toggleMenu = (id: number) =>
-    setSelectedMenus((prev) =>
-      prev.includes(id) ? prev.filter((menu) => menu !== id) : [...prev, id],
-    );
+  const toggleMenu = (menu: PracticeMenu) =>
+    setMenuAmounts((prev) => {
+      if (menu.id in prev) {
+        const next = { ...prev };
+        delete next[menu.id];
+        return next;
+      }
+      return { ...prev, [menu.id]: formatAmount(menu.default_value) };
+    });
+  const setMenuAmount = (menuId: number, amount: string) =>
+    setMenuAmounts((prev) => ({ ...prev, [menuId]: amount }));
 
   const handleSave = async () => {
     const usingSet = menuSource === "set" && menuSetId != null;
@@ -122,13 +142,10 @@ export default function ScheduleFormScreen() {
       menu_set_id: usingSet ? menuSetId : null,
       menus: usingSet
         ? undefined
-        : selectedMenus.map((id) => {
-            const menu = menus.find((item) => item.id === id);
-            return {
-              practice_menu_id: id,
-              target_value: menu?.default_value ?? null,
-            };
-          }),
+        : Object.entries(menuAmounts).map(([id, amount]) => ({
+            practice_menu_id: Number(id),
+            target_value: amount.trim() ? Number(amount) : null,
+          })),
     };
 
     try {
@@ -142,7 +159,7 @@ export default function ScheduleFormScreen() {
       if (isAxiosError(error) && error.response?.status === 403) {
         Alert.alert(
           "無料プランの上限",
-          "プランの割り当ては無料で3つまでです。Pro で無制限に登録できます。",
+          "予定の登録は無料で3つまでです。Pro で無制限に登録できます。",
           [
             { text: "閉じる", style: "cancel" },
             { text: "Pro を見る", onPress: () => router.push("/pro") },
@@ -159,18 +176,20 @@ export default function ScheduleFormScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.label}>いつ</Text>
-      <View style={styles.segment}>
-        <SegmentButton
-          active={recurrence === "single"}
-          label="この日だけ"
-          onPress={() => setRecurrence("single")}
-        />
-        <SegmentButton
-          active={recurrence === "weekly"}
-          label="毎週"
-          onPress={() => setRecurrence("weekly")}
-        />
-      </View>
+      {singleOnly ? null : (
+        <View style={styles.segment}>
+          <SegmentButton
+            active={recurrence === "single"}
+            label="この日だけ"
+            onPress={() => setRecurrence("single")}
+          />
+          <SegmentButton
+            active={recurrence === "weekly"}
+            label="毎週"
+            onPress={() => setRecurrence("weekly")}
+          />
+        </View>
+      )}
 
       {recurrence === "weekly" ? (
         <View style={styles.dayRow}>
@@ -192,19 +211,24 @@ export default function ScheduleFormScreen() {
       ) : (
         <>
           <TouchableOpacity
-            style={styles.input}
+            style={[styles.input, styles.dateInput]}
             onPress={() => setShowDatePicker((prev) => !prev)}
           >
-            <Text style={styles.valueText}>{toIsoDate(date)}</Text>
+            <Text style={styles.valueText}>
+              {formatJaFullDate(toIsoDate(date))}
+            </Text>
+            <Ionicons name="calendar-outline" size={18} color="#A1A1AA" />
           </TouchableOpacity>
           {showDatePicker ? (
             <DateTimePicker
               value={date}
               mode="date"
               themeVariant="dark"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
+              accentColor="#d08000"
+              locale="ja-JP"
+              display={Platform.OS === "ios" ? "inline" : "default"}
               onChange={(_event, selected) => {
-                if (Platform.OS !== "ios") setShowDatePicker(false);
+                setShowDatePicker(false);
                 if (selected) setDate(selected);
               }}
             />
@@ -240,26 +264,29 @@ export default function ScheduleFormScreen() {
         style={styles.input}
         value={title}
         onChangeText={setTitle}
-        placeholder={
-          eventType === "game" ? "例: 試合 vs 港南中" : "例: 朝の素振り"
-        }
+        placeholder={eventType === "game" ? "vs 港南高" : "例: 朝の素振り"}
         placeholderTextColor="#71717A"
       />
 
       <Text style={styles.label}>時刻</Text>
       <TouchableOpacity
-        style={styles.input}
+        style={[styles.input, styles.timeInput]}
         onPress={() => setShowTimePicker((prev) => !prev)}
       >
         <Text style={styles.valueText}>{timeString(time)}</Text>
+        <Ionicons name="time-outline" size={18} color="#A1A1AA" />
       </TouchableOpacity>
       {showTimePicker ? (
         <DateTimePicker
           value={time}
           mode="time"
           themeVariant="dark"
+          accentColor="#d08000"
+          locale="ja-JP"
+          minuteInterval={5}
           display={Platform.OS === "ios" ? "spinner" : "default"}
           onChange={(_event, selected) => {
+            // iOS はホイール操作のたびに発火するため開いたままにし、再タップで閉じる。
             if (Platform.OS !== "ios") setShowTimePicker(false);
             if (selected) setTime(selected);
           }}
@@ -306,19 +333,38 @@ export default function ScheduleFormScreen() {
           )}
         </View>
       ) : (
-        <View style={styles.menuWrap}>
+        <View>
           {menus.map((menu) => {
-            const active = selectedMenus.includes(menu.id);
+            const isSelected = menu.id in menuAmounts;
             return (
-              <TouchableOpacity
-                key={menu.id}
-                style={[styles.menuChip, active && styles.chipActive]}
-                onPress={() => toggleMenu(menu.id)}
-              >
-                <Text style={[styles.menuText, active && styles.textActive]}>
-                  {menu.name}
-                </Text>
-              </TouchableOpacity>
+              <View key={menu.id} style={styles.menuItem}>
+                <TouchableOpacity
+                  style={styles.menuItemRow}
+                  onPress={() => toggleMenu(menu)}
+                >
+                  <Ionicons
+                    name={isSelected ? "checkbox" : "square-outline"}
+                    size={22}
+                    color={isSelected ? "#d08000" : "#71717A"}
+                  />
+                  <Text style={styles.menuItemName}>{menu.name}</Text>
+                </TouchableOpacity>
+                {isSelected ? (
+                  <View style={styles.amountRow}>
+                    <TextInput
+                      style={styles.amountInput}
+                      value={menuAmounts[menu.id]}
+                      onChangeText={(text) => setMenuAmount(menu.id, text)}
+                      keyboardType="numeric"
+                      placeholder="0"
+                      placeholderTextColor="#71717A"
+                    />
+                    <Text style={styles.unitLabel}>
+                      {menu.unit_label ?? "回"}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
             );
           })}
         </View>
@@ -352,7 +398,7 @@ export default function ScheduleFormScreen() {
         disabled={saving}
       >
         <Text style={styles.saveButtonText}>
-          {editingId ? "更新" : "割り当てる"}
+          {editingId ? "更新" : "登録する"}
         </Text>
       </TouchableOpacity>
     </ScrollView>
@@ -399,6 +445,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   valueText: { color: "#F4F4F4", fontSize: 16, fontWeight: "700" },
+  dateInput: {
+    marginTop: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   segment: {
     flexDirection: "row",
     backgroundColor: "#3A3A3A",
@@ -414,6 +466,11 @@ const styles = StyleSheet.create({
   },
   segmentButtonActive: { backgroundColor: "#d08000" },
   segmentText: { color: "#A1A1AA", fontSize: 13, fontWeight: "600" },
+  timeInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   dayRow: { flexDirection: "row", gap: 6, marginTop: 10 },
   dayChip: {
     width: 40,
@@ -442,6 +499,33 @@ const styles = StyleSheet.create({
     backgroundColor: "#3A3A3A",
   },
   menuText: { color: "#A1A1AA", fontSize: 13, fontWeight: "600" },
+  menuItem: {
+    backgroundColor: "#3A3A3A",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+  menuItemRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  menuItemName: { color: "#F4F4F4", fontSize: 15, fontWeight: "600", flex: 1 },
+  amountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 10,
+    marginLeft: 32,
+  },
+  amountInput: {
+    width: 120,
+    backgroundColor: "#2E2E2E",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: "#F4F4F4",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  unitLabel: { color: "#A1A1AA", fontSize: 15 },
   hint: { color: "#71717A", fontSize: 13 },
   switchRow: {
     flexDirection: "row",

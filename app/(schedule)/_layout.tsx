@@ -7,7 +7,7 @@ export default function ScheduleLayout() {
 
   return (
     <Stack
-      initialRouteName="list"
+      initialRouteName="calendar"
       screenOptions={{
         headerStyle: { backgroundColor: "#2E2E2E" },
         headerTintColor: "#F4F4F4",
@@ -16,9 +16,9 @@ export default function ScheduleLayout() {
       }}
     >
       <Stack.Screen
-        name="list"
+        name="new"
         options={{
-          title: "練習プラン",
+          title: "予定を登録",
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => router.back()}
@@ -29,7 +29,20 @@ export default function ScheduleLayout() {
           ),
         }}
       />
-      <Stack.Screen name="new" options={{ title: "割り当て" }} />
+      <Stack.Screen
+        name="[id]"
+        options={{
+          title: "予定の詳細",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ padding: 8 }}
+            >
+              <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
       <Stack.Screen
         name="calendar"
         options={{
@@ -44,7 +57,20 @@ export default function ScheduleLayout() {
           ),
         }}
       />
-      <Stack.Screen name="weekly" options={{ title: "今週のプラン" }} />
+      <Stack.Screen
+        name="weekly"
+        options={{
+          title: "今週のプラン",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ padding: 8 }}
+            >
+              <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
     </Stack>
   );
 }

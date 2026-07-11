@@ -71,7 +71,7 @@ export default function WeeklyPlanScreen() {
     } catch {
       Alert.alert(
         "コピーできませんでした",
-        "無料プランは割り当て3つまでです。Pro で無制限になります。",
+        "無料プランは予定3つまでです。Pro で無制限になります。",
       );
     }
   };
@@ -111,7 +111,7 @@ export default function WeeklyPlanScreen() {
                     key={schedule.id}
                     style={styles.chip}
                     onPress={() =>
-                      router.push(`/(schedule)/new?id=${schedule.id}`)
+                      router.push(`/(schedule)/${schedule.id}?date=${iso}`)
                     }
                   >
                     <View
@@ -125,7 +125,9 @@ export default function WeeklyPlanScreen() {
               })}
               <TouchableOpacity
                 style={styles.addChip}
-                onPress={() => router.push(`/(schedule)/new?date=${iso}`)}
+                onPress={() =>
+                  router.push(`/(schedule)/new?date=${iso}&singleOnly=1`)
+                }
               >
                 <Ionicons name="add" size={16} color="#d08000" />
               </TouchableOpacity>
@@ -139,7 +141,7 @@ export default function WeeklyPlanScreen() {
         <Text style={styles.copyText}>来週にコピー</Text>
       </TouchableOpacity>
       <Text style={styles.note}>
-        毎週固定にしたい予定は、割り当てを開いて「毎週」に切り替えてください
+        毎週の繰り返し予定はカレンダーから登録できます
       </Text>
     </ScrollView>
   );
