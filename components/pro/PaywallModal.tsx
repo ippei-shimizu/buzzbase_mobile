@@ -103,6 +103,16 @@ const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     description:
       "課題別の取り組みや成績の推移、練習と成績のつながりを含む詳細レポートを受け取れます。",
   },
+  note_tags: {
+    title: "野球ノートにタグを付けて整理",
+    description:
+      "Pro プランなら野球ノートにタグを付けて、後から振り返りやすく整理できます。",
+  },
+  multi_game_result_notes: {
+    title: "1つのノートに複数の試合を紐付け",
+    description:
+      "Pro プランなら1つの野球ノートに複数の試合記録を紐付けて振り返れます。",
+  },
 };
 
 const DEFAULT_COPY: PaywallCopy = {
