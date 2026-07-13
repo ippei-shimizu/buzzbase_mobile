@@ -1,6 +1,7 @@
 import type { BaseballNoteListItem } from "../../types/baseballNote";
 import React from "react";
 import { Text, TouchableOpacity, StyleSheet } from "react-native";
+import { formatJaFullDate } from "@utils/formatDate";
 
 interface NoteListCardProps {
   note: BaseballNoteListItem;
@@ -20,7 +21,7 @@ export const NoteListCard: React.FC<NoteListCardProps> = ({
       <Text style={styles.title} numberOfLines={1}>
         {note.title}
       </Text>
-      <Text style={styles.date}>{note.date}</Text>
+      <Text style={styles.date}>{formatJaFullDate(note.date)}</Text>
       <Text style={styles.memo} numberOfLines={2}>
         {note.memo}
       </Text>

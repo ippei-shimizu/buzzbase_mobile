@@ -1,9 +1,16 @@
-import axiosInstance from "@utils/axiosInstance";
+import type { GameResult, GameResultsResponse } from "../types/gameResult";
 import { API_BASE_URL } from "@constants/api";
-import type { GameResultsResponse } from "../types/gameResult";
+import axiosInstance from "@utils/axiosInstance";
 
 export const deleteGameResult = async (id: number): Promise<void> => {
   await axiosInstance.delete(`/game_results/${id}`);
+};
+
+export const getGameResult = async (id: number): Promise<GameResult> => {
+  const response = await axiosInstance.get<GameResult>(
+    `${API_BASE_URL}/api/v2/game_results/${id}`,
+  );
+  return response.data;
 };
 
 export const getUserGameResults = async (

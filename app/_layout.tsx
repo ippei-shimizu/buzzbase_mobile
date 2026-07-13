@@ -33,6 +33,12 @@ Sentry.init({
   sendDefaultPii: false,
 });
 
+// アプリ起動時とディープリンク時のアンカー（初期ルート）をホーム（タブ）に固定する。
+// これが無いと、開発時のナビゲーション状態復元などでホーム以外の画面が最初に開くことがある。
+export const unstable_settings = {
+  initialRouteName: "(tabs)",
+};
+
 configureGoogleSignIn();
 
 const revenueCatApiKey =
@@ -113,6 +119,23 @@ function RootLayoutInner() {
         <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(game-record)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(practice-record)"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="(shadow-swing)" options={{ headerShown: false }} />
+        <Stack.Screen name="(schedule)" options={{ headerShown: false }} />
+        <Stack.Screen name="(menu-set)" options={{ headerShown: false }} />
+        <Stack.Screen name="(goal)" options={{ headerShown: false }} />
+        <Stack.Screen name="(note)" options={{ headerShown: false }} />
+        <Stack.Screen name="(records)" options={{ headerShown: false }} />
+        <Stack.Screen name="(theme)" options={{ headerShown: false }} />
+        <Stack.Screen name="(insight)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(reflect-template)"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="(review)" options={{ headerShown: false }} />
         <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen
           name="game-result-detail"

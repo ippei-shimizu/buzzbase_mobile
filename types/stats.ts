@@ -296,6 +296,7 @@ export type BattingTrendGranularity =
   | "game"
   | "month"
   | "year"
+  | "season"
   | "recent_games";
 
 /**

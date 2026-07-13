@@ -1,0 +1,35 @@
+import { Ionicons } from "@expo/vector-icons";
+import { Stack, useRouter } from "expo-router";
+import { TouchableOpacity } from "react-native";
+
+export default function PracticeRecordLayout() {
+  const router = useRouter();
+
+  return (
+    <Stack
+      initialRouteName="daily"
+      screenOptions={{
+        headerStyle: { backgroundColor: "#2E2E2E" },
+        headerTintColor: "#F4F4F4",
+        headerTitleStyle: { fontSize: 16, fontWeight: "600" },
+        contentStyle: { backgroundColor: "#2E2E2E" },
+        // グループ外（ホーム・一覧）から push されると自動の戻るボタンが遷移元に戻らないため、
+        // 全画面で router.back() の戻る導線を明示する。
+        headerLeft: () => (
+          <TouchableOpacity
+            onPress={() =>
+              router.canGoBack() ? router.back() : router.replace("/(tabs)")
+            }
+            style={{ padding: 8 }}
+          >
+            <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
+          </TouchableOpacity>
+        ),
+      }}
+    >
+      <Stack.Screen name="daily" options={{ title: "練習を記録" }} />
+      <Stack.Screen name="[id]" options={{ title: "練習の記録" }} />
+      <Stack.Screen name="menu-new" options={{ title: "新しいメニュー" }} />
+    </Stack>
+  );
+}

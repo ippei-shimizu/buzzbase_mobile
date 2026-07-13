@@ -1,6 +1,7 @@
 import type { ManagementNotice } from "../../types/notification";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { formatJaFullDate } from "@utils/formatDate";
 
 interface NoticeCardProps {
   notice: ManagementNotice;
@@ -18,7 +19,9 @@ export const NoticeCard = ({ notice, onPress }: NoticeCardProps) => {
         <Text style={styles.title} numberOfLines={2}>
           {notice.title}
         </Text>
-        <Text style={styles.date}>{notice.published_at}</Text>
+        <Text style={styles.date}>
+          {formatJaFullDate(notice.published_at.slice(0, 10))}
+        </Text>
       </View>
       <Text style={styles.chevron}>›</Text>
     </TouchableOpacity>

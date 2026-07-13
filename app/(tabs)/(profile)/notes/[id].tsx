@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDeleteBaseballNote } from "@hooks/useBaseballNoteMutations";
 import { useBaseballNote } from "@hooks/useBaseballNotes";
+import { formatJaFullDate } from "@utils/formatDate";
 import { slateMemoToText } from "@utils/slateUtils";
 
 export default function NoteDetailScreen() {
@@ -91,7 +92,7 @@ export default function NoteDetailScreen() {
         ]}
       >
         <Text style={styles.title}>{note.title}</Text>
-        <Text style={styles.date}>{note.date}</Text>
+        <Text style={styles.date}>{formatJaFullDate(note.date)}</Text>
         <Text style={styles.memo}>{memoText}</Text>
       </ScrollView>
     </>

@@ -18,6 +18,8 @@ import { formatMatchTypeLabel } from "@utils/matchType";
 interface GameResultDetailProps {
   game: GameResult;
   onDelete?: () => void;
+  /** false のとき自前の ScrollView で囲まず内容のみ描画する（他画面に埋め込む用）。 */
+  scroll?: boolean;
 }
 
 const formatDate = (dateStr: string): string => {
@@ -68,7 +70,11 @@ function StatRow({
   );
 }
 
-export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
+export const GameResultDetail = ({
+  game,
+  onDelete,
+  scroll = true,
+}: GameResultDetailProps) => {
   const { match_result, batting_average, pitching_result } = game;
   const isWin = match_result.my_team_score > match_result.opponent_team_score;
   const isLoss = match_result.my_team_score < match_result.opponent_team_score;
@@ -93,8 +99,8 @@ export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
     ]);
   };
 
-  return (
-    <ScrollView style={styles.container}>
+  const content = (
+    <>
       <View style={styles.card}>
         {/* ヘッダー */}
         <View style={styles.header}>
@@ -276,8 +282,11 @@ export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
       )}
 
       <View style={styles.bottomSpacer} />
-    </ScrollView>
+    </>
   );
+
+  if (!scroll) return <View style={styles.embedded}>{content}</View>;
+  return <ScrollView style={styles.container}>{content}</ScrollView>;
 };
 
 const styles = StyleSheet.create({
@@ -285,6 +294,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  embedded: {},
   card: {
     backgroundColor: "#27272a",
     borderRadius: 12,
