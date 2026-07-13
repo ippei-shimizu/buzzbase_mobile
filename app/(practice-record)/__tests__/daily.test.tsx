@@ -82,4 +82,62 @@ describe("日次の練習記録", () => {
       expect.objectContaining({ practice_menu_id: 1 }),
     ]);
   });
+
+  it("既存記録の編集時は保存ボタンの文言が変わる", async () => {
+    setupHandlers(() => {});
+    server.use(
+      http.get(baseUrl("/api/v2/practice_sessions/by_date"), () =>
+        HttpResponse.json({
+          id: 1,
+          logged_on: "2026-06-27",
+          memo: null,
+          practice_logs: [],
+          condition: null,
+          created_at: "2026-06-27T00:00:00Z",
+        }),
+      ),
+    );
+
+    const { getByText } = renderWithProviders(<DailyRecordScreen />);
+
+    await waitFor(() => expect(getByText("練習記録の変更を保存")).toBeTruthy());
+  });
+
+  it("無料ユーザーが Pro 時代の condition 付き記録を編集しても condition を送信しない", async () => {
+    let savedBody: {
+      practice_session?: { items?: unknown[]; condition?: unknown };
+    } = {};
+    setupHandlers((body) => {
+      savedBody = body as typeof savedBody;
+    });
+    server.use(
+      http.get(baseUrl("/api/v2/practice_sessions/by_date"), () =>
+        HttpResponse.json({
+          id: 1,
+          logged_on: "2026-06-27",
+          memo: null,
+          practice_logs: [],
+          condition: {
+            fatigue_level: 2,
+            physical_level: 3,
+            sleep_hours: 6,
+            mood: "好調",
+            memo: null,
+            injuries: [],
+          },
+          created_at: "2026-06-27T00:00:00Z",
+        }),
+      ),
+    );
+
+    const { getByText } = renderWithProviders(<DailyRecordScreen />);
+
+    await waitFor(() => expect(getByText("素振り")).toBeTruthy());
+
+    fireEvent.press(getByText("素振り"));
+    fireEvent.press(getByText("練習記録の変更を保存"));
+
+    await waitFor(() => expect(savedBody.practice_session).toBeTruthy());
+    expect(savedBody.practice_session?.condition).toBeNull();
+  });
 });

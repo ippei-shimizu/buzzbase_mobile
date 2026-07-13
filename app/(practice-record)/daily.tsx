@@ -8,7 +8,7 @@ import type {
 import type { ConditionDraft } from "@components/practice/ConditionForm";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -26,8 +26,9 @@ import {
   ConditionForm,
   EMPTY_CONDITION_DRAFT,
 } from "@components/practice/ConditionForm";
-import { ProGate } from "@components/pro/ProGate";
+import { PaywallModal } from "@components/pro/PaywallModal";
 import { CATEGORY_ICON, PRACTICE_CATEGORIES } from "@constants/practice";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
 import {
   usePracticeSessionByDate,
@@ -122,6 +123,8 @@ function DailyEditor({
 }) {
   const router = useRouter();
   const { saveSession, isSaving } = usePracticeSessionMutations();
+  const { hasEntitlement } = useEntitlement();
+  const isEditing = initialSession != null;
 
   // 既存の記録済み量を優先しつつ、未選択のプリセットメニューを目標量つきで追加する。
   const [selected, setSelected] = useState<SelectedItems>(() => {
@@ -147,6 +150,9 @@ function DailyEditor({
   const [improvementThemeId, setImprovementThemeId] = useState<number | null>(
     initialSession?.improvement_theme_id ?? null,
   );
+  const [isConditionPaywallOpen, setConditionPaywallOpen] = useState(false);
+  const canSaveCondition = hasEntitlement("detailed_condition_log");
+
   const toggleMenu = (menu: PracticeMenu) => {
     const isSelected = menu.id in selected;
     setSelected((prev) => {
@@ -193,10 +199,14 @@ function DailyEditor({
       return;
     }
     try {
+      // 無料ユーザーは condition の入力ができないため、state に何が残っていても送らない
+      // （Pro/トライアル時代の記録を持つユーザーが他項目だけ編集した際に、
+      // condition の Pro 判定で保存全体が失敗しないようにする）。
       const session = await saveSession({
         logged_on: dateString,
         items,
-        condition: hasCondition ? toConditionInput(condition) : null,
+        condition:
+          hasCondition && canSaveCondition ? toConditionInput(condition) : null,
         improvement_theme_id: improvementThemeId,
       });
       if (withNote) {
@@ -276,6 +286,14 @@ function DailyEditor({
   return (
     <View>
       <Text style={styles.sectionTitle}>練習メニュー（複数選択可）</Text>
+      <TouchableOpacity
+        style={styles.addMenuButton}
+        onPress={() => router.push("/(practice-menu)/form")}
+      >
+        <Ionicons name="add" size={18} color="#FFFFFF" />
+        <Text style={styles.addMenuButtonText}>新しいメニューを追加</Text>
+      </TouchableOpacity>
+
       {PRACTICE_CATEGORIES.map((category) => {
         const inCategory = menus.filter(
           (menu) => menu.category === category.key,
@@ -296,28 +314,31 @@ function DailyEditor({
         );
       })}
 
-      <TouchableOpacity
-        style={styles.addRow}
-        onPress={() => router.push("/(practice-record)/menu-new")}
-      >
-        <Ionicons name="add" size={18} color="#d08000" />
-        <Text style={styles.addRowText}>新しいメニューを追加</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.sectionTitle}>コンディション</Text>
-      <ProGate
+      <View style={styles.sectionTitleRow}>
+        <Text style={styles.sectionTitle}>コンディション</Text>
+        {!canSaveCondition ? (
+          <Text style={styles.proBadge}>Pro限定</Text>
+        ) : null}
+      </View>
+      <ConditionForm
+        value={condition}
+        onChange={setCondition}
+        disabled={!canSaveCondition}
+      />
+      {!canSaveCondition ? (
+        <TouchableOpacity
+          style={styles.conditionUnlockRow}
+          onPress={() => setConditionPaywallOpen(true)}
+        >
+          <Ionicons name="lock-closed" size={14} color="#d08000" />
+          <Text style={styles.conditionUnlockText}>Pro に加入して記録する</Text>
+        </TouchableOpacity>
+      ) : null}
+      <PaywallModal
+        isOpen={isConditionPaywallOpen}
+        onClose={() => setConditionPaywallOpen(false)}
         feature="detailed_condition_log"
-        renderLockedTrigger={(open) => (
-          <TouchableOpacity style={styles.conditionLocked} onPress={open}>
-            <Ionicons name="lock-closed" size={16} color="#A1A1AA" />
-            <Text style={styles.conditionLockedText}>
-              疲労・体調・睡眠・気分・怪我の記録は Pro 限定
-            </Text>
-          </TouchableOpacity>
-        )}
-      >
-        <ConditionForm value={condition} onChange={setCondition} />
-      </ProGate>
+      />
 
       <Text style={styles.sectionTitle}>取り組む課題（任意）</Text>
       <ThemePickerField
@@ -337,7 +358,9 @@ function DailyEditor({
         onPress={() => handleSave(false)}
         disabled={isSaving}
       >
-        <Text style={styles.saveSubButtonText}>練習記録のみ保存</Text>
+        <Text style={styles.saveSubButtonText}>
+          {isEditing ? "練習記録の変更を保存" : "練習記録のみ保存"}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -372,6 +395,21 @@ export default function DailyRecordScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <TouchableOpacity
+              style={styles.menuManageButton}
+              onPress={() => router.push("/(practice-menu)/list")}
+              accessibilityRole="button"
+              accessibilityLabel="練習メニューを管理"
+            >
+              <Ionicons name="list-outline" size={16} color="#F4F4F4" />
+              <Text style={styles.menuManageButtonText}>メニュー管理</Text>
+            </TouchableOpacity>
+          ),
+        }}
+      />
       <Text style={styles.label}>日付</Text>
       <TouchableOpacity
         style={styles.dateRow}
@@ -407,7 +445,7 @@ export default function DailyRecordScreen() {
           </Text>
           <TouchableOpacity
             style={styles.primaryButton}
-            onPress={() => router.push("/(practice-record)/menu-new")}
+            onPress={() => router.push("/(practice-menu)/form")}
           >
             <Ionicons name="add" size={18} color="#FFFFFF" />
             <Text style={styles.primaryButtonText}>最初のメニューを作る</Text>
@@ -442,6 +480,18 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 24,
     marginBottom: 12,
+  },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  proBadge: {
+    color: "#d08000",
+    fontSize: 12,
+    fontWeight: "700",
   },
   dateRow: {
     flexDirection: "row",
@@ -502,24 +552,32 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   unitLabel: { color: "#A1A1AA", fontSize: 15 },
-  addRow: {
+  addMenuButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#d08000",
+    borderRadius: 8,
+    paddingVertical: 12,
+    marginBottom: 16,
+  },
+  addMenuButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
+  conditionUnlockRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
     paddingVertical: 12,
   },
-  addRowText: { color: "#d08000", fontSize: 15, fontWeight: "600" },
-  conditionLocked: {
+  conditionUnlockText: { color: "#d08000", fontSize: 14, fontWeight: "600" },
+  menuManageButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    backgroundColor: "#3A3A3A",
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    gap: 6,
+    paddingHorizontal: 8,
   },
-  conditionLockedText: { color: "#A1A1AA", fontSize: 13, fontWeight: "600" },
+  menuManageButtonText: { color: "#F4F4F4", fontSize: 13, fontWeight: "600" },
   empty: { alignItems: "center", paddingVertical: 40 },
   emptyTitle: {
     color: "#F4F4F4",
