@@ -558,7 +558,7 @@ function PracticeList() {
 function NoteLinkChip({ note }: { note: NoteV2 }) {
   const hasPractice =
     note.practice_session_id != null || note.practice_log_id != null;
-  const hasGame = note.game_result_id != null;
+  const hasGame = note.game_result_ids.length > 0;
   if (!hasPractice && !hasGame) return null;
 
   return (

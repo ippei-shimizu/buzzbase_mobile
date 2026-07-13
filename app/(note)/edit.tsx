@@ -41,7 +41,7 @@ export default function NoteEditScreen() {
         memo: editableMemo,
         date: note.date,
         practiceSessionId: note.practice_session_id,
-        gameResultId: note.game_result_id,
+        gameResultIds: note.game_result_ids,
         improvementThemeId: note.improvement_theme_id,
         reflectionTemplateId: note.reflection_template_id,
         reflectionAnswers: note.reflection_answers,

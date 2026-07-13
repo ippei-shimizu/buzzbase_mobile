@@ -14,6 +14,8 @@ import {
   Platform,
 } from "react-native";
 import { ThemePickerField } from "@components/improvement-theme/ThemePickerField";
+import { PaywallModal } from "@components/pro/PaywallModal";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { useFilteredGameResults } from "@hooks/useGameResults";
 import { usePracticeSessions } from "@hooks/usePracticeSessions";
 import { formatJaFullDate } from "@utils/formatDate";
@@ -28,7 +30,7 @@ export interface NoteFormInitial {
   memo?: string;
   date?: string;
   practiceSessionId?: number | null;
-  gameResultId?: number | null;
+  gameResultIds?: number[];
   improvementThemeId?: number | null;
   reflectionTemplateId?: number | null;
   reflectionAnswers?: { question: string; answer: string }[];
@@ -68,6 +70,7 @@ export function NoteForm({
   templateLocked = false,
 }: Props) {
   const { sessions } = usePracticeSessions();
+  const { hasEntitlement } = useEntitlement();
 
   const [title, setTitle] = useState(initial?.title ?? "");
   const [memo, setMemo] = useState(initial?.memo ?? "");
@@ -78,9 +81,10 @@ export function NoteForm({
   const [practiceSessionId, setPracticeSessionId] = useState<number | null>(
     initial?.practiceSessionId ?? null,
   );
-  const [gameResultId, setGameResultId] = useState<number | null>(
-    initial?.gameResultId ?? null,
+  const [gameResultIds, setGameResultIds] = useState<number[]>(
+    initial?.gameResultIds ?? [],
   );
+  const [isGamePaywallOpen, setGamePaywallOpen] = useState(false);
   const [improvementThemeId, setImprovementThemeId] = useState<number | null>(
     initial?.improvementThemeId ?? null,
   );
@@ -129,17 +133,21 @@ export function NoteForm({
     return session ? `${formatJaFullDate(session.logged_on)} の練習` : null;
   })();
 
-  const gameLabel = (() => {
+  const gameLabelFor = (gameResultId: number): string | null => {
     const game = gameResults.find(
       (item) => item.game_result_id === gameResultId,
     );
     if (!game) return null;
     return `${formatJaFullDate(game.match_result.date_and_time.slice(0, 10))} vs ${game.match_result.opponent_team_name}`;
-  })();
+  };
 
   const filteredSessions = practiceFilter
     ? sessions.filter((item) => item.logged_on === toDateString(practiceFilter))
     : sessions.slice(0, 15);
+
+  const selectableGameResults = gameResults.filter(
+    (game) => !gameResultIds.includes(game.game_result_id),
+  );
 
   const reflectionAnswers = templateQuestions
     .map((question) => ({ question, answer: (answers[question] ?? "").trim() }))
@@ -152,6 +160,28 @@ export function NoteForm({
 
   const handleChangeAnswer = (question: string, answer: string) =>
     setAnswers((prev) => ({ ...prev, [question]: answer }));
+
+  const handleOpenGamePicker = () => {
+    // 無料は1件まで。2件目以降を追加しようとしたら Pro 訴求。
+    if (
+      gameResultIds.length >= 1 &&
+      !hasEntitlement("multi_game_result_notes")
+    ) {
+      setGamePaywallOpen(true);
+      return;
+    }
+    togglePicker("game");
+  };
+
+  const handleSelectGame = (gameResultId: number) => {
+    setGameResultIds((prev) =>
+      prev.includes(gameResultId) ? prev : [...prev, gameResultId],
+    );
+    setOpenPicker("none");
+  };
+
+  const handleRemoveGame = (gameResultId: number) =>
+    setGameResultIds((prev) => prev.filter((id) => id !== gameResultId));
 
   const handleSubmit = async () => {
     // 自由メモ or テンプレ回答のどちらかがあれば保存できる。
@@ -167,11 +197,13 @@ export function NoteForm({
       date: toDateString(date),
       memo: buildMemoJson(memoText),
       practice_session_id: practiceSessionId,
-      game_result_id: gameResultId,
+      game_result_ids: gameResultIds,
       improvement_theme_id: improvementThemeId,
       reflection_template_id: reflectionTemplateId,
       reflection_answers: reflectionAnswers,
-      tag_ids: tagIds,
+      // タグ編集UIは無料ユーザーには表示しないため、その場合は tag_ids キー自体を
+      // 送らず既存タグを維持する（back 側は未送信を「変更なし」として扱う）。
+      ...(hasEntitlement("note_tags") ? { tag_ids: tagIds } : {}),
     });
   };
 
@@ -233,7 +265,11 @@ export function NoteForm({
         locked={templateLocked}
       />
 
-      <TagSection selectedIds={tagIds} onChange={setTagIds} />
+      {hasEntitlement("note_tags") ? (
+        <TagSection selectedIds={tagIds} onChange={setTagIds} />
+      ) : (
+        <TagSectionLocked />
+      )}
 
       <Text style={styles.label}>紐付け（任意）</Text>
 
@@ -325,26 +361,30 @@ export function NoteForm({
         </View>
       ) : null}
 
+      {gameResultIds.map((gameResultId) => (
+        <View key={gameResultId} style={styles.linkButton}>
+          <Ionicons name="baseball-outline" size={18} color="#d08000" />
+          <Text style={styles.linkButtonText} numberOfLines={1}>
+            {gameLabelFor(gameResultId) ?? "試合に紐付け済み"}
+          </Text>
+          <TouchableOpacity onPress={() => handleRemoveGame(gameResultId)}>
+            <Ionicons name="close-circle" size={18} color="#A1A1AA" />
+          </TouchableOpacity>
+        </View>
+      ))}
       <TouchableOpacity
         style={styles.linkButton}
-        onPress={() => togglePicker("game")}
+        onPress={handleOpenGamePicker}
       >
         <Ionicons name="baseball-outline" size={18} color="#d08000" />
         <Text style={styles.linkButtonText}>
-          {gameLabel ??
-            (gameResultId != null ? "試合に紐付け済み" : "試合記録に紐付け")}
+          {gameResultIds.length > 0 ? "試合をもう1件追加" : "試合記録に紐付け"}
         </Text>
-        {gameResultId != null ? (
-          <TouchableOpacity onPress={() => setGameResultId(null)}>
-            <Ionicons name="close-circle" size={18} color="#A1A1AA" />
-          </TouchableOpacity>
-        ) : (
-          <Ionicons
-            name={openPicker === "game" ? "chevron-up" : "chevron-down"}
-            size={18}
-            color="#A1A1AA"
-          />
-        )}
+        <Ionicons
+          name={openPicker === "game" ? "chevron-up" : "chevron-down"}
+          size={18}
+          color="#A1A1AA"
+        />
       </TouchableOpacity>
       {openPicker === "game" ? (
         <View style={styles.picker}>
@@ -358,17 +398,14 @@ export function NoteForm({
               onChangeText={setGameSearch}
             />
           </View>
-          {gameResults.length === 0 ? (
+          {selectableGameResults.length === 0 ? (
             <Text style={styles.pickerEmpty}>試合記録がありません</Text>
           ) : (
-            gameResults.slice(0, 15).map((game) => (
+            selectableGameResults.slice(0, 15).map((game) => (
               <TouchableOpacity
                 key={game.game_result_id}
                 style={styles.pickerRow}
-                onPress={() => {
-                  setGameResultId(game.game_result_id);
-                  setOpenPicker("none");
-                }}
+                onPress={() => handleSelectGame(game.game_result_id)}
               >
                 <Text style={styles.pickerText}>
                   {formatJaFullDate(
@@ -381,6 +418,11 @@ export function NoteForm({
           )}
         </View>
       ) : null}
+      <PaywallModal
+        isOpen={isGamePaywallOpen}
+        onClose={() => setGamePaywallOpen(false)}
+        feature="multi_game_result_notes"
+      />
 
       <TouchableOpacity
         style={[styles.saveButton, isSubmitting && styles.saveButtonDisabled]}
@@ -390,6 +432,28 @@ export function NoteForm({
         <Text style={styles.saveButtonText}>{submitLabel}</Text>
       </TouchableOpacity>
     </ScrollView>
+  );
+}
+
+/** 無料ユーザー向けのタグ機能ロック表示。タップで Pro 訴求モーダルを開く。 */
+function TagSectionLocked() {
+  const [isPaywallOpen, setPaywallOpen] = useState(false);
+  return (
+    <>
+      <TouchableOpacity
+        style={styles.tagLockedRow}
+        onPress={() => setPaywallOpen(true)}
+      >
+        <Ionicons name="pricetag-outline" size={18} color="#A1A1AA" />
+        <Text style={styles.tagLockedText}>タグ機能は Pro 限定</Text>
+        <Ionicons name="lock-closed" size={16} color="#A1A1AA" />
+      </TouchableOpacity>
+      <PaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        feature="note_tags"
+      />
+    </>
   );
 }
 
@@ -433,6 +497,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   linkButtonText: { color: "#F4F4F4", fontSize: 14, flex: 1 },
+  tagLockedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  tagLockedText: { color: "#A1A1AA", fontSize: 13, fontWeight: "600", flex: 1 },
   picker: {
     backgroundColor: "#3A3A3A",
     borderRadius: 8,

@@ -7,7 +7,7 @@ export interface NoteV2 {
   date: string;
   memo: string | null;
   memo_preview: string;
-  game_result_id: number | null;
+  game_result_ids: number[];
   practice_log_id: number | null;
   practice_session_id: number | null;
   improvement_theme_id: number | null;
@@ -22,7 +22,7 @@ export interface NoteInput {
   title?: string | null;
   date: string;
   memo: string; // Slate 形式の JSON 文字列
-  game_result_id?: number | null;
+  game_result_ids?: number[];
   practice_log_id?: number | null;
   practice_session_id?: number | null;
   improvement_theme_id?: number | null;

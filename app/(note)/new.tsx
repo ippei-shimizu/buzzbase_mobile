@@ -24,7 +24,7 @@ export default function NoteNewScreen() {
         practiceSessionId: params.practiceSessionId
           ? Number(params.practiceSessionId)
           : null,
-        gameResultId: params.gameResultId ? Number(params.gameResultId) : null,
+        gameResultIds: params.gameResultId ? [Number(params.gameResultId)] : [],
         improvementThemeId: params.improvementThemeId
           ? Number(params.improvementThemeId)
           : null,
