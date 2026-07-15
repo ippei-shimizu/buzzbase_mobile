@@ -61,3 +61,9 @@ export async function purchasePackage(
   const { customerInfo } = await Purchases.purchasePackage(pkg);
   return customerInfo;
 }
+
+/** 機種変更・再インストール後に過去の購入を復元する。 */
+export async function restorePurchases(): Promise<CustomerInfo> {
+  if (!configured) throw new Error("RevenueCat is not configured");
+  return Purchases.restorePurchases();
+}

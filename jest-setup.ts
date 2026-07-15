@@ -30,6 +30,9 @@ jest.mock("react-native-purchases", () => ({
     purchasePackage: jest
       .fn()
       .mockResolvedValue({ customerInfo: { entitlements: { active: {} } } }),
+    restorePurchases: jest
+      .fn()
+      .mockResolvedValue({ entitlements: { active: {} } }),
   },
 }));
 
