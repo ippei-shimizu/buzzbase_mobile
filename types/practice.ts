@@ -123,7 +123,7 @@ export interface PracticeSession {
   id: number;
   logged_on: string;
   memo: string | null;
-  improvement_theme_id: number | null;
+  improvement_theme_ids: number[];
   practice_logs: PracticeLog[];
   condition: ConditionLog | null;
   created_at: string;
@@ -143,7 +143,7 @@ export type ConditionInput = Omit<ConditionLogInput, "logged_on">;
 export interface PracticeSessionInput {
   logged_on: string;
   memo?: string | null;
-  improvement_theme_id?: number | null;
+  improvement_theme_ids?: number[];
   items: PracticeSessionItemInput[];
   condition?: ConditionInput | null;
 }

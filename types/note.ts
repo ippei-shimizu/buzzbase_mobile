@@ -10,7 +10,7 @@ export interface NoteV2 {
   game_result_ids: number[];
   practice_log_id: number | null;
   practice_session_id: number | null;
-  improvement_theme_id: number | null;
+  improvement_theme_ids: number[];
   reflection_template_id: number | null;
   reflection_answers: ReflectionAnswer[];
   tags: Tag[];
@@ -25,7 +25,7 @@ export interface NoteInput {
   game_result_ids?: number[];
   practice_log_id?: number | null;
   practice_session_id?: number | null;
-  improvement_theme_id?: number | null;
+  improvement_theme_ids?: number[];
   reflection_template_id?: number | null;
   reflection_answers?: ReflectionAnswer[];
   tag_ids?: number[];
