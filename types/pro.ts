@@ -40,6 +40,7 @@ export const PRO_FEATURES = [
   "advanced_periodic_review", // 週次/月次レポートの詳細(課題別内訳・相関・成績前週比・月次)
   "note_tags", // 野球ノートへのタグ付け(無料は付与不可)
   "multi_game_result_notes", // 野球ノートへの複数試合記録紐付け(無料は1件まで)
+  "multi_improvement_theme_links", // 練習記録・野球ノートへの複数課題紐付け(無料は1件まで)
 ] as const;
 
 export type FreeFeature = (typeof FREE_FEATURES)[number];

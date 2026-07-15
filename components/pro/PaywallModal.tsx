@@ -113,6 +113,11 @@ const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     description:
       "Pro プランなら1つの野球ノートに複数の試合記録を紐付けて振り返れます。",
   },
+  multi_improvement_theme_links: {
+    title: "1つの記録に複数の課題を紐付け",
+    description:
+      "Pro プランなら練習記録・野球ノートに複数の課題を同時に紐付けて、取り組みをまとめて振り返れます。",
+  },
 };
 
 const DEFAULT_COPY: PaywallCopy = {
