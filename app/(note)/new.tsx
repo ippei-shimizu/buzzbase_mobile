@@ -9,7 +9,7 @@ export default function NoteNewScreen() {
   const params = useLocalSearchParams<{
     practiceSessionId?: string;
     gameResultId?: string;
-    improvementThemeId?: string;
+    improvementThemeIds?: string;
     date?: string;
   }>();
   const { createNote, isCreating } = useNoteMutations();
@@ -25,9 +25,9 @@ export default function NoteNewScreen() {
           ? Number(params.practiceSessionId)
           : null,
         gameResultIds: params.gameResultId ? [Number(params.gameResultId)] : [],
-        improvementThemeId: params.improvementThemeId
-          ? Number(params.improvementThemeId)
-          : null,
+        improvementThemeIds: params.improvementThemeIds
+          ? params.improvementThemeIds.split(",").map(Number)
+          : [],
       }}
       showDatePicker={!fromPracticeFlow}
       submitLabel="保存"

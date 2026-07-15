@@ -2,6 +2,7 @@ import type { NoteInput } from "../../types/note";
 import type { ReflectionTemplate } from "../../types/reflectionTemplate";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { BlurView } from "expo-blur";
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -31,7 +32,7 @@ export interface NoteFormInitial {
   date?: string;
   practiceSessionId?: number | null;
   gameResultIds?: number[];
-  improvementThemeId?: number | null;
+  improvementThemeIds?: number[];
   reflectionTemplateId?: number | null;
   reflectionAnswers?: { question: string; answer: string }[];
   tagIds?: number[];
@@ -85,13 +86,14 @@ export function NoteForm({
     initial?.gameResultIds ?? [],
   );
   const [isGamePaywallOpen, setGamePaywallOpen] = useState(false);
-  const [improvementThemeId, setImprovementThemeId] = useState<number | null>(
-    initial?.improvementThemeId ?? null,
+  const [improvementThemeIds, setImprovementThemeIds] = useState<number[]>(
+    initial?.improvementThemeIds ?? [],
   );
   const [reflectionTemplateId, setReflectionTemplateId] = useState<
     number | null
   >(initial?.reflectionTemplateId ?? null);
   const [tagIds, setTagIds] = useState<number[]>(initial?.tagIds ?? []);
+  const [isTagPaywallOpen, setTagPaywallOpen] = useState(false);
   const [templateQuestions, setTemplateQuestions] = useState<string[]>(() =>
     (initial?.reflectionAnswers ?? []).map((item) => item.question),
   );
@@ -198,7 +200,7 @@ export function NoteForm({
       memo: buildMemoJson(memoText),
       practice_session_id: practiceSessionId,
       game_result_ids: gameResultIds,
-      improvement_theme_id: improvementThemeId,
+      improvement_theme_ids: improvementThemeIds,
       reflection_template_id: reflectionTemplateId,
       reflection_answers: reflectionAnswers,
       // タグ編集UIは無料ユーザーには表示しないため、その場合は tag_ids キー自体を
@@ -265,17 +267,50 @@ export function NoteForm({
         locked={templateLocked}
       />
 
-      {hasEntitlement("note_tags") ? (
-        <TagSection selectedIds={tagIds} onChange={setTagIds} />
-      ) : (
-        <TagSectionLocked />
-      )}
+      <View style={styles.tagWrapper}>
+        <TagSection
+          selectedIds={tagIds}
+          onChange={setTagIds}
+          disabled={!hasEntitlement("note_tags")}
+        />
+        {!hasEntitlement("note_tags") ? (
+          <View style={styles.tagOverlay} pointerEvents="box-none">
+            <BlurView
+              intensity={8}
+              tint="dark"
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.tagOverlayCard}>
+              <Text style={styles.tagOverlayTitle}>
+                タグでノートを整理・検索
+              </Text>
+              <Text style={styles.tagOverlayDescription}>
+                ・練習の気づきや試合の振り返りをタグで分類{"\n"}
+                ・過去のノートをタグから素早く検索{"\n"}
+                ・自分専用のタグも自由に作成可能
+              </Text>
+              <TouchableOpacity
+                style={styles.tagUnlockButton}
+                onPress={() => setTagPaywallOpen(true)}
+              >
+                <Ionicons name="lock-closed" size={16} color="#FFFFFF" />
+                <Text style={styles.tagUnlockButtonText}>Pro に加入する</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : null}
+      </View>
+      <PaywallModal
+        isOpen={isTagPaywallOpen}
+        onClose={() => setTagPaywallOpen(false)}
+        feature="note_tags"
+      />
 
       <Text style={styles.label}>紐付け（任意）</Text>
 
       <ThemePickerField
-        selectedThemeId={improvementThemeId}
-        onChange={setImprovementThemeId}
+        selectedThemeIds={improvementThemeIds}
+        onChange={setImprovementThemeIds}
       />
 
       <TouchableOpacity
@@ -349,12 +384,16 @@ export function NoteForm({
                   setOpenPicker("none");
                 }}
               >
-                <Text style={styles.pickerText}>
+                <Text style={styles.pickerRowDate}>
                   {formatJaFullDate(session.logged_on)}
-                  {session.practice_logs.length > 0
-                    ? ` ・ ${session.practice_logs.map((log) => log.menu_name).join(", ")}`
-                    : ""}
                 </Text>
+                {session.practice_logs.length > 0 ? (
+                  <Text style={styles.pickerRowMenus} numberOfLines={1}>
+                    {session.practice_logs
+                      .map((log) => log.menu_name)
+                      .join(", ")}
+                  </Text>
+                ) : null}
               </TouchableOpacity>
             ))
           )}
@@ -435,28 +474,6 @@ export function NoteForm({
   );
 }
 
-/** 無料ユーザー向けのタグ機能ロック表示。タップで Pro 訴求モーダルを開く。 */
-function TagSectionLocked() {
-  const [isPaywallOpen, setPaywallOpen] = useState(false);
-  return (
-    <>
-      <TouchableOpacity
-        style={styles.tagLockedRow}
-        onPress={() => setPaywallOpen(true)}
-      >
-        <Ionicons name="pricetag-outline" size={18} color="#A1A1AA" />
-        <Text style={styles.tagLockedText}>タグ機能は Pro 限定</Text>
-        <Ionicons name="lock-closed" size={16} color="#A1A1AA" />
-      </TouchableOpacity>
-      <PaywallModal
-        isOpen={isPaywallOpen}
-        onClose={() => setPaywallOpen(false)}
-        feature="note_tags"
-      />
-    </>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#2E2E2E" },
   content: { padding: 16, paddingBottom: 40 },
@@ -497,16 +514,44 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   linkButtonText: { color: "#F4F4F4", fontSize: 14, flex: 1 },
-  tagLockedRow: {
+  tagWrapper: { position: "relative" },
+  tagOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 10,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,
+  },
+  tagOverlayCard: {
+    backgroundColor: "rgba(58,58,58,0.9)",
+    borderRadius: 10,
+    padding: 14,
+    alignItems: "center",
+  },
+  tagOverlayTitle: {
+    color: "#F4F4F4",
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 6,
+  },
+  tagOverlayDescription: {
+    color: "#D4D4D8",
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: "left",
+    marginBottom: 10,
+  },
+  tagUnlockButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    backgroundColor: "#3A3A3A",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    gap: 6,
+    backgroundColor: "#d08000",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
   },
-  tagLockedText: { color: "#A1A1AA", fontSize: 13, fontWeight: "600", flex: 1 },
+  tagUnlockButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
   picker: {
     backgroundColor: "#3A3A3A",
     borderRadius: 8,
@@ -540,6 +585,8 @@ const styles = StyleSheet.create({
     borderTopColor: "#2E2E2E",
   },
   pickerText: { color: "#F4F4F4", fontSize: 14 },
+  pickerRowDate: { color: "#F4F4F4", fontSize: 14, fontWeight: "700" },
+  pickerRowMenus: { color: "#A1A1AA", fontSize: 12, marginTop: 3 },
   pickerEmpty: { color: "#A1A1AA", fontSize: 13, padding: 12 },
   saveButton: {
     backgroundColor: "#d08000",

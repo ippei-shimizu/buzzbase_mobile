@@ -42,7 +42,7 @@ export default function NoteEditScreen() {
         date: note.date,
         practiceSessionId: note.practice_session_id,
         gameResultIds: note.game_result_ids,
-        improvementThemeId: note.improvement_theme_id,
+        improvementThemeIds: note.improvement_theme_ids,
         reflectionTemplateId: note.reflection_template_id,
         reflectionAnswers: note.reflection_answers,
         tagIds: note.tags?.map((tag) => tag.id) ?? [],

@@ -31,6 +31,22 @@ const gameB = buildGameResult({
   match_result: buildMatchResult({ opponent_team_name: "対戦相手B" }),
 });
 
+const themeA = {
+  id: 1,
+  title: "外角対応",
+  category: "batting",
+  purpose: null,
+  status: "open" as const,
+  started_on: "2026-06-01",
+  achieved_on: null,
+  sort_order: 0,
+  practice_logs_count: 0,
+  notes_count: 0,
+  active_days: 0,
+  created_at: "2026-06-01T00:00:00+09:00",
+};
+const themeB = { ...themeA, id: 2, title: "肩の開きを抑える" };
+
 const respondFree = () => {
   server.use(
     http.get(apiUrl("/pro/status"), () =>
@@ -54,6 +70,7 @@ const respondPro = () => {
           ...FREE_FEATURES,
           "note_tags",
           "multi_game_result_notes",
+          "multi_improvement_theme_links",
         ],
       }),
     ),
@@ -75,11 +92,14 @@ const setupCommonHandlers = () => {
         },
       }),
     ),
+    http.get(baseUrl("/api/v2/improvement_themes"), () =>
+      HttpResponse.json([themeA, themeB]),
+    ),
   );
 };
 
 describe("NoteForm", () => {
-  it("無料ユーザーはタグ機能がロックされ、タップで Pro 訴求が表示される", async () => {
+  it("無料ユーザーにはタグ選択UIの上に Pro 訴求オーバーレイが重なって表示される", async () => {
     respondFree();
     setupCommonHandlers();
 
@@ -87,19 +107,19 @@ describe("NoteForm", () => {
       <NoteForm submitLabel="保存" isSubmitting={false} onSubmit={jest.fn()} />,
     );
 
+    // UI自体（Proユーザーと同じ見た目）は見える。
     await waitFor(() =>
-      expect(screen.getByText("タグ機能は Pro 限定")).toBeOnTheScreen(),
+      expect(screen.getByText("タグ（任意・複数選択可）")).toBeOnTheScreen(),
     );
-    expect(
-      screen.queryByText("タグ（任意・複数選択可）"),
-    ).not.toBeOnTheScreen();
+    // オーバーレイのメリット訴求文言も見える。
+    expect(screen.getByText("タグでノートを整理・検索")).toBeOnTheScreen();
 
-    fireEvent.press(screen.getByText("タグ機能は Pro 限定"));
+    fireEvent.press(screen.getByText("Pro に加入する"));
 
     expect(screen.getByText("野球ノートにタグを付けて整理")).toBeOnTheScreen();
   });
 
-  it("Proユーザーはタグ選択UIが表示される", async () => {
+  it("Proユーザーはタグ選択UIが操作できる", async () => {
     respondPro();
     setupCommonHandlers();
 
@@ -110,6 +130,9 @@ describe("NoteForm", () => {
     await waitFor(() =>
       expect(screen.getByText("タグ（任意・複数選択可）")).toBeOnTheScreen(),
     );
+    expect(
+      screen.queryByText("タグでノートを整理・検索"),
+    ).not.toBeOnTheScreen();
   });
 
   it("無料ユーザーは2件目の試合紐付けを試みると Pro 訴求が表示される", async () => {
@@ -168,5 +191,56 @@ describe("NoteForm", () => {
     expect(
       screen.queryByPlaceholderText("対戦相手で検索"),
     ).not.toBeOnTheScreen();
+  });
+
+  it("無料ユーザーは2件目の課題紐付けを試みると Pro 訴求が表示される", async () => {
+    respondFree();
+    setupCommonHandlers();
+
+    renderWithProviders(
+      <NoteForm
+        submitLabel="保存"
+        isSubmitting={false}
+        onSubmit={jest.fn()}
+        initial={{ improvementThemeIds: [themeA.id] }}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("課題をもう1件追加")).toBeOnTheScreen(),
+    );
+    fireEvent.press(screen.getByText("課題をもう1件追加"));
+
+    expect(screen.getByText("1つの記録に複数の課題を紐付け")).toBeOnTheScreen();
+    expect(screen.queryByText(themeB.title)).not.toBeOnTheScreen();
+  });
+
+  it("Proユーザーは2件目の課題を選んで紐付けられる", async () => {
+    respondPro();
+    setupCommonHandlers();
+
+    renderWithProviders(
+      <NoteForm
+        submitLabel="保存"
+        isSubmitting={false}
+        onSubmit={jest.fn()}
+        initial={{ improvementThemeIds: [themeA.id] }}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("課題をもう1件追加")).toBeOnTheScreen(),
+    );
+    fireEvent.press(screen.getByText("課題をもう1件追加"));
+
+    await waitFor(() =>
+      expect(screen.getByText(themeB.title)).toBeOnTheScreen(),
+    );
+    fireEvent.press(screen.getByText(themeB.title));
+
+    await waitFor(() =>
+      expect(screen.getAllByText(themeB.title)).toHaveLength(1),
+    );
+    expect(screen.getByText(themeA.title)).toBeOnTheScreen();
   });
 });

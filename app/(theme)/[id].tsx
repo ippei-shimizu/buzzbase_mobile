@@ -162,7 +162,7 @@ export default function ThemeDetailScreen() {
       <TouchableOpacity
         style={styles.primaryButton}
         onPress={() =>
-          router.push(`/(note)/new?improvementThemeId=${theme.id}`)
+          router.push(`/(note)/new?improvementThemeIds=${theme.id}`)
         }
       >
         <Text style={styles.primaryButtonText}>この課題でノートを書く</Text>
