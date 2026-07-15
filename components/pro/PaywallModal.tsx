@@ -1,8 +1,5 @@
 import type { Feature, ProFeature } from "../../types/pro";
-import type {
-  PACKAGE_TYPE,
-  PurchasesOffering,
-} from "react-native-purchases";
+import type { PACKAGE_TYPE, PurchasesOffering } from "react-native-purchases";
 import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
