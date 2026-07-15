@@ -29,3 +29,13 @@ export const updateSchedule = async (
 export const deleteSchedule = async (id: number): Promise<void> => {
   await axiosInstance.delete(`${URL}/${id}`);
 };
+
+/** 指定週（週始めのISO日付）の単発予定を翌週へ一括コピーする（Pro限定）。 */
+export const copyScheduleWeekToNext = async (
+  weekStart: string,
+): Promise<Schedule[]> => {
+  const res = await axiosInstance.post<Schedule[]>(`${URL}/week_copy`, {
+    week_start: weekStart,
+  });
+  return res.data;
+};
