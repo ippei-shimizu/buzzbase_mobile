@@ -22,6 +22,9 @@ export interface Schedule {
   active: boolean;
   notification_message: string | null;
   menus: ScheduleMenu[];
+  // この予定に対して練習ログが記録済みの practice_menu_id 一覧。編集画面ではこれらの
+  // メニューを変更不可にし、済判定が壊れる編集を防ぐ。
+  logged_practice_menu_ids: number[];
 }
 
 export interface ScheduleInput {
