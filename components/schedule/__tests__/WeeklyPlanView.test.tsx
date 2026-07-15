@@ -8,7 +8,10 @@ import {
   http,
   HttpResponse,
 } from "../../../__tests__/test-utils/handlers";
-import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
+import {
+  createTestQueryClient,
+  renderWithProviders,
+} from "../../../__tests__/test-utils/renderWithProviders";
 import { server } from "../../../jest-setup-msw";
 import { DEFAULT_PRO_STATUS, FREE_FEATURES } from "../../../types/pro";
 import { WeeklyPlanView } from "../WeeklyPlanView";
@@ -27,6 +30,17 @@ jest.mock("@hooks/useFeatureFlag", () => ({
   useFeatureFlag: jest.fn(() => ({ enabled: true, isLoading: false })),
 }));
 
+const PRO_STATUS = {
+  subscription: {
+    ...DEFAULT_PRO_STATUS.subscription,
+    status: "active",
+    pro_active: true,
+    expires_at: "2026-12-31T00:00:00+09:00",
+    days_remaining: 30,
+  },
+  entitlements: [...FREE_FEATURES, "schedule_copy_next_week"],
+};
+
 const respondFree = () => {
   server.use(
     http.get(apiUrl("/pro/status"), () =>
@@ -37,19 +51,16 @@ const respondFree = () => {
 
 const respondPro = () => {
   server.use(
-    http.get(apiUrl("/pro/status"), () =>
-      HttpResponse.json({
-        subscription: {
-          ...DEFAULT_PRO_STATUS.subscription,
-          status: "active",
-          pro_active: true,
-          expires_at: "2026-12-31T00:00:00+09:00",
-          days_remaining: 30,
-        },
-        entitlements: [...FREE_FEATURES, "schedule_copy_next_week"],
-      }),
-    ),
+    http.get(apiUrl("/pro/status"), () => HttpResponse.json(PRO_STATUS)),
   );
+};
+
+// pro/status の取得完了を待たずに「来週にコピー」を押すテストがあるため、
+// レンダー前にクエリキャッシュへ Pro 状態を注入して初回描画から反映させる。
+const buildProQueryClient = () => {
+  const queryClient = createTestQueryClient();
+  queryClient.setQueryData(["pro", "status"], PRO_STATUS);
+  return queryClient;
 };
 
 describe("WeeklyPlanView", () => {
@@ -91,7 +102,9 @@ describe("WeeklyPlanView", () => {
       }),
     );
 
-    renderWithProviders(<WeeklyPlanView />);
+    renderWithProviders(<WeeklyPlanView />, {
+      queryClient: buildProQueryClient(),
+    });
 
     await waitFor(() =>
       expect(screen.getByText("来週にコピー")).toBeOnTheScreen(),

@@ -9,7 +9,10 @@ import {
   http,
   HttpResponse,
 } from "../../../__tests__/test-utils/handlers";
-import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
+import {
+  createTestQueryClient,
+  renderWithProviders,
+} from "../../../__tests__/test-utils/renderWithProviders";
 import { server } from "../../../jest-setup-msw";
 import { DEFAULT_PRO_STATUS } from "../../../types/pro";
 import ScheduleFormScreen from "../new";
@@ -73,6 +76,14 @@ const schedule = {
   logged_practice_menu_ids: [1],
 };
 
+// ["schedules"] クエリの解決前に editing（useState の遅延初期化）が評価されると
+// メニュー選択状態が空のまま固定されてしまうため、レンダー前にキャッシュへ注入する。
+const buildScheduleQueryClient = () => {
+  const queryClient = createTestQueryClient();
+  queryClient.setQueryData(["schedules"], [schedule]);
+  return queryClient;
+};
+
 describe("ScheduleFormScreen（編集）", () => {
   it("練習ログが記録済みのメニューはトグル・数量変更ができない", async () => {
     server.use(
@@ -88,7 +99,9 @@ describe("ScheduleFormScreen（編集）", () => {
       ),
     );
 
-    renderWithProviders(<ScheduleFormScreen />);
+    renderWithProviders(<ScheduleFormScreen />, {
+      queryClient: buildScheduleQueryClient(),
+    });
 
     await waitFor(() =>
       expect(
