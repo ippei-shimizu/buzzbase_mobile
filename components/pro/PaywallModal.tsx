@@ -45,10 +45,10 @@ const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     title: "動画・画像を長期保管",
     description: "31日以上前にアップロードしたメディアもいつでも閲覧可能です。",
   },
-  unlimited_schedules: {
-    title: "練習予定の登録を無制限に",
+  schedule_copy_next_week: {
+    title: "今週のプランを来週にまるごとコピー",
     description:
-      "曜日固定も特定日の予定も、いくつでも登録して計画的に練習できます。",
+      "Pro プランなら今週登録した予定をワンタップで来週にコピーでき、プラン作りの手間を省けます。",
   },
   unlimited_menu_sets: {
     title: "メニューセットを無制限に作成",
