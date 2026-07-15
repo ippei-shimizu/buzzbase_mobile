@@ -8,7 +8,8 @@ import type {
 import type { ConditionDraft } from "@components/practice/ConditionForm";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { BlurView } from "expo-blur";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -315,25 +316,36 @@ function DailyEditor({
       })}
 
       <View style={styles.sectionTitleRow}>
-        <Text style={styles.sectionTitle}>コンディション</Text>
+        <Text style={styles.sectionTitleInline}>コンディション</Text>
         {!canSaveCondition ? (
           <Text style={styles.proBadge}>Pro限定</Text>
         ) : null}
       </View>
-      <ConditionForm
-        value={condition}
-        onChange={setCondition}
-        disabled={!canSaveCondition}
-      />
-      {!canSaveCondition ? (
-        <TouchableOpacity
-          style={styles.conditionUnlockRow}
-          onPress={() => setConditionPaywallOpen(true)}
-        >
-          <Ionicons name="lock-closed" size={14} color="#d08000" />
-          <Text style={styles.conditionUnlockText}>Pro に加入して記録する</Text>
-        </TouchableOpacity>
-      ) : null}
+      <View style={styles.conditionWrapper}>
+        <ConditionForm
+          value={condition}
+          onChange={setCondition}
+          disabled={!canSaveCondition}
+        />
+        {!canSaveCondition ? (
+          <View style={styles.conditionOverlay} pointerEvents="box-none">
+            <BlurView
+              intensity={8}
+              tint="dark"
+              style={StyleSheet.absoluteFill}
+            />
+            <TouchableOpacity
+              style={styles.conditionUnlockButton}
+              onPress={() => setConditionPaywallOpen(true)}
+            >
+              <Ionicons name="lock-closed" size={16} color="#FFFFFF" />
+              <Text style={styles.conditionUnlockButtonText}>
+                Pro に加入して記録する
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+      </View>
       <PaywallModal
         isOpen={isConditionPaywallOpen}
         onClose={() => setConditionPaywallOpen(false)}
@@ -395,21 +407,6 @@ export default function DailyRecordScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Stack.Screen
-        options={{
-          headerRight: () => (
-            <TouchableOpacity
-              style={styles.menuManageButton}
-              onPress={() => router.push("/(practice-menu)/list")}
-              accessibilityRole="button"
-              accessibilityLabel="練習メニューを管理"
-            >
-              <Ionicons name="list-outline" size={16} color="#F4F4F4" />
-              <Text style={styles.menuManageButtonText}>メニュー管理</Text>
-            </TouchableOpacity>
-          ),
-        }}
-      />
       <Text style={styles.label}>日付</Text>
       <TouchableOpacity
         style={styles.dateRow}
@@ -488,6 +485,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: 12,
   },
+  sectionTitleInline: {
+    color: "#F4F4F4",
+    fontSize: 15,
+    fontWeight: "700",
+  },
   proBadge: {
     color: "#d08000",
     fontSize: 12,
@@ -558,26 +560,33 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     backgroundColor: "#d08000",
-    borderRadius: 8,
-    paddingVertical: 12,
+    borderRadius: 10,
+    paddingVertical: 14,
     marginBottom: 16,
   },
   addMenuButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
-  conditionUnlockRow: {
-    flexDirection: "row",
+  conditionWrapper: { position: "relative" },
+  conditionOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 10,
+    overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
-    paddingVertical: 12,
   },
-  conditionUnlockText: { color: "#d08000", fontSize: 14, fontWeight: "600" },
-  menuManageButton: {
+  conditionUnlockButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 8,
+    backgroundColor: "#d08000",
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
   },
-  menuManageButtonText: { color: "#F4F4F4", fontSize: 13, fontWeight: "600" },
+  conditionUnlockButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+  },
   empty: { alignItems: "center", paddingVertical: 40 },
   emptyTitle: {
     color: "#F4F4F4",
