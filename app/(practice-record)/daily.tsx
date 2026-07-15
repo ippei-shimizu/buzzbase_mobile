@@ -148,8 +148,8 @@ function DailyEditor({
   const [condition, setCondition] = useState<ConditionDraft>(() =>
     toConditionDraft(initialSession),
   );
-  const [improvementThemeId, setImprovementThemeId] = useState<number | null>(
-    initialSession?.improvement_theme_id ?? null,
+  const [improvementThemeIds, setImprovementThemeIds] = useState<number[]>(
+    initialSession?.improvement_theme_ids ?? [],
   );
   const [isConditionPaywallOpen, setConditionPaywallOpen] = useState(false);
   const canSaveCondition = hasEntitlement("detailed_condition_log");
@@ -208,7 +208,7 @@ function DailyEditor({
         items,
         condition:
           hasCondition && canSaveCondition ? toConditionInput(condition) : null,
-        improvement_theme_id: improvementThemeId,
+        improvement_theme_ids: improvementThemeIds,
       });
       if (withNote) {
         router.replace({
@@ -216,8 +216,8 @@ function DailyEditor({
           params: {
             date: dateString,
             practiceSessionId: String(session.id),
-            ...(improvementThemeId != null
-              ? { improvementThemeId: String(improvementThemeId) }
+            ...(improvementThemeIds.length > 0
+              ? { improvementThemeIds: improvementThemeIds.join(",") }
               : {}),
           },
         });
@@ -354,8 +354,8 @@ function DailyEditor({
 
       <Text style={styles.sectionTitle}>取り組む課題（任意）</Text>
       <ThemePickerField
-        selectedThemeId={improvementThemeId}
-        onChange={setImprovementThemeId}
+        selectedThemeIds={improvementThemeIds}
+        onChange={setImprovementThemeIds}
       />
 
       <TouchableOpacity
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginTop: 24,
+    marginTop: 36,
     marginBottom: 12,
   },
   sectionTitleInline: {
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   addMenuButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
-  conditionWrapper: { position: "relative" },
+  conditionWrapper: { position: "relative", marginTop: 8 },
   conditionOverlay: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 10,
