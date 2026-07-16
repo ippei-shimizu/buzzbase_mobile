@@ -49,10 +49,10 @@ export default function ThemeListScreen() {
   }, [themes]);
 
   const handleAdd = () => {
-    // 無料は取組中1つまで。2つ目は Pro 訴求。
+    // 無料は取組中2つまで。3つ目は Pro 訴求。
     if (
       !hasEntitlement("unlimited_improvement_themes") &&
-      themesByStatus.open.length >= 1
+      themesByStatus.open.length >= 2
     ) {
       setPaywallOpen(true);
       return;

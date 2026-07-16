@@ -14,7 +14,7 @@ export const FREE_FEATURES = [
   "shadow_swing_basic", // 素振りカウンター(基本): スイング回数の記録
   "practice_log_basic", // 練習記録(基本): 練習内容のログ
   "grass_recent_30days", // 草機能: 直近30日分のヒートマップ表示
-  "monthly_goal_single", // 月次目標: 1つまで作成可
+  "monthly_goal_single", // 個人の期間目標（月次/週次/年間/カスタム）: 2つまで作成可
   "schedule_single", // 自主練スケジュール: 無料でも無制限に作成可
 ] as const;
 
@@ -23,18 +23,18 @@ export const PRO_FEATURES = [
   "no_ads", // 広告非表示
   "season_transition_graph", // シーズン跨ぎ成績推移グラフ(複数シーズン比較)
   "grass_full_history", // 草機能: 全期間ヒートマップ表示
-  "unlimited_practice_menus", // 練習メニュー無制限(無料は3件まで)
+  "unlimited_practice_menus", // 練習メニュー無制限(無料は5件まで)
   "unlimited_media_uploads", // 動画・画像アップロード無制限(無料は月3件)
   "media_long_term_storage", // メディア長期保管(31日以上前も閲覧可)
   "schedule_copy_next_week", // 週の練習プランを来週へ一括コピー
-  "unlimited_menu_sets", // メニューセット無制限(無料は3件まで)
-  "unlimited_monthly_goals", // 月次目標無制限(無料は1件まで)
+  "unlimited_menu_sets", // メニューセット無制限(無料は2件まで)
+  "unlimited_monthly_goals", // 個人の期間目標無制限(無料は2件まで)
   "season_goals", // シーズン目標(無料は利用不可)
   "tournament_goals", // 大会目標(無料は利用不可)
   "custom_notification_messages", // カスタム通知メッセージの設定
   "advanced_goal_tracking", // 高度な目標トラッキング(達成率の詳細推移)
   "detailed_condition_log", // 詳細コンディションログ(体調・気分の詳細記録)
-  "unlimited_improvement_themes", // 課題テーマ無制限(無料は取組中1つまで)
+  "unlimited_improvement_themes", // 課題テーマ無制限(無料は取組中2つまで)
   "correlation_insights", // 相関インサイト(練習量・コンディション×成績の傾向)
   "unlimited_reflection_templates", // 振り返りテンプレの自作無制限(無料は1つまで・プリセットは全員可)
   "advanced_periodic_review", // 週次/月次レポートの詳細(課題別内訳・相関・成績前週比・月次)
@@ -42,6 +42,8 @@ export const PRO_FEATURES = [
   "multi_game_result_notes", // 野球ノートへの複数試合記録紐付け(無料は1件まで)
   "multi_improvement_theme_links", // 練習記録・野球ノートへの複数課題紐付け(無料は1件まで)
   "practice_menu_trend_detail", // メニューごとの推移詳細(期間フィルタ・グラフ・数値内訳)
+  "custom_period_goals", // カスタム期間の個人目標(無料は利用不可)
+  "manual_metric_goals", // 自由指標(手動更新)の目標設定(無料は利用不可)
 ] as const;
 
 export type FreeFeature = (typeof FREE_FEATURES)[number];

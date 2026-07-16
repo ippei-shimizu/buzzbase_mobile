@@ -104,6 +104,8 @@ function GoalForm({ editing }: { editing?: Goal }) {
   const { hasEntitlement } = useEntitlement();
   const canSeason = hasEntitlement("season_goals");
   const canTournament = hasEntitlement("tournament_goals");
+  const canCustomPeriod = hasEntitlement("custom_period_goals");
+  const canManualMetric = hasEntitlement("manual_metric_goals");
   const isSaving = isCreating || isUpdating;
 
   const [kind, setKind] = useState<GoalKind>(editing?.kind ?? "numeric");
@@ -298,22 +300,38 @@ function GoalForm({ editing }: { editing?: Goal }) {
       <View style={styles.row}>
         {KINDS.map((item) => {
           const active = kind === item.key;
+          // 自由指標は Pro 限定。既存の自由指標目標を編集中は鍵をかけない（タイプ自体変更不可のため）。
+          const isLockedManual =
+            item.key === "manual" && !canManualMetric && !editing;
           return (
-            <TouchableOpacity
-              key={item.key}
-              style={[
-                styles.seg,
-                active && styles.segActive,
-                editing && !active && styles.segLocked,
-              ]}
-              // タイプは作成後に変更不可（集計/達成管理の整合のため）。
-              disabled={Boolean(editing)}
-              onPress={() => setKind(item.key)}
-            >
-              <Text style={[styles.segText, active && styles.segTextActive]}>
-                {item.label}
-              </Text>
-            </TouchableOpacity>
+            <View key={item.key} style={styles.segWrapper}>
+              <TouchableOpacity
+                style={[
+                  styles.seg,
+                  active && styles.segActive,
+                  editing && !active && styles.segLocked,
+                  isLockedManual && styles.segLocked,
+                ]}
+                // タイプは作成後に変更不可（集計/達成管理の整合のため）。
+                disabled={Boolean(editing) || isLockedManual}
+                onPress={() => setKind(item.key)}
+              >
+                <Text style={[styles.segText, active && styles.segTextActive]}>
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+              {isLockedManual ? (
+                <TouchableOpacity
+                  style={styles.segProOverlay}
+                  onPress={() => router.push("/pro")}
+                  accessibilityRole="button"
+                  accessibilityLabel="自由指標は Pro プラン限定です"
+                >
+                  <Ionicons name="lock-closed" size={12} color="#F4F4F4" />
+                  <Text style={styles.segProOverlayText}>Pro限定</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
           );
         })}
       </View>
@@ -354,6 +372,16 @@ function GoalForm({ editing }: { editing?: Goal }) {
       {periodType === "tournament" && !canTournament ? (
         <View style={styles.proNote}>
           <Text style={styles.proText}>大会目標は Pro プラン限定です</Text>
+          <TouchableOpacity onPress={() => router.push("/pro")}>
+            <Text style={styles.proLink}>Pro を見る</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+      {periodType === "custom" && !canCustomPeriod ? (
+        <View style={styles.proNote}>
+          <Text style={styles.proText}>
+            カスタム期間の目標は Pro プラン限定です
+          </Text>
           <TouchableOpacity onPress={() => router.push("/pro")}>
             <Text style={styles.proLink}>Pro を見る</Text>
           </TouchableOpacity>
@@ -659,6 +687,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   row: { flexDirection: "row", gap: 8 },
+  segWrapper: { flex: 1, position: "relative" },
   seg: {
     flex: 1,
     paddingVertical: 10,
@@ -669,6 +698,16 @@ const styles = StyleSheet.create({
   segActive: { backgroundColor: "#d08000" },
   segLocked: { opacity: 0.4 },
   segText: { color: "#A1A1AA", fontSize: 14, fontWeight: "600" },
+  segProOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    borderRadius: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.35)",
+  },
+  segProOverlayText: { color: "#F4F4F4", fontSize: 11, fontWeight: "700" },
   segTextActive: { color: "#FFFFFF" },
   proNote: {
     flexDirection: "row",

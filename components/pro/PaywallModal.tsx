@@ -139,6 +139,16 @@ export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     description:
       "期間を絞ったグラフや数値の内訳など、メニューごとの詳細な推移をいつでも振り返れます。",
   },
+  custom_period_goals: {
+    title: "カスタム期間で目標を設定",
+    description:
+      "「大会前3週間」のように自分で決めた期間で目標を設定し、進み具合を追跡できます。",
+  },
+  manual_metric_goals: {
+    title: "自由指標で目標を設定",
+    description:
+      "球速や体重など、アプリが自動集計できない自分だけの指標も目標にして手入力で管理できます。",
+  },
 };
 
 const DEFAULT_COPY: PaywallCopy = {
