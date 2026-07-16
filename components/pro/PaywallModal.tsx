@@ -1,6 +1,7 @@
 import type { Feature, ProFeature } from "../../types/pro";
 import type { PACKAGE_TYPE, PurchasesOffering } from "react-native-purchases";
 import { Ionicons } from "@expo/vector-icons";
+import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -198,6 +199,14 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
         const preferred =
           packages.find((pkg) => pkg.packageType === "ANNUAL") ?? packages[0];
         setSelectedPackageId(preferred?.identifier ?? null);
+      } catch (error: unknown) {
+        // RevenueCat 側の商品未登録・App Store Connect 未反映などで取得失敗しても、
+        // ペイウォール自体は表示を続け、プラン欄のみ空状態表示にフォールバックする。
+        if (!cancelled) {
+          Sentry.captureException(error, {
+            tags: { source: "revenue_cat_get_offerings" },
+          });
+        }
       } finally {
         if (!cancelled) setLoadingOfferings(false);
       }
