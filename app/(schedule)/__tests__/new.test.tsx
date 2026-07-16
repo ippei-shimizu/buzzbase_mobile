@@ -115,9 +115,11 @@ describe("ScheduleFormScreen（編集）", () => {
     expect(screen.getByDisplayValue("200")).toBeOnTheScreen();
 
     // 未記録のメニューは通常どおりトグルできる。
-    fireEvent.press(screen.getByText("ティー打撃"));
-    expect(screen.getByDisplayValue("50")).toBeOnTheScreen();
+    // スケジュールの構成メニューとして初期状態から選択済みのため、
+    // 1回目のタップで解除され、2回目のタップで再選択される。
     fireEvent.press(screen.getByText("ティー打撃"));
     expect(screen.queryByDisplayValue("50")).not.toBeOnTheScreen();
+    fireEvent.press(screen.getByText("ティー打撃"));
+    expect(screen.getByDisplayValue("50")).toBeOnTheScreen();
   });
 });
