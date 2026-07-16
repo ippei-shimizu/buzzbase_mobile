@@ -45,4 +45,21 @@ describe("BlurredProContent", () => {
     fireEvent.press(screen.getByRole("button"));
     expect(onPressBadge).toHaveBeenCalledTimes(1);
   });
+
+  it("title/description を渡すと Pro で何ができるかの訴求コピーが表示される", () => {
+    render(
+      <BlurredProContent
+        unlocked={false}
+        title="コンディションを詳しく記録"
+        description="体調・気分・睡眠などを細かく記録できます"
+      >
+        <Text>記録内容</Text>
+      </BlurredProContent>,
+    );
+
+    expect(screen.getByText("コンディションを詳しく記録")).toBeOnTheScreen();
+    expect(
+      screen.getByText("体調・気分・睡眠などを細かく記録できます"),
+    ).toBeOnTheScreen();
+  });
 });
