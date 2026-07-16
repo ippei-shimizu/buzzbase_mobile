@@ -2,7 +2,6 @@ import type { NoteInput } from "../../types/note";
 import type { ReflectionTemplate } from "../../types/reflectionTemplate";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { BlurView } from "expo-blur";
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -275,11 +274,7 @@ export function NoteForm({
         />
         {!hasEntitlement("note_tags") ? (
           <View style={styles.tagOverlay} pointerEvents="box-none">
-            <BlurView
-              intensity={8}
-              tint="dark"
-              style={StyleSheet.absoluteFill}
-            />
+            <View style={styles.tagOverlayScrim} />
             <View style={styles.tagOverlayCard}>
               <Text style={styles.tagOverlayTitle}>
                 タグでノートを整理・検索
@@ -523,6 +518,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 12,
   },
+  tagOverlayScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(26, 26, 26, 0.82)",
+  },
   tagOverlayCard: {
     backgroundColor: "rgba(58,58,58,0.9)",
     borderRadius: 10,
@@ -550,6 +549,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 18,
+    marginTop: 8,
   },
   tagUnlockButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
   picker: {

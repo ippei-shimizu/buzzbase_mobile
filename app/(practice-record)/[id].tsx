@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { ConditionCard } from "@components/practice/ConditionCard";
 import { BlurredProContent } from "@components/pro/BlurredProContent";
+import { PaywallModal, PRO_PAYWALL_COPY } from "@components/pro/PaywallModal";
 import { formatPracticeValue, menuIconForLog } from "@constants/practice";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useNotes } from "@hooks/useNotes";
@@ -81,6 +82,7 @@ export default function PracticeSessionDetailScreen() {
   const { menus } = usePracticeMenus();
   const { hasEntitlement } = useEntitlement();
   const categoryById = new Map(menus.map((menu) => [menu.id, menu.category]));
+  const [isConditionPaywallOpen, setConditionPaywallOpen] = useState(false);
 
   const handleDelete = () => {
     Alert.alert("削除確認", "この練習記録を削除しますか？", [
@@ -203,6 +205,9 @@ export default function PracticeSessionDetailScreen() {
         {session.condition ? (
           <BlurredProContent
             unlocked={hasEntitlement("detailed_condition_log")}
+            title={PRO_PAYWALL_COPY.detailed_condition_log.title}
+            badgeLabel="Pro に加入する"
+            onPressBadge={() => setConditionPaywallOpen(true)}
           >
             <ConditionCard condition={session.condition} />
           </BlurredProContent>
@@ -210,6 +215,11 @@ export default function PracticeSessionDetailScreen() {
 
         <LinkedNotes sessionId={sessionId} />
       </ScrollView>
+      <PaywallModal
+        isOpen={isConditionPaywallOpen}
+        onClose={() => setConditionPaywallOpen(false)}
+        feature="detailed_condition_log"
+      />
     </>
   );
 }

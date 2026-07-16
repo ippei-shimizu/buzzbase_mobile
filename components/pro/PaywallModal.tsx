@@ -25,13 +25,14 @@ import {
 import { useSnackbarStore } from "@stores/snackbarStore";
 import { PRO_FEATURES } from "../../types/pro";
 
-interface PaywallCopy {
+export interface PaywallCopy {
   title: string;
   description: string;
 }
 
 // Pro 機能ごとの paywall コピー。各機能 Issue で文言を最終調整する想定。
-const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
+// BlurredProContent 等、ロック表示を出す他コンポーネントからも同じ文言を参照するため export する。
+export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
   no_ads: {
     title: "広告を非表示にして集中する",
     description:
@@ -132,6 +133,11 @@ const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     title: "1つの記録に複数の課題を紐付け",
     description:
       "Pro プランなら練習記録・野球ノートに複数の課題を同時に紐付けて、取り組みをまとめて振り返れます。",
+  },
+  practice_menu_trend_detail: {
+    title: "メニューごとの推移を詳しく見る",
+    description:
+      "期間を絞ったグラフや数値の内訳など、メニューごとの詳細な推移をいつでも振り返れます。",
   },
 };
 

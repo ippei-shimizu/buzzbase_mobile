@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +13,7 @@ import {
 import { GameResultDetail } from "@components/game-results/GameResultDetail";
 import { ConditionCard } from "@components/practice/ConditionCard";
 import { BlurredProContent } from "@components/pro/BlurredProContent";
+import { PaywallModal, PRO_PAYWALL_COPY } from "@components/pro/PaywallModal";
 import { formatPracticeValue } from "@constants/practice";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useGameResult } from "@hooks/useGameResults";
@@ -35,6 +36,7 @@ function LinkedPractice({ sessionId }: { sessionId: number }) {
   const router = useRouter();
   const { hasEntitlement } = useEntitlement();
   const { session, isLoading } = usePracticeSession(sessionId);
+  const [isConditionPaywallOpen, setConditionPaywallOpen] = useState(false);
   if (isLoading) return <ActivityIndicator color="#d08000" />;
   if (!session) return null;
 
@@ -105,13 +107,23 @@ function LinkedPractice({ sessionId }: { sessionId: number }) {
       )}
 
       {session.condition ? (
-        <BlurredProContent unlocked={hasEntitlement("detailed_condition_log")}>
+        <BlurredProContent
+          unlocked={hasEntitlement("detailed_condition_log")}
+          title={PRO_PAYWALL_COPY.detailed_condition_log.title}
+          badgeLabel="Pro に加入する"
+          onPressBadge={() => setConditionPaywallOpen(true)}
+        >
           <ConditionCard
             condition={session.condition}
             style={styles.conditionCard}
           />
         </BlurredProContent>
       ) : null}
+      <PaywallModal
+        isOpen={isConditionPaywallOpen}
+        onClose={() => setConditionPaywallOpen(false)}
+        feature="detailed_condition_log"
+      />
     </View>
   );
 }
