@@ -24,7 +24,7 @@ export function MenuSetListView() {
   const [isPaywallOpen, setPaywallOpen] = useState(false);
 
   const handleAdd = () => {
-    // 無料は3件まで（back の PlanLimits::MENU_SET_FREE_LIMIT と対応）。
+    // 無料は2件まで（back の PlanLimits::MENU_SET_FREE_LIMIT と対応）。
     if (
       !hasEntitlement("unlimited_menu_sets") &&
       menuSets.length >= MENU_SET_FREE_LIMIT
