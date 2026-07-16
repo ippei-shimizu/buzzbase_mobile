@@ -103,11 +103,12 @@ describe("ScheduleFormScreen（編集）", () => {
       queryClient: buildScheduleQueryClient(),
     });
 
-    await waitFor(() =>
-      expect(
-        screen.getByText("練習記録が済のメニューは変更できません"),
-      ).toBeOnTheScreen(),
-    );
+    // ロック表示の文言は editing のみに依存するため、practice_menus の取得完了
+    // より先に描画されうる。素振りの表示を待つことで menus 側の取得も待ち合わせる。
+    await waitFor(() => expect(screen.getByText("素振り")).toBeOnTheScreen());
+    expect(
+      screen.getByText("練習記録が済のメニューは変更できません"),
+    ).toBeOnTheScreen();
 
     // 記録済みメニューは選択状態のまま、タップしても解除されない。
     fireEvent.press(screen.getByText("素振り"));
