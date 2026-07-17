@@ -14,6 +14,11 @@ interface BlurredProContentProps {
   badgeLabel?: string;
   /** バッジタップ時のハンドラ（指定時のみタップ可能にし PaywallModal 起動などに使う）。 */
   onPressBadge?: () => void;
+  /**
+   * true のとき暗幕のみ表示しバッジ/CTAを出さない。
+   * 同一画面で複数ブロックを覆う場合、ボタンは1箇所だけに出したいときに使う。
+   */
+  hideBadge?: boolean;
 }
 
 /**
@@ -29,6 +34,7 @@ export function BlurredProContent({
   description,
   badgeLabel = "Pro プラン限定",
   onPressBadge,
+  hideBadge = false,
 }: BlurredProContentProps) {
   if (unlocked) return <>{children}</>;
 
@@ -49,20 +55,22 @@ export function BlurredProContent({
     <View style={[styles.wrapper, title ? styles.wrapperWithCopy : null]}>
       <View pointerEvents="none">{children}</View>
       <View style={styles.scrim} />
-      <View style={styles.overlay}>
-        {title ? (
-          <View style={styles.copyCard}>
-            <Ionicons name="lock-closed" size={18} color="#d08000" />
-            <Text style={styles.copyTitle}>{title}</Text>
-            {description ? (
-              <Text style={styles.copyDescription}>{description}</Text>
-            ) : null}
-            {badge}
-          </View>
-        ) : (
-          badge
-        )}
-      </View>
+      {hideBadge ? null : (
+        <View style={styles.overlay}>
+          {title ? (
+            <View style={styles.copyCard}>
+              <Ionicons name="lock-closed" size={18} color="#d08000" />
+              <Text style={styles.copyTitle}>{title}</Text>
+              {description ? (
+                <Text style={styles.copyDescription}>{description}</Text>
+              ) : null}
+              {badge}
+            </View>
+          ) : (
+            badge
+          )}
+        </View>
+      )}
     </View>
   );
 }

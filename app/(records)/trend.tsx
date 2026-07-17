@@ -440,26 +440,34 @@ export default function MenuTrendScreen() {
                   buckets={rangedBuckets}
                 />
               </View>
-              <View style={styles.listCard}>
-                {rangedBuckets.map((bucket) => (
-                  <View key={bucket.period} style={styles.row}>
-                    <Text style={styles.rowLabel}>
-                      {periodLabel(period, bucket.period)}
-                    </Text>
-                    <View style={styles.rowRight}>
-                      <Text style={styles.rowValue}>
-                        {bucketValueText(trend, bucket)}
-                      </Text>
-                      {period !== "day" ? (
-                        <Text style={styles.rowSub}>{bucket.days_count}日</Text>
-                      ) : null}
-                    </View>
-                  </View>
-                ))}
-              </View>
             </>
           )}
         </BlurredProContent>
+
+        {buckets.length > 0 ? (
+          <BlurredProContent
+            unlocked={hasEntitlement("practice_menu_trend_detail")}
+            hideBadge
+          >
+            <View style={styles.listCard}>
+              {rangedBuckets.map((bucket) => (
+                <View key={bucket.period} style={styles.row}>
+                  <Text style={styles.rowLabel}>
+                    {periodLabel(period, bucket.period)}
+                  </Text>
+                  <View style={styles.rowRight}>
+                    <Text style={styles.rowValue}>
+                      {bucketValueText(trend, bucket)}
+                    </Text>
+                    {period !== "day" ? (
+                      <Text style={styles.rowSub}>{bucket.days_count}日</Text>
+                    ) : null}
+                  </View>
+                </View>
+              ))}
+            </View>
+          </BlurredProContent>
+        ) : null}
       </ScrollView>
       <PaywallModal
         isOpen={isTrendPaywallOpen}
