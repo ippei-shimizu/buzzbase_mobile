@@ -448,6 +448,7 @@ export default function MenuTrendScreen() {
           <BlurredProContent
             unlocked={hasEntitlement("practice_menu_trend_detail")}
             hideBadge
+            scrimOpacity={1}
           >
             <View style={styles.listCard}>
               {rangedBuckets.map((bucket) => (

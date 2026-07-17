@@ -19,6 +19,8 @@ interface BlurredProContentProps {
    * 同一画面で複数ブロックを覆う場合、ボタンは1箇所だけに出したいときに使う。
    */
   hideBadge?: boolean;
+  /** 暗幕の不透明度（0〜1）。数値等を確実に見せたくない箇所は高めの値を指定する。デフォルト 0.82。 */
+  scrimOpacity?: number;
 }
 
 /**
@@ -35,6 +37,7 @@ export function BlurredProContent({
   badgeLabel = "Pro プラン限定",
   onPressBadge,
   hideBadge = false,
+  scrimOpacity = 0.82,
 }: BlurredProContentProps) {
   if (unlocked) return <>{children}</>;
 
@@ -54,7 +57,12 @@ export function BlurredProContent({
   return (
     <View style={[styles.wrapper, title ? styles.wrapperWithCopy : null]}>
       <View pointerEvents="none">{children}</View>
-      <View style={styles.scrim} />
+      <View
+        style={[
+          styles.scrim,
+          { backgroundColor: `rgba(26, 26, 26, ${scrimOpacity})` },
+        ]}
+      />
       {hideBadge ? null : (
         <View style={styles.overlay}>
           {title ? (
@@ -86,7 +94,6 @@ const styles = StyleSheet.create({
   },
   scrim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(26, 26, 26, 0.82)",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
