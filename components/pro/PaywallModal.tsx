@@ -451,7 +451,7 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
                 <Text style={styles.brandProBadgeText}>PRO</Text>
               </View>
             </View>
-            <Text style={styles.subtitle}>すべての機能をアンロック</Text>
+            <Text style={styles.subtitle}>練習・目標・分析をもっと深く</Text>
 
             <View style={styles.highlightCard}>
               <Text style={styles.highlightTitle}>{copy.title}</Text>
