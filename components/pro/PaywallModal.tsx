@@ -818,13 +818,13 @@ const styles = StyleSheet.create({
   },
   savingsBadge: {
     backgroundColor: "#d08000",
-    paddingHorizontal: 6,
-    paddingVertical: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 999,
   },
   savingsBadgeText: {
     color: "#F4F4F4",
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: "700",
   },
   planPrice: {
