@@ -162,6 +162,20 @@ describe("ProScreen", () => {
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });
 
+  it("getOfferings が失敗しても画面は表示され、プラン欄が空状態になる", async () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    setupSnackbar();
+    getOfferingsMock.mockRejectedValueOnce(new Error("offerings unavailable"));
+
+    const { findByText } = renderWithProviders(<ProScreen />);
+
+    expect(
+      await findByText(
+        "プラン情報を取得できませんでした。時間を置いて再度お試しください。",
+      ),
+    ).toBeTruthy();
+  });
+
   it("購入エラー（userCancelled でない）では snackbar を出す", async () => {
     useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     const showMock = setupSnackbar();

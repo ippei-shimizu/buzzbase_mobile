@@ -3,6 +3,7 @@ import type {
   PurchasesPackage,
 } from "react-native-purchases";
 import { Ionicons } from "@expo/vector-icons";
+import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -64,6 +65,14 @@ export default function ProScreen() {
       try {
         const result = await getOfferings();
         if (!cancelled) setOffering(result);
+      } catch (error: unknown) {
+        // RevenueCat 側の商品未登録・App Store Connect 未反映などで取得失敗しても、
+        // 画面自体は表示を続け、プラン欄のみ空状態表示にフォールバックする。
+        if (!cancelled) {
+          Sentry.captureException(error, {
+            tags: { source: "revenue_cat_get_offerings" },
+          });
+        }
       } finally {
         if (!cancelled) setLoadingOfferings(false);
       }

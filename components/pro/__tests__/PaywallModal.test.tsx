@@ -189,6 +189,20 @@ describe("PaywallModal", () => {
     expect(await findByText("年額プラン")).toBeTruthy();
   });
 
+  it("getOfferings が失敗してもシートは表示され、プラン欄が空状態になる", async () => {
+    getOfferingsMock.mockRejectedValueOnce(new Error("offerings unavailable"));
+
+    const { findByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    expect(
+      await findByText(
+        "プラン情報を取得できませんでした。時間を置いて再度お試しください。",
+      ),
+    ).toBeTruthy();
+  });
+
   it("PROを始めるボタンで選択中プランを購入し、成功後 success 画面へ遷移する", async () => {
     const syncTracker = setupSyncEndpoint();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
