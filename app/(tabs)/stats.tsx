@@ -320,6 +320,7 @@ export default function StatsScreen() {
     useState<BattingTrendGranularity>("game");
   const { hasEntitlement } = useEntitlement();
   const [seasonPaywallOpen, setSeasonPaywallOpen] = useState(false);
+  const [comingSoonPaywallOpen, setComingSoonPaywallOpen] = useState(false);
   const battingTrend = useBattingTrend(filters, battingTrendGranularity);
   const paBreakdown = usePlateAppearanceBreakdown(filters);
   const headlineStats = useHeadlineStats(filters);
@@ -597,7 +598,11 @@ export default function StatsScreen() {
               <ProComingSoonCard
                 title="方向別の打率"
                 description="打球を打った方向ごとの打率をヒートマップで可視化します"
-                onPress={() => trackProFeatureTapped("hit_direction")}
+                badgeLabel="Pro プラン限定"
+                onPress={() => {
+                  trackProFeatureTapped("hit_direction");
+                  setComingSoonPaywallOpen(true);
+                }}
               >
                 <ProComingSoonHitDirectionField />
               </ProComingSoonCard>
@@ -645,7 +650,11 @@ export default function StatsScreen() {
               <ProComingSoonCard
                 title="カウント別の打率"
                 description="初球・有利カウント・追い込みなど、カウント状況別の打率がわかります"
-                onPress={() => trackProFeatureTapped("count_situation")}
+                badgeLabel="Pro プラン限定"
+                onPress={() => {
+                  trackProFeatureTapped("count_situation");
+                  setComingSoonPaywallOpen(true);
+                }}
               >
                 <CountSituationDummy />
               </ProComingSoonCard>
@@ -661,7 +670,11 @@ export default function StatsScreen() {
               <ProComingSoonCard
                 title="球種別の打率"
                 description="ストレートや変化球など、球種ごとの得意・苦手が分析できます"
-                onPress={() => trackProFeatureTapped("pitch_type")}
+                badgeLabel="Pro プラン限定"
+                onPress={() => {
+                  trackProFeatureTapped("pitch_type");
+                  setComingSoonPaywallOpen(true);
+                }}
               >
                 <PitchTypeDummy />
               </ProComingSoonCard>
@@ -680,7 +693,11 @@ export default function StatsScreen() {
               <ProComingSoonCard
                 title="対戦投手別"
                 description="対戦した投手ごとの打撃成績を一覧で確認できます"
-                onPress={() => trackProFeatureTapped("pitcher_faceoff")}
+                badgeLabel="Pro プラン限定"
+                onPress={() => {
+                  trackProFeatureTapped("pitcher_faceoff");
+                  setComingSoonPaywallOpen(true);
+                }}
               >
                 <PitcherFaceoffDummy />
               </ProComingSoonCard>
@@ -846,6 +863,10 @@ export default function StatsScreen() {
         isOpen={seasonPaywallOpen}
         onClose={() => setSeasonPaywallOpen(false)}
         feature="season_transition_graph"
+      />
+      <PaywallModal
+        isOpen={comingSoonPaywallOpen}
+        onClose={() => setComingSoonPaywallOpen(false)}
       />
     </>
   );
