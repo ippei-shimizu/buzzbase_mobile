@@ -167,7 +167,7 @@ export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
   },
 };
 
-const DEFAULT_COPY: PaywallCopy = {
+export const DEFAULT_COPY: PaywallCopy = {
   title: "Pro 加入で BUZZ BASE をフル活用",
   description: "Pro プランで全機能のロックを解除できます。",
 };
@@ -308,7 +308,7 @@ export function filterFeatureGroups(
 }
 
 // RevenueCat の packageType は Offering 設定に依存するため、未知の値は product.title にフォールバックする。
-const PLAN_LABELS: Partial<
+export const PLAN_LABELS: Partial<
   Record<PACKAGE_TYPE, { name: string; period: string }>
 > = {
   MONTHLY: { name: "月額プラン", period: "/月" },
@@ -320,7 +320,7 @@ const PLAN_LABELS: Partial<
   LIFETIME: { name: "買い切りプラン", period: "" },
 };
 
-const isUserCancelled = (error: unknown): boolean =>
+export const isUserCancelled = (error: unknown): boolean =>
   typeof error === "object" &&
   error !== null &&
   (error as { userCancelled?: boolean }).userCancelled === true;
@@ -482,7 +482,9 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
                 <Text style={styles.brandProBadgeText}>PRO</Text>
               </View>
             </View>
-            <Text style={styles.subtitle}>練習・目標・分析をもっと深く</Text>
+            <Text style={styles.subtitle}>
+              すべての機能が使い放題になります
+            </Text>
 
             <View style={styles.highlightCard}>
               <Text style={styles.highlightTitle}>{copy.title}</Text>

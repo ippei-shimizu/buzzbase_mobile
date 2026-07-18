@@ -1,6 +1,10 @@
 import { fireEvent, waitFor } from "@testing-library/react-native";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
-import { getOfferings, purchasePackage } from "@services/revenueCatService";
+import {
+  getOfferings,
+  purchasePackage,
+  restorePurchases,
+} from "@services/revenueCatService";
 import { useSnackbarStore } from "@stores/snackbarStore";
 import {
   apiUrl,
@@ -24,6 +28,7 @@ jest.mock("expo-router", () => {
 jest.mock("@services/revenueCatService", () => ({
   getOfferings: jest.fn(),
   purchasePackage: jest.fn(),
+  restorePurchases: jest.fn(),
 }));
 
 jest.mock("@hooks/useFeatureFlag", () => ({
@@ -51,16 +56,29 @@ const useFeatureFlagMock = useFeatureFlag as jest.Mock;
 const useSnackbarStoreMock = useSnackbarStore as unknown as jest.Mock;
 const getOfferingsMock = getOfferings as jest.Mock;
 const purchasePackageMock = purchasePackage as jest.Mock;
+const restorePurchasesMock = restorePurchases as jest.Mock;
 
 const mockOffering = {
   identifier: "default",
   availablePackages: [
     {
       identifier: "monthly",
+      packageType: "MONTHLY",
       product: {
         title: "月額プラン",
         description: "毎月課金されるプラン",
         priceString: "¥980",
+        price: 980,
+      },
+    },
+    {
+      identifier: "annual",
+      packageType: "ANNUAL",
+      product: {
+        title: "年額プラン",
+        description: "年1回課金されるプラン",
+        priceString: "¥9,800",
+        price: 9800,
       },
     },
   ],
@@ -106,18 +124,32 @@ describe("ProScreen", () => {
     });
   });
 
-  it("pro_features=true で getOfferings を呼び、availablePackages を表示する", async () => {
+  it("pro_features=true で PaywallModal と同じ構成（ブランド表示・機能比較表・プラン一覧）を表示する", async () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    setupSnackbar();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+
+    const { findByText, getByText } = renderWithProviders(<ProScreen />);
+
+    expect(getByText("BUZZ BASE")).toBeOnTheScreen();
+    expect(getByText("PRO でできること")).toBeOnTheScreen();
+    expect(getByText("注意事項")).toBeOnTheScreen();
+    expect(await findByText("月額プラン")).toBeTruthy();
+    expect(await findByText("¥980/月")).toBeTruthy();
+  });
+
+  it("年額プランに月額換算比のお得金額バッジが表示される", async () => {
     useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     setupSnackbar();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
 
     const { findByText } = renderWithProviders(<ProScreen />);
 
-    expect(await findByText("月額プラン")).toBeTruthy();
-    expect(await findByText("¥980")).toBeTruthy();
+    // 月額980円×12=11,760円 に対し年額9,800円 → 1,960円お得。
+    expect(await findByText("年間¥1,960お得")).toBeTruthy();
   });
 
-  it("購入成功で syncProStatus + invalidateQueries + /pro/success へ replace", async () => {
+  it("プランを選択して PROを始めるを押すと購入し、成功後 success 画面へ遷移する", async () => {
     useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     setupSnackbar();
     const syncTracker = setupSyncEndpoint();
@@ -125,18 +157,42 @@ describe("ProScreen", () => {
     purchasePackageMock.mockResolvedValueOnce(undefined);
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
-    const button = await findByLabelText("月額プラン で加入");
 
-    fireEvent.press(button);
+    // 年額プランがあるので初期選択は年額プランになる。
+    await waitFor(() => expect(getOfferingsMock).toHaveBeenCalledTimes(1));
+    const ctaButton = await findByLabelText("PROを始める");
+    fireEvent.press(ctaButton);
 
     await waitFor(() => {
-      expect(purchasePackageMock).toHaveBeenCalledTimes(1);
+      expect(purchasePackageMock).toHaveBeenCalledWith(
+        expect.objectContaining({ identifier: "annual" }),
+      );
     });
     await waitFor(() => {
       expect(syncTracker.callCount).toBe(1);
     });
     await waitFor(() => {
       expect(getRouterSpies().replace).toHaveBeenCalledWith("/pro/success");
+    });
+  });
+
+  it("月額プランを選び直して PROを始めるを押すと選択中のプランで購入する", async () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    setupSnackbar();
+    setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    purchasePackageMock.mockResolvedValueOnce(undefined);
+
+    const { findByLabelText } = renderWithProviders(<ProScreen />);
+
+    const monthlyCard = await findByLabelText("月額プラン ¥980");
+    fireEvent.press(monthlyCard);
+    fireEvent.press(await findByLabelText("PROを始める"));
+
+    await waitFor(() => {
+      expect(purchasePackageMock).toHaveBeenCalledWith(
+        expect.objectContaining({ identifier: "monthly" }),
+      );
     });
   });
 
@@ -150,9 +206,8 @@ describe("ProScreen", () => {
     );
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
-    const button = await findByLabelText("月額プラン で加入");
-
-    fireEvent.press(button);
+    const ctaButton = await findByLabelText("PROを始める");
+    fireEvent.press(ctaButton);
 
     await waitFor(() => {
       expect(purchasePackageMock).toHaveBeenCalledTimes(1);
@@ -183,9 +238,8 @@ describe("ProScreen", () => {
     purchasePackageMock.mockRejectedValueOnce(new Error("network down"));
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
-    const button = await findByLabelText("月額プラン で加入");
-
-    fireEvent.press(button);
+    const ctaButton = await findByLabelText("PROを始める");
+    fireEvent.press(ctaButton);
 
     await waitFor(() => {
       expect(showMock).toHaveBeenCalledWith(
@@ -193,5 +247,27 @@ describe("ProScreen", () => {
       );
     });
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
+  });
+
+  it("購入を復元を押すと restorePurchases が呼ばれ、成功時は前の画面に戻る", async () => {
+    setupSyncEndpoint();
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    restorePurchasesMock.mockResolvedValueOnce(undefined);
+    const showMock = setupSnackbar();
+
+    const { findByLabelText } = renderWithProviders(<ProScreen />);
+    const restoreLink = await findByLabelText("購入を復元");
+    fireEvent.press(restoreLink);
+
+    await waitFor(() => {
+      expect(restorePurchasesMock).toHaveBeenCalledTimes(1);
+    });
+    await waitFor(() => {
+      expect(getRouterSpies().back).toHaveBeenCalled();
+    });
+    expect(showMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "success" }),
+    );
   });
 });
