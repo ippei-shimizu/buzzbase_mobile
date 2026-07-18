@@ -108,9 +108,12 @@ describe("GoalFormScreen（新規）", () => {
     renderWithProviders(<GoalFormScreen />);
 
     await waitFor(() => expect(screen.getByText("自由指標")).toBeOnTheScreen());
-    expect(
-      screen.queryByLabelText("自由指標は Pro プラン限定です"),
-    ).not.toBeOnTheScreen();
+    // pro/status の取得完了前はロック済み扱いのため、解決を待ってから非表示を確認する。
+    await waitFor(() =>
+      expect(
+        screen.queryByLabelText("自由指標は Pro プラン限定です"),
+      ).not.toBeOnTheScreen(),
+    );
 
     fireEvent.press(screen.getByText("自由指標"));
     expect(screen.getByText("指標名")).toBeOnTheScreen();
