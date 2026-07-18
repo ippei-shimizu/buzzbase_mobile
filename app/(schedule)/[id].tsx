@@ -20,6 +20,7 @@ import {
   useToggleDayPlanMenu,
 } from "@hooks/usePlans";
 import { useScheduleMutations, useSchedules } from "@hooks/useSchedules";
+import { useGameRecordStore } from "@stores/gameRecordStore";
 import { formatJaFullDate } from "@utils/formatDate";
 import { todayIso } from "@utils/planDate";
 
@@ -69,6 +70,13 @@ export default function ScheduleDetailScreen() {
           : {}),
       },
     });
+  const goRecordGame = () => {
+    // 直前の編集モードフラグが残っていると Step1 が編集モードのまま起動するため、
+    // 新規記録の入口では store を必ず初期化する。
+    useGameRecordStore.getState().reset();
+    if (recordDate) useGameRecordStore.getState().setField("date", recordDate);
+    router.push("/(game-record)/step1-game-info");
+  };
 
   const handleDelete = () => {
     if (!schedule) return;
@@ -211,10 +219,20 @@ export default function ScheduleDetailScreen() {
         </View>
       ) : null}
 
-      <TouchableOpacity style={styles.recordButton} onPress={goRecordPractice}>
-        <Ionicons name="create-outline" size={16} color="#FFFFFF" />
-        <Text style={styles.recordButtonText}>練習記録をつける</Text>
-      </TouchableOpacity>
+      {schedule.event_type === "game" ? (
+        <TouchableOpacity style={styles.recordButton} onPress={goRecordGame}>
+          <Ionicons name="baseball-outline" size={16} color="#FFFFFF" />
+          <Text style={styles.recordButtonText}>試合記録をつける</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={styles.recordButton}
+          onPress={goRecordPractice}
+        >
+          <Ionicons name="create-outline" size={16} color="#FFFFFF" />
+          <Text style={styles.recordButtonText}>練習記録をつける</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 }
