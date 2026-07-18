@@ -266,7 +266,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
 // グループは非表示にする。
 export function filterFeatureGroups(
   groups: FeatureGroup[],
-  excludeFeature: Feature,
+  excludeFeature?: Feature,
 ): FeatureGroup[] {
   return groups
     .map((group) => ({
@@ -297,7 +297,11 @@ const isUserCancelled = (error: unknown): boolean =>
 interface PaywallModalProps {
   isOpen: boolean;
   onClose: () => void;
-  feature: Feature;
+  /**
+   * ハイライト表示する Pro 機能。未指定（リリース前の告知UIなど、まだ entitlement
+   * キーを持たない機能からの呼び出し）の場合は汎用コピーのみを表示する。
+   */
+  feature?: Feature;
 }
 
 /**
@@ -310,8 +314,10 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((s) => s.show);
   const { enabled: proFeaturesFlag } = useFeatureFlag("pro_features");
-  const copy =
-    (PRO_PAYWALL_COPY as Record<string, PaywallCopy>)[feature] ?? DEFAULT_COPY;
+  const copy = feature
+    ? ((PRO_PAYWALL_COPY as Record<string, PaywallCopy>)[feature] ??
+      DEFAULT_COPY)
+    : DEFAULT_COPY;
 
   const [offering, setOffering] = useState<PurchasesOffering | null>(null);
   const [loadingOfferings, setLoadingOfferings] = useState(false);
@@ -364,14 +370,10 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
     !!monthlyPackage &&
     !!annualPackage &&
     annualPackage.product.price < monthlyPackage.product.price * 12;
-  // 月額を1年間払い続けた場合と比べて年額プランがどれだけお得かを%表示する。
-  const annualSavingsPercent =
+  // 月額を1年間払い続けた場合と比べて年額プランがいくら安いかを金額で表示する。
+  const annualSavingsAmount =
     annualIsDiscounted && monthlyPackage && annualPackage
-      ? Math.round(
-          (1 -
-            annualPackage.product.price / (monthlyPackage.product.price * 12)) *
-            100,
-        )
+      ? monthlyPackage.product.price * 12 - annualPackage.product.price
       : null;
 
   const visibleGroups = filterFeatureGroups(FEATURE_GROUPS, feature);
@@ -532,10 +534,10 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
                       </View>
                       <View style={styles.planNameRow}>
                         <Text style={styles.planName}>{label.name}</Text>
-                        {showSavingsBadge && annualSavingsPercent != null ? (
+                        {showSavingsBadge && annualSavingsAmount != null ? (
                           <View style={styles.savingsBadge}>
                             <Text style={styles.savingsBadgeText}>
-                              {annualSavingsPercent}%お得
+                              年間¥{annualSavingsAmount.toLocaleString()}お得
                             </Text>
                           </View>
                         ) : null}
@@ -635,19 +637,19 @@ const styles = StyleSheet.create({
   },
   brandName: {
     color: "#F4F4F4",
-    fontSize: 21,
+    fontSize: 27,
     fontWeight: "800",
     letterSpacing: 0.3,
   },
   brandProBadge: {
     backgroundColor: "#d08000",
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    borderRadius: 7,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
   },
   brandProBadgeText: {
     color: "#FFFFFF",
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: "800",
     letterSpacing: 0.5,
   },
