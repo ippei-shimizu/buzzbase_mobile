@@ -1,6 +1,7 @@
 import type { CorrelationInsight } from "../../types/insight";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -11,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { InsightCard } from "@components/insight/InsightCard";
+import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProComingSoonCard } from "@components/stats/ProComingSoonCard";
 import {
   useCorrelationInsights,
@@ -24,6 +26,7 @@ export default function InsightScreen() {
   const isPro = hasEntitlement("correlation_insights");
   const { insights, isLoading } = useCorrelationInsights({ enabled: isPro });
   const { deleteCombination } = useInsightCombinationMutations();
+  const [isPaywallOpen, setPaywallOpen] = useState(false);
 
   const confirmDelete = (insight: CorrelationInsight) => {
     if (insight.id == null) return;
@@ -53,22 +56,30 @@ export default function InsightScreen() {
 
   if (!isPro) {
     return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-      >
-        <ProComingSoonCard
-          title="練習と成績の関係を発見"
-          description="素振りや睡眠と打率の傾向を、あなたのデータから自動で読み解きます。"
-          onPress={() => router.push("/pro")}
+      <>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
         >
-          <View style={styles.dummy}>
-            <Text style={styles.dummyText}>
-              素振りが多い週は、打率が高い傾向があります。
-            </Text>
-          </View>
-        </ProComingSoonCard>
-      </ScrollView>
+          <ProComingSoonCard
+            title="練習と成績の関係を発見"
+            description="素振りや睡眠と打率の傾向を、あなたのデータから自動で読み解きます。"
+            badgeLabel="Pro プラン限定"
+            onPress={() => setPaywallOpen(true)}
+          >
+            <View style={styles.dummy}>
+              <Text style={styles.dummyText}>
+                素振りが多い週は、打率が高い傾向があります。
+              </Text>
+            </View>
+          </ProComingSoonCard>
+        </ScrollView>
+        <PaywallModal
+          isOpen={isPaywallOpen}
+          onClose={() => setPaywallOpen(false)}
+          feature="correlation_insights"
+        />
+      </>
     );
   }
 

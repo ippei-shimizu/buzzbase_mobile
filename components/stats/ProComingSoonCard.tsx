@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -9,18 +8,23 @@ interface ProComingSoonCardProps {
   children: React.ReactNode;
   /** カードタップ時のハンドラ（課金意向シグナルの計測用）。未指定ならタップ不可。 */
   onPress?: () => void;
+  /** 覆いの上に出すバッジ文言。デフォルトは未リリース機能向けの「準備中」表記。 */
+  badgeLabel?: string;
 }
 
 /**
- * Pro プラン限定機能のリリース前告知カード。
- * タイトル・説明は読める状態のまま、children（ダミー body）を BlurView でボカし、
- * ブラーの上に「Pro プラン (準備中)」バッジを重ねて機能の事前訴求を行う。
+ * Pro プラン限定機能のダミー体験カード。
+ * タイトル・説明は読める状態のまま、children（ダミー body）を不透明暗幕で覆い、
+ * その上にバッジを重ねて機能の事前訴求を行う。
+ * expo-blur の BlurView は iOS のバージョン/端末によって合成に失敗し中身が透けて見えることがあるため、
+ * ブラーには依存せず単色の不透明暗幕のみで確実に隠す。
  */
 export function ProComingSoonCard({
   title,
   description,
   children,
   onPress,
+  badgeLabel = "Pro プラン (準備中)",
 }: ProComingSoonCardProps) {
   const Container = onPress ? Pressable : View;
   return (
@@ -30,7 +34,7 @@ export function ProComingSoonCard({
         ? {
             onPress,
             accessibilityRole: "button" as const,
-            accessibilityLabel: `${title}（Pro プラン 準備中）`,
+            accessibilityLabel: `${title}（${badgeLabel}）`,
           }
         : {})}
     >
@@ -38,13 +42,11 @@ export function ProComingSoonCard({
       <Text style={styles.description}>{description}</Text>
       <View style={styles.previewWrapper} pointerEvents="none">
         {children}
-        {/* iOS は省電力モード/「透明度を下げる」設定でブラーが無効化され透明になるため、内容が透けないよう暗幕でフォールバックする */}
         <View style={styles.scrim} />
-        <BlurView intensity={14} tint="dark" style={StyleSheet.absoluteFill} />
         <View style={styles.overlay}>
           <View style={styles.badge}>
             <Ionicons name="lock-closed" size={13} color="#F4F4F4" />
-            <Text style={styles.badgeText}>Pro プラン (準備中)</Text>
+            <Text style={styles.badgeText}>{badgeLabel}</Text>
           </View>
         </View>
       </View>
@@ -78,7 +80,7 @@ const styles = StyleSheet.create({
   },
   scrim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(26, 26, 26, 0.5)",
+    backgroundColor: "rgba(26, 26, 26, 0.82)",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
