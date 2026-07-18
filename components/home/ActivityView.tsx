@@ -72,17 +72,17 @@ export function ActivityView() {
           />
         }
       >
-        {/* 提案A: 記録 → 今日 → 継続（報酬）→ 振り返り → ツール/深掘り の順。 */}
+        {/* 提案A: 記録 → 今日 → 継続（報酬）→ 振り返り → ツール → 積み上げ の順。 */}
         <RecordButtonsSection />
         <TodayTasksSection />
         <CurrentThemeSection />
         <TodayGoalSection />
         <StreakHeaderSection />
         <PeriodicReviewBanner />
-        <MonthlySummarySection />
-        <RecentPracticeSection />
         <PracticeToolsSection />
         <ImprovementToolsSection />
+        <MonthlySummarySection />
+        <RecentPracticeSection />
       </ScrollView>
       <BackToTopButton visible={showBackToTop} onPress={scrollToTop} />
     </View>
