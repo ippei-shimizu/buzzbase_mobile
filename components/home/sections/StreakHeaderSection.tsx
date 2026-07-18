@@ -106,7 +106,7 @@ export function StreakHeaderSection() {
 
       {!isPro ? (
         <View style={styles.proCard}>
-          <Text style={styles.proTitle}>Pro で全期間の草を表示</Text>
+          <Text style={styles.proTitle}>Pro で全期間の記録マップを表示</Text>
           <Text style={styles.proText}>
             無料では直近30日まで表示されます。Pro
             なら全期間・年ビューを確認できます。

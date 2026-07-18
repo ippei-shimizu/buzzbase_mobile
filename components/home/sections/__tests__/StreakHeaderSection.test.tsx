@@ -57,7 +57,9 @@ describe("StreakHeaderSection", () => {
     renderWithProviders(<StreakHeaderSection />);
 
     await waitFor(() =>
-      expect(screen.getByText("Pro で全期間の草を表示")).toBeOnTheScreen(),
+      expect(
+        screen.getByText("Pro で全期間の記録マップを表示"),
+      ).toBeOnTheScreen(),
     );
     fireEvent.press(screen.getByText("Pro を見る"));
 
