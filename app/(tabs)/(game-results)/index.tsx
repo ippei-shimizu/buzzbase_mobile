@@ -383,7 +383,7 @@ export default function GameResultsScreen() {
     <View style={styles.filterSection}>
       <TouchableOpacity
         style={styles.manageLink}
-        onPress={() => router.push("/(tabs)/(profile)/seasons")}
+        onPress={() => router.push("/(season)/list")}
         accessibilityRole="button"
         accessibilityLabel="シーズンを管理"
       >
@@ -597,7 +597,7 @@ export default function GameResultsScreen() {
         >
           <TouchableOpacity
             style={styles.manageLink}
-            onPress={() => router.push("/(tabs)/(profile)/seasons")}
+            onPress={() => router.push("/(season)/list")}
             accessibilityRole="button"
             accessibilityLabel="シーズンを管理"
           >

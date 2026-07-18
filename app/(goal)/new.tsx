@@ -440,7 +440,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
             {seasons.length === 0 ? (
               <TouchableOpacity
                 style={styles.emptyLink}
-                onPress={() => router.push("/(profile)/seasons")}
+                onPress={() => router.push("/(season)/list")}
               >
                 <Ionicons name="add-circle-outline" size={16} color="#d08000" />
                 <Text style={styles.emptyLinkText}>

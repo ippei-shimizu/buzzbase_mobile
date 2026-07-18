@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import { TouchableOpacity } from "react-native";
 
-export default function SeasonsLayout() {
+export default function SeasonLayout() {
   const router = useRouter();
 
   return (
@@ -12,19 +12,19 @@ export default function SeasonsLayout() {
         headerTintColor: "#F4F4F4",
         headerTitleStyle: { fontSize: 16, fontWeight: "600" },
         contentStyle: { backgroundColor: "#2E2E2E" },
+        headerLeft: () => (
+          <TouchableOpacity
+            onPress={() =>
+              router.canGoBack() ? router.back() : router.replace("/(tabs)")
+            }
+            style={{ padding: 8 }}
+          >
+            <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
+          </TouchableOpacity>
+        ),
       }}
     >
-      <Stack.Screen
-        name="index"
-        options={{
-          title: "シーズン管理",
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
-            </TouchableOpacity>
-          ),
-        }}
-      />
+      <Stack.Screen name="list" options={{ title: "シーズン管理" }} />
     </Stack>
   );
 }

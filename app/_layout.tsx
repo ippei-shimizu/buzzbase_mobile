@@ -137,6 +137,7 @@ function RootLayoutInner() {
           options={{ headerShown: false }}
         />
         <Stack.Screen name="(review)" options={{ headerShown: false }} />
+        <Stack.Screen name="(season)" options={{ headerShown: false }} />
         <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen
           name="game-result-detail"
