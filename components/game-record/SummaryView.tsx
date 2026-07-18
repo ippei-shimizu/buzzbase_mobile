@@ -47,6 +47,8 @@ interface Props {
   pitchingHitByPitch: number;
   onComplete: () => void;
   onShare?: () => void;
+  /** 指定時、試合一覧へのリンクの近くに野球ノート作成への動線を表示する。 */
+  onRecordNote?: () => void;
 }
 
 const BATTING_ORDER_LABELS: Record<string, string> = {
@@ -453,6 +455,28 @@ export function SummaryView(props: Props) {
           >
             <Text style={{ fontSize: 14, color: "#D4D4D8" }}>{props.memo}</Text>
           </View>
+        </View>
+      ) : null}
+
+      {/* 野球ノート作成へ */}
+      {props.onRecordNote ? (
+        <View style={{ alignItems: "center", marginTop: 24 }}>
+          <TouchableOpacity
+            onPress={props.onRecordNote}
+            style={{
+              borderWidth: 1,
+              borderColor: "#d08000",
+              borderRadius: 8,
+              paddingHorizontal: 24,
+              paddingVertical: 10,
+            }}
+          >
+            <Text
+              style={{ color: "#d08000", fontSize: 15, fontWeight: "bold" }}
+            >
+              野球ノートを記録する
+            </Text>
+          </TouchableOpacity>
         </View>
       ) : null}
 

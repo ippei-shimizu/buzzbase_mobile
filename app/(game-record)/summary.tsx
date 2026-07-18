@@ -158,6 +158,24 @@ export default function SummaryScreen() {
     });
   };
 
+  const handleRecordNote = () => {
+    // resetFlow() で store がクリアされる前に gameResultId を退避する。
+    const gameResultId = store.gameResultId;
+    if (!store.isEditMode) {
+      trackGameRecordCompleted({
+        match_type: toMatchTypeKey(store.matchType),
+        appearance_type: store.appearanceType,
+        has_pitching: store.pitchingResultId !== null,
+      });
+    }
+    resetFlow();
+    invalidateGameResultRelated(queryClient);
+    router.replace({
+      pathname: "/(note)/new",
+      params: gameResultId ? { gameResultId: String(gameResultId) } : {},
+    });
+  };
+
   const handlePrePromptYes = async () => {
     const source = sourceRef.current;
     setPrePromptVisible(false);
@@ -224,6 +242,7 @@ export default function SummaryScreen() {
         pitchingHitByPitch={store.pitchingHitByPitch}
         onComplete={handleComplete}
         onShare={handleShare}
+        onRecordNote={handleRecordNote}
       />
       <BottomTabBar />
       <PreReviewPrompt
