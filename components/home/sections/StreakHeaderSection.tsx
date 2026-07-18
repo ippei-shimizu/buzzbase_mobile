@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Heatmap } from "@components/grass/Heatmap";
 import { StreakBadge } from "@components/grass/StreakBadge";
+import { PaywallModal } from "@components/pro/PaywallModal";
 import { useActivityHeatmap, useStreak } from "@hooks/useActivity";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useShadowSwingStats } from "@hooks/useShadowSwing";
@@ -41,11 +41,11 @@ const streakNudge = (
 
 /** 継続ヘッダー（Streak ＋ 草ヒートマップ詳細）。ホームに詳細をそのまま表示する。 */
 export function StreakHeaderSection() {
-  const router = useRouter();
   const { streak } = useStreak();
   const { heatmap } = useActivityHeatmap();
   const { hasEntitlement } = useEntitlement();
   const isPro = hasEntitlement("grass_full_history");
+  const [isPaywallOpen, setPaywallOpen] = useState(false);
 
   const { stats: swingStats } = useShadowSwingStats();
 
@@ -113,12 +113,17 @@ export function StreakHeaderSection() {
           </Text>
           <TouchableOpacity
             style={styles.proButton}
-            onPress={() => router.push("/pro")}
+            onPress={() => setPaywallOpen(true)}
           >
             <Text style={styles.proButtonText}>Pro を見る</Text>
           </TouchableOpacity>
         </View>
       ) : null}
+      <PaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        feature="grass_full_history"
+      />
     </SectionCard>
   );
 }
