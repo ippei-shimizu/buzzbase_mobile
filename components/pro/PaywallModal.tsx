@@ -704,14 +704,14 @@ const styles = StyleSheet.create({
     flex: 0.65,
     textAlign: "center",
     color: "#A1A1AA",
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "700",
   },
   tableHeaderPro: {
     flex: 0.75,
     textAlign: "center",
     color: "#d08000",
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "700",
   },
   tableRow: {
@@ -728,20 +728,20 @@ const styles = StyleSheet.create({
   tableLabelCell: {
     flex: 1.6,
     color: "#D4D4D4",
-    fontSize: 12,
+    fontSize: 13,
     paddingRight: 6,
   },
   tableFreeCell: {
     flex: 0.65,
     textAlign: "center",
     color: "#A1A1AA",
-    fontSize: 12,
+    fontSize: 13,
   },
   tableProCell: {
     flex: 0.75,
     textAlign: "center",
     color: "#d08000",
-    fontSize: 12.5,
+    fontSize: 13.5,
     fontWeight: "700",
   },
   plansLoading: {
