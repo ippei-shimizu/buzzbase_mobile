@@ -218,9 +218,15 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     keys: ["detailed_condition_log", "multi_improvement_theme_links"],
   },
   {
-    title: "練習ツール",
-    icon: "timer-outline",
-    keys: ["shadow_swing_custom_interval", "shadow_swing_vibration"],
+    title: "野球ノート",
+    icon: "book-outline",
+    keys: [
+      "note_tags",
+      "multi_game_result_notes",
+      "unlimited_media_uploads",
+      "media_long_term_storage",
+      "unlimited_reflection_templates",
+    ],
   },
   {
     title: "予定・プラン管理",
@@ -232,12 +238,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     ],
   },
   {
-    title: "課題",
-    icon: "flag-outline",
-    keys: ["unlimited_improvement_themes"],
-  },
-  {
-    title: "目標を立てる",
+    title: "目標管理",
     icon: "trophy-outline",
     keys: [
       "unlimited_monthly_goals",
@@ -249,14 +250,14 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     ],
   },
   {
+    title: "課題管理",
+    icon: "flag-outline",
+    keys: ["unlimited_improvement_themes"],
+  },
+  {
     title: "成績",
     icon: "stats-chart-outline",
     keys: ["season_transition_graph", "practice_menu_trend_detail"],
-  },
-  {
-    title: "練習と成績のつながり",
-    icon: "trending-up",
-    keys: ["correlation_insights"],
   },
   {
     title: "振り返りレポート",
@@ -264,15 +265,14 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     keys: ["advanced_periodic_review"],
   },
   {
-    title: "野球ノート",
-    icon: "book-outline",
-    keys: [
-      "note_tags",
-      "multi_game_result_notes",
-      "unlimited_media_uploads",
-      "media_long_term_storage",
-      "unlimited_reflection_templates",
-    ],
+    title: "練習と成績のつながり",
+    icon: "trending-up",
+    keys: ["correlation_insights"],
+  },
+  {
+    title: "練習ツール",
+    icon: "timer-outline",
+    keys: ["shadow_swing_custom_interval", "shadow_swing_vibration"],
   },
   {
     title: "継続",
