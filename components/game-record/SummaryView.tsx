@@ -185,6 +185,31 @@ export function SummaryView(props: Props) {
         </TouchableOpacity>
       </View>
 
+      {/* 野球ノート作成へ */}
+      {props.onRecordNote ? (
+        <View style={{ alignItems: "center", marginTop: 20 }}>
+          <Text style={{ fontSize: 13, color: "#A1A1AA", marginBottom: 10 }}>
+            この試合の気づきを野球ノートに書き残そう
+          </Text>
+          <TouchableOpacity
+            onPress={props.onRecordNote}
+            style={{
+              borderWidth: 1,
+              borderColor: "#d08000",
+              borderRadius: 8,
+              paddingHorizontal: 24,
+              paddingVertical: 10,
+            }}
+          >
+            <Text
+              style={{ color: "#d08000", fontSize: 15, fontWeight: "bold" }}
+            >
+              野球ノートを記録する
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
       {/* メインカード */}
       <View
         style={{
@@ -455,28 +480,6 @@ export function SummaryView(props: Props) {
           >
             <Text style={{ fontSize: 14, color: "#D4D4D8" }}>{props.memo}</Text>
           </View>
-        </View>
-      ) : null}
-
-      {/* 野球ノート作成へ */}
-      {props.onRecordNote ? (
-        <View style={{ alignItems: "center", marginTop: 24 }}>
-          <TouchableOpacity
-            onPress={props.onRecordNote}
-            style={{
-              borderWidth: 1,
-              borderColor: "#d08000",
-              borderRadius: 8,
-              paddingHorizontal: 24,
-              paddingVertical: 10,
-            }}
-          >
-            <Text
-              style={{ color: "#d08000", fontSize: 15, fontWeight: "bold" }}
-            >
-              野球ノートを記録する
-            </Text>
-          </TouchableOpacity>
         </View>
       ) : null}
 
