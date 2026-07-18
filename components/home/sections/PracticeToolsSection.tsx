@@ -12,7 +12,10 @@ export function PracticeToolsSection() {
   const router = useRouter();
 
   return (
-    <SectionCard title="練習ツール">
+    <SectionCard
+      title="練習ツール"
+      description="一定のタイミングでお知らせしながら、素振りの回数を数えます"
+    >
       <TouchableOpacity
         style={styles.swingButton}
         onPress={() => router.push("/(shadow-swing)/setup")}
