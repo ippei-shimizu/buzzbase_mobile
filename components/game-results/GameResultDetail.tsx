@@ -3,7 +3,6 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,7 +16,8 @@ import { formatMatchTypeLabel } from "@utils/matchType";
 
 interface GameResultDetailProps {
   game: GameResult;
-  onDelete?: () => void;
+  onEdit?: () => void;
+  onShare?: () => void;
   /** false のとき自前の ScrollView で囲まず内容のみ描画する（他画面に埋め込む用）。 */
   scroll?: boolean;
 }
@@ -72,7 +72,8 @@ function StatRow({
 
 export const GameResultDetail = ({
   game,
-  onDelete,
+  onEdit,
+  onShare,
   scroll = true,
 }: GameResultDetailProps) => {
   const { match_result, batting_average, pitching_result } = game;
@@ -87,17 +88,6 @@ export const GameResultDetail = ({
   const sortedPlateAppearances = [...plateAppearances].sort(
     (a, b) => a.batter_box_number - b.batter_box_number,
   );
-
-  const handleDelete = () => {
-    Alert.alert("試合結果の削除", "この試合結果を削除しますか？", [
-      { text: "キャンセル", style: "cancel" },
-      {
-        text: "削除",
-        style: "destructive",
-        onPress: onDelete,
-      },
-    ]);
-  };
 
   const content = (
     <>
@@ -273,12 +263,22 @@ export const GameResultDetail = ({
         </View>
       )}
 
-      {/* 削除ボタン */}
-      {onDelete && (
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={18} color="#EF4444" />
-          <Text style={styles.deleteButtonText}>この試合結果を削除</Text>
-        </TouchableOpacity>
+      {/* 編集・共有ボタン */}
+      {(onEdit || onShare) && (
+        <View style={styles.actionsRow}>
+          {onEdit && (
+            <TouchableOpacity style={styles.editButton} onPress={onEdit}>
+              <Ionicons name="create-outline" size={18} color="#FFFFFF" />
+              <Text style={styles.editButtonText}>編集</Text>
+            </TouchableOpacity>
+          )}
+          {onShare && (
+            <TouchableOpacity style={styles.shareButton} onPress={onShare}>
+              <Ionicons name="share-outline" size={18} color="#d08000" />
+              <Text style={styles.shareButtonText}>共有</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       )}
 
       <View style={styles.bottomSpacer} />
@@ -451,19 +451,39 @@ const styles = StyleSheet.create({
     color: "#EF4444",
     fontSize: 13,
   },
-  deleteButton: {
+  actionsRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 16,
+  },
+  editButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#d08000",
+    borderRadius: 8,
+    paddingVertical: 12,
+  },
+  editButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  shareButton: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     borderWidth: 1,
-    borderColor: "#EF4444",
+    borderColor: "#d08000",
     borderRadius: 8,
     paddingVertical: 12,
-    marginTop: 16,
   },
-  deleteButtonText: {
-    color: "#EF4444",
+  shareButtonText: {
+    color: "#d08000",
     fontSize: 14,
     fontWeight: "600",
   },
