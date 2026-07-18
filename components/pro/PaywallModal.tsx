@@ -215,7 +215,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   {
     title: "練習を記録",
     icon: "barbell-outline",
-    keys: ["detailed_condition_log"],
+    keys: ["detailed_condition_log", "multi_improvement_theme_links"],
   },
   {
     title: "練習ツール",
@@ -234,7 +234,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   {
     title: "課題",
     icon: "flag-outline",
-    keys: ["unlimited_improvement_themes", "multi_improvement_theme_links"],
+    keys: ["unlimited_improvement_themes"],
   },
   {
     title: "目標を立てる",
