@@ -176,7 +176,7 @@ export const FEATURE_COMPARISONS: Record<ProFeature, FeatureComparison> = {
   no_ads: { free: "表示あり", pro: "非表示" },
   season_transition_graph: { free: "単年のみ", pro: "複数年比較" },
   grass_full_history: { free: "直近30日", pro: "全期間" },
-  unlimited_practice_menus: { free: "5件", pro: "無制限" },
+  unlimited_practice_menus: { free: "3件", pro: "無制限" },
   unlimited_media_uploads: { free: "月3件", pro: "無制限" },
   media_long_term_storage: { free: "31日以内", pro: "無期限" },
   schedule_copy_next_week: { free: "手動", pro: "1タップ" },
@@ -209,20 +209,27 @@ interface FeatureGroup {
 
 // 「PRO でできること」表のグループ分け。PRO_FEATURES 全26項目を過不足なく1回ずつ含む
 // （テストで網羅性を担保。詳細は __tests__/PaywallModal.test.tsx）。
+// グループ名・アイコンはホーム画面の実際のセクション名・導線に合わせる
+// （例: PracticeToolsSection="練習ツール", ImprovementToolsSection の各ツール名）。
 export const FEATURE_GROUPS: FeatureGroup[] = [
   {
-    title: "練習を記録・管理",
-    icon: "clipboard-outline",
+    title: "練習ツール",
+    icon: "timer-outline",
+    keys: ["shadow_swing_custom_interval", "shadow_swing_vibration"],
+  },
+  {
+    title: "予定・プラン管理",
+    icon: "calendar-outline",
     keys: [
       "unlimited_practice_menus",
       "unlimited_menu_sets",
       "schedule_copy_next_week",
-      "unlimited_media_uploads",
-      "media_long_term_storage",
-      "detailed_condition_log",
-      "shadow_swing_custom_interval",
-      "shadow_swing_vibration",
     ],
+  },
+  {
+    title: "課題",
+    icon: "flag-outline",
+    keys: ["unlimited_improvement_themes", "multi_improvement_theme_links"],
   },
   {
     title: "目標を立てる",
@@ -237,23 +244,36 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     ],
   },
   {
-    title: "成績を分析・振り返る",
+    title: "成績",
+    icon: "stats-chart-outline",
+    keys: ["season_transition_graph", "practice_menu_trend_detail"],
+  },
+  {
+    title: "練習と成績のつながり",
     icon: "trending-up",
-    keys: [
-      "season_transition_graph",
-      "correlation_insights",
-      "practice_menu_trend_detail",
-      "advanced_periodic_review",
-      "unlimited_improvement_themes",
-      "multi_improvement_theme_links",
-      "unlimited_reflection_templates",
-      "grass_full_history",
-    ],
+    keys: ["correlation_insights"],
+  },
+  {
+    title: "振り返りレポート",
+    icon: "sparkles-outline",
+    keys: ["advanced_periodic_review"],
   },
   {
     title: "野球ノート",
     icon: "book-outline",
-    keys: ["note_tags", "multi_game_result_notes"],
+    keys: [
+      "note_tags",
+      "multi_game_result_notes",
+      "unlimited_media_uploads",
+      "media_long_term_storage",
+      "detailed_condition_log",
+      "unlimited_reflection_templates",
+    ],
+  },
+  {
+    title: "継続",
+    icon: "flame-outline",
+    keys: ["grass_full_history"],
   },
   {
     title: "その他",
