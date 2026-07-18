@@ -12,7 +12,14 @@ import {
   Alert,
 } from "react-native";
 import { GoalProgressBar } from "@components/goal/GoalProgressBar";
-import { GOAL_PERIOD_LABELS, GOAL_PERIOD_ORDER } from "@constants/goal";
+import { PaywallModal } from "@components/pro/PaywallModal";
+import {
+  GOAL_PERIOD_LABELS,
+  GOAL_PERIOD_ORDER,
+  MONTHLY_GOAL_FREE_LIMIT,
+  PERSONAL_GOAL_PERIOD_TYPES,
+} from "@constants/goal";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { useGoalHistory, useGoalMutations, useGoals } from "@hooks/useGoals";
 
 type GoalTab = "in_progress" | "achieved" | "unachieved";
@@ -38,10 +45,12 @@ const categorize = (goal: Goal): GoalTab => {
 
 export default function GoalListScreen() {
   const router = useRouter();
+  const { hasEntitlement } = useEntitlement();
   const { goals: activeGoals, isLoading } = useGoals();
   const { goals: historyGoals, isLoading: isHistoryLoading } = useGoalHistory();
   const { achieveGoal, unachieveGoal } = useGoalMutations();
   const [tab, setTab] = useState<GoalTab>("in_progress");
+  const [isPaywallOpen, setPaywallOpen] = useState(false);
 
   const goalsByTab = useMemo(() => {
     const buckets: Record<GoalTab, Goal[]> = {
@@ -63,6 +72,21 @@ export default function GoalListScreen() {
     }
   };
 
+  const handleAdd = () => {
+    // 個人の期間目標（月次/週次/年間/カスタム）は無料枠を共有する。
+    const personalGoalCount = activeGoals.filter((goal) =>
+      PERSONAL_GOAL_PERIOD_TYPES.includes(goal.period_type),
+    ).length;
+    if (
+      !hasEntitlement("unlimited_monthly_goals") &&
+      personalGoalCount >= MONTHLY_GOAL_FREE_LIMIT
+    ) {
+      setPaywallOpen(true);
+      return;
+    }
+    router.push("/(goal)/new");
+  };
+
   if (isLoading || isHistoryLoading) {
     return (
       <View style={styles.centered}>
@@ -76,10 +100,7 @@ export default function GoalListScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => router.push("/(goal)/new")}
-        >
+        <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
           <Ionicons name="add" size={18} color="#FFFFFF" />
           <Text style={styles.addButtonText}>新しい目標を追加</Text>
         </TouchableOpacity>
@@ -167,6 +188,11 @@ export default function GoalListScreen() {
           })
         )}
       </ScrollView>
+      <PaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        feature="unlimited_monthly_goals"
+      />
     </View>
   );
 }
