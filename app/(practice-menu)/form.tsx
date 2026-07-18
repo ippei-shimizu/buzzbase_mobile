@@ -85,7 +85,7 @@ function MenuForm({ menu }: { menu?: PracticeMenu }) {
       if (isAxiosError(error) && error.response?.status === 403) {
         Alert.alert(
           "無料プランの上限",
-          "練習メニューは無料で5つまでです。Pro で無制限に登録できます。",
+          "練習メニューは無料で3つまでです。Pro で無制限に登録できます。",
           [
             { text: "閉じる", style: "cancel" },
             { text: "Pro を見る", onPress: () => router.push("/pro") },

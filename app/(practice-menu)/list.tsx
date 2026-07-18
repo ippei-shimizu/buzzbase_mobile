@@ -30,7 +30,7 @@ export default function PracticeMenuListScreen() {
   const [isPaywallOpen, setPaywallOpen] = useState(false);
 
   const handleAdd = () => {
-    // 無料は5件まで（back の PlanLimits::PRACTICE_MENU_FREE_LIMIT と対応）。
+    // 無料は3件まで（back の PlanLimits::PRACTICE_MENU_FREE_LIMIT と対応）。
     if (
       !hasEntitlement("unlimited_practice_menus") &&
       menus.length >= PRACTICE_MENU_FREE_LIMIT
