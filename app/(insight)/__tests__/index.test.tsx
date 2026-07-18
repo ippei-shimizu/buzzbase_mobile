@@ -61,7 +61,7 @@ describe("相関インサイト", () => {
     );
     fireEvent.press(screen.getByText("練習と成績の関係を発見"));
 
-    expect(await screen.findByText("PRO にアップグレード")).toBeOnTheScreen();
+    expect(await screen.findByText("BUZZ BASE")).toBeOnTheScreen();
     expect(screen.getByLabelText("PROを始める")).toBeOnTheScreen();
   });
 });

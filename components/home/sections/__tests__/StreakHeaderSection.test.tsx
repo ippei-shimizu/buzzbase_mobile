@@ -61,7 +61,7 @@ describe("StreakHeaderSection", () => {
     );
     fireEvent.press(screen.getByText("Pro を見る"));
 
-    expect(await screen.findByText("PRO にアップグレード")).toBeOnTheScreen();
+    expect(await screen.findByText("BUZZ BASE")).toBeOnTheScreen();
     expect(screen.getByText("練習履歴を全期間で確認")).toBeOnTheScreen();
   });
 });

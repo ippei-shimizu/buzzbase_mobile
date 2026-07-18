@@ -102,7 +102,7 @@ describe("GoalListScreen", () => {
     );
     fireEvent.press(screen.getByText("新しい目標を追加"));
 
-    expect(await screen.findByText("PRO にアップグレード")).toBeOnTheScreen();
+    expect(await screen.findByText("BUZZ BASE")).toBeOnTheScreen();
     expect(getRouterSpies().push).not.toHaveBeenCalledWith("/(goal)/new");
   });
 
