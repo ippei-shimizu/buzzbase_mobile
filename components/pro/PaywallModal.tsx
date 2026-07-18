@@ -149,6 +149,16 @@ export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     description:
       "球速や体重など、アプリが自動集計できない自分だけの指標も目標にして手入力で管理できます。",
   },
+  shadow_swing_custom_interval: {
+    title: "インターバルを自由に設定",
+    description:
+      "1秒〜20秒の全範囲でインターバルを設定できます。自分のテンポに合わせて素振りを鍛えましょう。",
+  },
+  shadow_swing_vibration: {
+    title: "バイブレーションでテンポを取る",
+    description:
+      "音を出せない場所でもバイブレーションでインターバルを把握しながら素振りできます。",
+  },
 };
 
 const DEFAULT_COPY: PaywallCopy = {
