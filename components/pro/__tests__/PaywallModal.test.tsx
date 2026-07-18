@@ -193,6 +193,17 @@ describe("PaywallModal", () => {
     expect(await findByText("年額プラン")).toBeTruthy();
   });
 
+  it("年額プランに月額換算比の割引率バッジが表示される", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+
+    const { findByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    // 月額980円×12=11,760円 に対し年額9,800円 → 約17%お得。
+    expect(await findByText("17%お得")).toBeTruthy();
+  });
+
   it("getOfferings が失敗してもシートは表示され、プラン欄が空状態になる", async () => {
     getOfferingsMock.mockRejectedValueOnce(new Error("offerings unavailable"));
 

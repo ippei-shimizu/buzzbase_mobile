@@ -364,6 +364,15 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
     !!monthlyPackage &&
     !!annualPackage &&
     annualPackage.product.price < monthlyPackage.product.price * 12;
+  // 月額を1年間払い続けた場合と比べて年額プランがどれだけお得かを%表示する。
+  const annualSavingsPercent =
+    annualIsDiscounted && monthlyPackage && annualPackage
+      ? Math.round(
+          (1 -
+            annualPackage.product.price / (monthlyPackage.product.price * 12)) *
+            100,
+        )
+      : null;
 
   const visibleGroups = filterFeatureGroups(FEATURE_GROUPS, feature);
 
@@ -434,10 +443,12 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.badge}>
-              <Ionicons name="star" size={18} color="#d08000" />
+            <View style={styles.brandRow}>
+              <Text style={styles.brandName}>BUZZ BASE</Text>
+              <View style={styles.brandProBadge}>
+                <Text style={styles.brandProBadgeText}>PRO</Text>
+              </View>
             </View>
-            <Text style={styles.title}>PRO にアップグレード</Text>
             <Text style={styles.subtitle}>すべての機能をアンロック</Text>
 
             <View style={styles.highlightCard}>
@@ -519,20 +530,20 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
                       <View style={styles.planRadioOuter}>
                         {isSelected && <View style={styles.planRadioInner} />}
                       </View>
-                      <View style={styles.planInfo}>
-                        <View style={styles.planNameRow}>
-                          <Text style={styles.planName}>{label.name}</Text>
-                          {showSavingsBadge ? (
-                            <View style={styles.savingsBadge}>
-                              <Text style={styles.savingsBadgeText}>お得</Text>
-                            </View>
-                          ) : null}
-                        </View>
-                        <Text style={styles.planPrice}>
-                          {pkg.product.priceString}
-                          {label.period}
-                        </Text>
+                      <View style={styles.planNameRow}>
+                        <Text style={styles.planName}>{label.name}</Text>
+                        {showSavingsBadge && annualSavingsPercent != null ? (
+                          <View style={styles.savingsBadge}>
+                            <Text style={styles.savingsBadgeText}>
+                              {annualSavingsPercent}%お得
+                            </Text>
+                          </View>
+                        ) : null}
                       </View>
+                      <Text style={styles.planPrice}>
+                        {pkg.product.priceString}
+                        {label.period}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -616,19 +627,29 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     alignItems: "center",
   },
-  badge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(208, 128, 0, 0.15)",
+  brandRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
+    gap: 8,
+    marginBottom: 6,
   },
-  title: {
+  brandName: {
     color: "#F4F4F4",
-    fontSize: 20,
-    fontWeight: "700",
+    fontSize: 21,
+    fontWeight: "800",
+    letterSpacing: 0.3,
+  },
+  brandProBadge: {
+    backgroundColor: "#d08000",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  brandProBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 0.5,
   },
   subtitle: {
     color: "#A1A1AA",
@@ -781,18 +802,16 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: "#d08000",
   },
-  planInfo: {
-    flex: 1,
-  },
   planNameRow: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginBottom: 2,
+    flexWrap: "wrap",
   },
   planName: {
     color: "#F4F4F4",
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "700",
   },
   savingsBadge: {
@@ -807,8 +826,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   planPrice: {
-    color: "#A1A1AA",
-    fontSize: 12,
+    color: "#F4F4F4",
+    fontSize: 16,
+    fontWeight: "800",
+    marginLeft: 8,
   },
   emptyText: {
     color: "#A1A1AA",
