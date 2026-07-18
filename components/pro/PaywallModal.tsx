@@ -23,7 +23,6 @@ import {
   restorePurchases,
 } from "@services/revenueCatService";
 import { useSnackbarStore } from "@stores/snackbarStore";
-import { PRO_FEATURES } from "../../types/pro";
 
 export interface PaywallCopy {
   title: string;
@@ -166,6 +165,117 @@ const DEFAULT_COPY: PaywallCopy = {
   description: "Pro プランで全機能のロックを解除できます。",
 };
 
+interface FeatureComparison {
+  free: string;
+  pro: string;
+}
+
+// 「PRO でできること」表の無料/PROセル文言。type/pro.ts のコメント・実装済みの
+// ゲーティング挙動（完全ロックのものは ✕/○、件数上限は具体的な数字）を基に決定。
+export const FEATURE_COMPARISONS: Record<ProFeature, FeatureComparison> = {
+  no_ads: { free: "表示あり", pro: "非表示" },
+  season_transition_graph: { free: "単年のみ", pro: "複数年比較" },
+  grass_full_history: { free: "直近30日", pro: "全期間" },
+  unlimited_practice_menus: { free: "5件", pro: "無制限" },
+  unlimited_media_uploads: { free: "月3件", pro: "無制限" },
+  media_long_term_storage: { free: "31日以内", pro: "無期限" },
+  schedule_copy_next_week: { free: "手動", pro: "1タップ" },
+  unlimited_menu_sets: { free: "2件", pro: "無制限" },
+  unlimited_monthly_goals: { free: "2件", pro: "無制限" },
+  season_goals: { free: "✕", pro: "○" },
+  tournament_goals: { free: "✕", pro: "○" },
+  custom_notification_messages: { free: "標準文言", pro: "自由編集" },
+  advanced_goal_tracking: { free: "簡易", pro: "詳細" },
+  detailed_condition_log: { free: "✕", pro: "○" },
+  unlimited_improvement_themes: { free: "2件", pro: "無制限" },
+  correlation_insights: { free: "✕", pro: "○" },
+  unlimited_reflection_templates: { free: "1件", pro: "無制限" },
+  advanced_periodic_review: { free: "✕", pro: "○" },
+  note_tags: { free: "✕", pro: "○" },
+  multi_game_result_notes: { free: "1件", pro: "複数件" },
+  multi_improvement_theme_links: { free: "1件", pro: "複数件" },
+  practice_menu_trend_detail: { free: "✕", pro: "○" },
+  custom_period_goals: { free: "✕", pro: "○" },
+  manual_metric_goals: { free: "✕", pro: "○" },
+  shadow_swing_custom_interval: { free: "5〜10秒", pro: "1〜20秒" },
+  shadow_swing_vibration: { free: "✕", pro: "○" },
+};
+
+interface FeatureGroup {
+  title: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  keys: ProFeature[];
+}
+
+// 「PRO でできること」表のグループ分け。PRO_FEATURES 全26項目を過不足なく1回ずつ含む
+// （テストで網羅性を担保。詳細は __tests__/PaywallModal.test.tsx）。
+export const FEATURE_GROUPS: FeatureGroup[] = [
+  {
+    title: "練習を記録・管理",
+    icon: "clipboard-outline",
+    keys: [
+      "unlimited_practice_menus",
+      "unlimited_menu_sets",
+      "schedule_copy_next_week",
+      "unlimited_media_uploads",
+      "media_long_term_storage",
+      "detailed_condition_log",
+      "shadow_swing_custom_interval",
+      "shadow_swing_vibration",
+    ],
+  },
+  {
+    title: "目標を立てる",
+    icon: "trophy-outline",
+    keys: [
+      "unlimited_monthly_goals",
+      "season_goals",
+      "tournament_goals",
+      "custom_period_goals",
+      "manual_metric_goals",
+      "advanced_goal_tracking",
+    ],
+  },
+  {
+    title: "成績を分析・振り返る",
+    icon: "trending-up",
+    keys: [
+      "season_transition_graph",
+      "correlation_insights",
+      "practice_menu_trend_detail",
+      "advanced_periodic_review",
+      "unlimited_improvement_themes",
+      "multi_improvement_theme_links",
+      "unlimited_reflection_templates",
+      "grass_full_history",
+    ],
+  },
+  {
+    title: "野球ノート",
+    icon: "book-outline",
+    keys: ["note_tags", "multi_game_result_notes"],
+  },
+  {
+    title: "その他",
+    icon: "ellipsis-horizontal-circle-outline",
+    keys: ["custom_notification_messages", "no_ads"],
+  },
+];
+
+// ハイライトカードで既に強調表示中の feature をグループ内から除外し、0件になった
+// グループは非表示にする。
+export function filterFeatureGroups(
+  groups: FeatureGroup[],
+  excludeFeature: Feature,
+): FeatureGroup[] {
+  return groups
+    .map((group) => ({
+      ...group,
+      keys: group.keys.filter((key) => key !== excludeFeature),
+    }))
+    .filter((group) => group.keys.length > 0);
+}
+
 // RevenueCat の packageType は Offering 設定に依存するため、未知の値は product.title にフォールバックする。
 const PLAN_LABELS: Partial<
   Record<PACKAGE_TYPE, { name: string; period: string }>
@@ -255,7 +365,7 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
     !!annualPackage &&
     annualPackage.product.price < monthlyPackage.product.price * 12;
 
-  const otherFeatures = PRO_FEATURES.filter((key) => key !== feature);
+  const visibleGroups = filterFeatureGroups(FEATURE_GROUPS, feature);
 
   const handlePurchase = async () => {
     if (!selectedPackage) return;
@@ -338,15 +448,40 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
             </View>
 
             <Text style={styles.sectionTitle}>PRO でできること</Text>
-            <View style={styles.featureList}>
-              {otherFeatures.map((key) => (
-                <View key={key} style={styles.featureRow}>
-                  <Ionicons name="lock-closed" size={14} color="#d08000" />
-                  <Text style={styles.featureLabel} numberOfLines={1}>
-                    {PRO_PAYWALL_COPY[key].title}
-                  </Text>
-                  <View style={styles.proBadge}>
-                    <Text style={styles.proBadgeText}>PRO</Text>
+            <View style={styles.groupList}>
+              {visibleGroups.map((group) => (
+                <View key={group.title} style={styles.group}>
+                  <View style={styles.groupHeader}>
+                    <Ionicons name={group.icon} size={16} color="#d08000" />
+                    <Text style={styles.groupHeaderTitle}>{group.title}</Text>
+                  </View>
+                  <View style={styles.table}>
+                    <View style={styles.tableHeaderRow}>
+                      <View style={styles.tableLabelCell} />
+                      <Text style={styles.tableHeaderFree}>無料</Text>
+                      <Text style={styles.tableHeaderPro}>PRO</Text>
+                    </View>
+                    {group.keys.map((key, index) => (
+                      <View
+                        key={key}
+                        style={[
+                          styles.tableRow,
+                          index === group.keys.length - 1 &&
+                            styles.tableRowLast,
+                        ]}
+                        accessibilityLabel={`${PRO_PAYWALL_COPY[key].title}。無料は${FEATURE_COMPARISONS[key].free}、PROは${FEATURE_COMPARISONS[key].pro}`}
+                      >
+                        <Text style={styles.tableLabelCell} numberOfLines={2}>
+                          {PRO_PAYWALL_COPY[key].title}
+                        </Text>
+                        <Text style={styles.tableFreeCell}>
+                          {FEATURE_COMPARISONS[key].free}
+                        </Text>
+                        <Text style={styles.tableProCell}>
+                          {FEATURE_COMPARISONS[key].pro}
+                        </Text>
+                      </View>
+                    ))}
                   </View>
                 </View>
               ))}
@@ -531,30 +666,82 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 4,
   },
-  featureList: {
+  groupList: {
     width: "100%",
-    gap: 10,
+    gap: 16,
     marginBottom: 20,
   },
-  featureRow: {
+  group: {
+    width: "100%",
+  },
+  groupHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
+    marginBottom: 8,
   },
-  featureLabel: {
-    flex: 1,
+  groupHeaderTitle: {
     color: "#F4F4F4",
     fontSize: 13,
+    fontWeight: "700",
   },
-  proBadge: {
-    backgroundColor: "rgba(208, 128, 0, 0.2)",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
+  table: {
+    width: "100%",
+    backgroundColor: "#3A3A3A",
+    borderRadius: 12,
+    overflow: "hidden",
   },
-  proBadgeText: {
+  tableHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#4A4A4A",
+  },
+  tableHeaderFree: {
+    flex: 0.65,
+    textAlign: "center",
+    color: "#A1A1AA",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  tableHeaderPro: {
+    flex: 0.75,
+    textAlign: "center",
     color: "#d08000",
     fontSize: 10,
+    fontWeight: "700",
+  },
+  tableRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderBottomWidth: 1,
+    borderBottomColor: "#333333",
+  },
+  tableRowLast: {
+    borderBottomWidth: 0,
+  },
+  tableLabelCell: {
+    flex: 1.6,
+    color: "#D4D4D4",
+    fontSize: 12,
+    paddingRight: 6,
+  },
+  tableFreeCell: {
+    flex: 0.65,
+    textAlign: "center",
+    color: "#A1A1AA",
+    fontSize: 12,
+  },
+  tableProCell: {
+    flex: 0.75,
+    textAlign: "center",
+    color: "#d08000",
+    fontSize: 12.5,
     fontWeight: "700",
   },
   plansLoading: {

@@ -22,8 +22,12 @@ import {
 } from "../../../__tests__/test-utils/handlers";
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
 import { server } from "../../../jest-setup-msw";
-import { DEFAULT_PRO_STATUS } from "../../../types/pro";
-import { PaywallModal } from "../PaywallModal";
+import { DEFAULT_PRO_STATUS, PRO_FEATURES } from "../../../types/pro";
+import {
+  FEATURE_GROUPS,
+  filterFeatureGroups,
+  PaywallModal,
+} from "../PaywallModal";
 
 jest.mock("expo-router", () => {
   const {
@@ -293,5 +297,64 @@ describe("PaywallModal", () => {
     expect(showMock).toHaveBeenCalledWith(
       expect.objectContaining({ type: "success" }),
     );
+  });
+
+  it("ハイライトカードで表示中の機能は「PRO でできること」表に重複表示されない", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getAllByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="note_tags" />,
+    );
+
+    expect(getAllByText("野球ノートにタグを付けて整理")).toHaveLength(1);
+  });
+
+  it("グループ見出しと無料/PROの比較値が表示される", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getByText, getByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    expect(getByText("野球ノート")).toBeOnTheScreen();
+    expect(
+      getByLabelText("1つのノートに複数の試合を紐付け。無料は1件、PROは複数件"),
+    ).toBeOnTheScreen();
+  });
+});
+
+describe("FEATURE_GROUPS", () => {
+  it("PRO_FEATURES の全項目を過不足・重複なく分類している", () => {
+    const allGroupedKeys = FEATURE_GROUPS.flatMap((group) => group.keys);
+
+    expect(allGroupedKeys).toHaveLength(PRO_FEATURES.length);
+    expect(new Set(allGroupedKeys).size).toBe(PRO_FEATURES.length);
+    expect(new Set(allGroupedKeys)).toEqual(new Set(PRO_FEATURES));
+  });
+});
+
+describe("filterFeatureGroups", () => {
+  it("指定した feature をグループ内から除外する", () => {
+    const result = filterFeatureGroups(
+      [
+        {
+          title: "野球ノート",
+          icon: "book-outline",
+          keys: ["note_tags", "multi_game_result_notes"],
+        },
+      ],
+      "note_tags",
+    );
+
+    expect(result[0].keys).toEqual(["multi_game_result_notes"]);
+  });
+
+  it("除外後に0件になったグループは結果から取り除かれる", () => {
+    const result = filterFeatureGroups(
+      [{ title: "野球ノート", icon: "book-outline", keys: ["note_tags"] }],
+      "note_tags",
+    );
+
+    expect(result).toEqual([]);
   });
 });
