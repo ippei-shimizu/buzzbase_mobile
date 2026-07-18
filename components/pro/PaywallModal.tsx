@@ -213,6 +213,11 @@ interface FeatureGroup {
 // （例: PracticeToolsSection="練習ツール", ImprovementToolsSection の各ツール名）。
 export const FEATURE_GROUPS: FeatureGroup[] = [
   {
+    title: "練習を記録",
+    icon: "barbell-outline",
+    keys: ["detailed_condition_log"],
+  },
+  {
     title: "練習ツール",
     icon: "timer-outline",
     keys: ["shadow_swing_custom_interval", "shadow_swing_vibration"],
@@ -266,7 +271,6 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
       "multi_game_result_notes",
       "unlimited_media_uploads",
       "media_long_term_storage",
-      "detailed_condition_log",
       "unlimited_reflection_templates",
     ],
   },
