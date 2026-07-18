@@ -14,7 +14,7 @@ export function PracticeToolsSection() {
   return (
     <SectionCard
       title="練習ツール"
-      description="一定のタイミングでお知らせしながら、素振りの回数を数えます"
+      description="一定のテンポで素振りの回数を数えて、回数を音で伝えてくれる機能です"
     >
       <TouchableOpacity
         style={styles.swingButton}
