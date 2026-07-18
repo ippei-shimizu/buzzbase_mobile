@@ -75,13 +75,13 @@ describe("ReviewListScreen", () => {
     renderWithProviders(<ReviewListScreen />);
 
     await waitFor(() =>
-      expect(screen.getByText("Pro に加入する")).toBeOnTheScreen(),
+      expect(screen.getByText("Pro プランを見る")).toBeOnTheScreen(),
     );
     // サンプルの練習日数（5日）は出るが、実データ（99日）は出ない。
     expect(screen.getByText("5日")).toBeOnTheScreen();
     expect(screen.queryByText("99日")).not.toBeOnTheScreen();
 
-    fireEvent.press(screen.getByText("Pro に加入する"));
+    fireEvent.press(screen.getByText("Pro プランを見る"));
     // オーバーレイと PaywallModal 両方に見出しが出るため複数ヒットで開いたことを確認する。
     expect(
       screen.getAllByText("週次・月次の振り返りレポートを受け取る").length,
@@ -95,6 +95,6 @@ describe("ReviewListScreen", () => {
     renderWithProviders(<ReviewListScreen />);
 
     expect(await screen.findByText("99日")).toBeOnTheScreen();
-    expect(screen.queryByText("Pro に加入する")).not.toBeOnTheScreen();
+    expect(screen.queryByText("Pro プランを見る")).not.toBeOnTheScreen();
   });
 });

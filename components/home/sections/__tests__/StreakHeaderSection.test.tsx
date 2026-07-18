@@ -51,7 +51,7 @@ const setupCommonHandlers = () => {
 };
 
 describe("StreakHeaderSection", () => {
-  it("無料ユーザーが「Pro を見る」を押すと PaywallModal が開く（/pro への直接遷移はしない）", async () => {
+  it("無料ユーザーが「Pro プランを見る」を押すと PaywallModal が開く（/pro への直接遷移はしない）", async () => {
     setupCommonHandlers();
 
     renderWithProviders(<StreakHeaderSection />);
@@ -61,7 +61,7 @@ describe("StreakHeaderSection", () => {
         screen.getByText("Pro で全期間の記録マップを表示"),
       ).toBeOnTheScreen(),
     );
-    fireEvent.press(screen.getByText("Pro を見る"));
+    fireEvent.press(screen.getByText("Pro プランを見る"));
 
     expect(await screen.findByText("BUZZ BASE")).toBeOnTheScreen();
     expect(screen.getByText("練習履歴を全期間で確認")).toBeOnTheScreen();

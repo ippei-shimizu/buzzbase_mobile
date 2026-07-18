@@ -12,8 +12,8 @@ import {
 } from "react-native";
 import { GameResultDetail } from "@components/game-results/GameResultDetail";
 import { ConditionCard } from "@components/practice/ConditionCard";
-import { BlurredProContent } from "@components/pro/BlurredProContent";
-import { PaywallModal, PRO_PAYWALL_COPY } from "@components/pro/PaywallModal";
+import { PaywallModal } from "@components/pro/PaywallModal";
+import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { formatPracticeValue } from "@constants/practice";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useGameResult } from "@hooks/useGameResults";
@@ -107,17 +107,16 @@ function LinkedPractice({ sessionId }: { sessionId: number }) {
       )}
 
       {session.condition ? (
-        <BlurredProContent
+        <ProUpsellOverlay
           unlocked={hasEntitlement("detailed_condition_log")}
-          title={PRO_PAYWALL_COPY.detailed_condition_log.title}
-          badgeLabel="Pro に加入する"
-          onPressBadge={() => setConditionPaywallOpen(true)}
+          feature="detailed_condition_log"
+          onPressCta={() => setConditionPaywallOpen(true)}
         >
           <ConditionCard
             condition={session.condition}
             style={styles.conditionCard}
           />
-        </BlurredProContent>
+        </ProUpsellOverlay>
       ) : null}
       <PaywallModal
         isOpen={isConditionPaywallOpen}

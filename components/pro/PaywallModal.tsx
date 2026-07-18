@@ -27,10 +27,12 @@ import { useSnackbarStore } from "@stores/snackbarStore";
 export interface PaywallCopy {
   title: string;
   description: string;
+  /** 2〜4行の具体的なメリット箇条書き。指定時は description より優先して表示する。 */
+  benefits?: string[];
 }
 
 // Pro 機能ごとの paywall コピー。各機能 Issue で文言を最終調整する想定。
-// BlurredProContent 等、ロック表示を出す他コンポーネントからも同じ文言を参照するため export する。
+// ProUpsellCard/ProUpsellOverlay 等、ロック表示を出す他コンポーネントからも同じ文言を参照するため export する。
 export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
   no_ads: {
     title: "広告を非表示にして集中する",
@@ -122,6 +124,11 @@ export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     title: "野球ノートにタグを付けて整理",
     description:
       "Pro プランなら野球ノートにタグを付けて、後から振り返りやすく整理できます。",
+    benefits: [
+      "練習の気づきや試合の振り返りをタグで分類",
+      "過去のノートをタグから素早く検索",
+      "自分専用のタグも自由に作成可能",
+    ],
   },
   multi_game_result_notes: {
     title: "1つのノートに複数の試合を紐付け",

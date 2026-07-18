@@ -8,8 +8,8 @@ import {
   View,
 } from "react-native";
 import { PeriodicReviewCard } from "@components/periodic-review/PeriodicReviewCard";
-import { BlurredProContent } from "@components/pro/BlurredProContent";
-import { PaywallModal, PRO_PAYWALL_COPY } from "@components/pro/PaywallModal";
+import { PaywallModal } from "@components/pro/PaywallModal";
+import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { useEntitlement } from "@hooks/useEntitlement";
 import {
   usePeriodicReviewMutations,
@@ -79,15 +79,13 @@ export default function ReviewListScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.content}>
-          <BlurredProContent
+          <ProUpsellOverlay
             unlocked={false}
-            title={PRO_PAYWALL_COPY.advanced_periodic_review.title}
-            description={PRO_PAYWALL_COPY.advanced_periodic_review.description}
-            badgeLabel="Pro に加入する"
-            onPressBadge={() => setPaywallOpen(true)}
+            feature="advanced_periodic_review"
+            onPressCta={() => setPaywallOpen(true)}
           >
             <PeriodicReviewCard review={DUMMY_REVIEW} />
-          </BlurredProContent>
+          </ProUpsellOverlay>
         </View>
         <PaywallModal
           isOpen={isPaywallOpen}

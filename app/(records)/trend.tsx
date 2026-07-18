@@ -20,8 +20,8 @@ import Svg, {
   LinearGradient,
   Stop,
 } from "react-native-svg";
-import { BlurredProContent } from "@components/pro/BlurredProContent";
 import { PaywallModal } from "@components/pro/PaywallModal";
+import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { UnderlineTabBar } from "@components/ui/UnderlineTabBar";
 import { formatTotalAmount, formatVolume } from "@constants/practice";
 import { useEntitlement } from "@hooks/useEntitlement";
@@ -410,10 +410,10 @@ export default function MenuTrendScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>{trend.menu.name}</Text>
 
-        <BlurredProContent
+        <ProUpsellOverlay
           unlocked={hasEntitlement("practice_menu_trend_detail")}
-          badgeLabel="Pro に加入する"
-          onPressBadge={() => setTrendPaywallOpen(true)}
+          feature="practice_menu_trend_detail"
+          onPressCta={() => setTrendPaywallOpen(true)}
         >
           <View style={styles.tabWrap}>
             <UnderlineTabBar
@@ -442,12 +442,12 @@ export default function MenuTrendScreen() {
               </View>
             </>
           )}
-        </BlurredProContent>
+        </ProUpsellOverlay>
 
         {buckets.length > 0 ? (
-          <BlurredProContent
+          <ProUpsellOverlay
             unlocked={hasEntitlement("practice_menu_trend_detail")}
-            hideBadge
+            hideCard
             scrimOpacity={1}
           >
             <View style={styles.listCard}>
@@ -467,7 +467,7 @@ export default function MenuTrendScreen() {
                 </View>
               ))}
             </View>
-          </BlurredProContent>
+          </ProUpsellOverlay>
         ) : null}
       </ScrollView>
       <PaywallModal

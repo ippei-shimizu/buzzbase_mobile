@@ -11,8 +11,8 @@ import {
   View,
 } from "react-native";
 import { ConditionCard } from "@components/practice/ConditionCard";
-import { BlurredProContent } from "@components/pro/BlurredProContent";
-import { PaywallModal, PRO_PAYWALL_COPY } from "@components/pro/PaywallModal";
+import { PaywallModal } from "@components/pro/PaywallModal";
+import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { formatPracticeValue, menuIconForLog } from "@constants/practice";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useNotes } from "@hooks/useNotes";
@@ -203,14 +203,13 @@ export default function PracticeSessionDetailScreen() {
         )}
 
         {session.condition ? (
-          <BlurredProContent
+          <ProUpsellOverlay
             unlocked={hasEntitlement("detailed_condition_log")}
-            title={PRO_PAYWALL_COPY.detailed_condition_log.title}
-            badgeLabel="Pro に加入する"
-            onPressBadge={() => setConditionPaywallOpen(true)}
+            feature="detailed_condition_log"
+            onPressCta={() => setConditionPaywallOpen(true)}
           >
             <ConditionCard condition={session.condition} />
-          </BlurredProContent>
+          </ProUpsellOverlay>
         ) : null}
 
         <LinkedNotes sessionId={sessionId} />

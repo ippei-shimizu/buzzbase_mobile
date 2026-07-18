@@ -84,12 +84,16 @@ describe("MenuTrendScreen", () => {
     renderWithProviders(<MenuTrendScreen />);
 
     await waitFor(() => expect(screen.getByText("素振り")).toBeOnTheScreen());
-    expect(screen.getByText("Pro に加入する")).toBeOnTheScreen();
-
-    fireEvent.press(screen.getByText("Pro に加入する"));
     expect(
       screen.getByText("メニューごとの推移を詳しく見る"),
     ).toBeOnTheScreen();
+    expect(screen.getByText("Pro プランを見る")).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByText("Pro プランを見る"));
+    // オーバーレイと PaywallModal 両方に見出しが出るため複数ヒットで開いたことを確認する。
+    expect(
+      screen.getAllByText("メニューごとの推移を詳しく見る").length,
+    ).toBeGreaterThan(1);
   });
 
   it("Proユーザーはフィルタ・グラフ・数値エリアを操作できる", async () => {
@@ -99,7 +103,7 @@ describe("MenuTrendScreen", () => {
     renderWithProviders(<MenuTrendScreen />);
 
     await waitFor(() => expect(screen.getByText("素振り")).toBeOnTheScreen());
-    expect(screen.queryByText("Pro に加入する")).not.toBeOnTheScreen();
+    expect(screen.queryByText("Pro プランを見る")).not.toBeOnTheScreen();
     expect(await screen.findByText("600本")).toBeOnTheScreen();
   });
 });

@@ -122,12 +122,20 @@ describe("NoteForm", () => {
     await waitFor(() =>
       expect(screen.getByText("タグ（任意・複数選択可）")).toBeOnTheScreen(),
     );
-    // オーバーレイのメリット訴求文言も見える。
-    expect(screen.getByText("タグでノートを整理・検索")).toBeOnTheScreen();
-
-    fireEvent.press(screen.getByText("Pro に加入する"));
-
+    // オーバーレイの見出し・メリット訴求文言（箇条書き）も見える。
     expect(screen.getByText("野球ノートにタグを付けて整理")).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        "・練習の気づきや試合の振り返りをタグで分類\n・過去のノートをタグから素早く検索\n・自分専用のタグも自由に作成可能",
+      ),
+    ).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByText("Pro プランを見る"));
+
+    // オーバーレイと PaywallModal 両方に見出しが出るため複数ヒットで開いたことを確認する。
+    expect(
+      screen.getAllByText("野球ノートにタグを付けて整理").length,
+    ).toBeGreaterThan(1);
   });
 
   it("Proユーザーはタグ選択UIが操作できる", async () => {
@@ -142,7 +150,7 @@ describe("NoteForm", () => {
       expect(screen.getByText("タグ（任意・複数選択可）")).toBeOnTheScreen(),
     );
     expect(
-      screen.queryByText("タグでノートを整理・検索"),
+      screen.queryByText("野球ノートにタグを付けて整理"),
     ).not.toBeOnTheScreen();
   });
 

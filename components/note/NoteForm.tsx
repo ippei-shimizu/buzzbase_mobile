@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { ThemePickerField } from "@components/improvement-theme/ThemePickerField";
 import { PaywallModal } from "@components/pro/PaywallModal";
+import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useFilteredGameResults } from "@hooks/useGameResults";
 import { usePracticeSessions } from "@hooks/usePracticeSessions";
@@ -266,35 +267,17 @@ export function NoteForm({
         locked={templateLocked}
       />
 
-      <View style={styles.tagWrapper}>
+      <ProUpsellOverlay
+        unlocked={hasEntitlement("note_tags")}
+        feature="note_tags"
+        onPressCta={() => setTagPaywallOpen(true)}
+      >
         <TagSection
           selectedIds={tagIds}
           onChange={setTagIds}
           disabled={!hasEntitlement("note_tags")}
         />
-        {!hasEntitlement("note_tags") ? (
-          <View style={styles.tagOverlay} pointerEvents="box-none">
-            <View style={styles.tagOverlayScrim} />
-            <View style={styles.tagOverlayCard}>
-              <Text style={styles.tagOverlayTitle}>
-                タグでノートを整理・検索
-              </Text>
-              <Text style={styles.tagOverlayDescription}>
-                ・練習の気づきや試合の振り返りをタグで分類{"\n"}
-                ・過去のノートをタグから素早く検索{"\n"}
-                ・自分専用のタグも自由に作成可能
-              </Text>
-              <TouchableOpacity
-                style={styles.tagUnlockButton}
-                onPress={() => setTagPaywallOpen(true)}
-              >
-                <Ionicons name="lock-closed" size={16} color="#FFFFFF" />
-                <Text style={styles.tagUnlockButtonText}>Pro に加入する</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : null}
-      </View>
+      </ProUpsellOverlay>
       <PaywallModal
         isOpen={isTagPaywallOpen}
         onClose={() => setTagPaywallOpen(false)}
@@ -509,49 +492,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   linkButtonText: { color: "#F4F4F4", fontSize: 14, flex: 1 },
-  tagWrapper: { position: "relative" },
-  tagOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 10,
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 12,
-  },
-  tagOverlayScrim: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(26, 26, 26, 0.82)",
-  },
-  tagOverlayCard: {
-    backgroundColor: "rgba(58,58,58,0.9)",
-    borderRadius: 10,
-    padding: 14,
-    alignItems: "center",
-  },
-  tagOverlayTitle: {
-    color: "#F4F4F4",
-    fontSize: 14,
-    fontWeight: "700",
-    marginBottom: 6,
-  },
-  tagOverlayDescription: {
-    color: "#D4D4D8",
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: "left",
-    marginBottom: 10,
-  },
-  tagUnlockButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "#d08000",
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    marginTop: 8,
-  },
-  tagUnlockButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
   picker: {
     backgroundColor: "#3A3A3A",
     borderRadius: 8,
