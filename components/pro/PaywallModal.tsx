@@ -115,9 +115,9 @@ export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
       "自分専用の問いかけテンプレをいくつでも作って、振り返りの質を高められます。",
   },
   advanced_periodic_review: {
-    title: "週次・月次レポートを詳しく",
+    title: "週次・月次の振り返りレポートを受け取る",
     description:
-      "課題別の取り組みや成績の推移、練習と成績のつながりを含む詳細レポートを受け取れます。",
+      "練習量や成績の変化、課題別の取り組み状況、練習と成績のつながりを週末・月末に自動でまとめてお届けします。",
   },
   note_tags: {
     title: "野球ノートにタグを付けて整理",
