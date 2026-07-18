@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { InsightCard } from "@components/insight/InsightCard";
 import { PaywallModal } from "@components/pro/PaywallModal";
-import { ProComingSoonCard } from "@components/stats/ProComingSoonCard";
+import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import {
   useCorrelationInsights,
   useInsightCombinationMutations,
@@ -61,18 +61,17 @@ export default function InsightScreen() {
           style={styles.container}
           contentContainerStyle={styles.content}
         >
-          <ProComingSoonCard
-            title="練習と成績の関係を発見"
-            description="素振りや睡眠と打率の傾向を、あなたのデータから自動で読み解きます。"
-            badgeLabel="Pro プラン限定"
-            onPress={() => setPaywallOpen(true)}
+          <ProUpsellOverlay
+            unlocked={false}
+            feature="correlation_insights"
+            onPressCta={() => setPaywallOpen(true)}
           >
             <View style={styles.dummy}>
               <Text style={styles.dummyText}>
                 素振りが多い週は、打率が高い傾向があります。
               </Text>
             </View>
-          </ProComingSoonCard>
+          </ProUpsellOverlay>
         </ScrollView>
         <PaywallModal
           isOpen={isPaywallOpen}

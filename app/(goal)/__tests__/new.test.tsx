@@ -22,13 +22,10 @@ jest.mock("expo-router", () => {
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
 
-const getRouterSpies = () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const m = require("expo-router") as {
-    __routerSpies: { push: jest.Mock };
-  };
-  return m.__routerSpies;
-};
+// PaywallModal が pro_features フラグで kill switch される設計のため、常時 true を返す。
+jest.mock("@hooks/useFeatureFlag", () => ({
+  useFeatureFlag: jest.fn(() => ({ enabled: true, isLoading: false })),
+}));
 
 const respondFree = () => {
   server.use(
@@ -71,7 +68,7 @@ const setupCommonHandlers = () => {
 };
 
 describe("GoalFormScreen（新規）", () => {
-  it("無料ユーザーは自由指標タブに Pro ロックが重なり、タップで /pro へ遷移する", async () => {
+  it("無料ユーザーは自由指標タブに Pro ロックが重なり、タップで Pro 説明・動線画面（PaywallModal）が開く", async () => {
     respondFree();
     setupCommonHandlers();
 
@@ -80,12 +77,13 @@ describe("GoalFormScreen（新規）", () => {
     await waitFor(() => expect(screen.getByText("自由指標")).toBeOnTheScreen());
     fireEvent.press(screen.getByLabelText("自由指標は Pro プラン限定です"));
 
-    expect(getRouterSpies().push).toHaveBeenCalledWith("/pro");
+    expect(await screen.findByText("BUZZ BASE")).toBeOnTheScreen();
+    expect(screen.getByLabelText("PROを始める")).toBeOnTheScreen();
     // ロックされているので選択状態には切り替わらない（指標名入力欄が出ない）。
     expect(screen.queryByText("指標名")).not.toBeOnTheScreen();
   });
 
-  it("無料ユーザーがカスタム期間を選ぶと Pro 訴求が表示される", async () => {
+  it("無料ユーザーがカスタム期間を選ぶと Pro 訴求カードが表示され、タップで PaywallModal が開く", async () => {
     respondFree();
     setupCommonHandlers();
 
@@ -96,9 +94,11 @@ describe("GoalFormScreen（新規）", () => {
     );
     fireEvent.press(screen.getByText("カスタム期間"));
 
-    expect(
-      screen.getByText("カスタム期間の目標は Pro プラン限定です"),
-    ).toBeOnTheScreen();
+    expect(screen.getByText("カスタム期間で目標を設定")).toBeOnTheScreen();
+    fireEvent.press(screen.getByText("Pro プランを見る"));
+
+    expect(await screen.findByText("BUZZ BASE")).toBeOnTheScreen();
+    expect(screen.getByLabelText("PROを始める")).toBeOnTheScreen();
   });
 
   it("Proユーザーは自由指標を選択でき、カスタム期間にもPro訴求が出ない", async () => {
@@ -120,7 +120,7 @@ describe("GoalFormScreen（新規）", () => {
 
     fireEvent.press(screen.getByText("カスタム期間"));
     expect(
-      screen.queryByText("カスタム期間の目標は Pro プラン限定です"),
+      screen.queryByText("カスタム期間で目標を設定"),
     ).not.toBeOnTheScreen();
   });
 });

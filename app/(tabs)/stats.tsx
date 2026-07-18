@@ -18,6 +18,7 @@ import {
   type NativeSyntheticEvent,
 } from "react-native";
 import { PaywallModal } from "@components/pro/PaywallModal";
+import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { AdditionalStatsCard } from "@components/stats/AdditionalStatsCard";
 import { BattingTrendChart } from "@components/stats/BattingTrendChart";
 import { ContactQualityCard } from "@components/stats/ContactQualityCard";
@@ -31,7 +32,6 @@ import { PitcherAttributeSummary } from "@components/stats/PitcherAttributeSumma
 import { PitcherFaceoffList } from "@components/stats/PitcherFaceoffList";
 import { PitchTypeCard } from "@components/stats/PitchTypeCard";
 import { PlateAppearanceDonut } from "@components/stats/PlateAppearanceDonut";
-import { ProComingSoonCard } from "@components/stats/ProComingSoonCard";
 import {
   CountSituationDummy,
   PitcherFaceoffDummy,
@@ -595,17 +595,17 @@ export default function StatsScreen() {
             )}
             {/* 6. HitDirectionTable */}
             {PRO_FEATURES_COMING_SOON ? (
-              <ProComingSoonCard
+              <ProUpsellOverlay
+                unlocked={false}
                 title="方向別の打率"
                 description="打球を打った方向ごとの打率をヒートマップで可視化します"
-                badgeLabel="Pro プラン限定"
-                onPress={() => {
+                onPressCta={() => {
                   trackProFeatureTapped("hit_direction");
                   setComingSoonPaywallOpen(true);
                 }}
               >
                 <ProComingSoonHitDirectionField />
-              </ProComingSoonCard>
+              </ProUpsellOverlay>
             ) : (
               hitDirections.data && (
                 <FetchingOverlay isFetching={hitDirections.isFetching}>
@@ -647,17 +647,17 @@ export default function StatsScreen() {
             )}
             {/* 10. CountSituationCards（カウント別の打率） */}
             {PRO_FEATURES_COMING_SOON ? (
-              <ProComingSoonCard
+              <ProUpsellOverlay
+                unlocked={false}
                 title="カウント別の打率"
                 description="初球・有利カウント・追い込みなど、カウント状況別の打率がわかります"
-                badgeLabel="Pro プラン限定"
-                onPress={() => {
+                onPressCta={() => {
                   trackProFeatureTapped("count_situation");
                   setComingSoonPaywallOpen(true);
                 }}
               >
                 <CountSituationDummy />
-              </ProComingSoonCard>
+              </ProUpsellOverlay>
             ) : (
               countSituations.data && (
                 <FetchingOverlay isFetching={countSituations.isFetching}>
@@ -667,17 +667,17 @@ export default function StatsScreen() {
             )}
             {/* 11. PitchTypeCard（球種別の打率） */}
             {PRO_FEATURES_COMING_SOON ? (
-              <ProComingSoonCard
+              <ProUpsellOverlay
+                unlocked={false}
                 title="球種別の打率"
                 description="ストレートや変化球など、球種ごとの得意・苦手が分析できます"
-                badgeLabel="Pro プラン限定"
-                onPress={() => {
+                onPressCta={() => {
                   trackProFeatureTapped("pitch_type");
                   setComingSoonPaywallOpen(true);
                 }}
               >
                 <PitchTypeDummy />
-              </ProComingSoonCard>
+              </ProUpsellOverlay>
             ) : (
               pitchTypes.data && (
                 <FetchingOverlay isFetching={pitchTypes.isFetching}>
@@ -690,17 +690,17 @@ export default function StatsScreen() {
             )}
             {/* 12. PitcherFaceoffList */}
             {PRO_FEATURES_COMING_SOON ? (
-              <ProComingSoonCard
+              <ProUpsellOverlay
+                unlocked={false}
                 title="対戦投手別"
                 description="対戦した投手ごとの打撃成績を一覧で確認できます"
-                badgeLabel="Pro プラン限定"
-                onPress={() => {
+                onPressCta={() => {
                   trackProFeatureTapped("pitcher_faceoff");
                   setComingSoonPaywallOpen(true);
                 }}
               >
                 <PitcherFaceoffDummy />
-              </ProComingSoonCard>
+              </ProUpsellOverlay>
             ) : (
               pitcherFaceoffs.data && (
                 <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>

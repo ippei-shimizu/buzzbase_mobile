@@ -44,7 +44,7 @@ describe("相関インサイト", () => {
     expect(
       getByText("素振りが多い週は、打率が高い傾向があります。"),
     ).toBeTruthy();
-    expect(getByText("Pro プラン限定")).toBeTruthy();
+    expect(getByText("Pro プランを見る")).toBeTruthy();
   });
 
   it("訴求カードをタップすると Pro 説明・動線画面（PaywallModal）が開く", async () => {
@@ -59,7 +59,7 @@ describe("相関インサイト", () => {
     await waitFor(() =>
       expect(screen.getByText("練習と成績の関係を発見")).toBeOnTheScreen(),
     );
-    fireEvent.press(screen.getByText("練習と成績の関係を発見"));
+    fireEvent.press(screen.getByText("Pro プランを見る"));
 
     expect(await screen.findByText("BUZZ BASE")).toBeOnTheScreen();
     expect(screen.getByLabelText("PROを始める")).toBeOnTheScreen();
