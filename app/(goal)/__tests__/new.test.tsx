@@ -68,19 +68,30 @@ const setupCommonHandlers = () => {
 };
 
 describe("GoalFormScreen（新規）", () => {
-  it("無料ユーザーは自由指標タブに Pro ロックが重なり、タップで Pro 説明・動線画面（PaywallModal）が開く", async () => {
+  it("無料ユーザーは自由指標タブを選べて、内容欄に Pro 訴求カードが表示される", async () => {
     respondFree();
     setupCommonHandlers();
 
     renderWithProviders(<GoalFormScreen />);
 
-    await waitFor(() => expect(screen.getByText("自由指標")).toBeOnTheScreen());
-    fireEvent.press(screen.getByLabelText("自由指標は Pro プラン限定です"));
+    await waitFor(() =>
+      expect(screen.getByLabelText("自由指標（Pro限定）")).toBeOnTheScreen(),
+    );
+    fireEvent.press(screen.getByLabelText("自由指標（Pro限定）"));
+
+    // タブは選択でき、指標名入力欄の代わりに Pro 訴求カード（説明文つき）が出る。
+    expect(screen.getByText("自由指標で目標を設定")).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        "球速や体重など、アプリが自動集計できない自分だけの指標も目標にして手入力で管理できます。",
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText("指標名")).not.toBeOnTheScreen();
+
+    fireEvent.press(screen.getByText("Pro プランを見る"));
 
     expect(await screen.findByText("BUZZ BASE")).toBeOnTheScreen();
     expect(screen.getByLabelText("PROを始める")).toBeOnTheScreen();
-    // ロックされているので選択状態には切り替わらない（指標名入力欄が出ない）。
-    expect(screen.queryByText("指標名")).not.toBeOnTheScreen();
   });
 
   it("無料ユーザーがカスタム期間を選ぶと Pro 訴求カードが表示され、タップで PaywallModal が開く", async () => {
@@ -111,7 +122,7 @@ describe("GoalFormScreen（新規）", () => {
     // pro/status の取得完了前はロック済み扱いのため、解決を待ってから非表示を確認する。
     await waitFor(() =>
       expect(
-        screen.queryByLabelText("自由指標は Pro プラン限定です"),
+        screen.queryByLabelText("自由指標（Pro限定）"),
       ).not.toBeOnTheScreen(),
     );
 

@@ -166,6 +166,8 @@ function GoalForm({ editing }: { editing?: Goal }) {
   const isManual = kind === "manual";
   const isMenuMetric =
     !isQualitative && !isManual && metricKey === "menu_practice_days";
+  // 自由指標は Pro 限定。既存の自由指標目標を編集中は鍵をかけない（タイプ自体変更不可のため）。
+  const isLockedManual = !canManualMetric && !editing;
 
   const handleSave = async () => {
     if (isQualitative && !title.trim()) {
@@ -309,42 +311,30 @@ function GoalForm({ editing }: { editing?: Goal }) {
         <View style={styles.row}>
           {KINDS.map((item) => {
             const active = kind === item.key;
-            // 自由指標は Pro 限定。既存の自由指標目標を編集中は鍵をかけない（タイプ自体変更不可のため）。
-            const isLockedManual =
-              item.key === "manual" && !canManualMetric && !editing;
+            const isLockedItem = item.key === "manual" && isLockedManual;
             return (
-              <View key={item.key} style={styles.segWrapper}>
-                <TouchableOpacity
-                  style={[
-                    styles.seg,
-                    active && styles.segActive,
-                    editing && !active && styles.segLocked,
-                    isLockedManual && styles.segLocked,
-                  ]}
-                  // タイプは作成後に変更不可（集計/達成管理の整合のため）。
-                  disabled={Boolean(editing) || isLockedManual}
-                  onPress={() => setKind(item.key)}
-                >
-                  <Text
-                    style={[styles.segText, active && styles.segTextActive]}
-                  >
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-                {isLockedManual ? (
-                  <TouchableOpacity
-                    style={styles.segProOverlay}
-                    onPress={() =>
-                      setProNotePaywallFeature("manual_metric_goals")
-                    }
-                    accessibilityRole="button"
-                    accessibilityLabel="自由指標は Pro プラン限定です"
-                  >
-                    <Ionicons name="lock-closed" size={12} color="#F4F4F4" />
-                    <Text style={styles.segProOverlayText}>Pro限定</Text>
-                  </TouchableOpacity>
+              <TouchableOpacity
+                key={item.key}
+                style={[
+                  styles.seg,
+                  active && styles.segActive,
+                  editing && !active && styles.segLocked,
+                ]}
+                // タイプは作成後に変更不可（集計/達成管理の整合のため）。自由指標はロック中でも
+                // タブ自体は押せるようにし、内容欄で Pro 訴求を見せる（下記 isManual ブロック）。
+                disabled={Boolean(editing)}
+                onPress={() => setKind(item.key)}
+                accessibilityLabel={
+                  isLockedItem ? "自由指標（Pro限定）" : item.label
+                }
+              >
+                {isLockedItem ? (
+                  <Ionicons name="lock-closed" size={11} color="#A1A1AA" />
                 ) : null}
-              </View>
+                <Text style={[styles.segText, active && styles.segTextActive]}>
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
             );
           })}
         </View>
@@ -588,7 +578,14 @@ function GoalForm({ editing }: { editing?: Goal }) {
           </>
         )}
 
-        {isManual ? (
+        {isManual && isLockedManual ? (
+          <ProUpsellCard
+            feature="manual_metric_goals"
+            onPressCta={() => setProNotePaywallFeature("manual_metric_goals")}
+            style={styles.proNoteCard}
+          />
+        ) : null}
+        {isManual && !isLockedManual ? (
           <>
             <Text style={styles.label}>指標名</Text>
             <TextInput
@@ -709,27 +706,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   row: { flexDirection: "row", gap: 8 },
-  segWrapper: { flex: 1, position: "relative" },
   seg: {
     flex: 1,
+    flexDirection: "row",
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
     backgroundColor: "#3A3A3A",
   },
   segActive: { backgroundColor: "#d08000" },
   segLocked: { opacity: 0.4 },
   segText: { color: "#A1A1AA", fontSize: 14, fontWeight: "600" },
-  segProOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    borderRadius: 8,
-    backgroundColor: "rgba(0, 0, 0, 0.35)",
-  },
-  segProOverlayText: { color: "#F4F4F4", fontSize: 11, fontWeight: "700" },
   segTextActive: { color: "#FFFFFF" },
   proNoteCard: { marginTop: 12 },
   hint: { color: "#71717A", fontSize: 12, marginTop: 8 },
