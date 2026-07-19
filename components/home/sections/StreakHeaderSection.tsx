@@ -112,6 +112,7 @@ export function StreakHeaderSection() {
             title="Pro で全期間の記録マップを表示"
             description="無料では直近30日まで表示されます。Pro なら全期間・年ビューを確認できます。"
             onPressCta={() => setPaywallOpen(true)}
+            style={styles.proCardDark}
           />
         </View>
       ) : null}
@@ -147,4 +148,5 @@ const styles = StyleSheet.create({
   },
   milestoneText: { color: "#A1A1AA", fontSize: 12, flexShrink: 1 },
   proCardWrapper: { marginTop: 16 },
+  proCardDark: { backgroundColor: "#1A1A1A" },
 });
