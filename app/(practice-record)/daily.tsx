@@ -8,7 +8,6 @@ import type {
 import type { ConditionDraft } from "@components/practice/ConditionForm";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { BlurView } from "expo-blur";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
@@ -28,6 +27,7 @@ import {
   EMPTY_CONDITION_DRAFT,
 } from "@components/practice/ConditionForm";
 import { PaywallModal } from "@components/pro/PaywallModal";
+import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { CATEGORY_ICON, PRACTICE_CATEGORIES } from "@constants/practice";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
@@ -322,29 +322,17 @@ function DailyEditor({
         ) : null}
       </View>
       <View style={styles.conditionWrapper}>
-        <ConditionForm
-          value={condition}
-          onChange={setCondition}
-          disabled={!canSaveCondition}
-        />
-        {!canSaveCondition ? (
-          <View style={styles.conditionOverlay} pointerEvents="box-none">
-            <BlurView
-              intensity={8}
-              tint="dark"
-              style={StyleSheet.absoluteFill}
-            />
-            <TouchableOpacity
-              style={styles.conditionUnlockButton}
-              onPress={() => setConditionPaywallOpen(true)}
-            >
-              <Ionicons name="lock-closed" size={16} color="#FFFFFF" />
-              <Text style={styles.conditionUnlockButtonText}>
-                Pro に加入して記録する
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
+        <ProUpsellOverlay
+          unlocked={canSaveCondition}
+          feature="detailed_condition_log"
+          onPressCta={() => setConditionPaywallOpen(true)}
+        >
+          <ConditionForm
+            value={condition}
+            onChange={setCondition}
+            disabled={!canSaveCondition}
+          />
+        </ProUpsellOverlay>
       </View>
       <PaywallModal
         isOpen={isConditionPaywallOpen}
@@ -565,28 +553,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   addMenuButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
-  conditionWrapper: { position: "relative", marginTop: 8 },
-  conditionOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 10,
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  conditionUnlockButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "#d08000",
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-  },
-  conditionUnlockButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "700",
-  },
+  conditionWrapper: { marginTop: 8 },
   empty: { alignItems: "center", paddingVertical: 40 },
   emptyTitle: {
     color: "#F4F4F4",
