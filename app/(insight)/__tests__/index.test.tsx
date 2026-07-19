@@ -41,10 +41,13 @@ describe("相関インサイト", () => {
     await waitFor(() => {
       expect(getByText("練習と成績の関係を発見")).toBeTruthy();
     });
+    expect(getByText("Pro プランを見る")).toBeTruthy();
+    // ダミーデータは3件表示し、複数の傾向を発見できる機能だと伝える。
     expect(
       getByText("素振りが多い週は、打率が高い傾向があります。"),
     ).toBeTruthy();
-    expect(getByText("Pro プランを見る")).toBeTruthy();
+    expect(getByText("睡眠時間とコンディションの関係")).toBeTruthy();
+    expect(getByText("練習日数と三振の関係")).toBeTruthy();
   });
 
   it("訴求カードをタップすると Pro 説明・動線画面（PaywallModal）が開く", async () => {
