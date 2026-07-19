@@ -12,9 +12,13 @@ import {
   StyleSheet,
 } from "react-native";
 import { GroupDefaultIcon } from "@components/icon/GroupDefaultIcon";
+import { PaywallModal } from "@components/pro/PaywallModal";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
 import { API_BASE_URL } from "@constants/api";
+import { GROUP_FREE_LIMIT } from "@constants/group";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { useAcceptInviteLink } from "@hooks/useGroupMutations";
+import { useGroups } from "@hooks/useGroups";
 import { getInviteLinkInfo } from "@services/groupService";
 
 export default function JoinGroupScreen() {
@@ -22,7 +26,10 @@ export default function JoinGroupScreen() {
   const [code, setCode] = useState("");
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [inviteInfo, setInviteInfo] = useState<InviteLinkInfo | null>(null);
+  const [isPaywallOpen, setPaywallOpen] = useState(false);
   const { acceptInviteLink, isAccepting } = useAcceptInviteLink();
+  const { groups } = useGroups();
+  const { hasEntitlement } = useEntitlement();
 
   const handleLookup = async () => {
     if (code.length === 0) return;
@@ -40,6 +47,14 @@ export default function JoinGroupScreen() {
   };
 
   const handleJoin = async () => {
+    if (
+      !hasEntitlement("unlimited_groups") &&
+      groups.length >= GROUP_FREE_LIMIT
+    ) {
+      setPaywallOpen(true);
+      return;
+    }
+
     try {
       const result = await acceptInviteLink(code);
       router.replace(`/(groups)/${result.group_id}`);
@@ -141,6 +156,11 @@ export default function JoinGroupScreen() {
           </TouchableOpacity>
         </View>
       )}
+      <PaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        feature="unlimited_groups"
+      />
     </View>
   );
 }

@@ -13,20 +13,26 @@ import {
 } from "react-native";
 import { GroupForm } from "@components/groups/GroupForm";
 import { SelectableUserRow } from "@components/groups/SelectableUserRow";
+import { PaywallModal } from "@components/pro/PaywallModal";
+import { GROUP_FREE_LIMIT } from "@constants/group";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { useCreateGroup, useInviteMembers } from "@hooks/useGroupMutations";
-import { useFollowingUsers } from "@hooks/useGroups";
+import { useFollowingUsers, useGroups } from "@hooks/useGroups";
 import { useProfile } from "@hooks/useProfile";
 
 export default function GroupCreateScreen() {
   const router = useRouter();
   const { profile } = useProfile();
   const { users, isLoading: isLoadingUsers } = useFollowingUsers(profile?.id);
+  const { groups } = useGroups();
+  const { hasEntitlement } = useEntitlement();
   const { createGroup, isCreating } = useCreateGroup();
   const { inviteMembers, isInviting } = useInviteMembers();
 
   const [name, setName] = useState("");
   const [iconUri, setIconUri] = useState<string | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [isPaywallOpen, setPaywallOpen] = useState(false);
 
   const isSaving = isCreating || isInviting;
   const canSave = name.trim().length > 0 && !isSaving;
@@ -53,6 +59,14 @@ export default function GroupCreateScreen() {
   };
 
   const handleSave = async () => {
+    if (
+      !hasEntitlement("unlimited_groups") &&
+      groups.length >= GROUP_FREE_LIMIT
+    ) {
+      setPaywallOpen(true);
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("group[name]", name);
@@ -147,6 +161,11 @@ export default function GroupCreateScreen() {
           )}
         </View>
       </ScrollView>
+      <PaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        feature="unlimited_groups"
+      />
     </>
   );
 }

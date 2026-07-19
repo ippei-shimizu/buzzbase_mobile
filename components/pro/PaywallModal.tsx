@@ -165,6 +165,11 @@ export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     description:
       "音を出せない場所でもバイブレーションでインターバルを把握しながら素振りできます。",
   },
+  unlimited_groups: {
+    title: "グループを無制限に作成・参加",
+    description:
+      "Pro プランなら2つ目以降のグループも自由に作成・参加できます。チームを掛け持ちしているメンバーも安心です。",
+  },
 };
 
 export const DEFAULT_COPY: PaywallCopy = {
@@ -206,6 +211,7 @@ export const FEATURE_COMPARISONS: Record<ProFeature, FeatureComparison> = {
   manual_metric_goals: { free: "✕", pro: "○" },
   shadow_swing_custom_interval: { free: "5〜10秒", pro: "1〜20秒" },
   shadow_swing_vibration: { free: "✕", pro: "○" },
+  unlimited_groups: { free: "1件", pro: "無制限" },
 };
 
 interface FeatureGroup {
@@ -285,6 +291,11 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     title: "継続",
     icon: "flame-outline",
     keys: ["grass_full_history"],
+  },
+  {
+    title: "グループ",
+    icon: "people-outline",
+    keys: ["unlimited_groups"],
   },
   {
     title: "その他",
