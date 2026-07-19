@@ -267,6 +267,7 @@ export function NoteForm({
         locked={templateLocked}
       />
 
+      <Text style={styles.label}>タグ（任意・複数選択可）</Text>
       <ProUpsellOverlay
         unlocked={hasEntitlement("note_tags")}
         feature="note_tags"
@@ -276,6 +277,7 @@ export function NoteForm({
           selectedIds={tagIds}
           onChange={setTagIds}
           disabled={!hasEntitlement("note_tags")}
+          showLabel={false}
         />
       </ProUpsellOverlay>
       <PaywallModal

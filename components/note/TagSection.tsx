@@ -14,13 +14,20 @@ interface Props {
   onChange: (ids: number[]) => void;
   /** true のとき見た目はそのまま操作不可にする（無料ユーザーへの Pro 機能プレビュー用）。 */
   disabled?: boolean;
+  /** false のとき内部の見出しラベルを出さない（呼び出し側で常時表示のラベルを別途出す場合用）。デフォルト true。 */
+  showLabel?: boolean;
 }
 
 /**
  * ノートのタグ選択。プリセット＋自作タグをトグルチップで複数選択でき、
  * 未登録の名前は入力欄からその場で作成して選択に加える（ハイブリッド）。
  */
-export function TagSection({ selectedIds, onChange, disabled = false }: Props) {
+export function TagSection({
+  selectedIds,
+  onChange,
+  disabled = false,
+  showLabel = true,
+}: Props) {
   const { tags, isLoading } = useTags();
   const { createTag, isCreating } = useTagMutations();
   const [newTag, setNewTag] = useState("");
@@ -63,7 +70,9 @@ export function TagSection({ selectedIds, onChange, disabled = false }: Props) {
 
   return (
     <View>
-      <Text style={styles.label}>タグ（任意・複数選択可）</Text>
+      {showLabel ? (
+        <Text style={styles.label}>タグ（任意・複数選択可）</Text>
+      ) : null}
       <View style={styles.chips}>
         {tags.map((tag) => {
           const active = selectedIds.includes(tag.id);

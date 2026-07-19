@@ -147,11 +147,11 @@ describe("NoteForm", () => {
     );
 
     await waitFor(() =>
-      expect(screen.getByText("タグ（任意・複数選択可）")).toBeOnTheScreen(),
+      expect(
+        screen.queryByText("野球ノートにタグを付けて整理"),
+      ).not.toBeOnTheScreen(),
     );
-    expect(
-      screen.queryByText("野球ノートにタグを付けて整理"),
-    ).not.toBeOnTheScreen();
+    expect(screen.getByText("タグ（任意・複数選択可）")).toBeOnTheScreen();
   });
 
   it("無料ユーザーは2件目の試合紐付けを試みると Pro 訴求が表示される", async () => {
