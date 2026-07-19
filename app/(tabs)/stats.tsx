@@ -18,6 +18,7 @@ import {
   type NativeSyntheticEvent,
 } from "react-native";
 import { PaywallModal } from "@components/pro/PaywallModal";
+import { ProUpsellCard } from "@components/pro/ProUpsellCard";
 import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { AdditionalStatsCard } from "@components/stats/AdditionalStatsCard";
 import { BattingTrendChart } from "@components/stats/BattingTrendChart";
@@ -597,12 +598,12 @@ export default function StatsScreen() {
             {PRO_FEATURES_COMING_SOON ? (
               <ProUpsellOverlay
                 unlocked={false}
-                title="方向別の打率"
-                description="打球を打った方向ごとの打率をヒートマップで可視化します"
+                feature="hit_direction_average"
                 onPressCta={() => {
                   trackProFeatureTapped("hit_direction");
                   setComingSoonPaywallOpen(true);
                 }}
+                style={styles.proSectionSpacing}
               >
                 <ProComingSoonHitDirectionField />
               </ProUpsellOverlay>
@@ -647,17 +648,18 @@ export default function StatsScreen() {
             )}
             {/* 10. CountSituationCards（カウント別の打率） */}
             {PRO_FEATURES_COMING_SOON ? (
-              <ProUpsellOverlay
-                unlocked={false}
-                title="カウント別の打率"
-                description="初球・有利カウント・追い込みなど、カウント状況別の打率がわかります"
-                onPressCta={() => {
-                  trackProFeatureTapped("count_situation");
-                  setComingSoonPaywallOpen(true);
-                }}
-              >
-                <CountSituationDummy />
-              </ProUpsellOverlay>
+              <View style={styles.proSectionSpacing}>
+                <ProUpsellCard
+                  feature="count_situation_average"
+                  onPressCta={() => {
+                    trackProFeatureTapped("count_situation");
+                    setComingSoonPaywallOpen(true);
+                  }}
+                />
+                <View pointerEvents="none" style={styles.comingSoonDummy}>
+                  <CountSituationDummy />
+                </View>
+              </View>
             ) : (
               countSituations.data && (
                 <FetchingOverlay isFetching={countSituations.isFetching}>
@@ -667,17 +669,18 @@ export default function StatsScreen() {
             )}
             {/* 11. PitchTypeCard（球種別の打率） */}
             {PRO_FEATURES_COMING_SOON ? (
-              <ProUpsellOverlay
-                unlocked={false}
-                title="球種別の打率"
-                description="ストレートや変化球など、球種ごとの得意・苦手が分析できます"
-                onPressCta={() => {
-                  trackProFeatureTapped("pitch_type");
-                  setComingSoonPaywallOpen(true);
-                }}
-              >
-                <PitchTypeDummy />
-              </ProUpsellOverlay>
+              <View style={styles.proSectionSpacing}>
+                <ProUpsellCard
+                  feature="pitch_type_average"
+                  onPressCta={() => {
+                    trackProFeatureTapped("pitch_type");
+                    setComingSoonPaywallOpen(true);
+                  }}
+                />
+                <View pointerEvents="none" style={styles.comingSoonDummy}>
+                  <PitchTypeDummy />
+                </View>
+              </View>
             ) : (
               pitchTypes.data && (
                 <FetchingOverlay isFetching={pitchTypes.isFetching}>
@@ -690,17 +693,18 @@ export default function StatsScreen() {
             )}
             {/* 12. PitcherFaceoffList */}
             {PRO_FEATURES_COMING_SOON ? (
-              <ProUpsellOverlay
-                unlocked={false}
-                title="対戦投手別"
-                description="対戦した投手ごとの打撃成績を一覧で確認できます"
-                onPressCta={() => {
-                  trackProFeatureTapped("pitcher_faceoff");
-                  setComingSoonPaywallOpen(true);
-                }}
-              >
-                <PitcherFaceoffDummy />
-              </ProUpsellOverlay>
+              <View style={styles.proSectionSpacing}>
+                <ProUpsellCard
+                  feature="pitcher_faceoff_average"
+                  onPressCta={() => {
+                    trackProFeatureTapped("pitcher_faceoff");
+                    setComingSoonPaywallOpen(true);
+                  }}
+                />
+                <View pointerEvents="none" style={styles.comingSoonDummy}>
+                  <PitcherFaceoffDummy />
+                </View>
+              </View>
             ) : (
               pitcherFaceoffs.data && (
                 <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
@@ -885,6 +889,12 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
+  },
+  proSectionSpacing: {
+    marginBottom: 16,
+  },
+  comingSoonDummy: {
+    marginTop: 12,
   },
   tabBar: {
     flexDirection: "row",

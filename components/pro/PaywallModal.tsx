@@ -170,6 +170,23 @@ export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     description:
       "Pro プランなら2つ目以降のグループも自由に作成・参加できます。チームを掛け持ちしているメンバーも安心です。",
   },
+  hit_direction_average: {
+    title: "方向別の打率",
+    description: "打球を打った方向ごとの打率をヒートマップで可視化します。",
+  },
+  count_situation_average: {
+    title: "カウント別の打率",
+    description:
+      "初球・有利カウント・追い込みなど、カウント状況別の打率がわかります。",
+  },
+  pitch_type_average: {
+    title: "球種別の打率",
+    description: "ストレートや変化球など、球種ごとの得意・苦手が分析できます。",
+  },
+  pitcher_faceoff_average: {
+    title: "対戦投手別",
+    description: "対戦した投手ごとの打撃成績を一覧で確認できます。",
+  },
 };
 
 export const DEFAULT_COPY: PaywallCopy = {
@@ -212,6 +229,10 @@ export const FEATURE_COMPARISONS: Record<ProFeature, FeatureComparison> = {
   shadow_swing_custom_interval: { free: "5〜10秒", pro: "1〜20秒" },
   shadow_swing_vibration: { free: "✕", pro: "○" },
   unlimited_groups: { free: "1件", pro: "無制限" },
+  hit_direction_average: { free: "✕", pro: "○" },
+  count_situation_average: { free: "✕", pro: "○" },
+  pitch_type_average: { free: "✕", pro: "○" },
+  pitcher_faceoff_average: { free: "✕", pro: "○" },
 };
 
 interface FeatureGroup {
@@ -220,7 +241,7 @@ interface FeatureGroup {
   keys: ProFeature[];
 }
 
-// 「PRO でできること」表のグループ分け。PRO_FEATURES 全26項目を過不足なく1回ずつ含む
+// 「PRO でできること」表のグループ分け。PRO_FEATURES 全31項目を過不足なく1回ずつ含む
 // （テストで網羅性を担保。詳細は __tests__/PaywallModal.test.tsx）。
 // グループ名・アイコンはホーム画面の実際のセクション名・導線に合わせる
 // （例: PracticeToolsSection="練習ツール", ImprovementToolsSection の各ツール名）。
@@ -270,7 +291,14 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   {
     title: "成績",
     icon: "stats-chart-outline",
-    keys: ["season_transition_graph", "practice_menu_trend_detail"],
+    keys: [
+      "season_transition_graph",
+      "practice_menu_trend_detail",
+      "hit_direction_average",
+      "count_situation_average",
+      "pitch_type_average",
+      "pitcher_faceoff_average",
+    ],
   },
   {
     title: "振り返りレポート",
