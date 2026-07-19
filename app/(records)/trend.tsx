@@ -445,17 +445,18 @@ export default function MenuTrendScreen() {
         </ProUpsellOverlay>
 
         {buckets.length > 0 ? (
-          <ProUpsellOverlay
-            unlocked={hasEntitlement("practice_menu_trend_detail")}
-            hideCard
-            scrimOpacity={1}
-          >
-            <View style={styles.listCard}>
-              {rangedBuckets.map((bucket) => (
-                <View key={bucket.period} style={styles.row}>
-                  <Text style={styles.rowLabel}>
-                    {periodLabel(period, bucket.period)}
-                  </Text>
+          <View style={styles.listCard}>
+            {rangedBuckets.map((bucket) => (
+              <View key={bucket.period} style={styles.row}>
+                <Text style={styles.rowLabel}>
+                  {periodLabel(period, bucket.period)}
+                </Text>
+                <ProUpsellOverlay
+                  unlocked={hasEntitlement("practice_menu_trend_detail")}
+                  hideCard
+                  scrimOpacity={1}
+                  style={styles.rowRightOverlay}
+                >
                   <View style={styles.rowRight}>
                     <Text style={styles.rowValue}>
                       {bucketValueText(trend, bucket)}
@@ -464,10 +465,10 @@ export default function MenuTrendScreen() {
                       <Text style={styles.rowSub}>{bucket.days_count}日</Text>
                     ) : null}
                   </View>
-                </View>
-              ))}
-            </View>
-          </ProUpsellOverlay>
+                </ProUpsellOverlay>
+              </View>
+            ))}
+          </View>
         ) : null}
       </ScrollView>
       <PaywallModal
@@ -535,6 +536,7 @@ const styles = StyleSheet.create({
   },
   rowLabel: { color: "#F4F4F4", fontSize: 14, fontWeight: "600" },
   rowRight: { flexDirection: "row", alignItems: "baseline", gap: 8 },
+  rowRightOverlay: { borderRadius: 0 },
   rowValue: { color: "#d08000", fontSize: 16, fontWeight: "800" },
   rowSub: { color: "#A1A1AA", fontSize: 12 },
 });

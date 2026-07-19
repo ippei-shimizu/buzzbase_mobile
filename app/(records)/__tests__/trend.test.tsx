@@ -1,6 +1,7 @@
 /**
  * メニュー推移詳細画面（practice_menu_trend_detail）の Pro 制限の振る舞いテスト。
- * フィルタ・グラフ・数値エリアは無料ユーザーには覆われ、タイトルのみ見える。
+ * フィルタ・グラフは無料ユーザーには覆われる。数値一覧はラベル（期間）は見えるが、
+ * 数値だけ「Pro限定」バッジで隠される。
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import {
@@ -94,6 +95,11 @@ describe("MenuTrendScreen", () => {
     expect(
       screen.getAllByText("メニューごとの推移を詳しく見る").length,
     ).toBeGreaterThan(1);
+
+    // 数値一覧はラベル（期間）は見え、数値側には「Pro限定」バッジが重なる
+    // （暗幕は視覚的に隠すのみで要素自体はツリーに残るため、ラベルの可視性のみ確認する）。
+    expect(screen.getByText("2026/6")).toBeOnTheScreen();
+    expect(screen.getByText("Pro限定")).toBeOnTheScreen();
   });
 
   it("Proユーザーはフィルタ・グラフ・数値エリアを操作できる", async () => {
