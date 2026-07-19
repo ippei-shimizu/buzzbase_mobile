@@ -203,13 +203,21 @@ export default function PracticeSessionDetailScreen() {
         )}
 
         {session.condition ? (
-          <ProUpsellOverlay
-            unlocked={hasEntitlement("detailed_condition_log")}
-            feature="detailed_condition_log"
-            onPressCta={() => setConditionPaywallOpen(true)}
-          >
-            <ConditionCard condition={session.condition} />
-          </ProUpsellOverlay>
+          <>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitleInline}>コンディション</Text>
+              {!hasEntitlement("detailed_condition_log") ? (
+                <Text style={styles.proBadge}>Pro限定</Text>
+              ) : null}
+            </View>
+            <ProUpsellOverlay
+              unlocked={hasEntitlement("detailed_condition_log")}
+              feature="detailed_condition_log"
+              onPressCta={() => setConditionPaywallOpen(true)}
+            >
+              <ConditionCard condition={session.condition} />
+            </ProUpsellOverlay>
+          </>
         ) : null}
 
         <LinkedNotes sessionId={sessionId} />
@@ -256,6 +264,23 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 24,
     marginBottom: 10,
+  },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 24,
+    marginBottom: 10,
+  },
+  sectionTitleInline: {
+    color: "#F4F4F4",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  proBadge: {
+    color: "#d08000",
+    fontSize: 12,
+    fontWeight: "700",
   },
   muted: { color: "#A1A1AA", fontSize: 13 },
 
