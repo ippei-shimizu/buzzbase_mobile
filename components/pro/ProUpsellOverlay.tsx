@@ -1,6 +1,13 @@
 import type { ProFeature } from "../../types/pro";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 import { ProUpsellCard } from "./ProUpsellCard";
 
 interface ProUpsellOverlayProps {
@@ -14,10 +21,11 @@ interface ProUpsellOverlayProps {
   ctaLabel?: string;
   /** 省略時はカードを出さず暗幕のみ表示する（同一画面の2ブロック目などCTAを1箇所に絞りたい場合用）。 */
   onPressCta?: () => void;
-  /** true のときカード自体を出さず暗幕のみにする（onPressCta の有無に関わらず）。 */
+  /** true のときカード自体を出さず暗幕のみにする（onPressCta の有無に関わらず）。ロック中は代わりに小さな「Pro限定」バッジを出す。 */
   hideCard?: boolean;
   /** 暗幕の不透明度（0〜1）。数値等を確実に見せたくない箇所は高めの値を指定する。デフォルト 0.82。 */
   scrimOpacity?: number;
+  style?: StyleProp<ViewStyle>;
 }
 
 /**
@@ -38,13 +46,15 @@ export function ProUpsellOverlay({
   onPressCta,
   hideCard = false,
   scrimOpacity = 0.82,
+  style,
 }: ProUpsellOverlayProps) {
   if (unlocked) return <>{children}</>;
 
   const showCard = !hideCard && Boolean(onPressCta);
+  const showBadge = hideCard;
 
   return (
-    <View style={[styles.wrapper, showCard && styles.wrapperWithCard]}>
+    <View style={[styles.wrapper, showCard && styles.wrapperWithCard, style]}>
       <View pointerEvents="none">{children}</View>
       <View
         style={[
@@ -65,6 +75,14 @@ export function ProUpsellOverlay({
           />
         </View>
       ) : null}
+      {showBadge ? (
+        <View style={styles.cardContainer}>
+          <View style={styles.badge}>
+            <Ionicons name="lock-closed" size={11} color="#F4F4F4" />
+            <Text style={styles.badgeText}>Pro限定</Text>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -76,7 +94,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   wrapperWithCard: {
-    minHeight: 120,
+    minHeight: 200,
   },
   scrim: {
     ...StyleSheet.absoluteFillObject,
@@ -86,5 +104,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 12,
+  },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(58, 58, 58, 0.9)",
+    borderRadius: 999,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
+  badgeText: {
+    color: "#F4F4F4",
+    fontSize: 11,
+    fontWeight: "700",
   },
 });
