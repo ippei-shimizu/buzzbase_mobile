@@ -106,9 +106,9 @@ const DUMMY_PITCH_TYPE_ROWS: PitchTypeRow[] = [
     hit_by_pitch: 1,
     sacrifice_fly: 0,
     batting_average: 0.342,
-    on_base_percentage: 0.4,
+    on_base_percentage: 0.425,
     slugging_percentage: 0.514,
-    ops: 0.914,
+    ops: 0.939,
     result_counts: [
       { plate_result_id: 1, plate_result_name: "二塁打", count: 3 },
       { plate_result_id: 2, plate_result_name: "三塁打", count: 0 },
