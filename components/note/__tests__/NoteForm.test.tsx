@@ -122,8 +122,13 @@ describe("NoteForm", () => {
     await waitFor(() =>
       expect(screen.getByText("タグ（任意・複数選択可）")).toBeOnTheScreen(),
     );
-    // オーバーレイの見出し・メリット訴求文言（箇条書き）も見える。
-    expect(screen.getByText("野球ノートにタグを付けて整理")).toBeOnTheScreen();
+    // オーバーレイのカードは pro/status 解決前（isProLoading 中）は描画されないため、
+    // 解決を待ってから見出し・メリット訴求文言（箇条書き）を検証する。
+    await waitFor(() =>
+      expect(
+        screen.getByText("野球ノートにタグを付けて整理"),
+      ).toBeOnTheScreen(),
+    );
     expect(
       screen.getByText(
         "・練習の気づきや試合の振り返りをタグで分類\n・過去のノートをタグから素早く検索\n・自分専用のタグも自由に作成可能",
