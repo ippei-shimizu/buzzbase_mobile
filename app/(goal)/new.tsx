@@ -673,9 +673,13 @@ function GoalForm({ editing }: { editing?: Goal }) {
         />
 
         <TouchableOpacity
-          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+          style={[
+            styles.saveButton,
+            (isSaving || (isManual && isLockedManual)) &&
+              styles.saveButtonDisabled,
+          ]}
           onPress={handleSave}
-          disabled={isSaving}
+          disabled={isSaving || (isManual && isLockedManual)}
         >
           <Text style={styles.saveButtonText}>{editing ? "更新" : "保存"}</Text>
         </TouchableOpacity>
