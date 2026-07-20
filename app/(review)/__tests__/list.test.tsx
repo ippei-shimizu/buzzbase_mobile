@@ -80,6 +80,10 @@ describe("ReviewListScreen", () => {
     // サンプルの練習日数（5日）は出るが、実データ（99日）は出ない。
     expect(screen.getByText("5日")).toBeOnTheScreen();
     expect(screen.queryByText("99日")).not.toBeOnTheScreen();
+    // サンプルデータであることが分かるラベルが表示される。
+    expect(
+      screen.getByText("サンプルデータ（実際の記録ではありません）"),
+    ).toBeOnTheScreen();
 
     fireEvent.press(screen.getByText("Pro プランを見る"));
     // オーバーレイと PaywallModal 両方に見出しが出るため複数ヒットで開いたことを確認する。

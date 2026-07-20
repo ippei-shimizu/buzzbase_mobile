@@ -14,6 +14,7 @@ import {
 import { InsightCard } from "@components/insight/InsightCard";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellCard } from "@components/pro/ProUpsellCard";
+import { SampleDataLabel } from "@components/pro/SampleDataLabel";
 import {
   useCorrelationInsights,
   useInsightCombinationMutations,
@@ -106,6 +107,7 @@ export default function InsightScreen() {
             feature="correlation_insights"
             onPressCta={() => setPaywallOpen(true)}
           />
+          <SampleDataLabel />
           <View pointerEvents="none" style={styles.dummyList}>
             {DUMMY_INSIGHTS.map((insight) => (
               <InsightCard key={insight.key} insight={insight} />
@@ -173,7 +175,13 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 40 },
   lead: { color: "#A1A1AA", fontSize: 13, lineHeight: 20, marginBottom: 16 },
   loader: { marginTop: 24 },
-  dummyList: { marginTop: 16 },
+  dummyList: {
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "#52525B",
+  },
   createButton: {
     flexDirection: "row",
     alignItems: "center",

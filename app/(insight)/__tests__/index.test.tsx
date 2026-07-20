@@ -48,6 +48,10 @@ describe("相関インサイト", () => {
     ).toBeTruthy();
     expect(getByText("睡眠時間とコンディションの関係")).toBeTruthy();
     expect(getByText("練習日数と三振の関係")).toBeTruthy();
+    // サンプルデータであることが分かるラベルが表示される。
+    expect(
+      getByText("サンプルデータ（実際の記録ではありません）"),
+    ).toBeTruthy();
   });
 
   it("訴求カードをタップすると Pro 説明・動線画面（PaywallModal）が開く", async () => {
