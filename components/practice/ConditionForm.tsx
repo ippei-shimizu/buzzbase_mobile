@@ -33,6 +33,8 @@ export const EMPTY_CONDITION_DRAFT: ConditionDraft = {
 interface Props {
   value: ConditionDraft;
   onChange: (next: ConditionDraft) => void;
+  /** true のとき見た目はそのまま操作不可にする（無料ユーザーへの Pro 機能プレビュー用）。 */
+  disabled?: boolean;
 }
 
 // emoji は RN で表示されない端末があるため Ionicons を使う。色は悪い→良いで赤→緑。
@@ -86,12 +88,17 @@ function LevelSelector({
  * コンディション入力フォーム（疲労/体調/睡眠/気分/怪我）。
  * 値と onChange を親が持つ制御コンポーネント。保存は親（練習セッション）側で一括して行う。
  */
-export function ConditionForm({ value, onChange }: Props) {
-  const patch = (partial: Partial<ConditionDraft>) =>
+export function ConditionForm({ value, onChange, disabled = false }: Props) {
+  const patch = (partial: Partial<ConditionDraft>) => {
+    if (disabled) return;
     onChange({ ...value, ...partial });
+  };
 
   return (
-    <View>
+    <View
+      style={disabled ? styles.disabled : undefined}
+      pointerEvents={disabled ? "none" : "auto"}
+    >
       <Text style={styles.label}>疲労度</Text>
       <LevelSelector
         value={value.fatigue_level}
@@ -154,6 +161,7 @@ export function ConditionForm({ value, onChange }: Props) {
 }
 
 const styles = StyleSheet.create({
+  disabled: { opacity: 0.45 },
   label: {
     color: "#A1A1AA",
     fontSize: 13,

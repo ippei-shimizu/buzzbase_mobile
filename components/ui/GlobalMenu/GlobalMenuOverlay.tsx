@@ -86,9 +86,7 @@ export const GlobalMenuOverlay = ({ visible, opacity, onClose }: Props) => {
           <View style={styles.divider} />
           <TouchableOpacity
             style={styles.item}
-            onPress={() =>
-              handleSelect(() => router.push("/(profile)/seasons"))
-            }
+            onPress={() => handleSelect(() => router.push("/(season)/list"))}
             accessibilityRole="menuitem"
           >
             <CalendarIcon size={20} color="#F4F4F4" />

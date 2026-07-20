@@ -1,29 +1,63 @@
 /**
- * PaywallModal コンポーネントの結合テスト。
+ * PaywallModal（下からせり出すシート型ペイウォール）の結合テスト。
  *
  * 方針:
- * - feature ごとのコピー表示、Pro 加入導線、閉じる、feature_flag gate を確認する。
- * - expo-router は buildExpoRouterMock で生成して __routerSpies からアサートする。
+ * - feature ごとのハイライトコピー表示、閉じる、feature_flag gate を確認する。
+ * - getOfferings/purchasePackage/restorePurchases はネイティブ Module 境界のため
+ *   services を jest.mock する（app/pro/index.test.tsx と同じ例外パターン）。
+ * - 購入成功時の syncProStatus は /pro/sync への実リクエストを MSW で観測する。
  */
-import type { RouterSpies } from "../../../__tests__/test-utils/mockExpoRouter";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, waitFor } from "@testing-library/react-native";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
-import { PaywallModal } from "../PaywallModal";
+import {
+  getOfferings,
+  purchasePackage,
+  restorePurchases,
+} from "@services/revenueCatService";
+import { useSnackbarStore } from "@stores/snackbarStore";
+import {
+  apiUrl,
+  http,
+  HttpResponse,
+} from "../../../__tests__/test-utils/handlers";
+import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
+import { server } from "../../../jest-setup-msw";
+import { DEFAULT_PRO_STATUS, PRO_FEATURES } from "../../../types/pro";
+import {
+  FEATURE_GROUPS,
+  filterFeatureGroups,
+  PaywallModal,
+} from "../PaywallModal";
 
-/* eslint-disable @typescript-eslint/no-require-imports */
 jest.mock("expo-router", () => {
   const {
     buildExpoRouterMock,
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
   } = require("../../../__tests__/test-utils/mockExpoRouter");
   return buildExpoRouterMock();
 });
-/* eslint-enable @typescript-eslint/no-require-imports */
+
+// react-native-purchases はネイティブ Module 境界。services は jest.mock しないルールの例外。
+jest.mock("@services/revenueCatService", () => ({
+  getOfferings: jest.fn(),
+  purchasePackage: jest.fn(),
+  restorePurchases: jest.fn(),
+}));
 
 jest.mock("@hooks/useFeatureFlag", () => ({
   useFeatureFlag: jest.fn(),
 }));
 
-const useFeatureFlagMock = useFeatureFlag as jest.Mock;
+jest.mock("@stores/snackbarStore", () => ({
+  useSnackbarStore: jest.fn(),
+}));
+
+interface RouterSpies {
+  push: jest.Mock;
+  replace: jest.Mock;
+  back: jest.Mock;
+  dismissAll: jest.Mock;
+}
 
 const getRouterSpies = (): RouterSpies => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -31,17 +65,75 @@ const getRouterSpies = (): RouterSpies => {
   return m.__routerSpies;
 };
 
-describe("PaywallModal", () => {
-  const mockOnClose = jest.fn();
+const useFeatureFlagMock = useFeatureFlag as jest.Mock;
+const useSnackbarStoreMock = useSnackbarStore as unknown as jest.Mock;
+const getOfferingsMock = getOfferings as jest.Mock;
+const purchasePackageMock = purchasePackage as jest.Mock;
+const restorePurchasesMock = restorePurchases as jest.Mock;
 
+const mockOffering = {
+  identifier: "default",
+  availablePackages: [
+    {
+      identifier: "monthly",
+      packageType: "MONTHLY",
+      product: {
+        title: "月額プラン",
+        description: "毎月課金されるプラン",
+        priceString: "¥980",
+        price: 980,
+      },
+    },
+    {
+      identifier: "annual",
+      packageType: "ANNUAL",
+      product: {
+        title: "年額プラン",
+        description: "年1回課金されるプラン",
+        priceString: "¥9,800",
+        price: 9800,
+      },
+    },
+  ],
+};
+
+const setupSnackbar = () => {
+  const showMock = jest.fn();
+  useSnackbarStoreMock.mockImplementation((selector: (s: unknown) => unknown) =>
+    selector({ show: showMock }),
+  );
+  return showMock;
+};
+
+// /pro/sync を MSW で intercept する。respond で受信回数を観測する。
+const setupSyncEndpoint = () => {
+  let calledCount = 0;
+  server.use(
+    http.post(apiUrl("/pro/sync"), () => {
+      calledCount += 1;
+      return HttpResponse.json(DEFAULT_PRO_STATUS);
+    }),
+  );
+  return {
+    get callCount() {
+      return calledCount;
+    },
+  };
+};
+
+const mockOnClose = jest.fn();
+
+describe("PaywallModal", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.values(getRouterSpies()).forEach((spy) => spy.mockClear());
     useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    setupSnackbar();
   });
 
-  it("Pro 機能を渡すと、その機能に対応したコピーが表示される", () => {
-    render(
+  it("Pro 機能を渡すと、その機能に対応したハイライトコピーが表示される", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getByText } = renderWithProviders(
       <PaywallModal
         isOpen
         onClose={mockOnClose}
@@ -49,23 +141,11 @@ describe("PaywallModal", () => {
       />,
     );
 
-    expect(screen.getByText("シーズンを跨いだ成長を可視化")).toBeOnTheScreen();
-  });
-
-  it("別の Pro 機能では別のコピーが表示される", () => {
-    render(
-      <PaywallModal
-        isOpen
-        onClose={mockOnClose}
-        feature="unlimited_practice_menus"
-      />,
-    );
-
-    expect(screen.getByText("練習メニューを無制限に登録")).toBeOnTheScreen();
+    expect(getByText("シーズンを跨いだ成長を可視化")).toBeOnTheScreen();
   });
 
   it("isOpen が false のときは表示されない", () => {
-    render(
+    const { queryByText } = renderWithProviders(
       <PaywallModal
         isOpen={false}
         onClose={mockOnClose}
@@ -73,15 +153,13 @@ describe("PaywallModal", () => {
       />,
     );
 
-    expect(
-      screen.queryByText("シーズンを跨いだ成長を可視化"),
-    ).not.toBeOnTheScreen();
+    expect(queryByText("シーズンを跨いだ成長を可視化")).not.toBeOnTheScreen();
   });
 
   it("pro_features=false のときは isOpen でも何も描画しない（kill switch）", () => {
     useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: false });
 
-    render(
+    const { queryByText } = renderWithProviders(
       <PaywallModal
         isOpen
         onClose={mockOnClose}
@@ -89,25 +167,205 @@ describe("PaywallModal", () => {
       />,
     );
 
+    expect(queryByText("シーズンを跨いだ成長を可視化")).not.toBeOnTheScreen();
+  });
+
+  it("閉じるボタンで onClose が呼ばれる", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    fireEvent.press(getByLabelText("閉じる"));
+
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("開くと getOfferings を呼び、取得したプランを一覧表示する", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+
+    const { findByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    expect(await findByText("月額プラン")).toBeTruthy();
+    expect(await findByText("年額プラン")).toBeTruthy();
+  });
+
+  it("年額プランに月額換算比のお得金額バッジが表示される", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+
+    const { findByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    // 月額980円×12=11,760円 に対し年額9,800円 → 1,960円お得。
+    expect(await findByText("年間¥1,960お得")).toBeTruthy();
+  });
+
+  it("getOfferings が失敗してもシートは表示され、プラン欄が空状態になる", async () => {
+    getOfferingsMock.mockRejectedValueOnce(new Error("offerings unavailable"));
+
+    const { findByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
     expect(
-      screen.queryByText("シーズンを跨いだ成長を可視化"),
-    ).not.toBeOnTheScreen();
+      await findByText(
+        "プラン情報を取得できませんでした。時間を置いて再度お試しください。",
+      ),
+    ).toBeTruthy();
   });
 
-  it("「Pro プランを見る」ボタンで /pro へ遷移し onClose も呼ばれる", () => {
-    render(<PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />);
+  it("PROを始めるボタンで選択中プランを購入し、成功後 success 画面へ遷移する", async () => {
+    const syncTracker = setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    purchasePackageMock.mockResolvedValueOnce(undefined);
 
-    fireEvent.press(screen.getByLabelText("Pro プランを見る"));
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
 
-    expect(mockOnClose).toHaveBeenCalledTimes(1);
-    expect(getRouterSpies().push).toHaveBeenCalledWith("/pro");
+    // 年額プランがあるので初期選択は年額プランになる。
+    await waitFor(() => expect(getOfferingsMock).toHaveBeenCalledTimes(1));
+    const ctaButton = await findByLabelText("PROを始める");
+    fireEvent.press(ctaButton);
+
+    await waitFor(() => {
+      expect(purchasePackageMock).toHaveBeenCalledWith(
+        expect.objectContaining({ identifier: "annual" }),
+      );
+    });
+    await waitFor(() => {
+      expect(syncTracker.callCount).toBe(1);
+    });
+    await waitFor(() => {
+      expect(mockOnClose).toHaveBeenCalled();
+      expect(getRouterSpies().push).toHaveBeenCalledWith("/pro/success");
+    });
   });
 
-  it("「閉じる」ボタンで onClose が呼ばれる", () => {
-    render(<PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />);
+  it("ユーザーキャンセル（userCancelled=true）では snackbar も画面遷移もしない", async () => {
+    const syncTracker = setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    purchasePackageMock.mockRejectedValueOnce(
+      Object.assign(new Error("cancelled"), { userCancelled: true }),
+    );
+    const snackbarSpy = setupSnackbar();
 
-    fireEvent.press(screen.getByLabelText("閉じる"));
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    const ctaButton = await findByLabelText("PROを始める");
+    fireEvent.press(ctaButton);
 
-    expect(mockOnClose).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(purchasePackageMock).toHaveBeenCalledTimes(1);
+    });
+    expect(snackbarSpy).not.toHaveBeenCalled();
+    expect(syncTracker.callCount).toBe(0);
+    expect(mockOnClose).not.toHaveBeenCalled();
+  });
+
+  it("購入エラー（userCancelled でない）では snackbar を出す", async () => {
+    const showMock = setupSnackbar();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    purchasePackageMock.mockRejectedValueOnce(new Error("network down"));
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    const ctaButton = await findByLabelText("PROを始める");
+    fireEvent.press(ctaButton);
+
+    await waitFor(() => {
+      expect(showMock).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "error" }),
+      );
+    });
+    expect(mockOnClose).not.toHaveBeenCalled();
+  });
+
+  it("購入を復元を押すと restorePurchases が呼ばれ、成功時は onClose される", async () => {
+    setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    restorePurchasesMock.mockResolvedValueOnce(undefined);
+    const showMock = setupSnackbar();
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    const restoreLink = await findByLabelText("購入を復元");
+    fireEvent.press(restoreLink);
+
+    await waitFor(() => {
+      expect(restorePurchasesMock).toHaveBeenCalledTimes(1);
+    });
+    await waitFor(() => {
+      expect(mockOnClose).toHaveBeenCalled();
+    });
+    expect(showMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "success" }),
+    );
+  });
+
+  it("ハイライトカードで表示中の機能は「PRO でできること」表に重複表示されない", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getAllByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="note_tags" />,
+    );
+
+    expect(getAllByText("野球ノートにタグを付けて整理")).toHaveLength(1);
+  });
+
+  it("グループ見出しと無料/PROの比較値が表示される", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getByText, getByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    expect(getByText("野球ノート")).toBeOnTheScreen();
+    expect(
+      getByLabelText("1つのノートに複数の試合を紐付け。無料は1件、PROは複数件"),
+    ).toBeOnTheScreen();
+  });
+});
+
+describe("FEATURE_GROUPS", () => {
+  it("PRO_FEATURES の全項目を過不足・重複なく分類している", () => {
+    const allGroupedKeys = FEATURE_GROUPS.flatMap((group) => group.keys);
+
+    expect(allGroupedKeys).toHaveLength(PRO_FEATURES.length);
+    expect(new Set(allGroupedKeys).size).toBe(PRO_FEATURES.length);
+    expect(new Set(allGroupedKeys)).toEqual(new Set(PRO_FEATURES));
+  });
+});
+
+describe("filterFeatureGroups", () => {
+  it("指定した feature をグループ内から除外する", () => {
+    const result = filterFeatureGroups(
+      [
+        {
+          title: "野球ノート",
+          icon: "book-outline",
+          keys: ["note_tags", "multi_game_result_notes"],
+        },
+      ],
+      "note_tags",
+    );
+
+    expect(result[0].keys).toEqual(["multi_game_result_notes"]);
+  });
+
+  it("除外後に0件になったグループは結果から取り除かれる", () => {
+    const result = filterFeatureGroups(
+      [{ title: "野球ノート", icon: "book-outline", keys: ["note_tags"] }],
+      "note_tags",
+    );
+
+    expect(result).toEqual([]);
   });
 });

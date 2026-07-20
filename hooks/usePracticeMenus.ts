@@ -49,6 +49,8 @@ export const usePracticeMenuMutations = () => {
     createMenu: create.mutateAsync,
     isCreating: create.isPending,
     updateMenu: update.mutateAsync,
+    isUpdating: update.isPending,
     deleteMenu: remove.mutateAsync,
+    isDeleting: remove.isPending,
   };
 };

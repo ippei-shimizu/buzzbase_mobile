@@ -7,6 +7,9 @@ import type { Ionicons } from "@expo/vector-icons";
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
+// back/app/models/concerns/plan_limits.rb の PRACTICE_MENU_FREE_LIMIT と一致させる。
+export const PRACTICE_MENU_FREE_LIMIT = 3;
+
 export const PRACTICE_CATEGORIES: { key: PracticeCategory; label: string }[] = [
   { key: "batting", label: "バッティング" },
   { key: "pitching", label: "投手" },

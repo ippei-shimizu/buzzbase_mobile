@@ -30,9 +30,20 @@ export function TodayGoalSection() {
                 {GOAL_PERIOD_LABELS[periodType]}
               </Text>
               {inType.map((goal) => (
-                <View key={goal.id} style={styles.goalCard}>
+                <TouchableOpacity
+                  key={goal.id}
+                  style={styles.goalCard}
+                  activeOpacity={0.6}
+                  accessibilityRole="button"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(goal)/[id]",
+                      params: { id: String(goal.id) },
+                    })
+                  }
+                >
                   <GoalProgressBar goal={goal} compact />
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           );

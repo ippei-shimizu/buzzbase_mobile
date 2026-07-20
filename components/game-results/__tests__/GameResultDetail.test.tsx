@@ -1,6 +1,5 @@
 import type { PlateAppearanceV2 } from "../../../types/plateAppearance";
 import { fireEvent } from "@testing-library/react-native";
-import { Alert } from "react-native";
 import { buildGameResult } from "../../../__tests__/test-utils/factories/gameResult";
 import {
   baseUrl,
@@ -95,36 +94,37 @@ describe("GameResultDetail", () => {
     expect(getByText("3番  中堅手")).toBeTruthy();
   });
 
-  it("isOwner（onDelete あり）のとき試合削除ボタンを押すと確認 Alert を経由して onDelete が呼ばれる", () => {
-    const onDelete = jest.fn();
-    const alertSpy = jest
-      .spyOn(Alert, "alert")
-      .mockImplementation((_title, _message, buttons) => {
-        const destructive = buttons?.find((b) => b.style === "destructive");
-        destructive?.onPress?.();
-      });
-
+  it("onEdit を押すと onEdit が呼ばれる", () => {
+    const onEdit = jest.fn();
     const game = buildGameResult();
     const { getByText } = renderWithProviders(
-      <GameResultDetail game={game} onDelete={onDelete} />,
+      <GameResultDetail game={game} onEdit={onEdit} />,
     );
 
-    fireEvent.press(getByText("この試合結果を削除"));
+    fireEvent.press(getByText("編集"));
 
-    expect(alertSpy).toHaveBeenCalledWith(
-      "試合結果の削除",
-      expect.any(String),
-      expect.any(Array),
-    );
-    expect(onDelete).toHaveBeenCalledTimes(1);
+    expect(onEdit).toHaveBeenCalledTimes(1);
   });
 
-  it("onDelete 未指定のとき試合削除ボタンは表示されない", () => {
+  it("onShare を押すと onShare が呼ばれる", () => {
+    const onShare = jest.fn();
+    const game = buildGameResult();
+    const { getByText } = renderWithProviders(
+      <GameResultDetail game={game} onShare={onShare} />,
+    );
+
+    fireEvent.press(getByText("共有"));
+
+    expect(onShare).toHaveBeenCalledTimes(1);
+  });
+
+  it("onEdit / onShare 未指定のとき編集・共有ボタンは表示されない", () => {
     const game = buildGameResult();
     const { queryByText } = renderWithProviders(
       <GameResultDetail game={game} />,
     );
-    expect(queryByText("この試合結果を削除")).toBeNull();
+    expect(queryByText("編集")).toBeNull();
+    expect(queryByText("共有")).toBeNull();
   });
 
   it("打席リストを batter_box_number 昇順で読み取り専用カードとして並べる", async () => {
@@ -170,7 +170,7 @@ describe("GameResultDetail", () => {
     __routerSpies.push.mockReset();
 
     const { findByLabelText, queryByRole } = renderWithProviders(
-      <GameResultDetail game={game} onDelete={() => {}} />,
+      <GameResultDetail game={game} />,
     );
     const card = await findByLabelText("第1打席 中安");
     fireEvent.press(card);

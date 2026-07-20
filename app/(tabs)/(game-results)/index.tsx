@@ -381,6 +381,16 @@ export default function GameResultsScreen() {
 
   const listFilterHeader = (
     <View style={styles.filterSection}>
+      <TouchableOpacity
+        style={styles.manageLink}
+        onPress={() => router.push("/(season)/list")}
+        accessibilityRole="button"
+        accessibilityLabel="シーズンを管理"
+      >
+        <Ionicons name="calendar-outline" size={15} color="#d08000" />
+        <Text style={styles.manageLinkText}>シーズンを管理</Text>
+        <Ionicons name="chevron-forward" size={14} color="#71717A" />
+      </TouchableOpacity>
       {/* 試合記録ボタン */}
       <TouchableOpacity
         style={styles.recordButton}
@@ -585,6 +595,16 @@ export default function GameResultsScreen() {
             />
           }
         >
+          <TouchableOpacity
+            style={styles.manageLink}
+            onPress={() => router.push("/(season)/list")}
+            accessibilityRole="button"
+            accessibilityLabel="シーズンを管理"
+          >
+            <Ionicons name="calendar-outline" size={15} color="#d08000" />
+            <Text style={styles.manageLinkText}>シーズンを管理</Text>
+            <Ionicons name="chevron-forward" size={14} color="#71717A" />
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.recordButton}
             onPress={() => {
@@ -812,6 +832,18 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
+  },
+  manageLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-end",
+    marginBottom: 10,
+  },
+  manageLinkText: {
+    color: "#d08000",
+    fontSize: 13,
+    fontWeight: "600",
   },
   filterSection: {
     marginBottom: 12,

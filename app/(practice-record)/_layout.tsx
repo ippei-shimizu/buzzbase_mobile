@@ -29,7 +29,6 @@ export default function PracticeRecordLayout() {
     >
       <Stack.Screen name="daily" options={{ title: "練習を記録" }} />
       <Stack.Screen name="[id]" options={{ title: "練習の記録" }} />
-      <Stack.Screen name="menu-new" options={{ title: "新しいメニュー" }} />
     </Stack>
   );
 }

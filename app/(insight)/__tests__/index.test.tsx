@@ -1,8 +1,9 @@
 /**
  * 相関インサイト画面の振る舞いテスト。
- * 無料ユーザーには準備中の訴求カードを出し、成績を断定表示しないことを確認する。
+ * 無料ユーザーにはダミーデータ入りの訴求カードを出し、成績を断定表示しないことを確認する。
+ * カードタップで PaywallModal（Pro 説明・動線画面）を開けることも確認する。
  */
-import { waitFor } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import {
   apiUrl,
   http,
@@ -22,8 +23,13 @@ jest.mock("expo-router", () => {
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
 
+// PaywallModal が pro_features フラグで kill switch される設計のため、常時 true を返す。
+jest.mock("@hooks/useFeatureFlag", () => ({
+  useFeatureFlag: jest.fn(() => ({ enabled: true, isLoading: false })),
+}));
+
 describe("相関インサイト", () => {
-  it("無料ユーザーには準備中カードを表示する", async () => {
+  it("無料ユーザーにはダミーデータ入りの訴求カードを表示する", async () => {
     server.use(
       http.get(apiUrl("/pro/status"), () =>
         HttpResponse.json(DEFAULT_PRO_STATUS),
@@ -35,5 +41,34 @@ describe("相関インサイト", () => {
     await waitFor(() => {
       expect(getByText("練習と成績の関係を発見")).toBeTruthy();
     });
+    expect(getByText("Pro プランを見る")).toBeTruthy();
+    // ダミーデータは3件表示し、複数の傾向を発見できる機能だと伝える。
+    expect(
+      getByText("素振りが多い週は、打率が高い傾向があります。"),
+    ).toBeTruthy();
+    expect(getByText("睡眠時間とコンディションの関係")).toBeTruthy();
+    expect(getByText("練習日数と三振の関係")).toBeTruthy();
+    // サンプルデータであることが分かるラベルが表示される。
+    expect(
+      getByText("サンプルデータ（実際の記録ではありません）"),
+    ).toBeTruthy();
+  });
+
+  it("訴求カードをタップすると Pro 説明・動線画面（PaywallModal）が開く", async () => {
+    server.use(
+      http.get(apiUrl("/pro/status"), () =>
+        HttpResponse.json(DEFAULT_PRO_STATUS),
+      ),
+    );
+
+    renderWithProviders(<InsightScreen />);
+
+    await waitFor(() =>
+      expect(screen.getByText("練習と成績の関係を発見")).toBeOnTheScreen(),
+    );
+    fireEvent.press(screen.getByText("Pro プランを見る"));
+
+    expect(await screen.findByText("BUZZ BASE")).toBeOnTheScreen();
+    expect(screen.getByLabelText("PROを始める")).toBeOnTheScreen();
   });
 });

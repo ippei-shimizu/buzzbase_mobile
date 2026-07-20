@@ -492,6 +492,16 @@ function PracticeList() {
 
   const header = (
     <>
+      <TouchableOpacity
+        style={styles.manageLink}
+        onPress={() => router.push("/(practice-menu)/list")}
+        accessibilityRole="button"
+        accessibilityLabel="練習メニューを管理"
+      >
+        <Ionicons name="list-outline" size={15} color="#d08000" />
+        <Text style={styles.manageLinkText}>練習メニューを管理</Text>
+        <Ionicons name="chevron-forward" size={14} color="#71717A" />
+      </TouchableOpacity>
       <NewRecordButton
         label="練習を記録"
         onPress={() => router.push("/(practice-record)/daily")}
@@ -558,7 +568,7 @@ function PracticeList() {
 function NoteLinkChip({ note }: { note: NoteV2 }) {
   const hasPractice =
     note.practice_session_id != null || note.practice_log_id != null;
-  const hasGame = note.game_result_id != null;
+  const hasGame = note.game_result_ids.length > 0;
   if (!hasPractice && !hasGame) return null;
 
   return (
@@ -657,13 +667,13 @@ function NoteList() {
   const header = (
     <>
       <TouchableOpacity
-        style={styles.templateLink}
+        style={styles.manageLink}
         onPress={() => router.push("/(reflect-template)/list")}
         accessibilityRole="button"
         accessibilityLabel="振り返りテンプレを管理"
       >
         <Ionicons name="document-text-outline" size={15} color="#d08000" />
-        <Text style={styles.templateLinkText}>振り返りテンプレを管理</Text>
+        <Text style={styles.manageLinkText}>振り返りテンプレを管理</Text>
         <Ionicons name="chevron-forward" size={14} color="#71717A" />
       </TouchableOpacity>
       <NewRecordButton
@@ -770,14 +780,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   newButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
-  templateLink: {
+  manageLink: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     alignSelf: "flex-end",
     marginBottom: 10,
   },
-  templateLinkText: {
+  manageLinkText: {
     color: "#d08000",
     fontSize: 13,
     fontWeight: "600",

@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { Heatmap } from "@components/grass/Heatmap";
 import { StreakBadge } from "@components/grass/StreakBadge";
+import { PaywallModal } from "@components/pro/PaywallModal";
+import { ProUpsellCard } from "@components/pro/ProUpsellCard";
 import { useActivityHeatmap, useStreak } from "@hooks/useActivity";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useShadowSwingStats } from "@hooks/useShadowSwing";
@@ -41,11 +42,11 @@ const streakNudge = (
 
 /** 継続ヘッダー（Streak ＋ 草ヒートマップ詳細）。ホームに詳細をそのまま表示する。 */
 export function StreakHeaderSection() {
-  const router = useRouter();
   const { streak } = useStreak();
   const { heatmap } = useActivityHeatmap();
-  const { hasEntitlement } = useEntitlement();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const isPro = hasEntitlement("grass_full_history");
+  const [isPaywallOpen, setPaywallOpen] = useState(false);
 
   const { stats: swingStats } = useShadowSwingStats();
 
@@ -104,21 +105,22 @@ export function StreakHeaderSection() {
         </View>
       ) : null}
 
-      {!isPro ? (
-        <View style={styles.proCard}>
-          <Text style={styles.proTitle}>Pro で全期間の草を表示</Text>
-          <Text style={styles.proText}>
-            無料では直近30日まで表示されます。Pro
-            なら全期間・年ビューを確認できます。
-          </Text>
-          <TouchableOpacity
-            style={styles.proButton}
-            onPress={() => router.push("/pro")}
-          >
-            <Text style={styles.proButtonText}>Pro を見る</Text>
-          </TouchableOpacity>
+      {!isProLoading && !isPro ? (
+        <View style={styles.proCardWrapper}>
+          <ProUpsellCard
+            feature="grass_full_history"
+            title="Pro で全期間の記録マップを表示"
+            description="無料では直近30日まで表示されます。Pro なら全期間・年ビューを確認できます。"
+            onPressCta={() => setPaywallOpen(true)}
+            style={styles.proCardDark}
+          />
         </View>
       ) : null}
+      <PaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        feature="grass_full_history"
+      />
     </SectionCard>
   );
 }
@@ -145,19 +147,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   milestoneText: { color: "#A1A1AA", fontSize: 12, flexShrink: 1 },
-  proCard: {
-    backgroundColor: "#2E2E2E",
-    borderRadius: 10,
-    padding: 14,
-    marginTop: 16,
-  },
-  proTitle: { color: "#F4F4F4", fontSize: 15, fontWeight: "700" },
-  proText: { color: "#A1A1AA", fontSize: 13, marginTop: 6, marginBottom: 12 },
-  proButton: {
-    backgroundColor: "#d08000",
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  proButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
+  proCardWrapper: { marginTop: 16 },
+  proCardDark: { backgroundColor: "#1A1A1A" },
 });

@@ -14,6 +14,9 @@ import {
   Platform,
 } from "react-native";
 import { ThemePickerField } from "@components/improvement-theme/ThemePickerField";
+import { PaywallModal } from "@components/pro/PaywallModal";
+import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { useFilteredGameResults } from "@hooks/useGameResults";
 import { usePracticeSessions } from "@hooks/usePracticeSessions";
 import { formatJaFullDate } from "@utils/formatDate";
@@ -28,8 +31,8 @@ export interface NoteFormInitial {
   memo?: string;
   date?: string;
   practiceSessionId?: number | null;
-  gameResultId?: number | null;
-  improvementThemeId?: number | null;
+  gameResultIds?: number[];
+  improvementThemeIds?: number[];
   reflectionTemplateId?: number | null;
   reflectionAnswers?: { question: string; answer: string }[];
   tagIds?: number[];
@@ -68,6 +71,7 @@ export function NoteForm({
   templateLocked = false,
 }: Props) {
   const { sessions } = usePracticeSessions();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
 
   const [title, setTitle] = useState(initial?.title ?? "");
   const [memo, setMemo] = useState(initial?.memo ?? "");
@@ -78,16 +82,18 @@ export function NoteForm({
   const [practiceSessionId, setPracticeSessionId] = useState<number | null>(
     initial?.practiceSessionId ?? null,
   );
-  const [gameResultId, setGameResultId] = useState<number | null>(
-    initial?.gameResultId ?? null,
+  const [gameResultIds, setGameResultIds] = useState<number[]>(
+    initial?.gameResultIds ?? [],
   );
-  const [improvementThemeId, setImprovementThemeId] = useState<number | null>(
-    initial?.improvementThemeId ?? null,
+  const [isGamePaywallOpen, setGamePaywallOpen] = useState(false);
+  const [improvementThemeIds, setImprovementThemeIds] = useState<number[]>(
+    initial?.improvementThemeIds ?? [],
   );
   const [reflectionTemplateId, setReflectionTemplateId] = useState<
     number | null
   >(initial?.reflectionTemplateId ?? null);
   const [tagIds, setTagIds] = useState<number[]>(initial?.tagIds ?? []);
+  const [isTagPaywallOpen, setTagPaywallOpen] = useState(false);
   const [templateQuestions, setTemplateQuestions] = useState<string[]>(() =>
     (initial?.reflectionAnswers ?? []).map((item) => item.question),
   );
@@ -129,17 +135,21 @@ export function NoteForm({
     return session ? `${formatJaFullDate(session.logged_on)} の練習` : null;
   })();
 
-  const gameLabel = (() => {
+  const gameLabelFor = (gameResultId: number): string | null => {
     const game = gameResults.find(
       (item) => item.game_result_id === gameResultId,
     );
     if (!game) return null;
     return `${formatJaFullDate(game.match_result.date_and_time.slice(0, 10))} vs ${game.match_result.opponent_team_name}`;
-  })();
+  };
 
   const filteredSessions = practiceFilter
     ? sessions.filter((item) => item.logged_on === toDateString(practiceFilter))
     : sessions.slice(0, 15);
+
+  const selectableGameResults = gameResults.filter(
+    (game) => !gameResultIds.includes(game.game_result_id),
+  );
 
   const reflectionAnswers = templateQuestions
     .map((question) => ({ question, answer: (answers[question] ?? "").trim() }))
@@ -152,6 +162,28 @@ export function NoteForm({
 
   const handleChangeAnswer = (question: string, answer: string) =>
     setAnswers((prev) => ({ ...prev, [question]: answer }));
+
+  const handleOpenGamePicker = () => {
+    // 無料は1件まで。2件目以降を追加しようとしたら Pro 訴求。
+    if (
+      gameResultIds.length >= 1 &&
+      !hasEntitlement("multi_game_result_notes")
+    ) {
+      setGamePaywallOpen(true);
+      return;
+    }
+    togglePicker("game");
+  };
+
+  const handleSelectGame = (gameResultId: number) => {
+    setGameResultIds((prev) =>
+      prev.includes(gameResultId) ? prev : [...prev, gameResultId],
+    );
+    setOpenPicker("none");
+  };
+
+  const handleRemoveGame = (gameResultId: number) =>
+    setGameResultIds((prev) => prev.filter((id) => id !== gameResultId));
 
   const handleSubmit = async () => {
     // 自由メモ or テンプレ回答のどちらかがあれば保存できる。
@@ -167,11 +199,13 @@ export function NoteForm({
       date: toDateString(date),
       memo: buildMemoJson(memoText),
       practice_session_id: practiceSessionId,
-      game_result_id: gameResultId,
-      improvement_theme_id: improvementThemeId,
+      game_result_ids: gameResultIds,
+      improvement_theme_ids: improvementThemeIds,
       reflection_template_id: reflectionTemplateId,
       reflection_answers: reflectionAnswers,
-      tag_ids: tagIds,
+      // タグ編集UIは無料ユーザーには表示しないため、その場合は tag_ids キー自体を
+      // 送らず既存タグを維持する（back 側は未送信を「変更なし」として扱う）。
+      ...(hasEntitlement("note_tags") ? { tag_ids: tagIds } : {}),
     });
   };
 
@@ -233,13 +267,31 @@ export function NoteForm({
         locked={templateLocked}
       />
 
-      <TagSection selectedIds={tagIds} onChange={setTagIds} />
+      <Text style={styles.label}>タグ（任意・複数選択可）</Text>
+      <ProUpsellOverlay
+        unlocked={hasEntitlement("note_tags")}
+        loading={isProLoading}
+        feature="note_tags"
+        onPressCta={() => setTagPaywallOpen(true)}
+      >
+        <TagSection
+          selectedIds={tagIds}
+          onChange={setTagIds}
+          disabled={!hasEntitlement("note_tags")}
+          showLabel={false}
+        />
+      </ProUpsellOverlay>
+      <PaywallModal
+        isOpen={isTagPaywallOpen}
+        onClose={() => setTagPaywallOpen(false)}
+        feature="note_tags"
+      />
 
       <Text style={styles.label}>紐付け（任意）</Text>
 
       <ThemePickerField
-        selectedThemeId={improvementThemeId}
-        onChange={setImprovementThemeId}
+        selectedThemeIds={improvementThemeIds}
+        onChange={setImprovementThemeIds}
       />
 
       <TouchableOpacity
@@ -313,38 +365,46 @@ export function NoteForm({
                   setOpenPicker("none");
                 }}
               >
-                <Text style={styles.pickerText}>
+                <Text style={styles.pickerRowDate}>
                   {formatJaFullDate(session.logged_on)}
-                  {session.practice_logs.length > 0
-                    ? ` ・ ${session.practice_logs.map((log) => log.menu_name).join(", ")}`
-                    : ""}
                 </Text>
+                {session.practice_logs.length > 0 ? (
+                  <Text style={styles.pickerRowMenus} numberOfLines={1}>
+                    {session.practice_logs
+                      .map((log) => log.menu_name)
+                      .join(", ")}
+                  </Text>
+                ) : null}
               </TouchableOpacity>
             ))
           )}
         </View>
       ) : null}
 
+      {gameResultIds.map((gameResultId) => (
+        <View key={gameResultId} style={styles.linkButton}>
+          <Ionicons name="baseball-outline" size={18} color="#d08000" />
+          <Text style={styles.linkButtonText} numberOfLines={1}>
+            {gameLabelFor(gameResultId) ?? "試合に紐付け済み"}
+          </Text>
+          <TouchableOpacity onPress={() => handleRemoveGame(gameResultId)}>
+            <Ionicons name="close-circle" size={18} color="#A1A1AA" />
+          </TouchableOpacity>
+        </View>
+      ))}
       <TouchableOpacity
         style={styles.linkButton}
-        onPress={() => togglePicker("game")}
+        onPress={handleOpenGamePicker}
       >
         <Ionicons name="baseball-outline" size={18} color="#d08000" />
         <Text style={styles.linkButtonText}>
-          {gameLabel ??
-            (gameResultId != null ? "試合に紐付け済み" : "試合記録に紐付け")}
+          {gameResultIds.length > 0 ? "試合をもう1件追加" : "試合記録に紐付け"}
         </Text>
-        {gameResultId != null ? (
-          <TouchableOpacity onPress={() => setGameResultId(null)}>
-            <Ionicons name="close-circle" size={18} color="#A1A1AA" />
-          </TouchableOpacity>
-        ) : (
-          <Ionicons
-            name={openPicker === "game" ? "chevron-up" : "chevron-down"}
-            size={18}
-            color="#A1A1AA"
-          />
-        )}
+        <Ionicons
+          name={openPicker === "game" ? "chevron-up" : "chevron-down"}
+          size={18}
+          color="#A1A1AA"
+        />
       </TouchableOpacity>
       {openPicker === "game" ? (
         <View style={styles.picker}>
@@ -358,17 +418,14 @@ export function NoteForm({
               onChangeText={setGameSearch}
             />
           </View>
-          {gameResults.length === 0 ? (
+          {selectableGameResults.length === 0 ? (
             <Text style={styles.pickerEmpty}>試合記録がありません</Text>
           ) : (
-            gameResults.slice(0, 15).map((game) => (
+            selectableGameResults.slice(0, 15).map((game) => (
               <TouchableOpacity
                 key={game.game_result_id}
                 style={styles.pickerRow}
-                onPress={() => {
-                  setGameResultId(game.game_result_id);
-                  setOpenPicker("none");
-                }}
+                onPress={() => handleSelectGame(game.game_result_id)}
               >
                 <Text style={styles.pickerText}>
                   {formatJaFullDate(
@@ -381,11 +438,19 @@ export function NoteForm({
           )}
         </View>
       ) : null}
+      <PaywallModal
+        isOpen={isGamePaywallOpen}
+        onClose={() => setGamePaywallOpen(false)}
+        feature="multi_game_result_notes"
+      />
 
       <TouchableOpacity
-        style={[styles.saveButton, isSubmitting && styles.saveButtonDisabled]}
+        style={[
+          styles.saveButton,
+          (isSubmitting || isProLoading) && styles.saveButtonDisabled,
+        ]}
         onPress={handleSubmit}
-        disabled={isSubmitting}
+        disabled={isSubmitting || isProLoading}
       >
         <Text style={styles.saveButtonText}>{submitLabel}</Text>
       </TouchableOpacity>
@@ -466,6 +531,8 @@ const styles = StyleSheet.create({
     borderTopColor: "#2E2E2E",
   },
   pickerText: { color: "#F4F4F4", fontSize: 14 },
+  pickerRowDate: { color: "#F4F4F4", fontSize: 14, fontWeight: "700" },
+  pickerRowMenus: { color: "#A1A1AA", fontSize: 12, marginTop: 3 },
   pickerEmpty: { color: "#A1A1AA", fontSize: 13, padding: 12 },
   saveButton: {
     backgroundColor: "#d08000",

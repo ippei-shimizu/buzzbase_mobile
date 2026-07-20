@@ -43,7 +43,7 @@ export default function GameResultDetailScreen() {
     router.push("/(game-record)/step1-game-info");
   };
 
-  const handleDelete = async () => {
+  const performDelete = async () => {
     try {
       await deleteGameResult(game.game_result_id);
     } catch (error) {
@@ -61,6 +61,13 @@ export default function GameResultDetailScreen() {
     router.back();
   };
 
+  const handleDelete = () => {
+    Alert.alert("試合結果の削除", "この試合結果を削除しますか？", [
+      { text: "キャンセル", style: "cancel" },
+      { text: "削除", style: "destructive", onPress: performDelete },
+    ]);
+  };
+
   return (
     <>
       <Stack.Screen
@@ -75,19 +82,22 @@ export default function GameResultDetailScreen() {
                   <Ionicons name="create-outline" size={22} color="#F4F4F4" />
                 </TouchableOpacity>
               )}
-              <TouchableOpacity
-                onPress={handleShare}
-                style={styles.headerButton}
-              >
-                <Ionicons name="share-outline" size={22} color="#F4F4F4" />
-              </TouchableOpacity>
+              {isOwner && (
+                <TouchableOpacity
+                  onPress={handleDelete}
+                  style={styles.headerButton}
+                >
+                  <Ionicons name="trash-outline" size={22} color="#F31260" />
+                </TouchableOpacity>
+              )}
             </View>
           ),
         }}
       />
       <GameResultDetail
         game={game}
-        onDelete={isOwner ? handleDelete : undefined}
+        onEdit={isOwner ? handleEdit : undefined}
+        onShare={handleShare}
       />
       <PreReviewPrompt {...modalProps} />
     </>

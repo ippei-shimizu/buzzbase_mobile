@@ -1,3 +1,4 @@
+import type { PresetMenu } from "../../types/practice";
 import type { Schedule } from "../../types/schedule";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -19,6 +20,7 @@ import {
   useToggleDayPlanMenu,
 } from "@hooks/usePlans";
 import { useScheduleMutations, useSchedules } from "@hooks/useSchedules";
+import { useGameRecordStore } from "@stores/gameRecordStore";
 import { formatJaFullDate } from "@utils/formatDate";
 import { todayIso } from "@utils/planDate";
 
@@ -46,7 +48,35 @@ export default function ScheduleDetailScreen() {
     ? plans.find((plan) => plan.id === scheduleId)
     : undefined;
 
+  // 済（当日ログ済み）のメニューだけ練習記録画面に引き継ぐ。
+  const doneMenus: PresetMenu[] = dayPlan
+    ? dayPlan.menus
+        .filter((menu) => menu.done)
+        .map((menu) => ({
+          practice_menu_id: menu.practice_menu_id,
+          target_value: menu.target_value,
+        }))
+    : [];
+  const recordDate = dateContext ?? schedule?.planned_on ?? null;
+
   const goEdit = () => router.push(`/(schedule)/new?id=${scheduleId}`);
+  const goRecordPractice = () =>
+    router.push({
+      pathname: "/(practice-record)/daily",
+      params: {
+        ...(recordDate ? { date: recordDate } : {}),
+        ...(doneMenus.length > 0
+          ? { presetMenus: JSON.stringify(doneMenus) }
+          : {}),
+      },
+    });
+  const goRecordGame = () => {
+    // 直前の編集モードフラグが残っていると Step1 が編集モードのまま起動するため、
+    // 新規記録の入口では store を必ず初期化する。
+    useGameRecordStore.getState().reset();
+    if (recordDate) useGameRecordStore.getState().setField("date", recordDate);
+    router.push("/(game-record)/step1-game-info");
+  };
 
   const handleDelete = () => {
     if (!schedule) return;
@@ -188,6 +218,21 @@ export default function ScheduleDetailScreen() {
           <Text style={styles.noteText}>{schedule.note}</Text>
         </View>
       ) : null}
+
+      {schedule.event_type === "game" ? (
+        <TouchableOpacity style={styles.recordButton} onPress={goRecordGame}>
+          <Ionicons name="baseball-outline" size={16} color="#FFFFFF" />
+          <Text style={styles.recordButtonText}>試合記録をつける</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={styles.recordButton}
+          onPress={goRecordPractice}
+        >
+          <Ionicons name="create-outline" size={16} color="#FFFFFF" />
+          <Text style={styles.recordButtonText}>練習記録をつける</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 }
@@ -257,4 +302,15 @@ const styles = StyleSheet.create({
   },
   menuText: { color: "#F4F4F4", fontSize: 14 },
   noteText: { color: "#F4F4F4", fontSize: 14, lineHeight: 21 },
+  recordButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 28,
+    paddingVertical: 14,
+    borderRadius: 8,
+    backgroundColor: "#d08000",
+  },
+  recordButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
 });

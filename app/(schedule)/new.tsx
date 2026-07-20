@@ -2,7 +2,6 @@ import type { PracticeMenu } from "../../types/practice";
 import type { EventType, ScheduleInput } from "../../types/schedule";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { isAxiosError } from "axios";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -102,11 +101,16 @@ export default function ScheduleFormScreen() {
   const [notify, setNotify] = useState(editing?.notification_enabled ?? true);
   const [message, setMessage] = useState(editing?.notification_message ?? "");
 
+  // 練習ログが記録済みのメニューは、済判定が壊れるため編集画面から変更できないようにする。
+  const lockedMenuIds = new Set(editing?.logged_practice_menu_ids ?? []);
+  const hasLockedMenu = lockedMenuIds.size > 0;
+
   const toggleDay = (num: number) =>
     setDays((prev) =>
       prev.includes(num) ? prev.filter((day) => day !== num) : [...prev, num],
     );
-  const toggleMenu = (menu: PracticeMenu) =>
+  const toggleMenu = (menu: PracticeMenu) => {
+    if (lockedMenuIds.has(menu.id)) return;
     setMenuAmounts((prev) => {
       if (menu.id in prev) {
         const next = { ...prev };
@@ -115,8 +119,11 @@ export default function ScheduleFormScreen() {
       }
       return { ...prev, [menu.id]: formatAmount(menu.default_value) };
     });
-  const setMenuAmount = (menuId: number, amount: string) =>
+  };
+  const setMenuAmount = (menuId: number, amount: string) => {
+    if (lockedMenuIds.has(menuId)) return;
     setMenuAmounts((prev) => ({ ...prev, [menuId]: amount }));
+  };
 
   const handleSave = async () => {
     const usingSet = menuSource === "set" && menuSetId != null;
@@ -155,19 +162,8 @@ export default function ScheduleFormScreen() {
         await createSchedule(input);
       }
       router.back();
-    } catch (error) {
-      if (isAxiosError(error) && error.response?.status === 403) {
-        Alert.alert(
-          "無料プランの上限",
-          "予定の登録は無料で3つまでです。Pro で無制限に登録できます。",
-          [
-            { text: "閉じる", style: "cancel" },
-            { text: "Pro を見る", onPress: () => router.push("/pro") },
-          ],
-        );
-      } else {
-        Alert.alert("保存に失敗しました");
-      }
+    } catch {
+      Alert.alert("保存に失敗しました");
     }
   };
 
@@ -334,20 +330,39 @@ export default function ScheduleFormScreen() {
         </View>
       ) : (
         <View>
+          {hasLockedMenu ? (
+            <Text style={styles.lockedHint}>
+              練習記録が済のメニューは変更できません
+            </Text>
+          ) : null}
           {menus.map((menu) => {
             const isSelected = menu.id in menuAmounts;
+            const isLocked = lockedMenuIds.has(menu.id);
             return (
               <View key={menu.id} style={styles.menuItem}>
                 <TouchableOpacity
                   style={styles.menuItemRow}
                   onPress={() => toggleMenu(menu)}
+                  disabled={isLocked}
                 >
                   <Ionicons
                     name={isSelected ? "checkbox" : "square-outline"}
                     size={22}
-                    color={isSelected ? "#d08000" : "#71717A"}
+                    color={
+                      isLocked ? "#52525B" : isSelected ? "#d08000" : "#71717A"
+                    }
                   />
-                  <Text style={styles.menuItemName}>{menu.name}</Text>
+                  <Text
+                    style={[
+                      styles.menuItemName,
+                      isLocked && styles.menuItemNameLocked,
+                    ]}
+                  >
+                    {menu.name}
+                  </Text>
+                  {isLocked ? (
+                    <Ionicons name="lock-closed" size={14} color="#71717A" />
+                  ) : null}
                 </TouchableOpacity>
                 {isSelected ? (
                   <View style={styles.amountRow}>
@@ -358,6 +373,7 @@ export default function ScheduleFormScreen() {
                       keyboardType="numeric"
                       placeholder="0"
                       placeholderTextColor="#71717A"
+                      editable={!isLocked}
                     />
                     <Text style={styles.unitLabel}>
                       {menu.unit_label ?? "回"}
@@ -508,6 +524,8 @@ const styles = StyleSheet.create({
   },
   menuItemRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   menuItemName: { color: "#F4F4F4", fontSize: 15, fontWeight: "600", flex: 1 },
+  menuItemNameLocked: { color: "#A1A1AA" },
+  lockedHint: { color: "#71717A", fontSize: 12, marginBottom: 8 },
   amountRow: {
     flexDirection: "row",
     alignItems: "center",

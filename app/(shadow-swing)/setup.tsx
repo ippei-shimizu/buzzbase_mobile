@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -5,9 +6,12 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  ScrollView,
   StyleSheet,
   Alert,
 } from "react-native";
+import { PaywallModal } from "@components/pro/PaywallModal";
+import { useEntitlement } from "@hooks/useEntitlement";
 import {
   useShadowSwingMutations,
   useShadowSwingStats,
@@ -18,15 +22,26 @@ const INTERVALS = [
   20,
 ];
 
+// 無料プランで選択できるインターバルの範囲（back の Entitlement 'shadow_swing_custom_interval' と対応）。
+const FREE_INTERVAL_MIN = 5;
+const FREE_INTERVAL_MAX = 10;
+
 export default function ShadowSwingSetupScreen() {
   const router = useRouter();
   const { startSession, isStarting } = useShadowSwingMutations();
   const { stats } = useShadowSwingStats();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
+  // pro/status 解決前は解放扱いにして、Pro ユーザーへのロック表示フラッシュを防ぐ。
+  const canCustomInterval =
+    isProLoading || hasEntitlement("shadow_swing_custom_interval");
+  const canVibration = isProLoading || hasEntitlement("shadow_swing_vibration");
   const [target, setTarget] = useState("200");
-  const [interval, setIntervalValue] = useState(2.0);
-  const [vibration, setVibration] = useState(true);
+  const [interval, setIntervalValue] = useState(5.0);
+  const [vibration, setVibration] = useState(false);
   const [sound, setSound] = useState(true);
   const [voice, setVoice] = useState(false);
+  const [isIntervalPaywallOpen, setIntervalPaywallOpen] = useState(false);
+  const [isVibrationPaywallOpen, setVibrationPaywallOpen] = useState(false);
 
   const handleStart = async () => {
     const targetCount = Number(target);
@@ -53,7 +68,11 @@ export default function ShadowSwingSetupScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.intro}>
         設定したインターバルで自動的にカウントアップし、素振りの本数を練習記録に
         保存します。笛の音や読み上げでテンポを取りながら振れます。
@@ -76,21 +95,48 @@ export default function ShadowSwingSetupScreen() {
       <View style={styles.optionRow}>
         {INTERVALS.map((value) => {
           const active = value === interval;
+          const locked =
+            !canCustomInterval &&
+            (value < FREE_INTERVAL_MIN || value > FREE_INTERVAL_MAX);
           return (
             <TouchableOpacity
               key={value}
-              style={[styles.option, active && styles.optionActive]}
-              onPress={() => setIntervalValue(value)}
+              style={[
+                styles.option,
+                active && styles.optionActive,
+                locked && styles.optionLocked,
+              ]}
+              onPress={() => {
+                if (locked) {
+                  setIntervalPaywallOpen(true);
+                  return;
+                }
+                setIntervalValue(value);
+              }}
             >
               <Text
                 style={[styles.optionText, active && styles.optionTextActive]}
               >
                 {value.toFixed(1)}秒
               </Text>
+              {locked ? (
+                <Ionicons
+                  name="lock-closed"
+                  size={10}
+                  color="#71717A"
+                  style={styles.lockIcon}
+                />
+              ) : null}
             </TouchableOpacity>
           );
         })}
       </View>
+      {!canCustomInterval ? (
+        <Text style={styles.hint}>
+          無料プランはインターバル{FREE_INTERVAL_MIN}〜{FREE_INTERVAL_MAX}
+          秒のみ選択できます。Pro で1〜20秒の全範囲を解放できます。
+        </Text>
+      ) : null}
 
       <Text style={styles.hint}>
         「笛の音」と「カウント読み上げ」はどちらか一方のみ選べます。
@@ -157,21 +203,45 @@ export default function ShadowSwingSetupScreen() {
           { key: false, label: "なし" },
         ].map((item) => {
           const active = item.key === vibration;
+          const locked = !canVibration && item.key;
           return (
             <TouchableOpacity
               key={String(item.key)}
-              style={[styles.option, active && styles.optionActive]}
-              onPress={() => setVibration(item.key)}
+              style={[
+                styles.option,
+                active && styles.optionActive,
+                locked && styles.optionLocked,
+              ]}
+              onPress={() => {
+                if (locked) {
+                  setVibrationPaywallOpen(true);
+                  return;
+                }
+                setVibration(item.key);
+              }}
             >
               <Text
                 style={[styles.optionText, active && styles.optionTextActive]}
               >
                 {item.label}
               </Text>
+              {locked ? (
+                <Ionicons
+                  name="lock-closed"
+                  size={10}
+                  color="#71717A"
+                  style={styles.lockIcon}
+                />
+              ) : null}
             </TouchableOpacity>
           );
         })}
       </View>
+      {!canVibration ? (
+        <Text style={styles.hint}>
+          バイブレーションは Pro プラン限定の機能です。
+        </Text>
+      ) : null}
 
       <TouchableOpacity
         style={[styles.startButton, isStarting && styles.startButtonDisabled]}
@@ -186,12 +256,24 @@ export default function ShadowSwingSetupScreen() {
           通算 {stats.total_count.toLocaleString()}本
         </Text>
       ) : null}
-    </View>
+
+      <PaywallModal
+        isOpen={isIntervalPaywallOpen}
+        onClose={() => setIntervalPaywallOpen(false)}
+        feature="shadow_swing_custom_interval"
+      />
+      <PaywallModal
+        isOpen={isVibrationPaywallOpen}
+        onClose={() => setVibrationPaywallOpen(false)}
+        feature="shadow_swing_vibration"
+      />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#2E2E2E", padding: 16 },
+  container: { flex: 1, backgroundColor: "#2E2E2E" },
+  content: { padding: 16, paddingBottom: 40 },
   intro: {
     color: "#D4D4D8",
     fontSize: 13,
@@ -227,14 +309,19 @@ const styles = StyleSheet.create({
   unit: { color: "#A1A1AA", fontSize: 15 },
   optionRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
   option: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
     backgroundColor: "#3A3A3A",
   },
   optionActive: { backgroundColor: "#d08000" },
+  optionLocked: { opacity: 0.5 },
   optionText: { color: "#A1A1AA", fontSize: 14, fontWeight: "600" },
   optionTextActive: { color: "#FFFFFF" },
+  lockIcon: { marginLeft: 2 },
   startButton: {
     backgroundColor: "#d08000",
     borderRadius: 8,

@@ -108,7 +108,7 @@ describe("GlobalMenuOverlay", () => {
       />,
     );
     fireEvent.press(getByText("シーズン管理"));
-    expect(getRouterSpies().push).toHaveBeenCalledWith("/(profile)/seasons");
+    expect(getRouterSpies().push).toHaveBeenCalledWith("/(season)/list");
     expect(onClose).toHaveBeenCalled();
   });
 

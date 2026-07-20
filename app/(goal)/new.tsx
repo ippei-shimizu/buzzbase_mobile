@@ -4,6 +4,7 @@ import type {
   GoalKind,
   GoalPeriodType,
 } from "../../types/goal";
+import type { ProFeature } from "../../types/pro";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { isAxiosError } from "axios";
@@ -20,6 +21,8 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
+import { PaywallModal } from "@components/pro/PaywallModal";
+import { ProUpsellCard } from "@components/pro/ProUpsellCard";
 import {
   GOAL_METRIC_CATEGORIES,
   GOAL_METRICS,
@@ -101,9 +104,13 @@ function GoalForm({ editing }: { editing?: Goal }) {
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
   const { menus } = usePracticeMenus();
-  const { hasEntitlement } = useEntitlement();
-  const canSeason = hasEntitlement("season_goals");
-  const canTournament = hasEntitlement("tournament_goals");
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
+  // pro/status 解決前は一律「解放扱い」にしてロック表示のフラッシュを防ぐ。
+  // 判定確定までは保存アクション自体を無効化するため、誤った entitlement で保存されない。
+  const canSeason = isProLoading || hasEntitlement("season_goals");
+  const canTournament = isProLoading || hasEntitlement("tournament_goals");
+  const canCustomPeriod = isProLoading || hasEntitlement("custom_period_goals");
+  const canManualMetric = isProLoading || hasEntitlement("manual_metric_goals");
   const isSaving = isCreating || isUpdating;
 
   const [kind, setKind] = useState<GoalKind>(editing?.kind ?? "numeric");
@@ -151,6 +158,8 @@ function GoalForm({ editing }: { editing?: Goal }) {
       : new Date(),
   );
   const [showStartPicker, setShowStartPicker] = useState(false);
+  const [proNotePaywallFeature, setProNotePaywallFeature] =
+    useState<ProFeature | null>(null);
 
   const metric =
     GOAL_METRICS.find((item) => item.key === metricKey) ?? GOAL_METRICS[0];
@@ -159,6 +168,15 @@ function GoalForm({ editing }: { editing?: Goal }) {
   const isManual = kind === "manual";
   const isMenuMetric =
     !isQualitative && !isManual && metricKey === "menu_practice_days";
+  // 自由指標は Pro 限定。既存の自由指標目標を編集中は鍵をかけない（タイプ自体変更不可のため）。
+  const isLockedManual = !canManualMetric && !editing;
+  // 期間タイプの Pro 制限。無料で season / tournament / custom を選ぶと保存不可。
+  // 編集中は期間タイプを変更できないため鍵をかけない（既存 Pro 目標の保存を妨げない）。
+  const isLockedPeriod =
+    !editing &&
+    ((periodType === "season" && !canSeason) ||
+      (periodType === "tournament" && !canTournament) ||
+      (periodType === "custom" && !canCustomPeriod));
 
   const handleSave = async () => {
     if (isQualitative && !title.trim()) {
@@ -289,203 +307,155 @@ function GoalForm({ editing }: { editing?: Goal }) {
   );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Stack.Screen
-        options={{ title: editing ? "目標を編集" : "新しい目標" }}
-      />
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
+        <Stack.Screen
+          options={{ title: editing ? "目標を編集" : "新しい目標" }}
+        />
 
-      <Text style={styles.label}>目標タイプ</Text>
-      <View style={styles.row}>
-        {KINDS.map((item) => {
-          const active = kind === item.key;
-          return (
-            <TouchableOpacity
-              key={item.key}
-              style={[
-                styles.seg,
-                active && styles.segActive,
-                editing && !active && styles.segLocked,
-              ]}
-              // タイプは作成後に変更不可（集計/達成管理の整合のため）。
-              disabled={Boolean(editing)}
-              onPress={() => setKind(item.key)}
-            >
-              <Text style={[styles.segText, active && styles.segTextActive]}>
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-      <Text style={styles.kindDescription}>{KIND_DESCRIPTIONS[kind]}</Text>
-
-      <Text style={styles.label}>種類</Text>
-      <View style={styles.chipWrap}>
-        {PERIODS.map((period) => {
-          const active = periodType === period.key;
-          return (
-            <TouchableOpacity
-              key={period.key}
-              style={[
-                styles.chip,
-                active && styles.chipActive,
-                editing && !active && styles.segLocked,
-              ]}
-              // 編集では種類を変更不可（Pro制限回避防止・集計整合のため）。
-              disabled={Boolean(editing)}
-              onPress={() => setPeriodType(period.key)}
-            >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                {period.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {periodType === "season" && !canSeason ? (
-        <View style={styles.proNote}>
-          <Text style={styles.proText}>シーズン目標は Pro プラン限定です</Text>
-          <TouchableOpacity onPress={() => router.push("/pro")}>
-            <Text style={styles.proLink}>Pro を見る</Text>
-          </TouchableOpacity>
+        <Text style={styles.label}>目標タイプ</Text>
+        <View style={styles.row}>
+          {KINDS.map((item) => {
+            const active = kind === item.key;
+            const isLockedItem = item.key === "manual" && isLockedManual;
+            return (
+              <TouchableOpacity
+                key={item.key}
+                style={[
+                  styles.seg,
+                  active && styles.segActive,
+                  editing && !active && styles.segLocked,
+                ]}
+                // タイプは作成後に変更不可（集計/達成管理の整合のため）。自由指標はロック中でも
+                // タブ自体は押せるようにし、内容欄で Pro 訴求を見せる（下記 isManual ブロック）。
+                disabled={Boolean(editing)}
+                onPress={() => setKind(item.key)}
+                accessibilityLabel={
+                  isLockedItem ? "自由指標（Pro限定）" : item.label
+                }
+              >
+                {isLockedItem ? (
+                  <Ionicons name="lock-closed" size={11} color="#A1A1AA" />
+                ) : null}
+                <Text style={[styles.segText, active && styles.segTextActive]}>
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
-      ) : null}
-      {periodType === "tournament" && !canTournament ? (
-        <View style={styles.proNote}>
-          <Text style={styles.proText}>大会目標は Pro プラン限定です</Text>
-          <TouchableOpacity onPress={() => router.push("/pro")}>
-            <Text style={styles.proLink}>Pro を見る</Text>
-          </TouchableOpacity>
+        <Text style={styles.kindDescription}>{KIND_DESCRIPTIONS[kind]}</Text>
+
+        <Text style={styles.label}>種類</Text>
+        <View style={styles.chipWrap}>
+          {PERIODS.map((period) => {
+            const active = periodType === period.key;
+            return (
+              <TouchableOpacity
+                key={period.key}
+                style={[
+                  styles.chip,
+                  active && styles.chipActive,
+                  editing && !active && styles.segLocked,
+                ]}
+                // 編集では種類を変更不可（Pro制限回避防止・集計整合のため）。
+                disabled={Boolean(editing)}
+                onPress={() => setPeriodType(period.key)}
+              >
+                <Text
+                  style={[styles.chipText, active && styles.chipTextActive]}
+                >
+                  {period.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
-      ) : null}
 
-      {periodType === "monthly" ? (
-        <Text style={styles.hint}>対象期間: 今月（自動設定）</Text>
-      ) : null}
-      {periodType === "weekly" ? (
-        <Text style={styles.hint}>対象期間: 今週 月〜日（自動設定）</Text>
-      ) : null}
-      {periodType === "yearly" ? (
-        <Text style={styles.hint}>対象期間: 今年 1月〜12月（自動設定）</Text>
-      ) : null}
+        {periodType === "season" && !canSeason ? (
+          <ProUpsellCard
+            feature="season_goals"
+            onPressCta={() => setProNotePaywallFeature("season_goals")}
+            style={styles.proNoteCard}
+          />
+        ) : null}
+        {periodType === "tournament" && !canTournament ? (
+          <ProUpsellCard
+            feature="tournament_goals"
+            onPressCta={() => setProNotePaywallFeature("tournament_goals")}
+            style={styles.proNoteCard}
+          />
+        ) : null}
+        {periodType === "custom" && !canCustomPeriod ? (
+          <ProUpsellCard
+            feature="custom_period_goals"
+            onPressCta={() => setProNotePaywallFeature("custom_period_goals")}
+            style={styles.proNoteCard}
+          />
+        ) : null}
 
-      {periodType === "custom" ? (
-        <>
-          <Text style={styles.label}>開始日</Text>
-          <TouchableOpacity
-            style={styles.input}
-            onPress={() => setShowStartPicker((prev) => !prev)}
-          >
-            <Text style={styles.inputText}>{dateString(startDate)}</Text>
-          </TouchableOpacity>
-          {showStartPicker ? (
-            <DateTimePicker
-              value={startDate}
-              mode="date"
-              themeVariant="dark"
-              accentColor="#d08000"
-              display={Platform.OS === "ios" ? "inline" : "default"}
-              onChange={(_event, selected) => {
-                setShowStartPicker(false);
-                if (selected) setStartDate(selected);
-              }}
-            />
-          ) : null}
-          {renderDeadline()}
-        </>
-      ) : null}
+        {periodType === "monthly" ? (
+          <Text style={styles.hint}>対象期間: 今月（自動設定）</Text>
+        ) : null}
+        {periodType === "weekly" ? (
+          <Text style={styles.hint}>対象期間: 今週 月〜日（自動設定）</Text>
+        ) : null}
+        {periodType === "yearly" ? (
+          <Text style={styles.hint}>対象期間: 今年 1月〜12月（自動設定）</Text>
+        ) : null}
 
-      {periodType === "season" ? (
-        <>
-          <Text style={styles.label}>シーズン</Text>
-          {seasons.length === 0 ? (
+        {periodType === "custom" ? (
+          <>
+            <Text style={styles.label}>開始日</Text>
             <TouchableOpacity
-              style={styles.emptyLink}
-              onPress={() => router.push("/(profile)/seasons")}
+              style={styles.input}
+              onPress={() => setShowStartPicker((prev) => !prev)}
             >
-              <Ionicons name="add-circle-outline" size={16} color="#d08000" />
-              <Text style={styles.emptyLinkText}>
-                シーズンがありません。シーズンを登録する
-              </Text>
+              <Text style={styles.inputText}>{dateString(startDate)}</Text>
             </TouchableOpacity>
-          ) : (
-            <View style={styles.chipWrap}>
-              {seasons.map((season) => {
-                const active = season.id === seasonId;
-                return (
-                  <TouchableOpacity
-                    key={season.id}
-                    style={[styles.chip, active && styles.chipActive]}
-                    disabled={Boolean(editing)}
-                    onPress={() => setSeasonId(season.id)}
-                  >
-                    <Text
-                      style={[styles.chipText, active && styles.chipTextActive]}
-                    >
-                      {season.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          )}
-          {renderDeadline()}
-        </>
-      ) : null}
+            {showStartPicker ? (
+              <DateTimePicker
+                value={startDate}
+                mode="date"
+                themeVariant="dark"
+                accentColor="#d08000"
+                display={Platform.OS === "ios" ? "inline" : "default"}
+                onChange={(_event, selected) => {
+                  setShowStartPicker(false);
+                  if (selected) setStartDate(selected);
+                }}
+              />
+            ) : null}
+            {renderDeadline()}
+          </>
+        ) : null}
 
-      {periodType === "tournament" ? (
-        <>
-          <Text style={styles.label}>大会</Text>
-          {tournaments.length === 0 ? (
-            <Text style={styles.emptyText}>
-              大会がありません。試合記録で大会を登録してください。
-            </Text>
-          ) : (
-            <View style={styles.chipWrap}>
-              {tournaments.map((tournament) => {
-                const active = tournament.id === tournamentId;
-                return (
-                  <TouchableOpacity
-                    key={tournament.id}
-                    style={[styles.chip, active && styles.chipActive]}
-                    disabled={Boolean(editing)}
-                    onPress={() => setTournamentId(tournament.id)}
-                  >
-                    <Text
-                      style={[styles.chipText, active && styles.chipTextActive]}
-                    >
-                      {tournament.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          )}
-          {renderDeadline()}
-        </>
-      ) : null}
-
-      {isQualitative || isManual ? null : (
-        <>
-          <Text style={styles.label}>指標</Text>
-          {GOAL_METRIC_CATEGORIES.map((category) => (
-            <View key={category.key} style={styles.metricGroup}>
-              <Text style={styles.metricGroupLabel}>{category.label}</Text>
+        {periodType === "season" ? (
+          <>
+            <Text style={styles.label}>シーズン</Text>
+            {seasons.length === 0 ? (
+              <TouchableOpacity
+                style={styles.emptyLink}
+                onPress={() => router.push("/(season)/list")}
+              >
+                <Ionicons name="add-circle-outline" size={16} color="#d08000" />
+                <Text style={styles.emptyLinkText}>
+                  シーズンがありません。シーズンを登録する
+                </Text>
+              </TouchableOpacity>
+            ) : (
               <View style={styles.chipWrap}>
-                {metricsInCategory(category.keys).map((item) => {
-                  const active = item.key === metricKey;
+                {seasons.map((season) => {
+                  const active = season.id === seasonId;
                   return (
                     <TouchableOpacity
-                      key={item.key}
-                      style={[
-                        styles.chip,
-                        active && styles.chipActive,
-                        editing && !active && styles.segLocked,
-                      ]}
-                      // 指標も編集不可（切り替えると既存の目標値が新指標に対して無意味になるため）。
+                      key={season.id}
+                      style={[styles.chip, active && styles.chipActive]}
                       disabled={Boolean(editing)}
-                      onPress={() => setMetricKey(item.key)}
+                      onPress={() => setSeasonId(season.id)}
                     >
                       <Text
                         style={[
@@ -493,31 +463,72 @@ function GoalForm({ editing }: { editing?: Goal }) {
                           active && styles.chipTextActive,
                         ]}
                       >
-                        {item.label}
+                        {season.name}
                       </Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
-            </View>
-          ))}
+            )}
+            {renderDeadline()}
+          </>
+        ) : null}
 
-          {isMenuMetric ? (
-            <>
-              <Text style={styles.label}>対象の練習メニュー</Text>
-              {menus.length === 0 ? (
-                <Text style={styles.emptyText}>
-                  練習メニューがありません。練習記録で登録してください。
-                </Text>
-              ) : (
+        {periodType === "tournament" ? (
+          <>
+            <Text style={styles.label}>大会</Text>
+            {tournaments.length === 0 ? (
+              <Text style={styles.emptyText}>
+                大会がありません。試合記録で大会を登録してください。
+              </Text>
+            ) : (
+              <View style={styles.chipWrap}>
+                {tournaments.map((tournament) => {
+                  const active = tournament.id === tournamentId;
+                  return (
+                    <TouchableOpacity
+                      key={tournament.id}
+                      style={[styles.chip, active && styles.chipActive]}
+                      disabled={Boolean(editing)}
+                      onPress={() => setTournamentId(tournament.id)}
+                    >
+                      <Text
+                        style={[
+                          styles.chipText,
+                          active && styles.chipTextActive,
+                        ]}
+                      >
+                        {tournament.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+            {renderDeadline()}
+          </>
+        ) : null}
+
+        {isQualitative || isManual ? null : (
+          <>
+            <Text style={styles.label}>指標</Text>
+            {GOAL_METRIC_CATEGORIES.map((category) => (
+              <View key={category.key} style={styles.metricGroup}>
+                <Text style={styles.metricGroupLabel}>{category.label}</Text>
                 <View style={styles.chipWrap}>
-                  {menus.map((menu) => {
-                    const active = menu.id === practiceMenuId;
+                  {metricsInCategory(category.keys).map((item) => {
+                    const active = item.key === metricKey;
                     return (
                       <TouchableOpacity
-                        key={menu.id}
-                        style={[styles.chip, active && styles.chipActive]}
-                        onPress={() => setPracticeMenuId(menu.id)}
+                        key={item.key}
+                        style={[
+                          styles.chip,
+                          active && styles.chipActive,
+                          editing && !active && styles.segLocked,
+                        ]}
+                        // 指標も編集不可（切り替えると既存の目標値が新指標に対して無意味になるため）。
+                        disabled={Boolean(editing)}
+                        onPress={() => setMetricKey(item.key)}
                       >
                         <Text
                           style={[
@@ -525,120 +536,177 @@ function GoalForm({ editing }: { editing?: Goal }) {
                             active && styles.chipTextActive,
                           ]}
                         >
-                          {menu.name}
+                          {item.label}
                         </Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
-              )}
-              <Text style={styles.hint}>
-                期間内にこのメニューを実施した「日数」を数えます。
-              </Text>
-            </>
-          ) : (
-            <Text style={styles.hint}>
-              条件: {metric.comparison === "less_than" ? "以下" : "以上"}
-            </Text>
-          )}
-        </>
-      )}
+              </View>
+            ))}
 
-      {isManual ? (
-        <>
-          <Text style={styles.label}>指標名</Text>
-          <TextInput
-            style={styles.input}
-            value={customLabel}
-            onChangeText={setCustomLabel}
-            placeholder="例: 球速 / 遠投距離 / 体重"
-            placeholderTextColor="#71717A"
-          />
-          <Text style={styles.label}>単位（任意）</Text>
-          <TextInput
-            style={styles.input}
-            value={customUnit}
-            onChangeText={setCustomUnit}
-            placeholder="例: km/h"
-            placeholderTextColor="#71717A"
-          />
-          <Text style={styles.label}>条件</Text>
-          <View style={styles.row}>
-            {COMPARISONS.map((item) => {
-              const active = comparison === item.key;
-              return (
-                <TouchableOpacity
-                  key={item.key}
-                  style={[styles.seg, active && styles.segActive]}
-                  onPress={() => setComparison(item.key)}
-                >
-                  <Text
-                    style={[styles.segText, active && styles.segTextActive]}
-                  >
-                    {item.label}
+            {isMenuMetric ? (
+              <>
+                <Text style={styles.label}>対象の練習メニュー</Text>
+                {menus.length === 0 ? (
+                  <Text style={styles.emptyText}>
+                    練習メニューがありません。練習記録で登録してください。
                   </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-          <Text style={styles.hint}>
-            現在値は手入力で更新します（自動集計はしません）。
-          </Text>
-        </>
-      ) : null}
+                ) : (
+                  <View style={styles.chipWrap}>
+                    {menus.map((menu) => {
+                      const active = menu.id === practiceMenuId;
+                      return (
+                        <TouchableOpacity
+                          key={menu.id}
+                          style={[styles.chip, active && styles.chipActive]}
+                          onPress={() => setPracticeMenuId(menu.id)}
+                        >
+                          <Text
+                            style={[
+                              styles.chipText,
+                              active && styles.chipTextActive,
+                            ]}
+                          >
+                            {menu.name}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
+                <Text style={styles.hint}>
+                  期間内にこのメニューを実施した「日数」を数えます。
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.hint}>
+                条件: {metric.comparison === "less_than" ? "以下" : "以上"}
+              </Text>
+            )}
+          </>
+        )}
 
-      {isQualitative ? null : (
-        <>
-          <Text style={styles.label}>目標値</Text>
-          <TextInput
-            style={styles.input}
-            value={target}
-            onChangeText={setTarget}
-            keyboardType="numeric"
-            placeholder={metric.decimal ? "例: 0.300" : "例: 20"}
-            placeholderTextColor="#71717A"
+        {isManual && isLockedManual ? (
+          <ProUpsellCard
+            feature="manual_metric_goals"
+            onPressCta={() => setProNotePaywallFeature("manual_metric_goals")}
+            style={styles.proNoteCard}
           />
-          {isManual ? (
-            <>
-              <Text style={styles.label}>現在値</Text>
-              <TextInput
-                style={styles.input}
-                value={manualCurrent}
-                onChangeText={setManualCurrent}
-                keyboardType="numeric"
-                placeholder="例: 125"
-                placeholderTextColor="#71717A"
-              />
-            </>
-          ) : null}
-        </>
-      )}
+        ) : null}
+        {isManual && !isLockedManual ? (
+          <>
+            <Text style={styles.label}>指標名</Text>
+            <TextInput
+              style={styles.input}
+              value={customLabel}
+              onChangeText={setCustomLabel}
+              placeholder="例: 球速 / 遠投距離 / 体重"
+              placeholderTextColor="#71717A"
+            />
+            <Text style={styles.label}>単位（任意）</Text>
+            <TextInput
+              style={styles.input}
+              value={customUnit}
+              onChangeText={setCustomUnit}
+              placeholder="例: km/h"
+              placeholderTextColor="#71717A"
+            />
+            <Text style={styles.label}>条件</Text>
+            <View style={styles.row}>
+              {COMPARISONS.map((item) => {
+                const active = comparison === item.key;
+                return (
+                  <TouchableOpacity
+                    key={item.key}
+                    style={[styles.seg, active && styles.segActive]}
+                    onPress={() => setComparison(item.key)}
+                  >
+                    <Text
+                      style={[styles.segText, active && styles.segTextActive]}
+                    >
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <Text style={styles.hint}>
+              現在値は手入力で更新します（自動集計はしません）。
+            </Text>
+          </>
+        ) : null}
 
-      <Text style={styles.label}>
-        {isQualitative ? "目標" : "タイトル（任意）"}
-      </Text>
-      <TextInput
-        style={styles.input}
-        value={title}
-        onChangeText={setTitle}
-        placeholder={
-          isQualitative
-            ? "例: この大会で優勝する"
-            : isManual
-              ? customLabel.trim() || "指標名の目標"
-              : metricExample(metricKey) || `${metric.label}目標`
-        }
-        placeholderTextColor="#71717A"
+        {isQualitative ? null : (
+          <>
+            <Text style={styles.label}>目標値</Text>
+            <TextInput
+              style={styles.input}
+              value={target}
+              onChangeText={setTarget}
+              keyboardType="numeric"
+              placeholder={metric.decimal ? "例: 0.300" : "例: 20"}
+              placeholderTextColor="#71717A"
+            />
+            {isManual ? (
+              <>
+                <Text style={styles.label}>現在値</Text>
+                <TextInput
+                  style={styles.input}
+                  value={manualCurrent}
+                  onChangeText={setManualCurrent}
+                  keyboardType="numeric"
+                  placeholder="例: 125"
+                  placeholderTextColor="#71717A"
+                />
+              </>
+            ) : null}
+          </>
+        )}
+
+        <Text style={styles.label}>
+          {isQualitative ? "目標" : "タイトル（任意）"}
+        </Text>
+        <TextInput
+          style={styles.input}
+          value={title}
+          onChangeText={setTitle}
+          placeholder={
+            isQualitative
+              ? "例: この大会で優勝する"
+              : isManual
+                ? customLabel.trim() || "指標名の目標"
+                : metricExample(metricKey) || `${metric.label}目標`
+          }
+          placeholderTextColor="#71717A"
+        />
+
+        <TouchableOpacity
+          style={[
+            styles.saveButton,
+            (isSaving ||
+              isProLoading ||
+              (isManual && isLockedManual) ||
+              isLockedPeriod) &&
+              styles.saveButtonDisabled,
+          ]}
+          onPress={handleSave}
+          disabled={
+            isSaving ||
+            isProLoading ||
+            (isManual && isLockedManual) ||
+            isLockedPeriod
+          }
+        >
+          <Text style={styles.saveButtonText}>{editing ? "更新" : "保存"}</Text>
+        </TouchableOpacity>
+      </ScrollView>
+      <PaywallModal
+        isOpen={proNotePaywallFeature !== null}
+        onClose={() => setProNotePaywallFeature(null)}
+        feature={proNotePaywallFeature ?? undefined}
       />
-
-      <TouchableOpacity
-        style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-        onPress={handleSave}
-        disabled={isSaving}
-      >
-        <Text style={styles.saveButtonText}>{editing ? "更新" : "保存"}</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    </>
   );
 }
 
@@ -661,26 +729,19 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", gap: 8 },
   seg: {
     flex: 1,
+    flexDirection: "row",
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
     backgroundColor: "#3A3A3A",
   },
   segActive: { backgroundColor: "#d08000" },
   segLocked: { opacity: 0.4 },
   segText: { color: "#A1A1AA", fontSize: 14, fontWeight: "600" },
   segTextActive: { color: "#FFFFFF" },
-  proNote: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#3A3A3A",
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 12,
-  },
-  proText: { color: "#A1A1AA", fontSize: 13 },
-  proLink: { color: "#d08000", fontSize: 13, fontWeight: "700" },
+  proNoteCard: { marginTop: 12 },
   hint: { color: "#71717A", fontSize: 12, marginTop: 8 },
   kindDescription: {
     color: "#A1A1AA",

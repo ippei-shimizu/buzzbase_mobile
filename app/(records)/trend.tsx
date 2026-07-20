@@ -20,8 +20,11 @@ import Svg, {
   LinearGradient,
   Stop,
 } from "react-native-svg";
+import { PaywallModal } from "@components/pro/PaywallModal";
+import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { UnderlineTabBar } from "@components/ui/UnderlineTabBar";
 import { formatTotalAmount, formatVolume } from "@constants/practice";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { useMenuTrend } from "@hooks/usePracticeSummaries";
 
 type Period = "year" | "month" | "day";
@@ -361,8 +364,10 @@ function RangeChips({
 export default function MenuTrendScreen() {
   const { menuId } = useLocalSearchParams<{ menuId: string }>();
   const { trend, isLoading } = useMenuTrend(menuId ? Number(menuId) : null);
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const [segment, setSegment] = useState(1); // 既定: 月別
   const [rangeIndex, setRangeIndex] = useState(DEFAULT_RANGE_INDEX.month);
+  const [isTrendPaywallOpen, setTrendPaywallOpen] = useState(false);
 
   // 粒度を切り替えたらレンジも既定へ戻す（粒度ごとに選択肢が異なるため）。
   const handleSegmentChange = (index: number) => {
@@ -405,37 +410,55 @@ export default function MenuTrendScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>{trend.menu.name}</Text>
 
-        <View style={styles.tabWrap}>
-          <UnderlineTabBar
-            options={SEGMENTS}
-            selectedIndex={segment}
-            onSelect={handleSegmentChange}
-          />
-        </View>
-
-        {buckets.length === 0 ? (
-          <Text style={styles.muted}>記録がありません</Text>
-        ) : (
-          <>
-            <RangeChips
-              options={rangeOptions}
-              selectedIndex={rangeIndex}
-              onSelect={setRangeIndex}
+        <ProUpsellOverlay
+          unlocked={hasEntitlement("practice_menu_trend_detail")}
+          loading={isProLoading}
+          feature="practice_menu_trend_detail"
+          onPressCta={() => setTrendPaywallOpen(true)}
+        >
+          <View style={styles.tabWrap}>
+            <UnderlineTabBar
+              options={SEGMENTS}
+              selectedIndex={segment}
+              onSelect={handleSegmentChange}
             />
-            <View style={styles.card}>
-              <TrendLine
-                key={`${period}-${rangeIndex}`}
-                trend={trend}
-                period={period}
-                buckets={rangedBuckets}
+          </View>
+
+          {buckets.length === 0 ? (
+            <Text style={styles.muted}>記録がありません</Text>
+          ) : (
+            <>
+              <RangeChips
+                options={rangeOptions}
+                selectedIndex={rangeIndex}
+                onSelect={setRangeIndex}
               />
-            </View>
-            <View style={styles.listCard}>
-              {rangedBuckets.map((bucket) => (
-                <View key={bucket.period} style={styles.row}>
-                  <Text style={styles.rowLabel}>
-                    {periodLabel(period, bucket.period)}
-                  </Text>
+              <View style={styles.card}>
+                <TrendLine
+                  key={`${period}-${rangeIndex}`}
+                  trend={trend}
+                  period={period}
+                  buckets={rangedBuckets}
+                />
+              </View>
+            </>
+          )}
+        </ProUpsellOverlay>
+
+        {buckets.length > 0 ? (
+          <View style={styles.listCard}>
+            {rangedBuckets.map((bucket) => (
+              <View key={bucket.period} style={styles.row}>
+                <Text style={styles.rowLabel}>
+                  {periodLabel(period, bucket.period)}
+                </Text>
+                <ProUpsellOverlay
+                  unlocked={hasEntitlement("practice_menu_trend_detail")}
+                  loading={isProLoading}
+                  hideCard
+                  scrimOpacity={1}
+                  style={styles.rowRightOverlay}
+                >
                   <View style={styles.rowRight}>
                     <Text style={styles.rowValue}>
                       {bucketValueText(trend, bucket)}
@@ -444,12 +467,17 @@ export default function MenuTrendScreen() {
                       <Text style={styles.rowSub}>{bucket.days_count}日</Text>
                     ) : null}
                   </View>
-                </View>
-              ))}
-            </View>
-          </>
-        )}
+                </ProUpsellOverlay>
+              </View>
+            ))}
+          </View>
+        ) : null}
       </ScrollView>
+      <PaywallModal
+        isOpen={isTrendPaywallOpen}
+        onClose={() => setTrendPaywallOpen(false)}
+        feature="practice_menu_trend_detail"
+      />
     </View>
   );
 }
@@ -510,6 +538,7 @@ const styles = StyleSheet.create({
   },
   rowLabel: { color: "#F4F4F4", fontSize: 14, fontWeight: "600" },
   rowRight: { flexDirection: "row", alignItems: "baseline", gap: 8 },
+  rowRightOverlay: { borderRadius: 0 },
   rowValue: { color: "#d08000", fontSize: 16, fontWeight: "800" },
   rowSub: { color: "#A1A1AA", fontSize: 12 },
 });

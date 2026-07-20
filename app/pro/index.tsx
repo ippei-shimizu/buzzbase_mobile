@@ -1,8 +1,6 @@
-import type {
-  PurchasesOffering,
-  PurchasesPackage,
-} from "react-native-purchases";
+import type { PurchasesOffering } from "react-native-purchases";
 import { Ionicons } from "@expo/vector-icons";
+import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -15,21 +13,22 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  DEFAULT_COPY,
+  FEATURE_COMPARISONS,
+  FEATURE_GROUPS,
+  isUserCancelled,
+  PLAN_LABELS,
+  PRO_PAYWALL_COPY,
+} from "@components/pro/PaywallModal";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { syncProStatus } from "@services/proService";
-import { getOfferings, purchasePackage } from "@services/revenueCatService";
+import {
+  getOfferings,
+  purchasePackage,
+  restorePurchases,
+} from "@services/revenueCatService";
 import { useSnackbarStore } from "@stores/snackbarStore";
-
-const FEATURE_HIGHLIGHTS = [
-  "広告非表示",
-  "シーズン跨ぎ成績推移グラフ",
-  "草機能の全期間ヒートマップ",
-  "動画・画像アップロード無制限",
-  "メディア長期保管",
-  "練習メニュー / 自主練スケジュール無制限",
-  "月次目標・シーズン目標無制限",
-  "カスタム通知メッセージ",
-] as const;
 
 const NOTICES = [
   "7 日間の無料トライアル期間中に解約すれば料金はかかりません。",
@@ -37,11 +36,6 @@ const NOTICES = [
   "契約期間は開始日から月額（月額プラン）または1年（年額プラン）ごとに自動更新されます。",
   "解約は App Store のサブスクリプション設定から行います。",
 ] as const;
-
-const isUserCancelled = (error: unknown): boolean =>
-  typeof error === "object" &&
-  error !== null &&
-  (error as { userCancelled?: boolean }).userCancelled === true;
 
 export default function ProScreen() {
   const router = useRouter();
@@ -55,7 +49,11 @@ export default function ProScreen() {
 
   const [offering, setOffering] = useState<PurchasesOffering | null>(null);
   const [loadingOfferings, setLoadingOfferings] = useState(true);
-  const [purchasingId, setPurchasingId] = useState<string | null>(null);
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(
+    null,
+  );
+  const [purchasing, setPurchasing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
 
   useEffect(() => {
     if (!proFeatures) return;
@@ -63,7 +61,21 @@ export default function ProScreen() {
     void (async () => {
       try {
         const result = await getOfferings();
-        if (!cancelled) setOffering(result);
+        if (cancelled) return;
+        setOffering(result);
+        const packages = result?.availablePackages ?? [];
+        // 年額があれば「お得」導線として初期選択にする。無ければ最初のプランを選ぶ。
+        const preferred =
+          packages.find((pkg) => pkg.packageType === "ANNUAL") ?? packages[0];
+        setSelectedPackageId(preferred?.identifier ?? null);
+      } catch (error: unknown) {
+        // RevenueCat 側の商品未登録・App Store Connect 未反映などで取得失敗しても、
+        // 画面自体は表示を続け、プラン欄のみ空状態表示にフォールバックする。
+        if (!cancelled) {
+          Sentry.captureException(error, {
+            tags: { source: "revenue_cat_get_offerings" },
+          });
+        }
       } finally {
         if (!cancelled) setLoadingOfferings(false);
       }
@@ -83,92 +95,200 @@ export default function ProScreen() {
   }
   if (!proFeatures) return <Redirect href="/" />;
 
-  const handlePurchase = async (pkg: PurchasesPackage) => {
-    setPurchasingId(pkg.identifier);
+  const packages = offering?.availablePackages ?? [];
+  const selectedPackage =
+    packages.find((pkg) => pkg.identifier === selectedPackageId) ?? null;
+  const monthlyPackage = packages.find((pkg) => pkg.packageType === "MONTHLY");
+  const annualPackage = packages.find((pkg) => pkg.packageType === "ANNUAL");
+  const annualIsDiscounted =
+    !!monthlyPackage &&
+    !!annualPackage &&
+    annualPackage.product.price < monthlyPackage.product.price * 12;
+  // 月額を1年間払い続けた場合と比べて年額プランがいくら安いかを金額で表示する。
+  const annualSavingsAmount =
+    annualIsDiscounted && monthlyPackage && annualPackage
+      ? monthlyPackage.product.price * 12 - annualPackage.product.price
+      : null;
+
+  const handlePurchase = async () => {
+    if (!selectedPackage) return;
+    setPurchasing(true);
     try {
-      await purchasePackage(pkg);
+      await purchasePackage(selectedPackage);
       await syncProStatus();
       await queryClient.invalidateQueries({ queryKey: ["pro", "status"] });
       router.replace("/pro/success");
     } catch (error: unknown) {
       if (isUserCancelled(error)) return;
+      // 課金成功後の syncProStatus 失敗も含め、購入フローの失敗は必ず監視に乗せる
+      // （課金済みなのに Pro 状態が同期されない事態を検知するため）。
+      Sentry.captureException(error, {
+        tags: { source: "revenue_cat_purchase" },
+      });
       showSnackbar({
         type: "error",
         message: "購入に失敗しました。時間を置いて再度お試しください",
       });
     } finally {
-      setPurchasingId(null);
+      setPurchasing(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    setRestoring(true);
+    try {
+      await restorePurchases();
+      await syncProStatus();
+      await queryClient.invalidateQueries({ queryKey: ["pro", "status"] });
+      showSnackbar({ type: "success", message: "購入情報を復元しました" });
+      router.back();
+    } catch {
+      showSnackbar({
+        type: "error",
+        message: "復元に失敗しました。時間を置いて再度お試しください",
+      });
+    } finally {
+      setRestoring(false);
     }
   };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="閉じる"
-          hitSlop={8}
-        >
-          <Ionicons name="close" size={28} color="#F4F4F4" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Pro に加入</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <TouchableOpacity
+        onPress={() => router.back()}
+        style={styles.closeButton}
+        accessibilityRole="button"
+        accessibilityLabel="閉じる"
+        hitSlop={8}
+      >
+        <Ionicons name="close" size={22} color="#F4F4F4" />
+      </TouchableOpacity>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heroBadge}>BUZZ BASE Pro</Text>
-        <Text style={styles.heroTitle}>記録を、成長へ。</Text>
-        <Text style={styles.heroDescription}>
-          広告なし、メディア無制限、シーズン跨ぎグラフ。Pro
-          で全機能を解放しよう。
-        </Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.brandRow}>
+          <Text style={styles.brandName}>BUZZ BASE</Text>
+          <View style={styles.brandProBadge}>
+            <Text style={styles.brandProBadgeText}>PRO</Text>
+          </View>
+        </View>
+        <Text style={styles.subtitle}>すべての機能が使い放題になります</Text>
 
-        <View style={styles.featureList}>
-          {FEATURE_HIGHLIGHTS.map((feature) => (
-            <View key={feature} style={styles.featureItem}>
-              <Ionicons name="checkmark-circle" size={20} color="#d08000" />
-              <Text style={styles.featureLabel}>{feature}</Text>
+        <View style={styles.highlightCard}>
+          <Text style={styles.highlightTitle}>{DEFAULT_COPY.title}</Text>
+          <Text style={styles.highlightDescription}>
+            {DEFAULT_COPY.description}
+          </Text>
+        </View>
+
+        <Text style={styles.sectionTitle}>PRO でできること</Text>
+        <View style={styles.groupList}>
+          {FEATURE_GROUPS.map((group) => (
+            <View key={group.title} style={styles.group}>
+              <View style={styles.groupHeader}>
+                <Ionicons name={group.icon} size={16} color="#d08000" />
+                <Text style={styles.groupHeaderTitle}>{group.title}</Text>
+              </View>
+              <View style={styles.table}>
+                <View style={styles.tableHeaderRow}>
+                  <View style={styles.tableLabelCell} />
+                  <Text style={styles.tableHeaderFree}>無料</Text>
+                  <Text style={styles.tableHeaderPro}>PRO</Text>
+                </View>
+                {group.keys.map((key, index) => (
+                  <View
+                    key={key}
+                    style={[
+                      styles.tableRow,
+                      index === group.keys.length - 1 && styles.tableRowLast,
+                    ]}
+                    accessibilityLabel={`${PRO_PAYWALL_COPY[key].title}。無料は${FEATURE_COMPARISONS[key].free}、PROは${FEATURE_COMPARISONS[key].pro}`}
+                  >
+                    <Text style={styles.tableLabelCell} numberOfLines={2}>
+                      {PRO_PAYWALL_COPY[key].title}
+                    </Text>
+                    <Text style={styles.tableFreeCell}>
+                      {FEATURE_COMPARISONS[key].free}
+                    </Text>
+                    <Text style={styles.tableProCell}>
+                      {FEATURE_COMPARISONS[key].pro}
+                    </Text>
+                  </View>
+                ))}
+              </View>
             </View>
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>プランを選ぶ</Text>
+        <Text style={styles.sectionTitle}>プランを選択</Text>
         {loadingOfferings ? (
-          <View style={styles.center}>
-            <ActivityIndicator size="large" color="#d08000" />
+          <ActivityIndicator
+            size="small"
+            color="#d08000"
+            style={styles.plansLoading}
+          />
+        ) : packages.length > 0 ? (
+          <View style={styles.planList}>
+            {packages.map((pkg) => {
+              const label = PLAN_LABELS[pkg.packageType] ?? {
+                name: pkg.product.title,
+                period: "",
+              };
+              const isSelected = pkg.identifier === selectedPackageId;
+              const showSavingsBadge =
+                pkg.packageType === "ANNUAL" && annualIsDiscounted;
+              return (
+                <TouchableOpacity
+                  key={pkg.identifier}
+                  style={[
+                    styles.planCard,
+                    isSelected && styles.planCardSelected,
+                  ]}
+                  onPress={() => setSelectedPackageId(pkg.identifier)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: isSelected }}
+                  accessibilityLabel={`${label.name} ${pkg.product.priceString}`}
+                >
+                  <View style={styles.planRadioOuter}>
+                    {isSelected && <View style={styles.planRadioInner} />}
+                  </View>
+                  <View style={styles.planNameRow}>
+                    <Text style={styles.planName}>{label.name}</Text>
+                    {showSavingsBadge && annualSavingsAmount != null ? (
+                      <View style={styles.savingsBadge}>
+                        <Text style={styles.savingsBadgeText}>
+                          年間¥{annualSavingsAmount.toLocaleString()}お得
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text style={styles.planPrice}>
+                    {pkg.product.priceString}
+                    {label.period}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
-        ) : offering && offering.availablePackages.length > 0 ? (
-          offering.availablePackages.map((pkg) => (
-            <TouchableOpacity
-              key={pkg.identifier}
-              style={styles.planCard}
-              onPress={() => handlePurchase(pkg)}
-              disabled={purchasingId !== null}
-              accessibilityRole="button"
-              accessibilityLabel={`${pkg.product.title} で加入`}
-            >
-              <View style={styles.planInfo}>
-                <Text style={styles.planTitle}>{pkg.product.title}</Text>
-                <Text style={styles.planDescription}>
-                  {pkg.product.description}
-                </Text>
-              </View>
-              <View style={styles.planPriceArea}>
-                <Text style={styles.planPrice}>{pkg.product.priceString}</Text>
-                {purchasingId === pkg.identifier ? (
-                  <ActivityIndicator size="small" color="#d08000" />
-                ) : null}
-              </View>
-            </TouchableOpacity>
-          ))
         ) : (
-          <View style={styles.center}>
-            <Text style={styles.emptyText}>
-              プラン情報を取得できませんでした。時間を置いて再度お試しください。
-            </Text>
-          </View>
+          <Text style={styles.emptyText}>
+            プラン情報を取得できませんでした。時間を置いて再度お試しください。
+          </Text>
         )}
+
+        <TouchableOpacity
+          onPress={handleRestore}
+          disabled={restoring}
+          style={styles.restoreLink}
+          accessibilityRole="button"
+          accessibilityLabel="購入を復元"
+        >
+          <Text style={styles.restoreLinkText}>
+            {restoring ? "復元中..." : "購入を復元"}
+          </Text>
+        </TouchableOpacity>
 
         <Text style={styles.sectionTitle}>注意事項</Text>
         <View style={styles.noticeList}>
@@ -178,7 +298,33 @@ export default function ProScreen() {
             </Text>
           ))}
         </View>
+
+        <Text style={styles.disclaimer}>
+          契約期間は開始日から月額・年額などプランの周期ごとに自動更新されます。解約は
+          App Store / Google Play のサブスクリプション設定から行えます。
+        </Text>
       </ScrollView>
+
+      <View
+        style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 24) }]}
+      >
+        <TouchableOpacity
+          onPress={handlePurchase}
+          disabled={!selectedPackage || purchasing}
+          style={[
+            styles.ctaButton,
+            (!selectedPackage || purchasing) && styles.ctaButtonDisabled,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="PROを始める"
+        >
+          {purchasing ? (
+            <ActivityIndicator size="small" color="#F4F4F4" />
+          ) : (
+            <Text style={styles.ctaButtonText}>PROを始める</Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -192,118 +338,237 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  header: {
-    flexDirection: "row",
+  closeButton: {
+    alignSelf: "flex-end",
+    padding: 12,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomColor: "#424242",
-    borderBottomWidth: 1,
   },
-  headerTitle: {
-    color: "#F4F4F4",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  headerSpacer: {
-    width: 28,
-  },
-  content: {
-    paddingHorizontal: 16,
-    paddingVertical: 24,
-    paddingBottom: 48,
-  },
-  heroBadge: {
-    alignSelf: "flex-start",
-    color: "#d08000",
-    backgroundColor: "rgba(208, 128, 0, 0.15)",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    fontSize: 11,
-    fontWeight: "700",
-    marginBottom: 8,
-    overflow: "hidden",
-  },
-  heroTitle: {
-    color: "#F4F4F4",
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-  heroDescription: {
-    color: "#D4D4D4",
-    fontSize: 14,
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  featureList: {
-    gap: 10,
-    marginBottom: 24,
-  },
-  featureItem: {
+  brandRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    marginBottom: 6,
   },
-  featureLabel: {
+  brandName: {
     color: "#F4F4F4",
-    fontSize: 14,
+    fontSize: 27,
+    fontWeight: "800",
+    letterSpacing: 0.3,
+  },
+  brandProBadge: {
+    backgroundColor: "#d08000",
+    borderRadius: 7,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+  },
+  brandProBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  subtitle: {
+    color: "#A1A1AA",
+    fontSize: 13,
+    marginTop: 4,
+    marginBottom: 20,
+  },
+  highlightCard: {
+    width: "100%",
+    backgroundColor: "rgba(208, 128, 0, 0.12)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(208, 128, 0, 0.4)",
+    padding: 16,
+    marginBottom: 20,
+  },
+  highlightTitle: {
+    color: "#F4F4F4",
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 6,
+  },
+  highlightDescription: {
+    color: "#D4D4D4",
+    fontSize: 13,
+    lineHeight: 20,
   },
   sectionTitle: {
+    alignSelf: "flex-start",
     color: "#A1A1AA",
     fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 1,
-    marginBottom: 8,
-    marginTop: 8,
+    marginBottom: 10,
+    marginTop: 4,
   },
-  planCard: {
-    backgroundColor: "#424242",
-    borderRadius: 12,
-    padding: 16,
+  groupList: {
+    width: "100%",
+    gap: 16,
+    marginBottom: 20,
+  },
+  group: {
+    width: "100%",
+  },
+  groupHeader: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
+    gap: 6,
+    marginBottom: 8,
   },
-  planInfo: {
+  groupHeaderTitle: {
+    color: "#F4F4F4",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  table: {
+    width: "100%",
+    backgroundColor: "#3A3A3A",
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  tableHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#4A4A4A",
+  },
+  tableHeaderFree: {
+    flex: 0.65,
+    textAlign: "center",
+    color: "#A1A1AA",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  tableHeaderPro: {
+    flex: 0.75,
+    textAlign: "center",
+    color: "#d08000",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  tableRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderBottomWidth: 1,
+    borderBottomColor: "#333333",
+  },
+  tableRowLast: {
+    borderBottomWidth: 0,
+  },
+  tableLabelCell: {
+    flex: 1.6,
+    color: "#D4D4D4",
+    fontSize: 13,
+    paddingRight: 6,
+  },
+  tableFreeCell: {
+    flex: 0.65,
+    textAlign: "center",
+    color: "#A1A1AA",
+    fontSize: 13,
+  },
+  tableProCell: {
+    flex: 0.75,
+    textAlign: "center",
+    color: "#d08000",
+    fontSize: 13.5,
+    fontWeight: "700",
+  },
+  plansLoading: {
+    marginBottom: 20,
+  },
+  planList: {
+    width: "100%",
+    gap: 10,
+    marginBottom: 16,
+  },
+  planCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#424242",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "transparent",
+    padding: 14,
+  },
+  planCardSelected: {
+    borderColor: "#d08000",
+    backgroundColor: "rgba(208, 128, 0, 0.1)",
+  },
+  planRadioOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#d08000",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  planRadioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#d08000",
+  },
+  planNameRow: {
     flex: 1,
-    marginRight: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
   },
-  planTitle: {
+  planName: {
     color: "#F4F4F4",
     fontSize: 15,
     fontWeight: "700",
-    marginBottom: 2,
   },
-  planDescription: {
-    color: "#A1A1AA",
-    fontSize: 12,
-    lineHeight: 16,
+  savingsBadge: {
+    backgroundColor: "#d08000",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
   },
-  planPriceArea: {
-    alignItems: "flex-end",
-    gap: 4,
+  savingsBadgeText: {
+    color: "#F4F4F4",
+    fontSize: 13,
+    fontWeight: "700",
   },
   planPrice: {
     color: "#F4F4F4",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  center: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 24,
+    fontSize: 16,
+    fontWeight: "800",
+    marginLeft: 8,
   },
   emptyText: {
     color: "#A1A1AA",
     fontSize: 13,
     textAlign: "center",
+    marginBottom: 16,
+  },
+  restoreLink: {
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  restoreLinkText: {
+    color: "#d08000",
+    fontSize: 13,
+    fontWeight: "600",
+    textAlign: "center",
   },
   noticeList: {
+    width: "100%",
     gap: 6,
     marginBottom: 16,
   },
@@ -311,5 +576,32 @@ const styles = StyleSheet.create({
     color: "#A1A1AA",
     fontSize: 12,
     lineHeight: 18,
+  },
+  disclaimer: {
+    color: "#7A7A7A",
+    fontSize: 11,
+    lineHeight: 16,
+    textAlign: "center",
+  },
+  footer: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#424242",
+  },
+  ctaButton: {
+    backgroundColor: "#d08000",
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ctaButtonDisabled: {
+    opacity: 0.5,
+  },
+  ctaButtonText: {
+    color: "#F4F4F4",
+    fontSize: 15,
+    fontWeight: "700",
   },
 });

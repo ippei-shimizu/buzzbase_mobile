@@ -26,8 +26,10 @@ import {
   ConditionForm,
   EMPTY_CONDITION_DRAFT,
 } from "@components/practice/ConditionForm";
-import { ProGate } from "@components/pro/ProGate";
+import { PaywallModal } from "@components/pro/PaywallModal";
+import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { CATEGORY_ICON, PRACTICE_CATEGORIES } from "@constants/practice";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
 import {
   usePracticeSessionByDate,
@@ -122,6 +124,8 @@ function DailyEditor({
 }) {
   const router = useRouter();
   const { saveSession, isSaving } = usePracticeSessionMutations();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
+  const isEditing = initialSession != null;
 
   // 既存の記録済み量を優先しつつ、未選択のプリセットメニューを目標量つきで追加する。
   const [selected, setSelected] = useState<SelectedItems>(() => {
@@ -144,9 +148,12 @@ function DailyEditor({
   const [condition, setCondition] = useState<ConditionDraft>(() =>
     toConditionDraft(initialSession),
   );
-  const [improvementThemeId, setImprovementThemeId] = useState<number | null>(
-    initialSession?.improvement_theme_id ?? null,
+  const [improvementThemeIds, setImprovementThemeIds] = useState<number[]>(
+    initialSession?.improvement_theme_ids ?? [],
   );
+  const [isConditionPaywallOpen, setConditionPaywallOpen] = useState(false);
+  const canSaveCondition = hasEntitlement("detailed_condition_log");
+
   const toggleMenu = (menu: PracticeMenu) => {
     const isSelected = menu.id in selected;
     setSelected((prev) => {
@@ -193,11 +200,15 @@ function DailyEditor({
       return;
     }
     try {
+      // 無料ユーザーは condition の入力ができないため、state に何が残っていても送らない
+      // （Pro/トライアル時代の記録を持つユーザーが他項目だけ編集した際に、
+      // condition の Pro 判定で保存全体が失敗しないようにする）。
       const session = await saveSession({
         logged_on: dateString,
         items,
-        condition: hasCondition ? toConditionInput(condition) : null,
-        improvement_theme_id: improvementThemeId,
+        condition:
+          hasCondition && canSaveCondition ? toConditionInput(condition) : null,
+        improvement_theme_ids: improvementThemeIds,
       });
       if (withNote) {
         router.replace({
@@ -205,8 +216,8 @@ function DailyEditor({
           params: {
             date: dateString,
             practiceSessionId: String(session.id),
-            ...(improvementThemeId != null
-              ? { improvementThemeId: String(improvementThemeId) }
+            ...(improvementThemeIds.length > 0
+              ? { improvementThemeIds: improvementThemeIds.join(",") }
               : {}),
           },
         });
@@ -276,6 +287,14 @@ function DailyEditor({
   return (
     <View>
       <Text style={styles.sectionTitle}>練習メニュー（複数選択可）</Text>
+      <TouchableOpacity
+        style={styles.addMenuButton}
+        onPress={() => router.push("/(practice-menu)/form")}
+      >
+        <Ionicons name="add" size={18} color="#FFFFFF" />
+        <Text style={styles.addMenuButtonText}>新しいメニューを追加</Text>
+      </TouchableOpacity>
+
       {PRACTICE_CATEGORIES.map((category) => {
         const inCategory = menus.filter(
           (menu) => menu.category === category.key,
@@ -296,33 +315,36 @@ function DailyEditor({
         );
       })}
 
-      <TouchableOpacity
-        style={styles.addRow}
-        onPress={() => router.push("/(practice-record)/menu-new")}
-      >
-        <Ionicons name="add" size={18} color="#d08000" />
-        <Text style={styles.addRowText}>新しいメニューを追加</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.sectionTitle}>コンディション</Text>
-      <ProGate
+      <View style={styles.sectionTitleRow}>
+        <Text style={styles.sectionTitleInline}>コンディション</Text>
+        {!isProLoading && !canSaveCondition ? (
+          <Text style={styles.proBadge}>Pro限定</Text>
+        ) : null}
+      </View>
+      <View style={styles.conditionWrapper}>
+        <ProUpsellOverlay
+          unlocked={canSaveCondition}
+          loading={isProLoading}
+          feature="detailed_condition_log"
+          onPressCta={() => setConditionPaywallOpen(true)}
+        >
+          <ConditionForm
+            value={condition}
+            onChange={setCondition}
+            disabled={!canSaveCondition}
+          />
+        </ProUpsellOverlay>
+      </View>
+      <PaywallModal
+        isOpen={isConditionPaywallOpen}
+        onClose={() => setConditionPaywallOpen(false)}
         feature="detailed_condition_log"
-        renderLockedTrigger={(open) => (
-          <TouchableOpacity style={styles.conditionLocked} onPress={open}>
-            <Ionicons name="lock-closed" size={16} color="#A1A1AA" />
-            <Text style={styles.conditionLockedText}>
-              疲労・体調・睡眠・気分・怪我の記録は Pro 限定
-            </Text>
-          </TouchableOpacity>
-        )}
-      >
-        <ConditionForm value={condition} onChange={setCondition} />
-      </ProGate>
+      />
 
       <Text style={styles.sectionTitle}>取り組む課題（任意）</Text>
       <ThemePickerField
-        selectedThemeId={improvementThemeId}
-        onChange={setImprovementThemeId}
+        selectedThemeIds={improvementThemeIds}
+        onChange={setImprovementThemeIds}
       />
 
       <TouchableOpacity
@@ -337,7 +359,9 @@ function DailyEditor({
         onPress={() => handleSave(false)}
         disabled={isSaving}
       >
-        <Text style={styles.saveSubButtonText}>練習記録のみ保存</Text>
+        <Text style={styles.saveSubButtonText}>
+          {isEditing ? "練習記録の変更を保存" : "練習記録のみ保存"}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -407,7 +431,7 @@ export default function DailyRecordScreen() {
           </Text>
           <TouchableOpacity
             style={styles.primaryButton}
-            onPress={() => router.push("/(practice-record)/menu-new")}
+            onPress={() => router.push("/(practice-menu)/form")}
           >
             <Ionicons name="add" size={18} color="#FFFFFF" />
             <Text style={styles.primaryButtonText}>最初のメニューを作る</Text>
@@ -442,6 +466,23 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 24,
     marginBottom: 12,
+  },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 36,
+    marginBottom: 12,
+  },
+  sectionTitleInline: {
+    color: "#F4F4F4",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  proBadge: {
+    color: "#d08000",
+    fontSize: 12,
+    fontWeight: "700",
   },
   dateRow: {
     flexDirection: "row",
@@ -502,24 +543,18 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   unitLabel: { color: "#A1A1AA", fontSize: 15 },
-  addRow: {
+  addMenuButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    paddingVertical: 12,
-  },
-  addRowText: { color: "#d08000", fontSize: 15, fontWeight: "600" },
-  conditionLocked: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "#3A3A3A",
-    borderRadius: 8,
-    paddingHorizontal: 14,
+    backgroundColor: "#d08000",
+    borderRadius: 10,
     paddingVertical: 14,
+    marginBottom: 16,
   },
-  conditionLockedText: { color: "#A1A1AA", fontSize: 13, fontWeight: "600" },
+  addMenuButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
+  conditionWrapper: { marginTop: 8 },
   empty: { alignItems: "center", paddingVertical: 40 },
   emptyTitle: {
     color: "#F4F4F4",

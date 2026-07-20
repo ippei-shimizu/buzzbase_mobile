@@ -1,5 +1,17 @@
 import type { GoalComparison, GoalPeriodType } from "../types/goal";
 
+// back/app/models/concerns/plan_limits.rb の MONTHLY_GOAL_FREE_LIMIT と一致させる。
+export const MONTHLY_GOAL_FREE_LIMIT = 2;
+
+// back/app/models/goal.rb の Goal::PERSONAL_PERIOD_TYPES と一致させる。
+// 個人の期間目標（試合エンティティに紐づかない日付レンジ系）は無料枠を共有する。
+export const PERSONAL_GOAL_PERIOD_TYPES: GoalPeriodType[] = [
+  "monthly",
+  "weekly",
+  "yearly",
+  "custom",
+];
+
 /** 目標の種類（期間タイプ）の表示ラベル。 */
 export const GOAL_PERIOD_LABELS: Record<GoalPeriodType, string> = {
   weekly: "週次",
