@@ -168,6 +168,13 @@ function GoalForm({ editing }: { editing?: Goal }) {
     !isQualitative && !isManual && metricKey === "menu_practice_days";
   // 自由指標は Pro 限定。既存の自由指標目標を編集中は鍵をかけない（タイプ自体変更不可のため）。
   const isLockedManual = !canManualMetric && !editing;
+  // 期間タイプの Pro 制限。無料で season / tournament / custom を選ぶと保存不可。
+  // 編集中は期間タイプを変更できないため鍵をかけない（既存 Pro 目標の保存を妨げない）。
+  const isLockedPeriod =
+    !editing &&
+    ((periodType === "season" && !canSeason) ||
+      (periodType === "tournament" && !canTournament) ||
+      (periodType === "custom" && !canCustomPeriod));
 
   const handleSave = async () => {
     if (isQualitative && !title.trim()) {
@@ -675,11 +682,11 @@ function GoalForm({ editing }: { editing?: Goal }) {
         <TouchableOpacity
           style={[
             styles.saveButton,
-            (isSaving || (isManual && isLockedManual)) &&
+            (isSaving || (isManual && isLockedManual) || isLockedPeriod) &&
               styles.saveButtonDisabled,
           ]}
           onPress={handleSave}
-          disabled={isSaving || (isManual && isLockedManual)}
+          disabled={isSaving || (isManual && isLockedManual) || isLockedPeriod}
         >
           <Text style={styles.saveButtonText}>{editing ? "更新" : "保存"}</Text>
         </TouchableOpacity>
