@@ -43,6 +43,9 @@ coverage/
 /ios
 /android
 
+# StoreKit config (Xcodeが開くたびに自動整形されるため追跡しない)
+BuzzBasePro.storekit
+
 .env
 
 # Android
