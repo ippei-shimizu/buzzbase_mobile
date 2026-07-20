@@ -39,6 +39,8 @@ export interface GameResultFilterParams {
   match_type?: string;
   season_id?: string;
   tournament_id?: string;
+  start_month?: string;
+  end_month?: string;
   search?: string;
   sort_by?: string;
   sort_order?: "asc" | "desc";
@@ -55,6 +57,8 @@ export const getFilteredGameResults = async (
   if (params.season_id) queryParams.set("season_id", params.season_id);
   if (params.tournament_id)
     queryParams.set("tournament_id", params.tournament_id);
+  if (params.start_month) queryParams.set("start_month", params.start_month);
+  if (params.end_month) queryParams.set("end_month", params.end_month);
   if (params.search) queryParams.set("search", params.search);
   if (params.sort_by) queryParams.set("sort_by", params.sort_by);
   if (params.sort_order) queryParams.set("sort_order", params.sort_order);
@@ -77,6 +81,8 @@ export const getFilteredUserGameResults = async (
   if (params.season_id) queryParams.set("season_id", params.season_id);
   if (params.tournament_id)
     queryParams.set("tournament_id", params.tournament_id);
+  if (params.start_month) queryParams.set("start_month", params.start_month);
+  if (params.end_month) queryParams.set("end_month", params.end_month);
   if (params.search) queryParams.set("search", params.search);
   if (params.sort_by) queryParams.set("sort_by", params.sort_by);
   if (params.sort_order) queryParams.set("sort_order", params.sort_order);

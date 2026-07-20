@@ -10,6 +10,21 @@ export const getAvailableYears = async (userId?: number): Promise<string[]> => {
 };
 
 /**
+ * 試合を記録したことのある年月一覧を "YYYY-MM" の新しい順で取得する（期間フィルタの候補用）。
+ * @param userId 対象ユーザー（省略時はログインユーザー）
+ */
+export const getAvailableMonths = async (
+  userId?: number,
+): Promise<string[]> => {
+  const params = userId ? { user_id: userId } : {};
+  const response = await axiosInstance.get<string[]>(
+    "/match_results/available_months",
+    { params },
+  );
+  return response.data;
+};
+
+/**
  * 試合作成フォームの初期値レスポンス。
  *
  * - inning_format: 直近試合のイニング制（7 or 9）。履歴なしは 9

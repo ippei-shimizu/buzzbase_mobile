@@ -28,6 +28,9 @@ export const defaultHandlers = [
   http.get(`${API_BASE_URL}/api/v2/baseball_notes`, () =>
     HttpResponse.json([]),
   ),
+  http.get(`${API_V1_URL}/match_results/available_months`, () =>
+    HttpResponse.json([]),
+  ),
 ];
 
 /**

@@ -9,12 +9,14 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
+import { monthOptionsFromRecorded } from "@utils/monthOptions";
 import { FilterResetButton } from "./FilterResetButton";
 
 interface StatsFiltersProps {
   filters: StatsFiltersType;
   onFiltersChange: (filters: StatsFiltersType) => void;
   availableYears: (string | number)[];
+  availableMonths?: string[];
   availableSeasons?: { id: string; name: string }[];
   availableTournaments?: { id: string; name: string }[];
 }
@@ -40,14 +42,25 @@ function FilterDropdown({
   onToggle: () => void;
 }) {
   const selectedLabel = options.find((o) => o.key === value)?.label ?? "全て";
+  // 「全て」以外を選択中は primary で強調し、絞り込み中だと一目で分かるようにする。
+  const isFiltered = value !== undefined;
 
   return (
     <View style={{ zIndex: isOpen ? 100 : 0 }}>
-      <TouchableOpacity style={styles.button} onPress={onToggle}>
-        <Text style={styles.buttonText}>
+      <TouchableOpacity
+        style={[styles.button, isFiltered && styles.buttonActive]}
+        onPress={onToggle}
+      >
+        <Text
+          style={[styles.buttonText, isFiltered && styles.buttonTextActive]}
+        >
           {label}: {selectedLabel}
         </Text>
-        <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+        <Ionicons
+          name="chevron-down"
+          size={14}
+          color={isFiltered ? "#d08000" : "#A1A1AA"}
+        />
       </TouchableOpacity>
 
       {isOpen && (
@@ -110,6 +123,7 @@ export const StatsFilters = ({
   filters,
   onFiltersChange,
   availableYears,
+  availableMonths = [],
   availableSeasons = [],
   availableTournaments = [],
 }: StatsFiltersProps) => {
@@ -118,9 +132,53 @@ export const StatsFilters = ({
     setActiveFilter((prev) => (prev === id ? null : id));
 
   const yearOptions = [
-    { key: "all", label: "通算" },
     ...availableYears.map((y) => ({ key: String(y), label: `${y}` })),
   ];
+
+  const monthOptions = monthOptionsFromRecorded(availableMonths);
+
+  // 年度と期間は排他。実年を選んだら期間を、期間を指定したら年度をクリアする。
+  const handleYearSelect = (value: string | undefined) => {
+    const year = value;
+    onFiltersChange(
+      year
+        ? { ...filters, year, startMonth: undefined, endMonth: undefined }
+        : { ...filters, year },
+    );
+  };
+
+  // 開始を選ぶと終了が未指定/開始より前のとき終了を同月に合わせ、単月をワンタップで作れる。
+  const handleStartMonthSelect = (value: string | undefined) => {
+    if (!value) {
+      onFiltersChange({ ...filters, startMonth: undefined });
+      return;
+    }
+    const endMonth =
+      !filters.endMonth || filters.endMonth < value ? value : filters.endMonth;
+    onFiltersChange({
+      ...filters,
+      startMonth: value,
+      endMonth,
+      year: undefined,
+    });
+  };
+
+  const handleEndMonthSelect = (value: string | undefined) => {
+    if (!value) {
+      onFiltersChange({ ...filters, endMonth: undefined });
+      return;
+    }
+    const startMonth =
+      filters.startMonth && filters.startMonth > value
+        ? value
+        : filters.startMonth;
+    onFiltersChange({
+      ...filters,
+      startMonth,
+      endMonth: value,
+      year: undefined,
+    });
+  };
 
   const seasonOptions = availableSeasons.map((s) => ({
     key: s.id,
@@ -136,7 +194,9 @@ export const StatsFilters = ({
     filters.year ||
     filters.matchType ||
     filters.seasonId ||
-    filters.tournamentId
+    filters.tournamentId ||
+    filters.startMonth ||
+    filters.endMonth
   );
   const handleReset = () => {
     setActiveFilter(null);
@@ -149,12 +209,30 @@ export const StatsFilters = ({
         label="年度"
         value={filters.year}
         options={yearOptions}
-        onSelect={(v) =>
-          onFiltersChange({ ...filters, year: v === "all" ? undefined : v })
-        }
+        onSelect={handleYearSelect}
         isOpen={activeFilter === "year"}
         onToggle={() => toggleFilter("year")}
       />
+      {monthOptions.length > 0 && (
+        <>
+          <FilterDropdown
+            label="開始"
+            value={filters.startMonth}
+            options={monthOptions}
+            onSelect={handleStartMonthSelect}
+            isOpen={activeFilter === "startMonth"}
+            onToggle={() => toggleFilter("startMonth")}
+          />
+          <FilterDropdown
+            label="終了"
+            value={filters.endMonth}
+            options={monthOptions}
+            onSelect={handleEndMonthSelect}
+            isOpen={activeFilter === "endMonth"}
+            onToggle={() => toggleFilter("endMonth")}
+          />
+        </>
+      )}
       <FilterDropdown
         label="種別"
         value={filters.matchType}
@@ -209,6 +287,12 @@ const styles = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 12,
     fontWeight: "500",
+  },
+  buttonActive: {
+    borderColor: "#d08000",
+  },
+  buttonTextActive: {
+    color: "#d08000",
   },
   overlayBg: {
     position: "absolute" as const,
