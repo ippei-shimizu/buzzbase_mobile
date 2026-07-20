@@ -1,3 +1,4 @@
+import type { MediaAttachment } from "./mediaAttachment";
 import type { ReflectionAnswer } from "./reflectionTemplate";
 import type { Tag } from "./tag";
 
@@ -14,6 +15,7 @@ export interface NoteV2 {
   reflection_template_id: number | null;
   reflection_answers: ReflectionAnswer[];
   tags: Tag[];
+  media_attachments: MediaAttachment[];
 }
 
 export interface NoteInput {
