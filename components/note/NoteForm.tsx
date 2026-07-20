@@ -71,7 +71,7 @@ export function NoteForm({
   templateLocked = false,
 }: Props) {
   const { sessions } = usePracticeSessions();
-  const { hasEntitlement } = useEntitlement();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
 
   const [title, setTitle] = useState(initial?.title ?? "");
   const [memo, setMemo] = useState(initial?.memo ?? "");
@@ -270,6 +270,7 @@ export function NoteForm({
       <Text style={styles.label}>タグ（任意・複数選択可）</Text>
       <ProUpsellOverlay
         unlocked={hasEntitlement("note_tags")}
+        loading={isProLoading}
         feature="note_tags"
         onPressCta={() => setTagPaywallOpen(true)}
       >
@@ -444,9 +445,12 @@ export function NoteForm({
       />
 
       <TouchableOpacity
-        style={[styles.saveButton, isSubmitting && styles.saveButtonDisabled]}
+        style={[
+          styles.saveButton,
+          (isSubmitting || isProLoading) && styles.saveButtonDisabled,
+        ]}
         onPress={handleSubmit}
-        disabled={isSubmitting}
+        disabled={isSubmitting || isProLoading}
       >
         <Text style={styles.saveButtonText}>{submitLabel}</Text>
       </TouchableOpacity>

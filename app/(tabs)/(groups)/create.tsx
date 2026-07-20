@@ -24,8 +24,8 @@ export default function GroupCreateScreen() {
   const router = useRouter();
   const { profile } = useProfile();
   const { users, isLoading: isLoadingUsers } = useFollowingUsers(profile?.id);
-  const { groups } = useGroups();
-  const { hasEntitlement } = useEntitlement();
+  const { groups, isLoading: isGroupsLoading } = useGroups();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const { createGroup, isCreating } = useCreateGroup();
   const { inviteMembers, isInviting } = useInviteMembers();
 
@@ -59,7 +59,11 @@ export default function GroupCreateScreen() {
   };
 
   const handleSave = async () => {
+    // pro/status と所属グループの取得完了後にのみ上限判定する。
+    // 判定確定前は誤ってPaywallを出さず、サーバー側の上限チェックに委ねる。
     if (
+      !isProLoading &&
+      !isGroupsLoading &&
       !hasEntitlement("unlimited_groups") &&
       groups.length >= GROUP_FREE_LIMIT
     ) {

@@ -28,7 +28,7 @@ const WEEKDAY_LABELS = ["月", "火", "水", "木", "金", "土", "日"];
 export function WeeklyPlanView() {
   const router = useRouter();
   const { schedules } = useSchedules();
-  const { hasEntitlement } = useEntitlement();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const [weekStart, setWeekStart] = useState<string>(mondayOf(todayIso()));
   const [isCopying, setCopying] = useState(false);
   const [isPaywallOpen, setPaywallOpen] = useState(false);
@@ -145,7 +145,7 @@ export function WeeklyPlanView() {
       >
         <Ionicons name="copy-outline" size={16} color="#F4F4F4" />
         <Text style={styles.copyText}>来週にコピー</Text>
-        {!hasEntitlement("schedule_copy_next_week") ? (
+        {!isProLoading && !hasEntitlement("schedule_copy_next_week") ? (
           <Ionicons name="lock-closed" size={14} color="#A1A1AA" />
         ) : null}
       </TouchableOpacity>

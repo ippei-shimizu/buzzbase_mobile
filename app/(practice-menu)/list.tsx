@@ -26,7 +26,7 @@ export default function PracticeMenuListScreen() {
   const router = useRouter();
   const { menus, isLoading } = usePracticeMenus();
   const { deleteMenu } = usePracticeMenuMutations();
-  const { hasEntitlement } = useEntitlement();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const [isPaywallOpen, setPaywallOpen] = useState(false);
 
   const handleAdd = () => {
@@ -64,7 +64,7 @@ export default function PracticeMenuListScreen() {
     ]);
   };
 
-  if (isLoading) {
+  if (isLoading || isProLoading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#d08000" />

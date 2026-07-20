@@ -30,9 +30,11 @@ export default function ShadowSwingSetupScreen() {
   const router = useRouter();
   const { startSession, isStarting } = useShadowSwingMutations();
   const { stats } = useShadowSwingStats();
-  const { hasEntitlement } = useEntitlement();
-  const canCustomInterval = hasEntitlement("shadow_swing_custom_interval");
-  const canVibration = hasEntitlement("shadow_swing_vibration");
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
+  // pro/status 解決前は解放扱いにして、Pro ユーザーへのロック表示フラッシュを防ぐ。
+  const canCustomInterval =
+    isProLoading || hasEntitlement("shadow_swing_custom_interval");
+  const canVibration = isProLoading || hasEntitlement("shadow_swing_vibration");
   const [target, setTarget] = useState("200");
   const [interval, setIntervalValue] = useState(5.0);
   const [vibration, setVibration] = useState(false);

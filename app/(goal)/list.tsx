@@ -45,7 +45,7 @@ const categorize = (goal: Goal): GoalTab => {
 
 export default function GoalListScreen() {
   const router = useRouter();
-  const { hasEntitlement } = useEntitlement();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const { goals: activeGoals, isLoading } = useGoals();
   const { goals: historyGoals, isLoading: isHistoryLoading } = useGoalHistory();
   const { achieveGoal, unachieveGoal } = useGoalMutations();
@@ -87,7 +87,7 @@ export default function GoalListScreen() {
     router.push("/(goal)/new");
   };
 
-  if (isLoading || isHistoryLoading) {
+  if (isLoading || isHistoryLoading || isProLoading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#d08000" />

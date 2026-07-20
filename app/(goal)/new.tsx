@@ -104,11 +104,13 @@ function GoalForm({ editing }: { editing?: Goal }) {
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
   const { menus } = usePracticeMenus();
-  const { hasEntitlement } = useEntitlement();
-  const canSeason = hasEntitlement("season_goals");
-  const canTournament = hasEntitlement("tournament_goals");
-  const canCustomPeriod = hasEntitlement("custom_period_goals");
-  const canManualMetric = hasEntitlement("manual_metric_goals");
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
+  // pro/status 解決前は一律「解放扱い」にしてロック表示のフラッシュを防ぐ。
+  // 判定確定までは保存アクション自体を無効化するため、誤った entitlement で保存されない。
+  const canSeason = isProLoading || hasEntitlement("season_goals");
+  const canTournament = isProLoading || hasEntitlement("tournament_goals");
+  const canCustomPeriod = isProLoading || hasEntitlement("custom_period_goals");
+  const canManualMetric = isProLoading || hasEntitlement("manual_metric_goals");
   const isSaving = isCreating || isUpdating;
 
   const [kind, setKind] = useState<GoalKind>(editing?.kind ?? "numeric");
@@ -682,11 +684,19 @@ function GoalForm({ editing }: { editing?: Goal }) {
         <TouchableOpacity
           style={[
             styles.saveButton,
-            (isSaving || (isManual && isLockedManual) || isLockedPeriod) &&
+            (isSaving ||
+              isProLoading ||
+              (isManual && isLockedManual) ||
+              isLockedPeriod) &&
               styles.saveButtonDisabled,
           ]}
           onPress={handleSave}
-          disabled={isSaving || (isManual && isLockedManual) || isLockedPeriod}
+          disabled={
+            isSaving ||
+            isProLoading ||
+            (isManual && isLockedManual) ||
+            isLockedPeriod
+          }
         >
           <Text style={styles.saveButtonText}>{editing ? "更新" : "保存"}</Text>
         </TouchableOpacity>

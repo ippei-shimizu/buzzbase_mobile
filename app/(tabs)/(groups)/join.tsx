@@ -28,8 +28,8 @@ export default function JoinGroupScreen() {
   const [inviteInfo, setInviteInfo] = useState<InviteLinkInfo | null>(null);
   const [isPaywallOpen, setPaywallOpen] = useState(false);
   const { acceptInviteLink, isAccepting } = useAcceptInviteLink();
-  const { groups } = useGroups();
-  const { hasEntitlement } = useEntitlement();
+  const { groups, isLoading: isGroupsLoading } = useGroups();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
 
   const handleLookup = async () => {
     if (code.length === 0) return;
@@ -47,7 +47,11 @@ export default function JoinGroupScreen() {
   };
 
   const handleJoin = async () => {
+    // pro/status と所属グループの取得完了後にのみ上限判定する。
+    // 判定確定前は誤ってPaywallを出さず、サーバー側の上限チェックに委ねる。
     if (
+      !isProLoading &&
+      !isGroupsLoading &&
       !hasEntitlement("unlimited_groups") &&
       groups.length >= GROUP_FREE_LIMIT
     ) {
