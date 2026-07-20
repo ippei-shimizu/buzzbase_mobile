@@ -61,7 +61,14 @@ export function ProUpsellOverlay({
 
   return (
     <View style={[styles.wrapper, showCard && styles.wrapperWithCard, style]}>
-      <View pointerEvents="none">{children}</View>
+      {/* 暗幕裏の実データ（コンディション値・練習量等）を VoiceOver/TalkBack から隠す。 */}
+      <View
+        pointerEvents="none"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        {children}
+      </View>
       <View
         style={[
           styles.scrim,
