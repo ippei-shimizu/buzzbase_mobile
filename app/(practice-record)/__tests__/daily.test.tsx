@@ -138,6 +138,6 @@ describe("日次の練習記録", () => {
     fireEvent.press(getByText("練習記録の変更を保存"));
 
     await waitFor(() => expect(savedBody.practice_session).toBeTruthy());
-    expect(savedBody.practice_session?.condition).toBeNull();
+    expect(savedBody.practice_session).not.toHaveProperty("condition");
   });
 });

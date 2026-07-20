@@ -200,14 +200,16 @@ function DailyEditor({
       return;
     }
     try {
-      // 無料ユーザーは condition の入力ができないため、state に何が残っていても送らない
-      // （Pro/トライアル時代の記録を持つユーザーが他項目だけ編集した際に、
-      // condition の Pro 判定で保存全体が失敗しないようにする）。
+      // 無料ユーザーは condition を入力できないため、state に何が残っていても
+      // condition キー自体を送らない（back は未送信を「変更なし」として扱うため、
+      // Pro/トライアル時代の記録を持つユーザーが他項目だけ編集しても既存の
+      // コンディションを保持できる）。
       const session = await saveSession({
         logged_on: dateString,
         items,
-        condition:
-          hasCondition && canSaveCondition ? toConditionInput(condition) : null,
+        ...(hasCondition && canSaveCondition
+          ? { condition: toConditionInput(condition) }
+          : {}),
         improvement_theme_ids: improvementThemeIds,
       });
       if (withNote) {
