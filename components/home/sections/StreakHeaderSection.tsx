@@ -44,7 +44,7 @@ const streakNudge = (
 export function StreakHeaderSection() {
   const { streak } = useStreak();
   const { heatmap } = useActivityHeatmap();
-  const { hasEntitlement } = useEntitlement();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const isPro = hasEntitlement("grass_full_history");
   const [isPaywallOpen, setPaywallOpen] = useState(false);
 
@@ -105,7 +105,7 @@ export function StreakHeaderSection() {
         </View>
       ) : null}
 
-      {!isPro ? (
+      {!isProLoading && !isPro ? (
         <View style={styles.proCardWrapper}>
           <ProUpsellCard
             feature="grass_full_history"

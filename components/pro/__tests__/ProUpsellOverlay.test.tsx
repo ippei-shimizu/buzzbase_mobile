@@ -44,6 +44,25 @@ describe("ProUpsellOverlay", () => {
     expect(screen.queryByText("Pro プランを見る")).not.toBeOnTheScreen();
   });
 
+  it("loading=true のとき、暗幕のみでカード・バッジは出ない（判定確定前のフラッシュ抑制）", () => {
+    render(
+      <ProUpsellOverlay
+        unlocked={false}
+        loading
+        onPressCta={jest.fn()}
+        feature="note_tags"
+      >
+        <Text>記録内容</Text>
+      </ProUpsellOverlay>,
+    );
+
+    expect(
+      screen.queryByText("野球ノートにタグを付けて整理"),
+    ).not.toBeOnTheScreen();
+    expect(screen.queryByText("Pro プランを見る")).not.toBeOnTheScreen();
+    expect(screen.queryByText("Pro限定")).not.toBeOnTheScreen();
+  });
+
   it("hideCard=true のとき、onPressCta があってもカードは出ない", () => {
     render(
       <ProUpsellOverlay

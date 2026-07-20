@@ -364,7 +364,7 @@ function RangeChips({
 export default function MenuTrendScreen() {
   const { menuId } = useLocalSearchParams<{ menuId: string }>();
   const { trend, isLoading } = useMenuTrend(menuId ? Number(menuId) : null);
-  const { hasEntitlement } = useEntitlement();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const [segment, setSegment] = useState(1); // 既定: 月別
   const [rangeIndex, setRangeIndex] = useState(DEFAULT_RANGE_INDEX.month);
   const [isTrendPaywallOpen, setTrendPaywallOpen] = useState(false);
@@ -412,6 +412,7 @@ export default function MenuTrendScreen() {
 
         <ProUpsellOverlay
           unlocked={hasEntitlement("practice_menu_trend_detail")}
+          loading={isProLoading}
           feature="practice_menu_trend_detail"
           onPressCta={() => setTrendPaywallOpen(true)}
         >
@@ -453,6 +454,7 @@ export default function MenuTrendScreen() {
                 </Text>
                 <ProUpsellOverlay
                   unlocked={hasEntitlement("practice_menu_trend_detail")}
+                  loading={isProLoading}
                   hideCard
                   scrimOpacity={1}
                   style={styles.rowRightOverlay}

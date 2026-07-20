@@ -34,7 +34,7 @@ const formatJaDate = (iso: string): string => {
 
 function LinkedPractice({ sessionId }: { sessionId: number }) {
   const router = useRouter();
-  const { hasEntitlement } = useEntitlement();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const { session, isLoading } = usePracticeSession(sessionId);
   const [isConditionPaywallOpen, setConditionPaywallOpen] = useState(false);
   if (isLoading) return <ActivityIndicator color="#d08000" />;
@@ -109,6 +109,7 @@ function LinkedPractice({ sessionId }: { sessionId: number }) {
       {session.condition ? (
         <ProUpsellOverlay
           unlocked={hasEntitlement("detailed_condition_log")}
+          loading={isProLoading}
           feature="detailed_condition_log"
           onPressCta={() => setConditionPaywallOpen(true)}
         >

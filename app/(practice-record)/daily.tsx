@@ -124,7 +124,7 @@ function DailyEditor({
 }) {
   const router = useRouter();
   const { saveSession, isSaving } = usePracticeSessionMutations();
-  const { hasEntitlement } = useEntitlement();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const isEditing = initialSession != null;
 
   // 既存の記録済み量を優先しつつ、未選択のプリセットメニューを目標量つきで追加する。
@@ -317,13 +317,14 @@ function DailyEditor({
 
       <View style={styles.sectionTitleRow}>
         <Text style={styles.sectionTitleInline}>コンディション</Text>
-        {!canSaveCondition ? (
+        {!isProLoading && !canSaveCondition ? (
           <Text style={styles.proBadge}>Pro限定</Text>
         ) : null}
       </View>
       <View style={styles.conditionWrapper}>
         <ProUpsellOverlay
           unlocked={canSaveCondition}
+          loading={isProLoading}
           feature="detailed_condition_log"
           onPressCta={() => setConditionPaywallOpen(true)}
         >

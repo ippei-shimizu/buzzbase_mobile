@@ -80,7 +80,7 @@ export default function PracticeSessionDetailScreen() {
   const { session, isLoading } = usePracticeSession(sessionId);
   const { deleteSession, isDeleting } = usePracticeSessionMutations();
   const { menus } = usePracticeMenus();
-  const { hasEntitlement } = useEntitlement();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const categoryById = new Map(menus.map((menu) => [menu.id, menu.category]));
   const [isConditionPaywallOpen, setConditionPaywallOpen] = useState(false);
 
@@ -206,12 +206,13 @@ export default function PracticeSessionDetailScreen() {
           <>
             <View style={styles.sectionTitleRow}>
               <Text style={styles.sectionTitleInline}>コンディション</Text>
-              {!hasEntitlement("detailed_condition_log") ? (
+              {!isProLoading && !hasEntitlement("detailed_condition_log") ? (
                 <Text style={styles.proBadge}>Pro限定</Text>
               ) : null}
             </View>
             <ProUpsellOverlay
               unlocked={hasEntitlement("detailed_condition_log")}
+              loading={isProLoading}
               feature="detailed_condition_log"
               onPressCta={() => setConditionPaywallOpen(true)}
             >
