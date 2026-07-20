@@ -216,7 +216,7 @@ export default function PracticeSessionDetailScreen() {
               feature="detailed_condition_log"
               onPressCta={() => setConditionPaywallOpen(true)}
             >
-              <ConditionCard condition={session.condition} />
+              <ConditionCard condition={session.condition} showTitle={false} />
             </ProUpsellOverlay>
           </>
         ) : null}

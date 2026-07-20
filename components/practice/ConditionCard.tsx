@@ -42,10 +42,13 @@ function ConditionFace({
 export function ConditionCard({
   condition,
   style,
+  showTitle = true,
 }: {
   condition: ConditionLog;
   /** 呼び出し元のレイアウトに合わせて外枠（marginTop・区切り線等）を上書きする。 */
   style?: StyleProp<ViewStyle>;
+  /** 呼び出し元が独自に見出しを描画する場合は false にして内部見出しの二重表示を防ぐ。 */
+  showTitle?: boolean;
 }) {
   const chips: { icon: keyof typeof Ionicons.glyphMap; text: string }[] = [];
   if (condition.sleep_hours != null) {
@@ -58,7 +61,9 @@ export function ConditionCard({
 
   return (
     <View style={[styles.conditionCard, style]}>
-      <Text style={styles.sectionTitle}>コンディション</Text>
+      {showTitle ? (
+        <Text style={styles.sectionTitle}>コンディション</Text>
+      ) : null}
       {condition.fatigue_level != null || condition.physical_level != null ? (
         <View style={styles.faceRow}>
           {condition.fatigue_level != null ? (
