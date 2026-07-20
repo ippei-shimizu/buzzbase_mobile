@@ -58,10 +58,6 @@ export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     title: "動画・画像を無制限にアップロード",
     description: "月3点までの制限を撤廃。練習映像をいくらでも保存できます。",
   },
-  media_long_term_storage: {
-    title: "動画・画像を長期保管",
-    description: "31日以上前にアップロードしたメディアもいつでも閲覧可能です。",
-  },
   schedule_copy_next_week: {
     title: "今週のプランを来週にまるごとコピー",
     description:
@@ -207,7 +203,6 @@ export const FEATURE_COMPARISONS: Record<ProFeature, FeatureComparison> = {
   grass_full_history: { free: "直近30日", pro: "全期間" },
   unlimited_practice_menus: { free: "3件", pro: "無制限" },
   unlimited_media_uploads: { free: "月3件", pro: "無制限" },
-  media_long_term_storage: { free: "31日以内", pro: "無期限" },
   schedule_copy_next_week: { free: "手動", pro: "1タップ" },
   unlimited_menu_sets: { free: "2件", pro: "無制限" },
   unlimited_monthly_goals: { free: "2件", pro: "無制限" },
@@ -258,7 +253,6 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
       "note_tags",
       "multi_game_result_notes",
       "unlimited_media_uploads",
-      "media_long_term_storage",
       "unlimited_reflection_templates",
     ],
   },
