@@ -132,7 +132,7 @@ const DUMMY_REVIEWS: PeriodicReview[] = [
 ];
 
 export default function ReviewListScreen() {
-  const { hasEntitlement } = useEntitlement();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const canViewReviews = hasEntitlement("advanced_periodic_review");
   const { reviews, isLoading } = usePeriodicReviews();
   const { markReadMany } = usePeriodicReviewMutations();
@@ -150,6 +150,16 @@ export default function ReviewListScreen() {
     void markReadMany(unreadIds);
     // markReadMany は安定参照、reviews の未読分のみを対象にする
   }, [reviews, markReadMany, canViewReviews]);
+
+  // pro/status 解決前は canViewReviews が false 倒しになり、Pro ユーザーへ一瞬
+  // サンプル表示がフラッシュしてしまうため、判定確定までスピナーを出す。
+  if (isProLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#d08000" />
+      </View>
+    );
+  }
 
   if (!canViewReviews) {
     return (
