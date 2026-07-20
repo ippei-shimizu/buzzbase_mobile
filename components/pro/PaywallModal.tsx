@@ -459,6 +459,11 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
       router.push("/pro/success");
     } catch (error: unknown) {
       if (isUserCancelled(error)) return;
+      // 課金成功後の syncProStatus 失敗も含め、購入フローの失敗は必ず監視に乗せる
+      // （課金済みなのに Pro 状態が同期されない事態を検知するため）。
+      Sentry.captureException(error, {
+        tags: { source: "revenue_cat_purchase" },
+      });
       showSnackbar({
         type: "error",
         message: "購入に失敗しました。時間を置いて再度お試しください",
