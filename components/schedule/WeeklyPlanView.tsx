@@ -51,6 +51,8 @@ export function WeeklyPlanView() {
   const rangeLabel = `${fromIsoDate(weekStart).getMonth() + 1}/${fromIsoDate(weekStart).getDate()}〜${fromIsoDate(weekEnd).getMonth() + 1}/${fromIsoDate(weekEnd).getDate()}`;
 
   const handleCopyToNextWeek = () => {
+    // pro/status 解決前は判定せず、確定後にのみ Paywall 表示 or コピー実行する。
+    if (isProLoading) return;
     if (!hasEntitlement("schedule_copy_next_week")) {
       setPaywallOpen(true);
       return;
@@ -139,9 +141,12 @@ export function WeeklyPlanView() {
       })}
 
       <TouchableOpacity
-        style={[styles.copyButton, isCopying && styles.copyButtonDisabled]}
+        style={[
+          styles.copyButton,
+          (isCopying || isProLoading) && styles.copyButtonDisabled,
+        ]}
         onPress={handleCopyToNextWeek}
-        disabled={isCopying}
+        disabled={isCopying || isProLoading}
       >
         <Ionicons name="copy-outline" size={16} color="#F4F4F4" />
         <Text style={styles.copyText}>来週にコピー</Text>

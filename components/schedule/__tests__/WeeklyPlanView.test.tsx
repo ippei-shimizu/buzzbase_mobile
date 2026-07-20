@@ -8,10 +8,7 @@ import {
   http,
   HttpResponse,
 } from "../../../__tests__/test-utils/handlers";
-import {
-  createTestQueryClient,
-  renderWithProviders,
-} from "../../../__tests__/test-utils/renderWithProviders";
+import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
 import { server } from "../../../jest-setup-msw";
 import { DEFAULT_PRO_STATUS, FREE_FEATURES } from "../../../types/pro";
 import { WeeklyPlanView } from "../WeeklyPlanView";
@@ -55,14 +52,6 @@ const respondPro = () => {
   );
 };
 
-// pro/status の取得完了を待たずに「来週にコピー」を押すテストがあるため、
-// レンダー前にクエリキャッシュへ Pro 状態を注入して初回描画から反映させる。
-const buildProQueryClient = () => {
-  const queryClient = createTestQueryClient();
-  queryClient.setQueryData(["pro", "status"], PRO_STATUS);
-  return queryClient;
-};
-
 describe("WeeklyPlanView", () => {
   it("無料ユーザーが「来週にコピー」を押すと Pro 訴求が表示され、コピーAPIは呼ばれない", async () => {
     respondFree();
@@ -77,9 +66,8 @@ describe("WeeklyPlanView", () => {
 
     renderWithProviders(<WeeklyPlanView />);
 
-    await waitFor(() =>
-      expect(screen.getByText("来週にコピー")).toBeOnTheScreen(),
-    );
+    // pro/status 解決前はボタンが無効なので、有効化（判定確定）を待ってから押す。
+    await waitFor(() => expect(screen.getByText("来週にコピー")).toBeEnabled());
     fireEvent.press(screen.getByText("来週にコピー"));
 
     await waitFor(() =>
@@ -102,13 +90,10 @@ describe("WeeklyPlanView", () => {
       }),
     );
 
-    renderWithProviders(<WeeklyPlanView />, {
-      queryClient: buildProQueryClient(),
-    });
+    renderWithProviders(<WeeklyPlanView />);
 
-    await waitFor(() =>
-      expect(screen.getByText("来週にコピー")).toBeOnTheScreen(),
-    );
+    // pro/status 解決前はボタンが無効なので、有効化（判定確定）を待ってから押す。
+    await waitFor(() => expect(screen.getByText("来週にコピー")).toBeEnabled());
     fireEvent.press(screen.getByText("来週にコピー"));
 
     await waitFor(() => expect(requestedWeekStart).toBeTruthy());
