@@ -1,3 +1,4 @@
+import type { MediaAttachment } from "../../types/mediaAttachment";
 import type { NoteInput } from "../../types/note";
 import type { ReflectionTemplate } from "../../types/reflectionTemplate";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,6 +22,8 @@ import { useFilteredGameResults } from "@hooks/useGameResults";
 import { usePracticeSessions } from "@hooks/usePracticeSessions";
 import { formatJaFullDate } from "@utils/formatDate";
 import { buildMemoJson, buildReflectionMemoText } from "../../types/note";
+import { MediaAttachmentList } from "./MediaAttachmentList";
+import { MediaPicker } from "./MediaPicker";
 import { ReflectionTemplateSection } from "./ReflectionTemplateSection";
 import { TagSection } from "./TagSection";
 
@@ -47,6 +50,12 @@ interface Props {
   onSubmit: (input: NoteInput) => Promise<void> | void;
   /** 編集時はテンプレ変更で回答が消えるのを防ぐため、テンプレ選択を固定する。 */
   templateLocked?: boolean;
+  /**
+   * 保存済みノートのID。メディア添付はbaseball_note_idが必須のため、
+   * 新規作成時（undefined）はメディアセクションを非表示にし、保存後の編集画面でのみ有効化する。
+   */
+  noteId?: number;
+  mediaAttachments?: MediaAttachment[];
 }
 
 const todayString = (): string => {
@@ -69,6 +78,8 @@ export function NoteForm({
   isSubmitting,
   onSubmit,
   templateLocked = false,
+  noteId,
+  mediaAttachments = [],
 }: Props) {
   const { sessions } = usePracticeSessions();
   const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
@@ -258,6 +269,16 @@ export function NoteForm({
         placeholder="外角が体の開きで詰まる。右肩を我慢、と指摘された…"
         placeholderTextColor="#71717A"
       />
+
+      <Text style={styles.label}>メディア（任意）</Text>
+      {noteId != null ? (
+        <>
+          <MediaPicker baseballNoteId={noteId} />
+          <MediaAttachmentList attachments={mediaAttachments} editable />
+        </>
+      ) : (
+        <Text style={styles.hint}>保存後に画像・動画を追加できます</Text>
+      )}
 
       <ReflectionTemplateSection
         selectedTemplateId={reflectionTemplateId}
@@ -534,6 +555,7 @@ const styles = StyleSheet.create({
   pickerRowDate: { color: "#F4F4F4", fontSize: 14, fontWeight: "700" },
   pickerRowMenus: { color: "#A1A1AA", fontSize: 12, marginTop: 3 },
   pickerEmpty: { color: "#A1A1AA", fontSize: 13, padding: 12 },
+  hint: { color: "#71717A", fontSize: 13 },
   saveButton: {
     backgroundColor: "#d08000",
     borderRadius: 8,

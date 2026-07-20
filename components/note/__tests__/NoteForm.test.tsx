@@ -267,4 +267,56 @@ describe("NoteForm", () => {
     );
     expect(screen.getByText(themeA.title)).toBeOnTheScreen();
   });
+
+  it("新規作成時（noteId未指定）はメディアセクションの代わりに保存を促す文言が出る", async () => {
+    respondFree();
+    setupCommonHandlers();
+
+    renderWithProviders(
+      <NoteForm submitLabel="保存" isSubmitting={false} onSubmit={jest.fn()} />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("メディア（任意）")).toBeOnTheScreen(),
+    );
+    expect(
+      screen.getByText("保存後に画像・動画を追加できます"),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText("撮影")).not.toBeOnTheScreen();
+  });
+
+  it("noteId指定時（編集画面）はメディア追加ボタンと既存添付一覧が表示される", async () => {
+    respondFree();
+    setupCommonHandlers();
+
+    renderWithProviders(
+      <NoteForm
+        submitLabel="更新"
+        isSubmitting={false}
+        onSubmit={jest.fn()}
+        noteId={99}
+        mediaAttachments={[
+          {
+            id: 1,
+            media_type: "image",
+            status: "ready",
+            file_size_bytes: 12_345,
+            duration_seconds: null,
+            width: 1080,
+            height: 1920,
+            position: 0,
+            playback_url: "https://media.test/image.jpg",
+            thumbnail_url: null,
+            created_at: "2026-07-20T00:00:00Z",
+          },
+        ]}
+      />,
+    );
+
+    await waitFor(() => expect(screen.getByText("撮影")).toBeOnTheScreen());
+    expect(screen.getByText("ライブラリ")).toBeOnTheScreen();
+    expect(
+      screen.queryByText("保存後に画像・動画を追加できます"),
+    ).not.toBeOnTheScreen();
+  });
 });
