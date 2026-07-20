@@ -23,7 +23,7 @@ interface ProUpsellOverlayProps {
   onPressCta?: () => void;
   /** true のときカード自体を出さず暗幕のみにする（onPressCta の有無に関わらず）。ロック中は代わりに小さな「Pro限定」バッジを出す。 */
   hideCard?: boolean;
-  /** 暗幕の不透明度（0〜1）。数値等を確実に見せたくない箇所は高めの値を指定する。デフォルト 0.82。 */
+  /** 暗幕の不透明度（0〜1）。数値等を確実に見せたくない箇所は高めの値を指定する。デフォルト 0.68。 */
   scrimOpacity?: number;
   style?: StyleProp<ViewStyle>;
 }
@@ -45,7 +45,7 @@ export function ProUpsellOverlay({
   ctaLabel,
   onPressCta,
   hideCard = false,
-  scrimOpacity = 0.82,
+  scrimOpacity = 0.68,
   style,
 }: ProUpsellOverlayProps) {
   if (unlocked) return <>{children}</>;
