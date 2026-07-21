@@ -26,6 +26,7 @@ interface UploadAsset {
   uri: string;
   mediaType: MediaType;
   contentType: string;
+  memo?: string;
 }
 
 /**
@@ -93,6 +94,7 @@ export const useMediaAttachmentUpload = () => {
           width,
           height,
           file_size_bytes: fileSizeBytes,
+          ...(asset.memo ? { memo: asset.memo } : {}),
         });
 
         setPhase("done");

@@ -364,6 +364,7 @@ describe("NoteForm", () => {
             width: 1080,
             height: 1920,
             position: 0,
+            memo: null,
             playback_url: "https://media.test/image.jpg",
             thumbnail_url: null,
             created_at: "2026-07-20T00:00:00Z",

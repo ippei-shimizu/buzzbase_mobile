@@ -304,6 +304,13 @@ export function NoteForm({
                 prev.filter((item) => item.localId !== localId),
               )
             }
+            onUpdateMemo={(localId, memo) =>
+              setStagedMedia((prev) =>
+                prev.map((item) =>
+                  item.localId === localId ? { ...item, memo } : item,
+                ),
+              )
+            }
           />
         </>
       )}

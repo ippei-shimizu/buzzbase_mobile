@@ -81,6 +81,7 @@ export function MediaPicker({ baseballNoteId, onStage, onUploaded }: Props) {
         mediaType,
         contentType,
         previewUri: mediaType === "image" ? asset.uri : null,
+        memo: "",
       });
       return;
     }

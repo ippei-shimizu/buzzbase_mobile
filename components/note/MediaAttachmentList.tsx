@@ -13,22 +13,32 @@ import { MediaViewer } from "./MediaViewer";
 
 interface Props {
   attachments: MediaAttachment[];
-  /** 削除ボタンを表示するか。ノート編集時はtrue、他ユーザーのノート閲覧時はfalse。 */
+  /** 削除・メモ編集を可能にするか。ノート編集時はtrue、他ユーザーのノート閲覧時はfalse。 */
   editable?: boolean;
 }
 
-/** ノートに添付された画像・動画のサムネイルグリッド。タップでフルスクリーン再生。 */
+/** ノートに添付された画像・動画のサムネイルグリッド。タップでフルスクリーン再生+メモ編集。 */
 export function MediaAttachmentList({ attachments, editable = false }: Props) {
-  const { deleteMediaAttachment, isDeleting } = useMediaAttachmentMutations();
-  const [viewing, setViewing] = useState<MediaAttachment | null>(null);
+  const {
+    deleteMediaAttachment,
+    isDeleting,
+    updateMediaAttachmentMemo,
+    isUpdatingMemo,
+  } = useMediaAttachmentMutations();
+  const [viewingId, setViewingId] = useState<number | null>(null);
 
   if (attachments.length === 0) return null;
+
+  const viewing = attachments.find((item) => item.id === viewingId) ?? null;
 
   return (
     <View style={styles.grid}>
       {attachments.map((attachment) => (
         <View key={attachment.id} style={styles.thumbnailWrapper}>
-          <TouchableOpacity onPress={() => setViewing(attachment)}>
+          <TouchableOpacity
+            onPress={() => setViewingId(attachment.id)}
+            disabled={attachment.status === "pending"}
+          >
             {attachment.status === "pending" ? (
               <View style={[styles.thumbnail, styles.processing]}>
                 <ActivityIndicator size="small" color="#d08000" />
@@ -64,7 +74,23 @@ export function MediaAttachmentList({ attachments, editable = false }: Props) {
           ) : null}
         </View>
       ))}
-      <MediaViewer attachment={viewing} onClose={() => setViewing(null)} />
+      <MediaViewer
+        content={
+          viewing
+            ? {
+                mediaType: viewing.media_type,
+                mediaUri: viewing.playback_url,
+                memo: viewing.memo ?? "",
+              }
+            : null
+        }
+        onClose={() => setViewingId(null)}
+        editableMemo={editable}
+        isSavingMemo={isUpdatingMemo}
+        onSaveMemo={(memo) => {
+          if (viewing) updateMediaAttachmentMemo({ id: viewing.id, memo });
+        }}
+      />
     </View>
   );
 }

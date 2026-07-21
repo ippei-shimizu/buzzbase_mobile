@@ -1,6 +1,7 @@
 import type {
   MediaAttachment,
   MediaAttachmentCompleteInput,
+  MediaAttachmentMemoInput,
   MediaAttachmentPresignInput,
   MediaAttachmentPresignResponse,
 } from "../types/mediaAttachment";
@@ -22,6 +23,16 @@ export const presignMediaUpload = async (
 export const completeMediaUpload = async (
   id: number,
   input: MediaAttachmentCompleteInput,
+): Promise<MediaAttachment> => {
+  const res = await axiosInstance.patch<MediaAttachment>(`${URL}/${id}`, {
+    media_attachment: input,
+  });
+  return res.data;
+};
+
+export const updateMediaAttachmentMemo = async (
+  id: number,
+  input: MediaAttachmentMemoInput,
 ): Promise<MediaAttachment> => {
   const res = await axiosInstance.patch<MediaAttachment>(`${URL}/${id}`, {
     media_attachment: input,

@@ -10,6 +10,7 @@ export interface MediaAttachment {
   width: number | null;
   height: number | null;
   position: number;
+  memo: string | null;
   playback_url: string | null;
   thumbnail_url: string | null;
   created_at: string;
@@ -34,6 +35,11 @@ export interface MediaAttachmentCompleteInput {
   width?: number;
   height?: number;
   file_size_bytes: number;
+  memo?: string;
+}
+
+export interface MediaAttachmentMemoInput {
+  memo: string;
 }
 
 /**
@@ -47,4 +53,6 @@ export interface StagedMediaAsset {
   contentType: string;
   /** サムネイル代わりのプレビューURI。動画は生成コストを避けるため未生成（null）。 */
   previewUri: string | null;
+  /** メディアごとの所感メモ。保存後にアップロードが完了する際、完了通知と併せて送信する。 */
+  memo: string;
 }

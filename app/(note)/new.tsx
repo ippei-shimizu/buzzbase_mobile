@@ -54,6 +54,7 @@ export default function NoteNewScreen() {
                   uri: asset.uri,
                   mediaType: asset.mediaType,
                   contentType: asset.contentType,
+                  memo: asset.memo,
                 },
                 note.id,
               );
