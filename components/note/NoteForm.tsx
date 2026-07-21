@@ -1,4 +1,7 @@
-import type { MediaAttachment } from "../../types/mediaAttachment";
+import type {
+  MediaAttachment,
+  StagedMediaAsset,
+} from "../../types/mediaAttachment";
 import type { NoteInput } from "../../types/note";
 import type { ReflectionTemplate } from "../../types/reflectionTemplate";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,6 +28,7 @@ import { buildMemoJson, buildReflectionMemoText } from "../../types/note";
 import { MediaAttachmentList } from "./MediaAttachmentList";
 import { MediaPicker } from "./MediaPicker";
 import { ReflectionTemplateSection } from "./ReflectionTemplateSection";
+import { StagedMediaList } from "./StagedMediaList";
 import { TagSection } from "./TagSection";
 
 type OpenPicker = "none" | "practice" | "game";
@@ -47,12 +51,20 @@ interface Props {
   showDatePicker?: boolean;
   submitLabel: string;
   isSubmitting: boolean;
-  onSubmit: (input: NoteInput) => Promise<void> | void;
+  /**
+   * stagedMediaは新規作成時にローカルで選択済み（未アップロード）のメディア。
+   * baseball_note_idが未確定のため、呼び出し側でノート作成成功後にまとめてアップロードする。
+   * 編集時（noteIdあり）は常に空配列。
+   */
+  onSubmit: (
+    input: NoteInput,
+    stagedMedia: StagedMediaAsset[],
+  ) => Promise<void> | void;
   /** 編集時はテンプレ変更で回答が消えるのを防ぐため、テンプレ選択を固定する。 */
   templateLocked?: boolean;
   /**
-   * 保存済みノートのID。メディア添付はbaseball_note_idが必須のため、
-   * 新規作成時（undefined）はメディアセクションを非表示にし、保存後の編集画面でのみ有効化する。
+   * 保存済みノートのID。未指定（新規作成中）はメディアをアップロードせずローカルで
+   * 保持し、保存成功後に呼び出し側でアップロードする（baseball_note_idが必須のため）。
    */
   noteId?: number;
   mediaAttachments?: MediaAttachment[];
@@ -105,6 +117,7 @@ export function NoteForm({
   >(initial?.reflectionTemplateId ?? null);
   const [tagIds, setTagIds] = useState<number[]>(initial?.tagIds ?? []);
   const [isTagPaywallOpen, setTagPaywallOpen] = useState(false);
+  const [stagedMedia, setStagedMedia] = useState<StagedMediaAsset[]>([]);
   const [templateQuestions, setTemplateQuestions] = useState<string[]>(() =>
     (initial?.reflectionAnswers ?? []).map((item) => item.question),
   );
@@ -205,19 +218,22 @@ export function NoteForm({
     }
     // 一覧プレビュー用に、メモ未入力ならテンプレ回答からメモ本文を合成する。
     const memoText = memo.trim() || buildReflectionMemoText(reflectionAnswers);
-    await onSubmit({
-      title: title.trim() || null,
-      date: toDateString(date),
-      memo: buildMemoJson(memoText),
-      practice_session_id: practiceSessionId,
-      game_result_ids: gameResultIds,
-      improvement_theme_ids: improvementThemeIds,
-      reflection_template_id: reflectionTemplateId,
-      reflection_answers: reflectionAnswers,
-      // タグ編集UIは無料ユーザーには表示しないため、その場合は tag_ids キー自体を
-      // 送らず既存タグを維持する（back 側は未送信を「変更なし」として扱う）。
-      ...(hasEntitlement("note_tags") ? { tag_ids: tagIds } : {}),
-    });
+    await onSubmit(
+      {
+        title: title.trim() || null,
+        date: toDateString(date),
+        memo: buildMemoJson(memoText),
+        practice_session_id: practiceSessionId,
+        game_result_ids: gameResultIds,
+        improvement_theme_ids: improvementThemeIds,
+        reflection_template_id: reflectionTemplateId,
+        reflection_answers: reflectionAnswers,
+        // タグ編集UIは無料ユーザーには表示しないため、その場合は tag_ids キー自体を
+        // 送らず既存タグを維持する（back 側は未送信を「変更なし」として扱う）。
+        ...(hasEntitlement("note_tags") ? { tag_ids: tagIds } : {}),
+      },
+      stagedMedia,
+    );
   };
 
   return (
@@ -277,7 +293,19 @@ export function NoteForm({
           <MediaAttachmentList attachments={mediaAttachments} editable />
         </>
       ) : (
-        <Text style={styles.hint}>保存後に画像・動画を追加できます</Text>
+        <>
+          <MediaPicker
+            onStage={(asset) => setStagedMedia((prev) => [...prev, asset])}
+          />
+          <StagedMediaList
+            assets={stagedMedia}
+            onRemove={(localId) =>
+              setStagedMedia((prev) =>
+                prev.filter((item) => item.localId !== localId),
+              )
+            }
+          />
+        </>
       )}
 
       <ReflectionTemplateSection
@@ -555,7 +583,6 @@ const styles = StyleSheet.create({
   pickerRowDate: { color: "#F4F4F4", fontSize: 14, fontWeight: "700" },
   pickerRowMenus: { color: "#A1A1AA", fontSize: 12, marginTop: 3 },
   pickerEmpty: { color: "#A1A1AA", fontSize: 13, padding: 12 },
-  hint: { color: "#71717A", fontSize: 13 },
   saveButton: {
     backgroundColor: "#d08000",
     borderRadius: 8,

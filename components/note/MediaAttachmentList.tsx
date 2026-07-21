@@ -42,6 +42,8 @@ export function MediaAttachmentList({ attachments, editable = false }: Props) {
                     undefined,
                 }}
                 style={styles.thumbnail}
+                accessible
+                accessibilityRole="image"
               />
             )}
             {attachment.media_type === "video" &&

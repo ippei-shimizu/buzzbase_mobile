@@ -35,3 +35,16 @@ export interface MediaAttachmentCompleteInput {
   height?: number;
   file_size_bytes: number;
 }
+
+/**
+ * ノート新規作成中（baseball_note_id未確定）にローカルで保持する選択済みメディア。
+ * ノート保存成功後、まとめてアップロードする。
+ */
+export interface StagedMediaAsset {
+  localId: string;
+  uri: string;
+  mediaType: MediaType;
+  contentType: string;
+  /** サムネイル代わりのプレビューURI。動画は生成コストを避けるため未生成（null）。 */
+  previewUri: string | null;
+}

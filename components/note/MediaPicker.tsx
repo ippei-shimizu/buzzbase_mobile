@@ -1,4 +1,8 @@
-import type { MediaAttachment, MediaType } from "../../types/mediaAttachment";
+import type {
+  MediaAttachment,
+  MediaType,
+  StagedMediaAsset,
+} from "../../types/mediaAttachment";
 import { Ionicons } from "@expo/vector-icons";
 import { isAxiosError } from "axios";
 import * as ImagePicker from "expo-image-picker";
@@ -15,7 +19,13 @@ import { PaywallModal } from "@components/pro/PaywallModal";
 import { useMediaAttachmentUpload } from "@hooks/useMediaAttachmentUpload";
 
 interface Props {
-  baseballNoteId: number;
+  /** 保存済みノートのID。指定時は選択後すぐにアップロードする。 */
+  baseballNoteId?: number;
+  /**
+   * baseballNoteIdが未確定（ノート新規作成中）の場合、選択したメディアを
+   * アップロードせずローカルで保持してもらうためのコールバック。
+   */
+  onStage?: (asset: StagedMediaAsset) => void;
   onUploaded?: (attachment: MediaAttachment) => void;
 }
 
@@ -32,7 +42,7 @@ const guessContentType = (
   asset.mimeType ?? (mediaType === "video" ? "video/mp4" : "image/jpeg");
 
 /** ノートへの画像・動画添付。撮影/ライブラリから選択し、圧縮〜アップロードまで完結させる。 */
-export function MediaPicker({ baseballNoteId, onUploaded }: Props) {
+export function MediaPicker({ baseballNoteId, onStage, onUploaded }: Props) {
   const { upload, phase, reset } = useMediaAttachmentUpload();
   const [isPaywallOpen, setPaywallOpen] = useState(false);
 
@@ -61,14 +71,23 @@ export function MediaPicker({ baseballNoteId, onUploaded }: Props) {
 
     const asset = result.assets[0];
     const mediaType: MediaType = asset.type === "video" ? "video" : "image";
+    const contentType = guessContentType(asset, mediaType);
+
+    if (baseballNoteId == null) {
+      // ノート未保存時は選択のみ。アップロードは保存後にまとめて行う。
+      onStage?.({
+        localId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        uri: asset.uri,
+        mediaType,
+        contentType,
+        previewUri: mediaType === "image" ? asset.uri : null,
+      });
+      return;
+    }
 
     try {
       const attachment = await upload(
-        {
-          uri: asset.uri,
-          mediaType,
-          contentType: guessContentType(asset, mediaType),
-        },
+        { uri: asset.uri, mediaType, contentType },
         baseballNoteId,
       );
       onUploaded?.(attachment);
