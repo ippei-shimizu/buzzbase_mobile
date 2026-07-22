@@ -126,7 +126,7 @@ export function MediaViewer({
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.95)" },
+  overlay: { flex: 1, backgroundColor: "rgba(46,46,46,0.96)" },
   content: {
     flexGrow: 1,
     alignItems: "center",
