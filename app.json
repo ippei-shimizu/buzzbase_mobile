@@ -23,9 +23,7 @@
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "ja",
         "UIDesignRequiresCompatibility": true,
-        "LSApplicationQueriesSchemes": [
-          "twitter"
-        ]
+        "LSApplicationQueriesSchemes": ["twitter"]
       }
     },
     "android": {

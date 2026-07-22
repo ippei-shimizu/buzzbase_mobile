@@ -78,7 +78,7 @@ describe("getVideoMeta", () => {
       })),
     }));
     jest.resetModules();
-     
+
     const {
       getVideoMeta: getVideoMetaWithMock,
     } = require("../mediaProcessing");

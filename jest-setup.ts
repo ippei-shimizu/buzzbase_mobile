@@ -165,13 +165,11 @@ jest.mock("expo-video", () => {
 
 // expo-video-thumbnails: サムネイル生成はネイティブ処理のため固定のURIを返す。
 jest.mock("expo-video-thumbnails", () => ({
-  getThumbnailAsync: jest
-    .fn()
-    .mockResolvedValue({
-      uri: "file:///mock-thumbnail.jpg",
-      width: 100,
-      height: 100,
-    }),
+  getThumbnailAsync: jest.fn().mockResolvedValue({
+    uri: "file:///mock-thumbnail.jpg",
+    width: 100,
+    height: 100,
+  }),
 }));
 
 // react-native-compressor: 圧縮せず入力URIをそのまま返す。
