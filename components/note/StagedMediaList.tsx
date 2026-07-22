@@ -1,7 +1,8 @@
 import type { StagedMediaAsset } from "../../types/mediaAttachment";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { buildMediaMemoLabel } from "@utils/mediaMemoLabel";
 import { MediaViewer } from "./MediaViewer";
 
 interface Props {
@@ -36,15 +37,20 @@ export function StagedMediaList({ assets, onRemove, onUpdateMemo }: Props) {
               />
             ) : (
               <View style={[styles.thumbnail, styles.videoPlaceholder]}>
-                <Ionicons name="videocam" size={28} color="#A1A1AA" />
+                <Ionicons name="videocam" size={36} color="#A1A1AA" />
               </View>
             )}
+            <View style={styles.memoLabel}>
+              <Text style={styles.memoLabelText} numberOfLines={1}>
+                {buildMediaMemoLabel(asset.mediaType, asset.memo)}
+              </Text>
+            </View>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.removeButton}
             onPress={() => onRemove(asset.localId)}
           >
-            <Ionicons name="close-circle" size={20} color="#F4F4F4" />
+            <Ionicons name="close-circle" size={22} color="#F4F4F4" />
           </TouchableOpacity>
         </View>
       ))}
@@ -69,21 +75,33 @@ export function StagedMediaList({ assets, onRemove, onUpdateMemo }: Props) {
   );
 }
 
-const THUMBNAIL_SIZE = 88;
+const THUMBNAIL_SIZE = 140;
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 8 },
   thumbnailWrapper: { position: "relative" },
   thumbnail: {
     width: THUMBNAIL_SIZE,
     height: THUMBNAIL_SIZE,
-    borderRadius: 8,
+    borderRadius: 10,
     backgroundColor: "#3A3A3A",
   },
   videoPlaceholder: { justifyContent: "center", alignItems: "center" },
+  memoLabel: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+  },
+  memoLabelText: { color: "#F4F4F4", fontSize: 12, fontWeight: "600" },
   removeButton: {
     position: "absolute",
-    top: -6,
-    right: -6,
+    top: -8,
+    right: -8,
   },
 });
