@@ -58,5 +58,17 @@ export const trimVideo = (
       headerText: "動画をトリミング",
       saveButtonText: "完了",
       cancelButtonText: "キャンセル",
+      saveDialogTitle: "確認",
+      saveDialogMessage: "この内容で保存しますか？",
+      saveDialogConfirmText: "保存する",
+      saveDialogCancelText: "戻る",
+      cancelDialogTitle: "確認",
+      cancelDialogMessage: "編集内容を破棄しますか？",
+      cancelDialogConfirmText: "破棄する",
+      cancelDialogCancelText: "戻る",
+      trimmingText: "動画を処理中…",
+      alertOnFailTitle: "エラー",
+      alertOnFailMessage: "動画の読み込みに失敗しました",
+      alertOnFailCloseText: "閉じる",
     });
   });
