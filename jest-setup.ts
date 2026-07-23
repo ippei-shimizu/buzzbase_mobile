@@ -178,3 +178,16 @@ jest.mock("react-native-compressor", () => ({
     compress: jest.fn((uri: string) => Promise.resolve(uri)),
   },
 }));
+
+// react-native-video-trim: showEditorはネイティブUIを開くだけで、テストでは
+// イベント購読の型（EventSubscription）だけ満たせればよい。実際のイベント発火は
+// 各テストファイルでjest.doMockして個別に検証する。
+jest.mock("react-native-video-trim", () => ({
+  __esModule: true,
+  showEditor: jest.fn(),
+  default: {
+    onFinishTrimming: jest.fn(() => ({ remove: jest.fn() })),
+    onCancel: jest.fn(() => ({ remove: jest.fn() })),
+    onError: jest.fn(() => ({ remove: jest.fn() })),
+  },
+}));
