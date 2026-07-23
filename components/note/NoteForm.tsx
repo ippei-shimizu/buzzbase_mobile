@@ -290,7 +290,11 @@ export function NoteForm({
       {noteId != null ? (
         <>
           <MediaPicker baseballNoteId={noteId} />
-          <MediaAttachmentList attachments={mediaAttachments} editable />
+          <MediaAttachmentList
+            attachments={mediaAttachments}
+            editable
+            noteId={noteId}
+          />
         </>
       ) : (
         <>
@@ -308,6 +312,20 @@ export function NoteForm({
               setStagedMedia((prev) =>
                 prev.map((item) =>
                   item.localId === localId ? { ...item, memo } : item,
+                ),
+              )
+            }
+            onUpdateUri={(localId, uri) =>
+              setStagedMedia((prev) =>
+                prev.map((item) =>
+                  item.localId === localId
+                    ? {
+                        ...item,
+                        uri,
+                        previewUri:
+                          item.mediaType === "image" ? uri : item.previewUri,
+                      }
+                    : item,
                 ),
               )
             }
