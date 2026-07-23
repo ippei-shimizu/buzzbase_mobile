@@ -315,16 +315,11 @@ export function NoteForm({
                 ),
               )
             }
-            onUpdateUri={(localId, uri) =>
+            onUpdateUri={(localId, uri, previewUri) =>
               setStagedMedia((prev) =>
                 prev.map((item) =>
                   item.localId === localId
-                    ? {
-                        ...item,
-                        uri,
-                        previewUri:
-                          item.mediaType === "image" ? uri : item.previewUri,
-                      }
+                    ? { ...item, uri, previewUri }
                     : item,
                 ),
               )

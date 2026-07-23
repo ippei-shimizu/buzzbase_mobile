@@ -51,7 +51,7 @@ export interface StagedMediaAsset {
   uri: string;
   mediaType: MediaType;
   contentType: string;
-  /** サムネイル代わりのプレビューURI。動画は生成コストを避けるため未生成（null）。 */
+  /** サムネイル代わりのプレビューURI。動画はファーストフレームから生成し、失敗時はnull。 */
   previewUri: string | null;
   /** メディアごとの所感メモ。保存後にアップロードが完了する際、完了通知と併せて送信する。 */
   memo: string;

@@ -23,7 +23,16 @@ import {
   FREE_VIDEO_MAX_DURATION_SECONDS,
   PRO_VIDEO_MAX_DURATION_SECONDS,
 } from "@utils/mediaLimits";
-import { getVideoMeta } from "@utils/mediaProcessing";
+import { generateVideoThumbnail, getVideoMeta } from "@utils/mediaProcessing";
+
+/** サムネイル生成に失敗しても選択自体は継続させるため、失敗時はnullにフォールバックする。 */
+const generateVideoPreview = async (uri: string): Promise<string | null> => {
+  try {
+    return await generateVideoThumbnail(uri);
+  } catch {
+    return null;
+  }
+};
 
 interface Props {
   /** 保存済みノートのID。指定時は選択後すぐにアップロードする。 */
@@ -144,12 +153,14 @@ export function MediaPicker({ baseballNoteId, onStage, onUploaded }: Props) {
 
     if (baseballNoteId == null) {
       // ノート未保存時は選択のみ。アップロードは保存後にまとめて行う。
+      const previewUri =
+        mediaType === "video" ? await generateVideoPreview(uri) : uri;
       onStage?.({
         localId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         uri,
         mediaType,
         contentType,
-        previewUri: mediaType === "image" ? uri : null,
+        previewUri,
         memo: "",
       });
       return;

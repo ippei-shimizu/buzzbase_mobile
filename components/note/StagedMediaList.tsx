@@ -16,14 +16,28 @@ import {
   PRO_VIDEO_MAX_DURATION_SECONDS,
 } from "@utils/mediaLimits";
 import { buildMediaMemoLabel } from "@utils/mediaMemoLabel";
+import { generateVideoThumbnail } from "@utils/mediaProcessing";
 import { MediaViewer } from "./MediaViewer";
 
 interface Props {
   assets: StagedMediaAsset[];
   onRemove: (localId: string) => void;
   onUpdateMemo: (localId: string, memo: string) => void;
-  onUpdateUri: (localId: string, uri: string) => void;
+  onUpdateUri: (
+    localId: string,
+    uri: string,
+    previewUri: string | null,
+  ) => void;
 }
+
+/** サムネイル生成に失敗しても再トリミング自体は継続させるため、失敗時はnullにフォールバックする。 */
+const generateVideoPreview = async (uri: string): Promise<string | null> => {
+  try {
+    return await generateVideoThumbnail(uri);
+  } catch {
+    return null;
+  }
+};
 
 /**
  * ノート新規作成中、保存前に選択したメディアのプレビュー一覧（未アップロード）。
@@ -53,7 +67,10 @@ export function StagedMediaList({
     setTrimmingLocalId(asset.localId);
     try {
       const result = await trim(asset.uri, limitSeconds);
-      if (result) onUpdateUri(asset.localId, result.uri);
+      if (result) {
+        const previewUri = await generateVideoPreview(result.uri);
+        onUpdateUri(asset.localId, result.uri, previewUri);
+      }
     } finally {
       setTrimmingLocalId(null);
     }
