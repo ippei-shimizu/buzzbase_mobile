@@ -16,7 +16,14 @@ import {
   View,
 } from "react-native";
 import { PaywallModal } from "@components/pro/PaywallModal";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { useMediaAttachmentUpload } from "@hooks/useMediaAttachmentUpload";
+import { useVideoTrim } from "@hooks/useVideoTrim";
+import {
+  FREE_VIDEO_MAX_DURATION_SECONDS,
+  PRO_VIDEO_MAX_DURATION_SECONDS,
+} from "@utils/mediaLimits";
+import { getVideoMeta } from "@utils/mediaProcessing";
 
 interface Props {
   /** 保存済みノートのID。指定時は選択後すぐにアップロードする。 */
@@ -41,13 +48,68 @@ const guessContentType = (
 ): string =>
   asset.mimeType ?? (mediaType === "video" ? "video/mp4" : "image/jpeg");
 
+/** 上限を超えていないか確認し、任意でトリミングするか選ばせる確認ダイアログ。 */
+const confirmOptionalTrim = (): Promise<boolean> =>
+  new Promise((resolve) => {
+    Alert.alert(
+      "動画を編集しますか？",
+      "そのまま追加するか、トリミングしてから追加できます。",
+      [
+        {
+          text: "そのまま追加",
+          style: "cancel",
+          onPress: () => resolve(false),
+        },
+        { text: "トリミングする", onPress: () => resolve(true) },
+      ],
+    );
+  });
+
 /** ノートへの画像・動画添付。撮影/ライブラリから選択し、圧縮〜アップロードまで完結させる。 */
 export function MediaPicker({ baseballNoteId, onStage, onUploaded }: Props) {
   const { upload, phase, reset } = useMediaAttachmentUpload();
+  const { trim, isTrimming } = useVideoTrim();
+  const { hasEntitlement } = useEntitlement();
   const [isPaywallOpen, setPaywallOpen] = useState(false);
 
   const isBusy =
-    phase === "compressing" || phase === "uploading" || phase === "finalizing";
+    isTrimming ||
+    phase === "compressing" ||
+    phase === "uploading" ||
+    phase === "finalizing";
+
+  const videoDurationLimitSeconds = () =>
+    hasEntitlement("unlimited_media_uploads")
+      ? PRO_VIDEO_MAX_DURATION_SECONDS
+      : FREE_VIDEO_MAX_DURATION_SECONDS;
+
+  /**
+   * 動画が上限を超えていれば強制的にトリミング画面を開く（キャンセルしたら選択自体を
+   * 中断しnullを返す）。上限内でも任意でトリミングするか確認する。
+   * @returns 最終的に使用する動画URI。中断すべき場合はnull
+   */
+  const resolveVideoUri = async (rawUri: string): Promise<string | null> => {
+    const limitSeconds = videoDurationLimitSeconds();
+
+    let rawDurationSeconds = 0;
+    try {
+      rawDurationSeconds = (await getVideoMeta(rawUri)).durationSeconds;
+    } catch {
+      // メタ取得に失敗した場合はトリミング判定をスキップしそのまま進める。
+      return rawUri;
+    }
+
+    if (rawDurationSeconds > limitSeconds) {
+      const result = await trim(rawUri, limitSeconds);
+      return result?.uri ?? null;
+    }
+
+    const shouldTrim = await confirmOptionalTrim();
+    if (!shouldTrim) return rawUri;
+
+    const result = await trim(rawUri, limitSeconds);
+    return result?.uri ?? rawUri;
+  };
 
   const handlePick = async (source: "library" | "camera") => {
     const permission =
@@ -73,14 +135,21 @@ export function MediaPicker({ baseballNoteId, onStage, onUploaded }: Props) {
     const mediaType: MediaType = asset.type === "video" ? "video" : "image";
     const contentType = guessContentType(asset, mediaType);
 
+    let uri = asset.uri;
+    if (mediaType === "video") {
+      const resolvedUri = await resolveVideoUri(asset.uri);
+      if (resolvedUri == null) return; // 上限超過でユーザーがトリミングをキャンセル
+      uri = resolvedUri;
+    }
+
     if (baseballNoteId == null) {
       // ノート未保存時は選択のみ。アップロードは保存後にまとめて行う。
       onStage?.({
         localId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        uri: asset.uri,
+        uri,
         mediaType,
         contentType,
-        previewUri: mediaType === "image" ? asset.uri : null,
+        previewUri: mediaType === "image" ? uri : null,
         memo: "",
       });
       return;
@@ -88,7 +157,7 @@ export function MediaPicker({ baseballNoteId, onStage, onUploaded }: Props) {
 
     try {
       const attachment = await upload(
-        { uri: asset.uri, mediaType, contentType },
+        { uri, mediaType, contentType },
         baseballNoteId,
       );
       onUploaded?.(attachment);
@@ -126,7 +195,9 @@ export function MediaPicker({ baseballNoteId, onStage, onUploaded }: Props) {
       {isBusy ? (
         <View style={styles.progressRow}>
           <ActivityIndicator size="small" color="#d08000" />
-          <Text style={styles.progressText}>{PHASE_LABEL[phase]}</Text>
+          <Text style={styles.progressText}>
+            {isTrimming ? "トリミング中…" : PHASE_LABEL[phase]}
+          </Text>
         </View>
       ) : null}
       <PaywallModal
