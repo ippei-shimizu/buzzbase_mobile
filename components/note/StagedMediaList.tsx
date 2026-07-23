@@ -1,7 +1,20 @@
 import type { StagedMediaAsset } from "../../types/mediaAttachment";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useEntitlement } from "@hooks/useEntitlement";
+import { useVideoTrim } from "@hooks/useVideoTrim";
+import {
+  FREE_VIDEO_MAX_DURATION_SECONDS,
+  PRO_VIDEO_MAX_DURATION_SECONDS,
+} from "@utils/mediaLimits";
 import { buildMediaMemoLabel } from "@utils/mediaMemoLabel";
 import { MediaViewer } from "./MediaViewer";
 
@@ -9,19 +22,42 @@ interface Props {
   assets: StagedMediaAsset[];
   onRemove: (localId: string) => void;
   onUpdateMemo: (localId: string, memo: string) => void;
+  onUpdateUri: (localId: string, uri: string) => void;
 }
 
 /**
  * ノート新規作成中、保存前に選択したメディアのプレビュー一覧（未アップロード）。
  * タップするとフルスクリーンでプレビューし、メモをその場で編集できる
  * （アップロードは保存後にまとめて行うが、メモはローカルに保持し完了通知で送信する）。
+ * 動画は任意のタイミングで再トリミングできる（ローカルURIを差し替えるだけ）。
  */
-export function StagedMediaList({ assets, onRemove, onUpdateMemo }: Props) {
+export function StagedMediaList({
+  assets,
+  onRemove,
+  onUpdateMemo,
+  onUpdateUri,
+}: Props) {
   const [viewingId, setViewingId] = useState<string | null>(null);
+  const [trimmingLocalId, setTrimmingLocalId] = useState<string | null>(null);
+  const { trim, isTrimming } = useVideoTrim();
+  const { hasEntitlement } = useEntitlement();
 
   if (assets.length === 0) return null;
 
   const viewing = assets.find((asset) => asset.localId === viewingId) ?? null;
+
+  const handleTrim = async (asset: StagedMediaAsset) => {
+    const limitSeconds = hasEntitlement("unlimited_media_uploads")
+      ? PRO_VIDEO_MAX_DURATION_SECONDS
+      : FREE_VIDEO_MAX_DURATION_SECONDS;
+    setTrimmingLocalId(asset.localId);
+    try {
+      const result = await trim(asset.uri, limitSeconds);
+      if (result) onUpdateUri(asset.localId, result.uri);
+    } finally {
+      setTrimmingLocalId(null);
+    }
+  };
 
   return (
     <View style={styles.grid}>
@@ -45,7 +81,21 @@ export function StagedMediaList({ assets, onRemove, onUpdateMemo }: Props) {
                 {buildMediaMemoLabel(asset.mediaType, asset.memo)}
               </Text>
             </View>
+            {trimmingLocalId === asset.localId ? (
+              <View style={styles.trimmingOverlay}>
+                <ActivityIndicator size="small" color="#F4F4F4" />
+              </View>
+            ) : null}
           </TouchableOpacity>
+          {asset.mediaType === "video" ? (
+            <TouchableOpacity
+              style={styles.trimButton}
+              disabled={isTrimming}
+              onPress={() => handleTrim(asset)}
+            >
+              <Ionicons name="cut-outline" size={16} color="#F4F4F4" />
+            </TouchableOpacity>
+          ) : null}
           <TouchableOpacity
             style={styles.removeButton}
             onPress={() => onRemove(asset.localId)}
@@ -99,6 +149,25 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 10,
   },
   memoLabelText: { color: "#F4F4F4", fontSize: 12, fontWeight: "600" },
+  trimmingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  trimButton: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    borderRadius: 14,
+    padding: 5,
+  },
   removeButton: {
     position: "absolute",
     top: -8,
