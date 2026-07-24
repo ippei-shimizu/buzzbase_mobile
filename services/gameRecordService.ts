@@ -1,4 +1,3 @@
-import axiosInstance from "@utils/axiosInstance";
 import type {
   MatchResultPayload,
   BattingAveragePayload,
@@ -9,6 +8,7 @@ import type {
   Team,
   Position,
 } from "../types/gameRecord";
+import axiosInstance from "@utils/axiosInstance";
 
 /** POST /game_results — 空のgame_resultを作成 */
 export const createGameResult = async (): Promise<{
@@ -75,6 +75,24 @@ export const createPitchingResult = async (
     pitching_result: data,
   });
   return response.data;
+};
+
+/**
+ * GET /match_results/existing_search — 指定 game_result_id + user_id に紐づく match_result を取得する。
+ * @returns 存在すれば { id }、存在しなければ null
+ */
+export const findExistingMatchResult = async (
+  gameResultId: number,
+  userId: number,
+): Promise<{ id: number } | null> => {
+  try {
+    const response = await axiosInstance.get("/match_results/existing_search", {
+      params: { game_result_id: gameResultId, user_id: userId },
+    });
+    return response.data;
+  } catch {
+    return null;
+  }
 };
 
 /** PUT /match_results/:id */
