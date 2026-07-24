@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Dimensions,
   Image,
   StyleSheet,
   Text,
@@ -174,7 +175,8 @@ export function MediaAttachmentList({
   );
 }
 
-const THUMBNAIL_SIZE = 140;
+// 1行2列を基準に、左右の画面パディング(16*2)とサムネイル間のgapを差し引いたサイズ。
+const THUMBNAIL_SIZE = (Dimensions.get("window").width - 16 * 2 - 12) / 2;
 
 const styles = StyleSheet.create({
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 8 },
