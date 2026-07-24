@@ -142,7 +142,7 @@ export default function ReflectTemplateListScreen() {
         isOpen={isPaywallOpen}
         onClose={() => setPaywallOpen(false)}
         feature="unlimited_reflection_templates"
-        contextMessage="無料プランで作成できる振り返りテンプレは1件までのため、追加できませんでした。"
+        contextMessage="無料プランで作成できる振り返りテンプレは1件までのため、追加できません。"
       />
     </View>
   );

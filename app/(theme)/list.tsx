@@ -132,7 +132,7 @@ export default function ThemeListScreen() {
         isOpen={isPaywallOpen}
         onClose={() => setPaywallOpen(false)}
         feature="unlimited_improvement_themes"
-        contextMessage="無料プランで同時に取り組める課題は2件までのため、追加できませんでした。"
+        contextMessage="無料プランで同時に取り組める課題は2件までのため、追加できません。"
       />
     </View>
   );

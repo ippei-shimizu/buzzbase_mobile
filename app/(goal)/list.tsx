@@ -192,7 +192,7 @@ export default function GoalListScreen() {
         isOpen={isPaywallOpen}
         onClose={() => setPaywallOpen(false)}
         feature="unlimited_monthly_goals"
-        contextMessage={`無料プランで設定できる目標は${MONTHLY_GOAL_FREE_LIMIT}件までのため、追加できませんでした。`}
+        contextMessage={`無料プランで設定できる目標は${MONTHLY_GOAL_FREE_LIMIT}件までのため、追加できません。`}
       />
     </View>
   );
