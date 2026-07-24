@@ -19,6 +19,7 @@ import {
   createTeam,
   getTournaments,
   createTournament,
+  findExistingMatchResult,
 } from "../services/gameRecordService";
 import {
   createPlateAppearance,
@@ -144,11 +145,28 @@ export const useGameRecord = () => {
           season_id: seasonId,
         });
       } else {
-        const matchResult = await createMatchResult(matchResultPayload);
-        store.setField("matchResultId", matchResult.id);
+        let matchResultId: number;
+        try {
+          const matchResult = await createMatchResult(matchResultPayload);
+          matchResultId = matchResult.id;
+        } catch (error) {
+          // create 自体はサーバー側で成功していたがレスポンスを受け取れず（タイムアウト等）
+          // matchResultId が未反映のまま再送されると、game_result_id の uniqueness 制約に
+          // 違反して 422 になる。既存レコードがあれば復旧して update にフォールバックする。
+          const userId = await resolveUserId();
+          const existing = await findExistingMatchResult(
+            s.gameResultId!,
+            userId,
+          );
+          if (!existing) throw error;
+          matchResultId = existing.id;
+          await updateMatchResult(matchResultId, matchResultPayload);
+        }
+
+        store.setField("matchResultId", matchResultId);
 
         await updateGameResult(s.gameResultId!, {
-          match_result_id: matchResult.id,
+          match_result_id: matchResultId,
           season_id: seasonId,
         });
       }
