@@ -511,6 +511,7 @@ export function NoteForm({
         isOpen={isGamePaywallOpen}
         onClose={() => setGamePaywallOpen(false)}
         feature="multi_game_result_notes"
+        contextMessage="無料プランでは1つのノートに試合を1件まで紐付けられるため、追加できませんでした。"
       />
 
       <TouchableOpacity

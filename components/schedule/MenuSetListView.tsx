@@ -82,6 +82,7 @@ export function MenuSetListView() {
         isOpen={isPaywallOpen}
         onClose={() => setPaywallOpen(false)}
         feature="unlimited_menu_sets"
+        contextMessage={`無料プランで作成できるメニューセットは${MENU_SET_FREE_LIMIT}件までのため、追加できませんでした。`}
       />
     </View>
   );
