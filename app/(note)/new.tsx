@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import { isAxiosError } from "axios";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -15,7 +16,7 @@ export default function NoteNewScreen() {
     improvementThemeIds?: string;
     date?: string;
   }>();
-  const { createNote, isCreating } = useNoteMutations();
+  const { createNote, deleteNote, isCreating } = useNoteMutations();
   const { upload } = useMediaAttachmentUpload();
   const [isUploadingMedia, setUploadingMedia] = useState(false);
   const [isPaywallOpen, setPaywallOpen] = useState(false);
@@ -58,7 +59,7 @@ export default function NoteNewScreen() {
           }
 
           setUploadingMedia(true);
-          let failedCount = 0;
+          let technicalFailureCount = 0;
           let limitReached = false;
           for (const asset of stagedMedia) {
             try {
@@ -72,9 +73,16 @@ export default function NoteNewScreen() {
                 note.id,
               );
             } catch (error) {
-              failedCount += 1;
               if (isAxiosError(error) && error.response?.status === 403) {
                 limitReached = true;
+              } else {
+                technicalFailureCount += 1;
+                // __DEV__時はSentryへ送信されない(app/_layout.tsxでenabled: !__DEV__)ため、
+                // ローカル調査用にMetroへも出力する。
+                console.error("[baseball_note_media_upload]", error);
+                Sentry.captureException(error, {
+                  tags: { source: "baseball_note_media_upload" },
+                });
               }
             }
           }
@@ -86,11 +94,19 @@ export default function NoteNewScreen() {
             setPaywallOpen(true);
             return;
           }
-          if (failedCount > 0) {
+          if (technicalFailureCount > 0) {
+            // メディア添付が前提でノートを作成しているため、失敗時はノートごと
+            // 保存されなかったことにする（文字だけの空ノートが残るのを防ぐ）。
+            await deleteNote(note.id).catch((error) => {
+              Sentry.captureException(error, {
+                tags: { source: "baseball_note_rollback_on_media_failure" },
+              });
+            });
             Alert.alert(
-              "一部のメディアのアップロードに失敗しました",
-              "ノートは保存されています。編集画面から追加し直せます。",
+              "メディアの保存に失敗しました",
+              "ノートは保存されませんでした。もう一度お試しください。",
             );
+            return;
           }
           goToNoteList();
         }}
