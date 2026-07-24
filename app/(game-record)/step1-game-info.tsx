@@ -1,5 +1,6 @@
 import type { RecordPattern } from "../../types/gameRecord";
 import type { GameInfoFieldErrors } from "@components/game-record/GameInfoForm";
+import { AxiosError } from "axios";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -126,8 +127,9 @@ export default function Step1GameInfoScreen() {
 
     const errors: GameInfoFieldErrors = {};
     if (!store.date) errors.date = "試合日を入力してください";
-    if (!store.myTeamName) errors.myTeamName = "自チーム名を入力してください";
-    if (!store.opponentTeamName)
+    if (!store.myTeamName.trim())
+      errors.myTeamName = "自チーム名を入力してください";
+    if (!store.opponentTeamName.trim())
       errors.opponentTeamName = "相手チーム名を入力してください";
     // 点数: 0-0（完封試合）も有効値のため、null（未入力）かどうかで判定する。
     if (store.myTeamScore === null) {
@@ -198,10 +200,16 @@ export default function Step1GameInfoScreen() {
         router.push(next);
       },
       onError: (error) => {
+        const serverMessage =
+          error instanceof AxiosError
+            ? error.response?.data?.errors?.join("\n")
+            : undefined;
         useSnackbarStore.getState().show({
           type: "error",
           message:
-            error instanceof Error ? error.message : "エラーが発生しました",
+            serverMessage ||
+            (error instanceof Error ? error.message : "エラーが発生しました"),
+          durationMs: serverMessage ? 5000 : undefined,
         });
       },
     });
