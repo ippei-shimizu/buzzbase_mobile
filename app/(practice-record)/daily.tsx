@@ -291,7 +291,7 @@ function DailyEditor({
         style={styles.addMenuButton}
         onPress={() => router.push("/(practice-menu)/form")}
       >
-        <Ionicons name="add" size={18} color="#FFFFFF" />
+        <Ionicons name="add" size={18} color="#d08000" />
         <Text style={styles.addMenuButtonText}>新しいメニューを追加</Text>
       </TouchableOpacity>
 
@@ -548,12 +548,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    backgroundColor: "#d08000",
-    borderRadius: 10,
-    paddingVertical: 14,
+    backgroundColor: "rgba(208,128,0,0.08)",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d08000",
+    paddingVertical: 10,
     marginBottom: 16,
   },
-  addMenuButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
+  addMenuButtonText: { color: "#d08000", fontSize: 13, fontWeight: "700" },
   conditionWrapper: { marginTop: 8 },
   empty: { alignItems: "center", paddingVertical: 40 },
   emptyTitle: {
