@@ -134,10 +134,14 @@ export function MediaPicker({ baseballNoteId, onStage, onUploaded }: Props) {
       source === "library"
         ? ImagePicker.launchImageLibraryAsync
         : ImagePicker.launchCameraAsync;
-    const result = await launch({
-      mediaTypes: ["images", "videos"],
-      quality: 0.8,
-    });
+    let result: ImagePicker.ImagePickerResult;
+    try {
+      result = await launch({ mediaTypes: ["images", "videos"], quality: 0.8 });
+    } catch {
+      // シミュレータでの撮影等、ハードウェア起因で起動自体に失敗するケースがある。
+      Alert.alert("起動できませんでした", "カメラ・ライブラリを利用できません");
+      return;
+    }
     if (result.canceled || !result.assets[0]) return;
 
     const asset = result.assets[0];
