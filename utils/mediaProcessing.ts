@@ -2,13 +2,36 @@ import { File } from "expo-file-system";
 import { createVideoPlayer } from "expo-video";
 import * as VideoThumbnails from "expo-video-thumbnails";
 import { Image } from "react-native";
-import { Video as VideoCompressor } from "react-native-compressor";
+import {
+  Image as ImageCompressor,
+  Video as VideoCompressor,
+} from "react-native-compressor";
 
 const VIDEO_META_TIMEOUT_MS = 10_000;
+const IMAGE_MAX_DIMENSION = 1080;
+const IMAGE_COMPRESSION_QUALITY = 0.7;
 
-/** 動画をクライアント側で圧縮する（サーバーffmpegは使わない）。圧縮後のファイルURIを返す。 */
-export const compressVideo = async (uri: string): Promise<string> =>
-  VideoCompressor.compress(uri, { compressionMethod: "auto" });
+/**
+ * 動画をクライアント側で圧縮する（サーバーffmpegは使わない）。R2の保存コストを抑えるため、
+ * 長辺をプランごとの解像度上限（maxSize）まで縮小する。圧縮後のファイルURIを返す。
+ */
+export const compressVideo = async (
+  uri: string,
+  maxSize: number,
+): Promise<string> =>
+  VideoCompressor.compress(uri, { compressionMethod: "manual", maxSize });
+
+/**
+ * 画像をクライアント側で圧縮する。サイズ上限のチェック用ではなく、R2の保存コストを
+ * 抑えるため上限未満でも常に長辺1080px・品質0.7を目安に縮小する。
+ */
+export const compressImage = async (uri: string): Promise<string> =>
+  ImageCompressor.compress(uri, {
+    compressionMethod: "manual",
+    maxWidth: IMAGE_MAX_DIMENSION,
+    maxHeight: IMAGE_MAX_DIMENSION,
+    quality: IMAGE_COMPRESSION_QUALITY,
+  });
 
 /** 動画のファーストフレームからサムネイル画像を生成する。 */
 export const generateVideoThumbnail = async (uri: string): Promise<string> => {

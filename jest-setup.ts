@@ -177,6 +177,9 @@ jest.mock("react-native-compressor", () => ({
   Video: {
     compress: jest.fn((uri: string) => Promise.resolve(uri)),
   },
+  Image: {
+    compress: jest.fn((uri: string) => Promise.resolve(uri)),
+  },
 }));
 
 // react-native-video-trim: showEditorはネイティブUIを開くだけで、テストでは

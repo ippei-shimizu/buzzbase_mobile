@@ -7,12 +7,18 @@ import {
   putToPresignedUrl,
 } from "../services/mediaAttachmentService";
 import {
+  FREE_VIDEO_MAX_HEIGHT,
+  PRO_VIDEO_MAX_HEIGHT,
+} from "../utils/mediaLimits";
+import {
+  compressImage,
   compressVideo,
   generateVideoThumbnail,
   getFileSizeBytes,
   getImageMeta,
   getVideoMeta,
 } from "../utils/mediaProcessing";
+import { useEntitlement } from "./useEntitlement";
 
 export type UploadPhase =
   | "idle"
@@ -38,6 +44,7 @@ export const useMediaAttachmentUpload = () => {
   const [phase, setPhase] = useState<UploadPhase>("idle");
   const [error, setError] = useState<Error | null>(null);
   const queryClient = useQueryClient();
+  const { hasEntitlement } = useEntitlement();
 
   const upload = useCallback(
     async (
@@ -54,13 +61,18 @@ export const useMediaAttachmentUpload = () => {
 
         if (asset.mediaType === "video") {
           setPhase("compressing");
-          fileUri = await compressVideo(fileUri);
+          const maxSize = hasEntitlement("unlimited_media_uploads")
+            ? PRO_VIDEO_MAX_HEIGHT
+            : FREE_VIDEO_MAX_HEIGHT;
+          fileUri = await compressVideo(fileUri, maxSize);
           thumbnailUri = await generateVideoThumbnail(fileUri);
           const meta = await getVideoMeta(fileUri);
           width = meta.width;
           height = meta.height;
           durationSeconds = meta.durationSeconds;
         } else {
+          setPhase("compressing");
+          fileUri = await compressImage(fileUri);
           const meta = await getImageMeta(fileUri);
           width = meta.width;
           height = meta.height;
@@ -109,7 +121,7 @@ export const useMediaAttachmentUpload = () => {
         throw uploadError;
       }
     },
-    [queryClient],
+    [queryClient, hasEntitlement],
   );
 
   const reset = useCallback(() => {

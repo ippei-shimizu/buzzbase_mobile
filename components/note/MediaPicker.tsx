@@ -46,7 +46,7 @@ interface Props {
 }
 
 const PHASE_LABEL: Record<string, string> = {
-  compressing: "動画を圧縮中…",
+  compressing: "圧縮中…",
   uploading: "アップロード中…",
   finalizing: "仕上げ中…",
 };

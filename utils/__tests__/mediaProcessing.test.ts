@@ -5,8 +5,12 @@
  * jest.mock / jest.spyOn で局所モックする。
  */
 import { Image } from "react-native";
-import { Video as VideoCompressor } from "react-native-compressor";
 import {
+  Image as ImageCompressor,
+  Video as VideoCompressor,
+} from "react-native-compressor";
+import {
+  compressImage,
   compressVideo,
   generateVideoThumbnail,
   getFileSizeBytes,
@@ -18,13 +22,29 @@ jest.mock("expo-file-system", () => ({
 }));
 
 describe("compressVideo", () => {
-  it("react-native-compressorで圧縮後のURIを返す", async () => {
-    const uri = await compressVideo("file:///original.mp4");
+  it("react-native-compressorで指定した長辺(maxSize)まで圧縮したURIを返す", async () => {
+    const uri = await compressVideo("file:///original.mp4", 1080);
     expect(VideoCompressor.compress).toHaveBeenCalledWith(
       "file:///original.mp4",
-      { compressionMethod: "auto" },
+      { compressionMethod: "manual", maxSize: 1080 },
     );
     expect(uri).toBe("file:///original.mp4");
+  });
+});
+
+describe("compressImage", () => {
+  it("react-native-compressorで長辺1080px・品質0.7に圧縮したURIを返す", async () => {
+    const uri = await compressImage("file:///original.jpg");
+    expect(ImageCompressor.compress).toHaveBeenCalledWith(
+      "file:///original.jpg",
+      {
+        compressionMethod: "manual",
+        maxWidth: 1080,
+        maxHeight: 1080,
+        quality: 0.7,
+      },
+    );
+    expect(uri).toBe("file:///original.jpg");
   });
 });
 
