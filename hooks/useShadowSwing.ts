@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   completeShadowSwingSession,
   getShadowSwingStats,
+  getShadowSwingTrend,
   startShadowSwingSession,
 } from "../services/shadowSwingService";
 
@@ -11,6 +12,15 @@ export const useShadowSwingStats = () => {
     queryFn: getShadowSwingStats,
   });
   return { stats: data ?? null, isLoading };
+};
+
+export const useShadowSwingTrend = (options?: { enabled?: boolean }) => {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["shadowSwingTrend"],
+    queryFn: getShadowSwingTrend,
+    enabled: options?.enabled ?? true,
+  });
+  return { trend: data ?? null, isLoading, isError };
 };
 
 export const useShadowSwingMutations = () => {

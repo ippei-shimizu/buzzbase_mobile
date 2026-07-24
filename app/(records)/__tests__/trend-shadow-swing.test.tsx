@@ -1,9 +1,8 @@
 /**
- * メニュー推移詳細画面（practice_menu_trend_detail）の Pro 制限の振る舞いテスト。
- * 無料ユーザーは推移詳細APIを叩かず、サンプルデータ + Pro訴求カードを表示する。
- * Proユーザーは実データの推移を取得して表示する。
+ * メニュー推移画面（practice_menu_trend_detail）を素振り（source=shadow_swing）経由で開いた場合の振る舞い。
+ * 素振りログは practice_menu に紐付かないため、専用の /shadow_swing_sessions/trend を叩く。
  */
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { screen, waitFor } from "@testing-library/react-native";
 import {
   apiUrl,
   baseUrl,
@@ -22,7 +21,7 @@ jest.mock("expo-router", () => {
   } = require("../../../__tests__/test-utils/mockExpoRouter");
   return buildExpoRouterMock({
     searchParams: {
-      menuId: "1",
+      source: "shadow_swing",
       menuName: "素振り",
       unit: "count",
       unitLabel: "本",
@@ -31,14 +30,13 @@ jest.mock("expo-router", () => {
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
 
-// PaywallModal が pro_features フラグで kill switch される設計のため、常時 true を返す。
 jest.mock("@hooks/useFeatureFlag", () => ({
   useFeatureFlag: jest.fn(() => ({ enabled: true, isLoading: false })),
 }));
 
-const trend = {
+const shadowSwingTrend = {
   menu: {
-    id: 1,
+    id: null,
     name: "素振り",
     unit: "count",
     unit_label: "本",
@@ -46,7 +44,7 @@ const trend = {
   },
   by_year: [],
   by_month: [
-    { period: "2026-06", total_amount: 600, total_volume: 0, days_count: 10 },
+    { period: "2026-06", total_amount: 900, total_volume: 0, days_count: 12 },
   ],
   by_day: [],
 };
@@ -76,18 +74,18 @@ const respondPro = () => {
   );
 };
 
-const setupTrendEndpoint = () => {
+const setupShadowSwingTrendEndpoint = () => {
   server.use(
-    http.get(baseUrl("/api/v2/practice_menu_trends/1"), () =>
-      HttpResponse.json(trend),
+    http.get(baseUrl("/api/v2/shadow_swing_sessions/trend"), () =>
+      HttpResponse.json(shadowSwingTrend),
     ),
   );
 };
 
-describe("MenuTrendScreen", () => {
-  it("無料ユーザーは推移詳細APIを叩かず、サンプルデータとPro訴求カードを表示する", async () => {
+describe("MenuTrendScreen（素振り経由）", () => {
+  it("無料ユーザーは素振り推移APIを叩かず、サンプルデータを表示する", async () => {
     respondFree();
-    // 推移詳細APIのハンドラは登録しない。呼び出されれば onUnhandledRequest: "error" で検知できる。
+    // 素振り推移APIのハンドラは登録しない。呼び出されれば onUnhandledRequest: "error" で検知できる。
 
     renderWithProviders(<MenuTrendScreen />);
 
@@ -95,26 +93,18 @@ describe("MenuTrendScreen", () => {
     expect(
       screen.getByText("サンプルデータ（実際の記録ではありません）"),
     ).toBeOnTheScreen();
-    expect(screen.getByText("Pro プランを見る")).toBeOnTheScreen();
-
-    fireEvent.press(screen.getByText("Pro プランを見る"));
-    // ProUpsellCard と PaywallModal 両方に見出しが出るため複数ヒットで開いたことを確認する。
-    expect(
-      screen.getAllByText("メニューごとの推移を詳しく見る").length,
-    ).toBeGreaterThan(1);
   });
 
-  it("Proユーザーは実データの推移を取得して表示する", async () => {
+  it("Proユーザーは素振りの実データの推移を取得して表示する", async () => {
     respondPro();
-    setupTrendEndpoint();
+    setupShadowSwingTrendEndpoint();
 
     renderWithProviders(<MenuTrendScreen />);
 
     await waitFor(() => expect(screen.getByText("素振り")).toBeOnTheScreen());
-    expect(screen.queryByText("Pro プランを見る")).not.toBeOnTheScreen();
     expect(
       screen.queryByText("サンプルデータ（実際の記録ではありません）"),
     ).not.toBeOnTheScreen();
-    expect(await screen.findByText("600本")).toBeOnTheScreen();
+    expect(await screen.findByText("900本")).toBeOnTheScreen();
   });
 });

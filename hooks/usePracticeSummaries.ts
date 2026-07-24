@@ -27,11 +27,14 @@ export const usePracticeOverview = () => {
   return { overview: data ?? null, isLoading };
 };
 
-export const useMenuTrend = (menuId: number | null) => {
+export const useMenuTrend = (
+  menuId: number | null,
+  options?: { enabled?: boolean },
+) => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["menuTrend", menuId],
     queryFn: () => getMenuTrend(menuId as number),
-    enabled: menuId != null,
+    enabled: (options?.enabled ?? true) && menuId != null,
   });
   return { trend: data ?? null, isLoading, isError };
 };
