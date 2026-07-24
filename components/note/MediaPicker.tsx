@@ -20,6 +20,7 @@ import { useEntitlement } from "@hooks/useEntitlement";
 import { useMediaAttachmentUpload } from "@hooks/useMediaAttachmentUpload";
 import { useVideoTrim } from "@hooks/useVideoTrim";
 import {
+  FREE_MEDIA_MONTHLY_LIMIT,
   FREE_VIDEO_MAX_DURATION_SECONDS,
   PRO_VIDEO_MAX_DURATION_SECONDS,
 } from "@utils/mediaLimits";
@@ -219,6 +220,7 @@ export function MediaPicker({ baseballNoteId, onStage, onUploaded }: Props) {
         isOpen={isPaywallOpen}
         onClose={() => setPaywallOpen(false)}
         feature="unlimited_media_uploads"
+        contextMessage={`今月の無料上限（${FREE_MEDIA_MONTHLY_LIMIT}件）に達したため、保存できませんでした。`}
       />
     </View>
   );

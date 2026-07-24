@@ -144,6 +144,40 @@ describe("PaywallModal", () => {
     expect(getByText("シーズンを跨いだ成長を可視化")).toBeOnTheScreen();
   });
 
+  it("contextMessageを渡すと、なぜ表示されているかの状況説明が汎用コピーと併せて表示される", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getByText } = renderWithProviders(
+      <PaywallModal
+        isOpen
+        onClose={mockOnClose}
+        feature="unlimited_media_uploads"
+        contextMessage="今月の無料上限（3件）に達したため、1件の画像・動画は保存できませんでした。"
+      />,
+    );
+
+    expect(
+      getByText(
+        "今月の無料上限（3件）に達したため、1件の画像・動画は保存できませんでした。",
+      ),
+    ).toBeOnTheScreen();
+    expect(getByText("動画・画像を無制限にアップロード")).toBeOnTheScreen();
+  });
+
+  it("contextMessageを渡さない場合は状況説明バナーを表示しない", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { queryByText } = renderWithProviders(
+      <PaywallModal
+        isOpen
+        onClose={mockOnClose}
+        feature="unlimited_media_uploads"
+      />,
+    );
+
+    expect(queryByText(/今月の無料上限/)).not.toBeOnTheScreen();
+  });
+
   it("isOpen が false のときは表示されない", () => {
     const { queryByText } = renderWithProviders(
       <PaywallModal

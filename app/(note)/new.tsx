@@ -7,6 +7,7 @@ import { NoteForm } from "@components/note/NoteForm";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { useMediaAttachmentUpload } from "@hooks/useMediaAttachmentUpload";
 import { useNoteMutations } from "@hooks/useNotes";
+import { FREE_MEDIA_MONTHLY_LIMIT } from "@utils/mediaLimits";
 
 export default function NoteNewScreen() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function NoteNewScreen() {
   const { upload } = useMediaAttachmentUpload();
   const [isUploadingMedia, setUploadingMedia] = useState(false);
   const [isPaywallOpen, setPaywallOpen] = useState(false);
+  const [limitReachedCount, setLimitReachedCount] = useState(0);
 
   const goToNoteList = () => router.replace("/(records)/list?tab=note");
 
@@ -60,7 +62,7 @@ export default function NoteNewScreen() {
 
           setUploadingMedia(true);
           let technicalFailureCount = 0;
-          let limitReached = false;
+          let limitReachedCountThisRun = 0;
           for (const asset of stagedMedia) {
             try {
               await upload(
@@ -74,7 +76,7 @@ export default function NoteNewScreen() {
               );
             } catch (error) {
               if (isAxiosError(error) && error.response?.status === 403) {
-                limitReached = true;
+                limitReachedCountThisRun += 1;
               } else {
                 technicalFailureCount += 1;
                 // __DEV__時はSentryへ送信されない(app/_layout.tsxでenabled: !__DEV__)ため、
@@ -90,7 +92,8 @@ export default function NoteNewScreen() {
 
           // 上限到達時はPro訴求モーダルを優先表示し、閉じたタイミングで遷移する
           // （ノート本体は既に保存済みのため、モーダルを閉じるだけで完了扱いにする）。
-          if (limitReached) {
+          if (limitReachedCountThisRun > 0) {
+            setLimitReachedCount(limitReachedCountThisRun);
             setPaywallOpen(true);
             return;
           }
@@ -118,6 +121,7 @@ export default function NoteNewScreen() {
           goToNoteList();
         }}
         feature="unlimited_media_uploads"
+        contextMessage={`今月の無料上限（${FREE_MEDIA_MONTHLY_LIMIT}件）に達したため、${limitReachedCount}件の画像・動画は保存できませんでした。`}
       />
     </>
   );
