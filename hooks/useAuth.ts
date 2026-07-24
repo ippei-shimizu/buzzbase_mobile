@@ -10,6 +10,7 @@ import {
   signOut,
   signUp as signUpService,
   resendConfirmation as resendConfirmationService,
+  requestPasswordReset as requestPasswordResetService,
   validateToken,
 } from "@services/authService";
 import { googleSignIn } from "@services/googleAuthService";
@@ -102,6 +103,10 @@ export const useAuth = () => {
     await resendConfirmationService(email);
   };
 
+  const requestPasswordReset = async (email: string) => {
+    await requestPasswordResetService(email);
+  };
+
   const googleLogin = async () => {
     const response = await googleSignIn();
     setIsLoggedIn(true);
@@ -124,6 +129,7 @@ export const useAuth = () => {
     logout,
     signUp,
     resendConfirmation,
+    requestPasswordReset,
     googleLogin,
     appleLogin,
   };

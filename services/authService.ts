@@ -69,3 +69,18 @@ export const resendConfirmation = async (email: string): Promise<void> => {
       "buzzbase://confirmation-success",
   });
 };
+
+/**
+ * パスワードリセットメールを送信する。
+ * リンク先はfront版の /reset-password（新パスワード入力画面）。
+ * ネイティブ内完結はUniversal Links等のコストが高いため見送り、
+ * メールクリック後はブラウザでfrontのページを開く設計にしている。
+ */
+export const requestPasswordReset = async (email: string): Promise<void> => {
+  await axiosInstance.post("/auth/password", {
+    email,
+    redirect_url:
+      process.env.EXPO_PUBLIC_RESET_PASSWORD_URL ||
+      "https://buzzbase.jp/reset-password",
+  });
+};
