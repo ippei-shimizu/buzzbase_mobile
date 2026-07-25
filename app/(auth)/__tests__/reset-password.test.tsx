@@ -73,6 +73,38 @@ describe("reset-password: 新しいパスワードの設定", () => {
     });
   });
 
+  it("サーバー側バリデーションエラー(422)時はfull_messagesを抽出して表示する", async () => {
+    server.use(
+      http.put(apiUrl("/auth/password"), () =>
+        HttpResponse.json(
+          {
+            success: false,
+            errors: {
+              password_confirmation: ["が一致しません"],
+              full_messages: ["パスワード（確認用） が一致しません"],
+            },
+          },
+          { status: 422 },
+        ),
+      ),
+    );
+
+    const { getByPlaceholderText, getByText, findByText } =
+      renderResetPassword();
+
+    fireEvent.changeText(
+      getByPlaceholderText("6文字以上の半角英数字"),
+      "newPassword123",
+    );
+    fireEvent.changeText(
+      getByPlaceholderText("もう一度入力してください"),
+      "newPassword123",
+    );
+    fireEvent.press(getByText("パスワードを変更する"));
+
+    await findByText("パスワード（確認用） が一致しません");
+  });
+
   it("確認用パスワードが一致しない場合は送信ボタンが無効のままでPUTが呼ばれない", () => {
     let requested = false;
     server.use(
