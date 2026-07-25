@@ -42,8 +42,21 @@ export default function ResetPasswordScreen() {
       setCompleted(true);
       setTimeout(() => router.replace("/(auth)/sign-in"), 2000);
     } catch (error) {
-      if (error instanceof AxiosError && error.response?.data?.errors) {
-        setErrors(error.response.data.errors);
+      // PUT /auth/password のバリデーションエラーは devise_token_auth の
+      // resource_errors ヘルパーにより { フィールド名: [...], full_messages: [...] }
+      // というハッシュ形式で返るため、full_messages を優先的に取り出す
+      // （フラットな配列を前提にすると ErrorMessage 側の map でクラッシュする）。
+      if (error instanceof AxiosError) {
+        const messages: string[] =
+          error.response?.data?.errors?.full_messages ||
+          (Array.isArray(error.response?.data?.errors)
+            ? error.response.data.errors
+            : []);
+        setErrors(
+          messages.length > 0
+            ? messages
+            : ["パスワードの再設定に失敗しました。もう一度お試しください"],
+        );
       } else {
         setErrors(["パスワードの再設定に失敗しました。もう一度お試しください"]);
       }
