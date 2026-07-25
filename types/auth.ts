@@ -11,6 +11,21 @@ export interface SignUpData {
   passwordConfirmation: string;
 }
 
+/** パスワード再設定リクエストのデータ */
+export interface ResetPasswordData {
+  password: string;
+  passwordConfirmation: string;
+}
+
+// パスワードリセットメールのディープリンクから受け取るワンタイムトークン。
+// ログイン中セッションのSecureStoreトークンと混同しないよう、
+// PUT /auth/passwordのリクエストヘッダーへ明示的に渡す。
+export interface ResetPasswordAuthHeaders {
+  accessToken: string;
+  client: string;
+  uid: string;
+}
+
 /** ユーザー情報 */
 export interface User {
   id: number;
