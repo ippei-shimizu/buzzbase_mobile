@@ -90,13 +90,9 @@ export default function NoteNewScreen() {
           }
           setUploadingMedia(false);
 
-          // 上限到達時はPro訴求モーダルを優先表示し、閉じたタイミングで遷移する
-          // （ノート本体は既に保存済みのため、モーダルを閉じるだけで完了扱いにする）。
-          if (limitReachedCountThisRun > 0) {
-            setLimitReachedCount(limitReachedCountThisRun);
-            setPaywallOpen(true);
-            return;
-          }
+          // technicalFailureCountを優先判定する。上限到達（limitReachedCountThisRun）と
+          // 技術的失敗が同時に起きた場合、後者を握りつぶしてPaywallだけ出すと
+          // 技術的失敗分のノートがロールバックされないまま残ってしまうため。
           if (technicalFailureCount > 0) {
             // メディア添付が前提でノートを作成しているため、失敗時はノートごと
             // 保存されなかったことにする（文字だけの空ノートが残るのを防ぐ）。
@@ -109,6 +105,13 @@ export default function NoteNewScreen() {
               "メディアの保存に失敗しました",
               "ノートは保存されませんでした。もう一度お試しください。",
             );
+            return;
+          }
+          // 上限到達時はPro訴求モーダルを優先表示し、閉じたタイミングで遷移する
+          // （ノート本体は既に保存済みのため、モーダルを閉じるだけで完了扱いにする）。
+          if (limitReachedCountThisRun > 0) {
+            setLimitReachedCount(limitReachedCountThisRun);
+            setPaywallOpen(true);
             return;
           }
           goToNoteList();
