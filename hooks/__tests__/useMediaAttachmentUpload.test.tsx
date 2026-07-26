@@ -28,6 +28,7 @@ jest.mock("../../services/mediaAttachmentService", () => ({
 }));
 
 jest.mock("../../utils/mediaProcessing", () => ({
+  compressImage: jest.fn((uri: string) => Promise.resolve(uri)),
   compressVideo: jest.fn((uri: string) => Promise.resolve(uri)),
   generateVideoThumbnail: jest.fn(() => Promise.resolve("file:///thumb.jpg")),
   getFileSizeBytes: jest.fn(() => 12_345),
