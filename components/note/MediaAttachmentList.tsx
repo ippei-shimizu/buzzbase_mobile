@@ -36,21 +36,29 @@ export function MediaAttachmentList({
   editable = false,
   noteId,
 }: Props) {
-  const {
-    deleteMediaAttachment,
-    isDeleting,
-    updateMediaAttachmentMemo,
-    isUpdatingMemo,
-  } = useMediaAttachmentMutations();
+  const { deleteMediaAttachment, updateMediaAttachmentMemo, isUpdatingMemo } =
+    useMediaAttachmentMutations();
   const { upload } = useMediaAttachmentUpload();
   const { trim, isTrimming } = useVideoTrim();
   const { hasEntitlement } = useEntitlement();
   const [viewingId, setViewingId] = useState<number | null>(null);
   const [trimmingId, setTrimmingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   if (attachments.length === 0) return null;
 
   const viewing = attachments.find((item) => item.id === viewingId) ?? null;
+
+  const handleDelete = async (attachmentId: number) => {
+    setDeletingId(attachmentId);
+    try {
+      await deleteMediaAttachment(attachmentId);
+    } catch {
+      Alert.alert("削除に失敗しました");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   /**
    * アップロード済み動画の再トリミング。既存動画を直接編集する手段がないため、
@@ -77,7 +85,17 @@ export function MediaAttachmentList({
         },
         noteId,
       );
-      deleteMediaAttachment(attachment.id);
+
+      try {
+        await deleteMediaAttachment(attachment.id);
+      } catch {
+        // 新しい動画は既にアップロード済みのため、トリミング失敗とは別に伝える
+        // （放置すると新旧2つの動画が残ったままになる）。
+        Alert.alert(
+          "元の動画の削除に失敗しました",
+          "トリミング後の動画は保存されています。手動で不要な方を削除してください。",
+        );
+      }
     } catch {
       Alert.alert("トリミングに失敗しました");
     } finally {
@@ -146,8 +164,8 @@ export function MediaAttachmentList({
           {editable ? (
             <TouchableOpacity
               style={styles.removeButton}
-              disabled={isDeleting}
-              onPress={() => deleteMediaAttachment(attachment.id)}
+              disabled={deletingId === attachment.id}
+              onPress={() => handleDelete(attachment.id)}
             >
               <Ionicons name="close-circle" size={22} color="#F4F4F4" />
             </TouchableOpacity>
@@ -168,7 +186,10 @@ export function MediaAttachmentList({
         editableMemo={editable}
         isSavingMemo={isUpdatingMemo}
         onSaveMemo={(memo) => {
-          if (viewing) updateMediaAttachmentMemo({ id: viewing.id, memo });
+          if (!viewing) return;
+          updateMediaAttachmentMemo({ id: viewing.id, memo }).catch(() => {
+            Alert.alert("メモの保存に失敗しました");
+          });
         }}
       />
     </View>
