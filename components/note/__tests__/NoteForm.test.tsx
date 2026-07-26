@@ -375,8 +375,6 @@ describe("NoteForm", () => {
 
     await waitFor(() => expect(screen.getByText("撮影")).toBeOnTheScreen());
     expect(screen.getByText("ライブラリ")).toBeOnTheScreen();
-    expect(
-      screen.queryByText("保存後に画像・動画を追加できます"),
-    ).not.toBeOnTheScreen();
+    expect(screen.getByRole("img")).toBeOnTheScreen();
   });
 });
