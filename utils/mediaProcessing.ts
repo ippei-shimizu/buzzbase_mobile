@@ -8,8 +8,34 @@ import {
 } from "react-native-compressor";
 
 const VIDEO_META_TIMEOUT_MS = 10_000;
+// Proの最大長さ(180秒)の動画でも通常は十分収まる想定の、ネイティブ側ハング対策の安全網。
+const VIDEO_COMPRESSION_TIMEOUT_MS = 3 * 60_000;
+const IMAGE_COMPRESSION_TIMEOUT_MS = 30_000;
 const IMAGE_MAX_DIMENSION = 1080;
 const IMAGE_COMPRESSION_QUALITY = 0.7;
+
+/**
+ * ネイティブ圧縮処理が想定外に長時間かかった場合に備え、一定時間で諦めてエラーにする。
+ * 呼び出し元（useMediaAttachmentUpload）の既存エラーハンドリングでアラート表示につながる。
+ */
+const withTimeout = <T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  message: string,
+): Promise<T> =>
+  new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
+    promise.then(
+      (value) => {
+        clearTimeout(timeout);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      },
+    );
+  });
 
 /**
  * 動画をクライアント側で圧縮する（サーバーffmpegは使わない）。R2の保存コストを抑えるため、
@@ -19,19 +45,27 @@ export const compressVideo = async (
   uri: string,
   maxSize: number,
 ): Promise<string> =>
-  VideoCompressor.compress(uri, { compressionMethod: "manual", maxSize });
+  withTimeout(
+    VideoCompressor.compress(uri, { compressionMethod: "manual", maxSize }),
+    VIDEO_COMPRESSION_TIMEOUT_MS,
+    "動画の圧縮がタイムアウトしました",
+  );
 
 /**
  * 画像をクライアント側で圧縮する。サイズ上限のチェック用ではなく、R2の保存コストを
  * 抑えるため上限未満でも常に長辺1080px・品質0.7を目安に縮小する。
  */
 export const compressImage = async (uri: string): Promise<string> =>
-  ImageCompressor.compress(uri, {
-    compressionMethod: "manual",
-    maxWidth: IMAGE_MAX_DIMENSION,
-    maxHeight: IMAGE_MAX_DIMENSION,
-    quality: IMAGE_COMPRESSION_QUALITY,
-  });
+  withTimeout(
+    ImageCompressor.compress(uri, {
+      compressionMethod: "manual",
+      maxWidth: IMAGE_MAX_DIMENSION,
+      maxHeight: IMAGE_MAX_DIMENSION,
+      quality: IMAGE_COMPRESSION_QUALITY,
+    }),
+    IMAGE_COMPRESSION_TIMEOUT_MS,
+    "画像の圧縮がタイムアウトしました",
+  );
 
 /** 動画のファーストフレームからサムネイル画像を生成する。 */
 export const generateVideoThumbnail = async (uri: string): Promise<string> => {
