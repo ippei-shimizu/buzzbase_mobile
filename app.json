@@ -83,7 +83,8 @@
       ],
       "expo-localization",
       "expo-audio",
-      "expo-video"
+      "expo-video",
+      "./plugins/withVideoTrimHttps.js"
     ],
     "extra": {
       "eas": {
