@@ -575,7 +575,7 @@ export default function StatsScreen() {
   const { tournaments } = useTournaments();
   const { years: availableYears } = useAvailableYears();
   const { months } = useAvailableMonths();
-  const { hasEntitlement } = useEntitlement();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   // 打球方向の生データは無料機能のSprayChartでも使うため、Pro判定に関わらず常時取得する
   // （Proでロックするのはhit_directionsのデータそのものではなく、詳細内訳テーブルの表示のみ）。
   const hitDirections = useHitDirections(filters);
@@ -907,6 +907,7 @@ export default function StatsScreen() {
             ) : (
               <ProUpsellOverlay
                 unlocked={false}
+                loading={isProLoading}
                 feature="hit_direction_average"
                 onPressCta={() => {
                   trackProFeatureTapped("hit_direction");
@@ -948,89 +949,94 @@ export default function StatsScreen() {
               </FetchingOverlay>
             )}
             {/* 10. CountSituationCards（カウント別の打率） */}
-            {hasEntitlement("count_situation_average") ? (
-              countSituations.data && (
-                <FetchingOverlay isFetching={countSituations.isFetching}>
-                  <CountSituationCards data={countSituations.data} />
-                </FetchingOverlay>
-              )
-            ) : (
-              <View style={styles.proSectionSpacing}>
-                <ProUpsellCard
-                  feature="count_situation_average"
-                  onPressCta={() => {
-                    trackProFeatureTapped("count_situation");
-                    setComingSoonPaywallOpen(true);
-                  }}
-                />
-                <SampleDataLabel />
-                <View pointerEvents="none" style={styles.comingSoonDummy}>
-                  <CountSituationDummy />
+            {/* pro/status 解決前は hasEntitlement が false 倒しになり、Pro ユーザーへ
+                一瞬サンプル表示がフラッシュしてしまうため、判定確定までは何も出さない。 */}
+            {!isProLoading &&
+              (hasEntitlement("count_situation_average") ? (
+                countSituations.data && (
+                  <FetchingOverlay isFetching={countSituations.isFetching}>
+                    <CountSituationCards data={countSituations.data} />
+                  </FetchingOverlay>
+                )
+              ) : (
+                <View style={styles.proSectionSpacing}>
+                  <ProUpsellCard
+                    feature="count_situation_average"
+                    onPressCta={() => {
+                      trackProFeatureTapped("count_situation");
+                      setComingSoonPaywallOpen(true);
+                    }}
+                  />
+                  <SampleDataLabel />
+                  <View pointerEvents="none" style={styles.comingSoonDummy}>
+                    <CountSituationDummy />
+                  </View>
                 </View>
-              </View>
-            )}
+              ))}
             {/* 11. PitchTypeCard（球種別の打率） */}
-            {hasEntitlement("pitch_type_average") ? (
-              pitchTypes.data && (
-                <FetchingOverlay isFetching={pitchTypes.isFetching}>
-                  <PitchTypeCard
-                    rows={pitchTypes.data.rows}
-                    totalTargetPa={pitchTypes.data.total_target_pa}
+            {!isProLoading &&
+              (hasEntitlement("pitch_type_average") ? (
+                pitchTypes.data && (
+                  <FetchingOverlay isFetching={pitchTypes.isFetching}>
+                    <PitchTypeCard
+                      rows={pitchTypes.data.rows}
+                      totalTargetPa={pitchTypes.data.total_target_pa}
+                    />
+                  </FetchingOverlay>
+                )
+              ) : (
+                <View style={styles.proSectionSpacing}>
+                  <ProUpsellCard
+                    feature="pitch_type_average"
+                    onPressCta={() => {
+                      trackProFeatureTapped("pitch_type");
+                      setComingSoonPaywallOpen(true);
+                    }}
                   />
-                </FetchingOverlay>
-              )
-            ) : (
-              <View style={styles.proSectionSpacing}>
-                <ProUpsellCard
-                  feature="pitch_type_average"
-                  onPressCta={() => {
-                    trackProFeatureTapped("pitch_type");
-                    setComingSoonPaywallOpen(true);
-                  }}
-                />
-                <SampleDataLabel />
-                {/* タップした時に詳細スタッツを展開するPro機能もサンプルで体験できるよう、
-                    ダミーの静的リストではなく実コンポーネントにサンプルデータを渡す。 */}
-                <View style={styles.comingSoonDummy}>
-                  <PitchTypeCard
-                    rows={DUMMY_PITCH_TYPE_ROWS}
-                    totalTargetPa={DUMMY_PITCH_TYPE_TOTAL_PA}
-                  />
+                  <SampleDataLabel />
+                  {/* タップした時に詳細スタッツを展開するPro機能もサンプルで体験できるよう、
+                      ダミーの静的リストではなく実コンポーネントにサンプルデータを渡す。 */}
+                  <View style={styles.comingSoonDummy}>
+                    <PitchTypeCard
+                      rows={DUMMY_PITCH_TYPE_ROWS}
+                      totalTargetPa={DUMMY_PITCH_TYPE_TOTAL_PA}
+                    />
+                  </View>
                 </View>
-              </View>
-            )}
+              ))}
             {/* 12. PitcherFaceoffList */}
-            {hasEntitlement("pitcher_faceoff_average") ? (
-              pitcherFaceoffs.data && (
-                <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
-                  <PitcherFaceoffList
-                    rows={pitcherFaceoffs.data.rows}
-                    minPlateAppearances={
-                      pitcherFaceoffs.data.min_plate_appearances
-                    }
-                    totalTargetPa={pitcherFaceoffs.data.total_target_pa}
+            {!isProLoading &&
+              (hasEntitlement("pitcher_faceoff_average") ? (
+                pitcherFaceoffs.data && (
+                  <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
+                    <PitcherFaceoffList
+                      rows={pitcherFaceoffs.data.rows}
+                      minPlateAppearances={
+                        pitcherFaceoffs.data.min_plate_appearances
+                      }
+                      totalTargetPa={pitcherFaceoffs.data.total_target_pa}
+                    />
+                  </FetchingOverlay>
+                )
+              ) : (
+                <View style={styles.proSectionSpacing}>
+                  <ProUpsellCard
+                    feature="pitcher_faceoff_average"
+                    onPressCta={() => {
+                      trackProFeatureTapped("pitcher_faceoff");
+                      setComingSoonPaywallOpen(true);
+                    }}
                   />
-                </FetchingOverlay>
-              )
-            ) : (
-              <View style={styles.proSectionSpacing}>
-                <ProUpsellCard
-                  feature="pitcher_faceoff_average"
-                  onPressCta={() => {
-                    trackProFeatureTapped("pitcher_faceoff");
-                    setComingSoonPaywallOpen(true);
-                  }}
-                />
-                <SampleDataLabel />
-                <View style={styles.comingSoonDummy}>
-                  <PitcherFaceoffList
-                    rows={DUMMY_PITCHER_FACEOFF_ROWS}
-                    minPlateAppearances={DUMMY_PITCHER_FACEOFF_MIN_PA}
-                    totalTargetPa={DUMMY_PITCHER_FACEOFF_TOTAL_PA}
-                  />
+                  <SampleDataLabel />
+                  <View style={styles.comingSoonDummy}>
+                    <PitcherFaceoffList
+                      rows={DUMMY_PITCHER_FACEOFF_ROWS}
+                      minPlateAppearances={DUMMY_PITCHER_FACEOFF_MIN_PA}
+                      totalTargetPa={DUMMY_PITCHER_FACEOFF_TOTAL_PA}
+                    />
+                  </View>
                 </View>
-              </View>
-            )}
+              ))}
             {/* 13. PitcherAttributeSummary */}
             {pitcherAttributeSummary.data && (
               <FetchingOverlay isFetching={pitcherAttributeSummary.isFetching}>
