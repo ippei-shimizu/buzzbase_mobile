@@ -5,6 +5,7 @@ import type {
   MediaAttachmentPresignInput,
   MediaAttachmentPresignResponse,
 } from "../types/mediaAttachment";
+import { FileSystemUploadType, uploadAsync } from "expo-file-system/legacy";
 import { API_BASE_URL } from "@constants/api";
 import axiosInstance from "@utils/axiosInstance";
 
@@ -46,21 +47,21 @@ export const deleteMediaAttachment = async (id: number): Promise<void> => {
 
 /**
  * R2への署名PUTアップロード。axiosInstanceはback向けのbaseURL・認証ヘッダーを
- * 自動付与するため使わず、外部ホスト向けに素のfetchでPUTする。
+ * 自動付与するため使わず、外部ホスト向けに素のuploadAsyncでPUTする。
+ * fetch+blobだとファイル全体をJSメモリに展開してしまうため、ネイティブ側で
+ * ストリーミング送信できるuploadAsyncを使う（動画は圧縮後でも数十MBになりうる）。
  */
 export const putToPresignedUrl = async (
   uploadUrl: string,
   fileUri: string,
   contentType: string,
 ): Promise<void> => {
-  const fileResponse = await fetch(fileUri);
-  const blob = await fileResponse.blob();
-  const putResponse = await fetch(uploadUrl, {
-    method: "PUT",
+  const result = await uploadAsync(uploadUrl, fileUri, {
+    httpMethod: "PUT",
+    uploadType: FileSystemUploadType.BINARY_CONTENT,
     headers: { "Content-Type": contentType },
-    body: blob,
   });
-  if (!putResponse.ok) {
-    throw new Error(`R2アップロードに失敗しました: ${putResponse.status}`);
+  if (result.status < 200 || result.status >= 300) {
+    throw new Error(`R2アップロードに失敗しました: ${result.status}`);
   }
 };
