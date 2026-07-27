@@ -1,3 +1,4 @@
+import type { MenuTrend } from "../types/practice";
 import type {
   ShadowSwingSession,
   ShadowSwingStats,
@@ -29,5 +30,10 @@ export const completeShadowSwingSession = async (
 
 export const getShadowSwingStats = async (): Promise<ShadowSwingStats> => {
   const res = await axiosInstance.get<ShadowSwingStats>(`${URL}/stats`);
+  return res.data;
+};
+
+export const getShadowSwingTrend = async (): Promise<MenuTrend> => {
+  const res = await axiosInstance.get<MenuTrend>(`${URL}/trend`);
   return res.data;
 };

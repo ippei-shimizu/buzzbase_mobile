@@ -169,6 +169,7 @@ export default function GroupCreateScreen() {
         isOpen={isPaywallOpen}
         onClose={() => setPaywallOpen(false)}
         feature="unlimited_groups"
+        contextMessage={`無料プランで参加できるグループは${GROUP_FREE_LIMIT}件までのため、作成できませんでした。`}
       />
     </>
   );

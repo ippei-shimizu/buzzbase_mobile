@@ -1,3 +1,7 @@
+import type {
+  MediaAttachment,
+  StagedMediaAsset,
+} from "../../types/mediaAttachment";
 import type { NoteInput } from "../../types/note";
 import type { ReflectionTemplate } from "../../types/reflectionTemplate";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,7 +25,10 @@ import { useFilteredGameResults } from "@hooks/useGameResults";
 import { usePracticeSessions } from "@hooks/usePracticeSessions";
 import { formatJaFullDate } from "@utils/formatDate";
 import { buildMemoJson, buildReflectionMemoText } from "../../types/note";
+import { MediaAttachmentList } from "./MediaAttachmentList";
+import { MediaPicker } from "./MediaPicker";
 import { ReflectionTemplateSection } from "./ReflectionTemplateSection";
+import { StagedMediaList } from "./StagedMediaList";
 import { TagSection } from "./TagSection";
 
 type OpenPicker = "none" | "practice" | "game";
@@ -44,9 +51,23 @@ interface Props {
   showDatePicker?: boolean;
   submitLabel: string;
   isSubmitting: boolean;
-  onSubmit: (input: NoteInput) => Promise<void> | void;
+  /**
+   * stagedMediaは新規作成時にローカルで選択済み（未アップロード）のメディア。
+   * baseball_note_idが未確定のため、呼び出し側でノート作成成功後にまとめてアップロードする。
+   * 編集時（noteIdあり）は常に空配列。
+   */
+  onSubmit: (
+    input: NoteInput,
+    stagedMedia: StagedMediaAsset[],
+  ) => Promise<void> | void;
   /** 編集時はテンプレ変更で回答が消えるのを防ぐため、テンプレ選択を固定する。 */
   templateLocked?: boolean;
+  /**
+   * 保存済みノートのID。未指定（新規作成中）はメディアをアップロードせずローカルで
+   * 保持し、保存成功後に呼び出し側でアップロードする（baseball_note_idが必須のため）。
+   */
+  noteId?: number;
+  mediaAttachments?: MediaAttachment[];
 }
 
 const todayString = (): string => {
@@ -69,6 +90,8 @@ export function NoteForm({
   isSubmitting,
   onSubmit,
   templateLocked = false,
+  noteId,
+  mediaAttachments = [],
 }: Props) {
   const { sessions } = usePracticeSessions();
   const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
@@ -94,6 +117,7 @@ export function NoteForm({
   >(initial?.reflectionTemplateId ?? null);
   const [tagIds, setTagIds] = useState<number[]>(initial?.tagIds ?? []);
   const [isTagPaywallOpen, setTagPaywallOpen] = useState(false);
+  const [stagedMedia, setStagedMedia] = useState<StagedMediaAsset[]>([]);
   const [templateQuestions, setTemplateQuestions] = useState<string[]>(() =>
     (initial?.reflectionAnswers ?? []).map((item) => item.question),
   );
@@ -194,19 +218,22 @@ export function NoteForm({
     }
     // 一覧プレビュー用に、メモ未入力ならテンプレ回答からメモ本文を合成する。
     const memoText = memo.trim() || buildReflectionMemoText(reflectionAnswers);
-    await onSubmit({
-      title: title.trim() || null,
-      date: toDateString(date),
-      memo: buildMemoJson(memoText),
-      practice_session_id: practiceSessionId,
-      game_result_ids: gameResultIds,
-      improvement_theme_ids: improvementThemeIds,
-      reflection_template_id: reflectionTemplateId,
-      reflection_answers: reflectionAnswers,
-      // タグ編集UIは無料ユーザーには表示しないため、その場合は tag_ids キー自体を
-      // 送らず既存タグを維持する（back 側は未送信を「変更なし」として扱う）。
-      ...(hasEntitlement("note_tags") ? { tag_ids: tagIds } : {}),
-    });
+    await onSubmit(
+      {
+        title: title.trim() || null,
+        date: toDateString(date),
+        memo: buildMemoJson(memoText),
+        practice_session_id: practiceSessionId,
+        game_result_ids: gameResultIds,
+        improvement_theme_ids: improvementThemeIds,
+        reflection_template_id: reflectionTemplateId,
+        reflection_answers: reflectionAnswers,
+        // タグ編集UIは無料ユーザーには表示しないため、その場合は tag_ids キー自体を
+        // 送らず既存タグを維持する（back 側は未送信を「変更なし」として扱う）。
+        ...(hasEntitlement("note_tags") ? { tag_ids: tagIds } : {}),
+      },
+      stagedMedia,
+    );
   };
 
   return (
@@ -258,6 +285,48 @@ export function NoteForm({
         placeholder="外角が体の開きで詰まる。右肩を我慢、と指摘された…"
         placeholderTextColor="#71717A"
       />
+
+      <Text style={styles.label}>メディア（任意）</Text>
+      {noteId != null ? (
+        <>
+          <MediaPicker baseballNoteId={noteId} />
+          <MediaAttachmentList
+            attachments={mediaAttachments}
+            editable
+            noteId={noteId}
+          />
+        </>
+      ) : (
+        <>
+          <MediaPicker
+            onStage={(asset) => setStagedMedia((prev) => [...prev, asset])}
+          />
+          <StagedMediaList
+            assets={stagedMedia}
+            onRemove={(localId) =>
+              setStagedMedia((prev) =>
+                prev.filter((item) => item.localId !== localId),
+              )
+            }
+            onUpdateMemo={(localId, memo) =>
+              setStagedMedia((prev) =>
+                prev.map((item) =>
+                  item.localId === localId ? { ...item, memo } : item,
+                ),
+              )
+            }
+            onUpdateUri={(localId, uri, previewUri) =>
+              setStagedMedia((prev) =>
+                prev.map((item) =>
+                  item.localId === localId
+                    ? { ...item, uri, previewUri }
+                    : item,
+                ),
+              )
+            }
+          />
+        </>
+      )}
 
       <ReflectionTemplateSection
         selectedTemplateId={reflectionTemplateId}
@@ -442,6 +511,7 @@ export function NoteForm({
         isOpen={isGamePaywallOpen}
         onClose={() => setGamePaywallOpen(false)}
         feature="multi_game_result_notes"
+        contextMessage="無料プランでは1つのノートに試合を1件まで紐付けられるため、追加できません。"
       />
 
       <TouchableOpacity

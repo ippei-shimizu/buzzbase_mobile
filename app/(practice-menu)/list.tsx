@@ -130,6 +130,7 @@ export default function PracticeMenuListScreen() {
         isOpen={isPaywallOpen}
         onClose={() => setPaywallOpen(false)}
         feature="unlimited_practice_menus"
+        contextMessage={`無料プランで登録できる練習メニューは${PRACTICE_MENU_FREE_LIMIT}件までのため、追加できません。`}
       />
     </View>
   );

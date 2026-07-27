@@ -146,20 +146,35 @@ export default function PracticeSummaryScreen() {
             key={summary.practice_menu_id ?? summary.menu_name}
             summary={summary}
             iconName={
-              CATEGORY_ICON[
-                (summary.practice_menu_id != null
-                  ? categoryById.get(summary.practice_menu_id)
-                  : undefined) ?? "other"
-              ]
+              // 素振り（practice_menu 未紐付け）は専用アイコンで見分ける。
+              summary.practice_menu_id == null
+                ? "baseball"
+                : CATEGORY_ICON[
+                    categoryById.get(summary.practice_menu_id) ?? "other"
+                  ]
             }
-            onPress={
-              summary.practice_menu_id != null
-                ? () =>
-                    router.push({
+            onPress={() =>
+              router.push(
+                summary.practice_menu_id != null
+                  ? {
                       pathname: "/(records)/trend",
-                      params: { menuId: String(summary.practice_menu_id) },
-                    })
-                : undefined
+                      params: {
+                        menuId: String(summary.practice_menu_id),
+                        menuName: summary.menu_name,
+                        unit: summary.unit,
+                        unitLabel: summary.unit_label ?? "",
+                      },
+                    }
+                  : {
+                      pathname: "/(records)/trend",
+                      params: {
+                        source: "shadow_swing",
+                        menuName: summary.menu_name,
+                        unit: summary.unit,
+                        unitLabel: summary.unit_label ?? "",
+                      },
+                    },
+              )
             }
           />
         ))

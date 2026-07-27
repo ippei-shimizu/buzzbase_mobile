@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { GameResultDetail } from "@components/game-results/GameResultDetail";
+import { MediaAttachmentList } from "@components/note/MediaAttachmentList";
 import { ConditionCard } from "@components/practice/ConditionCard";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
@@ -226,6 +227,7 @@ export default function NoteDetailScreen() {
           </View>
         ) : null}
         {showFreeMemo ? <Text style={styles.memo}>{memoText}</Text> : null}
+        <MediaAttachmentList attachments={note.media_attachments} />
         {reflectionAnswers.length > 0 ? (
           <View style={styles.reflection}>
             {reflectionAnswers.map((item) => (

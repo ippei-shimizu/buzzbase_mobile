@@ -47,6 +47,8 @@ export default function NoteEditScreen() {
         reflectionAnswers: note.reflection_answers,
         tagIds: note.tags?.map((tag) => tag.id) ?? [],
       }}
+      noteId={noteId}
+      mediaAttachments={note.media_attachments}
       submitLabel="更新"
       isSubmitting={isUpdating}
       templateLocked

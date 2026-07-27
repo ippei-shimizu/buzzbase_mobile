@@ -1,4 +1,8 @@
-import type { MenuTrend, MenuTrendBucket } from "../../types/practice";
+import type {
+  MenuTrend,
+  MenuTrendBucket,
+  PracticeUnit,
+} from "../../types/practice";
 import { useLocalSearchParams } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
@@ -21,11 +25,13 @@ import Svg, {
   Stop,
 } from "react-native-svg";
 import { PaywallModal } from "@components/pro/PaywallModal";
-import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
+import { ProUpsellCard } from "@components/pro/ProUpsellCard";
+import { SampleDataLabel } from "@components/pro/SampleDataLabel";
 import { UnderlineTabBar } from "@components/ui/UnderlineTabBar";
 import { formatTotalAmount, formatVolume } from "@constants/practice";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useMenuTrend } from "@hooks/usePracticeSummaries";
+import { useShadowSwingTrend } from "@hooks/useShadowSwing";
 
 type Period = "year" | "month" | "day";
 const SEGMENTS = ["年別", "月別", "日別"];
@@ -60,6 +66,93 @@ const DEFAULT_RANGE_INDEX: Record<Period, number> = {
   year: 2,
   month: 1,
   day: 1,
+};
+
+const pad2 = (value: number): string => String(value).padStart(2, "0");
+
+const yearPeriod = (base: Date, offsetFromNow: number): string =>
+  String(base.getFullYear() - offsetFromNow);
+
+const monthPeriod = (base: Date, offsetFromNow: number): string => {
+  const date = new Date(base.getFullYear(), base.getMonth() - offsetFromNow, 1);
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}`;
+};
+
+const dayPeriod = (base: Date, offsetFromNow: number): string => {
+  const date = new Date(
+    base.getFullYear(),
+    base.getMonth(),
+    base.getDate() - offsetFromNow,
+  );
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+};
+
+// offsetFromNow=0 が最新（新しい順）。値は古いほど小さくし、右肩上がりのサンプルに見せる。
+const buildSampleBuckets = (
+  count: number,
+  periodFor: (offsetFromNow: number) => string,
+  baseValue: number,
+  growthStep: number,
+  daysCountFor: (offsetFromNow: number) => number,
+): MenuTrendBucket[] =>
+  Array.from({ length: count }, (_, offsetFromNow) => {
+    const value = baseValue + growthStep * (count - 1 - offsetFromNow);
+    return {
+      period: periodFor(offsetFromNow),
+      total_amount: value,
+      total_volume: value,
+      days_count: daysCountFor(offsetFromNow),
+    };
+  });
+
+// メニュー・単位によらず、どのメニューでも同じ右肩上がりの例を見せる（内容の作り分けはしない）。
+const SAMPLE_YEAR = { base: 800, step: 700 };
+const SAMPLE_MONTH = { base: 80, step: 40 };
+const SAMPLE_DAY = { base: 8, step: 4 };
+
+/**
+ * 無料ユーザー向けのサンプル推移データを組み立てる。
+ * 推移詳細APIはPro限定のため叩かず、どのメニューでも同じ一般的な例をその場で生成して見せる。
+ * 表示単位（kg / 本など）だけは実際のメニューに合わせる。
+ */
+const buildSampleTrend = (
+  menuName: string,
+  unit: PracticeUnit,
+  unitLabel: string | null,
+): MenuTrend => {
+  const now = new Date();
+  const isWeightReps = unit === "weight_reps";
+
+  return {
+    menu: {
+      id: -1,
+      name: menuName,
+      unit,
+      unit_label: unitLabel,
+      is_weight_reps: isWeightReps,
+    },
+    by_year: buildSampleBuckets(
+      3,
+      (offset) => yearPeriod(now, offset),
+      SAMPLE_YEAR.base,
+      SAMPLE_YEAR.step,
+      (offset) => 30 + (2 - offset) * 15,
+    ),
+    by_month: buildSampleBuckets(
+      6,
+      (offset) => monthPeriod(now, offset),
+      SAMPLE_MONTH.base,
+      SAMPLE_MONTH.step,
+      (offset) => 8 + (5 - offset),
+    ),
+    by_day: buildSampleBuckets(
+      14,
+      (offset) => dayPeriod(now, offset),
+      SAMPLE_DAY.base,
+      SAMPLE_DAY.step,
+      () => 1,
+    ),
+  };
 };
 
 const bucketValue = (trend: MenuTrend, bucket: MenuTrendBucket): number =>
@@ -362,9 +455,29 @@ function RangeChips({
 }
 
 export default function MenuTrendScreen() {
-  const { menuId } = useLocalSearchParams<{ menuId: string }>();
-  const { trend, isLoading } = useMenuTrend(menuId ? Number(menuId) : null);
+  const { menuId, menuName, unit, unitLabel, source } = useLocalSearchParams<{
+    menuId?: string;
+    menuName?: string;
+    unit?: string;
+    unitLabel?: string;
+    source?: string;
+  }>();
+  const isShadowSwing = source === "shadow_swing";
   const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
+  const isPro = hasEntitlement("practice_menu_trend_detail");
+  // 無料ユーザーは推移詳細APIを叩かない（Pro限定のためサーバー側も403を返す設計）。
+  const { trend: fetchedMenuTrend, isLoading: isMenuTrendLoading } =
+    useMenuTrend(!isShadowSwing && menuId ? Number(menuId) : null, {
+      enabled: isPro && !isShadowSwing,
+    });
+  const { trend: fetchedShadowSwingTrend, isLoading: isShadowSwingLoading } =
+    useShadowSwingTrend({ enabled: isPro && isShadowSwing });
+  const fetchedTrend = isShadowSwing
+    ? fetchedShadowSwingTrend
+    : fetchedMenuTrend;
+  const isTrendLoading = isShadowSwing
+    ? isShadowSwingLoading
+    : isMenuTrendLoading;
   const [segment, setSegment] = useState(1); // 既定: 月別
   const [rangeIndex, setRangeIndex] = useState(DEFAULT_RANGE_INDEX.month);
   const [isTrendPaywallOpen, setTrendPaywallOpen] = useState(false);
@@ -375,13 +488,23 @@ export default function MenuTrendScreen() {
     setRangeIndex(DEFAULT_RANGE_INDEX[PERIODS[index]]);
   };
 
-  if (isLoading) {
+  if (isProLoading || (isPro && isTrendLoading)) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#d08000" />
       </View>
     );
   }
+
+  // 無料ユーザーはサーバーから実データを取得せず、その場で組み立てたサンプルを表示する。
+  const trend = isPro
+    ? fetchedTrend
+    : buildSampleTrend(
+        menuName || "メニュー",
+        (unit as PracticeUnit) || "count",
+        unitLabel || null,
+      );
+
   if (!trend) {
     return (
       <View style={styles.centered}>
@@ -410,29 +533,35 @@ export default function MenuTrendScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>{trend.menu.name}</Text>
 
-        <ProUpsellOverlay
-          unlocked={hasEntitlement("practice_menu_trend_detail")}
-          loading={isProLoading}
-          feature="practice_menu_trend_detail"
-          onPressCta={() => setTrendPaywallOpen(true)}
-        >
-          <View style={styles.tabWrap}>
-            <UnderlineTabBar
-              options={SEGMENTS}
-              selectedIndex={segment}
-              onSelect={handleSegmentChange}
-            />
-          </View>
+        {!isPro ? (
+          <ProUpsellCard
+            feature="practice_menu_trend_detail"
+            onPressCta={() => setTrendPaywallOpen(true)}
+            style={styles.upsellCard}
+          />
+        ) : null}
 
-          {buckets.length === 0 ? (
-            <Text style={styles.muted}>記録がありません</Text>
-          ) : (
-            <>
-              <RangeChips
-                options={rangeOptions}
-                selectedIndex={rangeIndex}
-                onSelect={setRangeIndex}
-              />
+        <View style={styles.tabWrap}>
+          <UnderlineTabBar
+            options={SEGMENTS}
+            selectedIndex={segment}
+            onSelect={handleSegmentChange}
+          />
+        </View>
+
+        {buckets.length === 0 ? (
+          <Text style={styles.muted}>記録がありません</Text>
+        ) : (
+          <>
+            <RangeChips
+              options={rangeOptions}
+              selectedIndex={rangeIndex}
+              onSelect={setRangeIndex}
+            />
+
+            {!isPro ? <SampleDataLabel /> : null}
+
+            <View style={!isPro ? styles.sampleDataWrap : undefined}>
               <View style={styles.card}>
                 <TrendLine
                   key={`${period}-${rangeIndex}`}
@@ -441,37 +570,26 @@ export default function MenuTrendScreen() {
                   buckets={rangedBuckets}
                 />
               </View>
-            </>
-          )}
-        </ProUpsellOverlay>
-
-        {buckets.length > 0 ? (
-          <View style={styles.listCard}>
-            {rangedBuckets.map((bucket) => (
-              <View key={bucket.period} style={styles.row}>
-                <Text style={styles.rowLabel}>
-                  {periodLabel(period, bucket.period)}
-                </Text>
-                <ProUpsellOverlay
-                  unlocked={hasEntitlement("practice_menu_trend_detail")}
-                  loading={isProLoading}
-                  hideCard
-                  scrimOpacity={1}
-                  style={styles.rowRightOverlay}
-                >
-                  <View style={styles.rowRight}>
-                    <Text style={styles.rowValue}>
-                      {bucketValueText(trend, bucket)}
+              <View style={styles.listCard}>
+                {rangedBuckets.map((bucket) => (
+                  <View key={bucket.period} style={styles.row}>
+                    <Text style={styles.rowLabel}>
+                      {periodLabel(period, bucket.period)}
                     </Text>
-                    {period !== "day" ? (
-                      <Text style={styles.rowSub}>{bucket.days_count}日</Text>
-                    ) : null}
+                    <View style={styles.rowRight}>
+                      <Text style={styles.rowValue}>
+                        {bucketValueText(trend, bucket)}
+                      </Text>
+                      {period !== "day" ? (
+                        <Text style={styles.rowSub}>{bucket.days_count}日</Text>
+                      ) : null}
+                    </View>
                   </View>
-                </ProUpsellOverlay>
+                ))}
               </View>
-            ))}
-          </View>
-        ) : null}
+            </View>
+          </>
+        )}
       </ScrollView>
       <PaywallModal
         isOpen={isTrendPaywallOpen}
@@ -493,8 +611,17 @@ const styles = StyleSheet.create({
   },
   errorText: { color: "#A1A1AA", fontSize: 15 },
   title: { color: "#F4F4F4", fontSize: 20, fontWeight: "700" },
+  upsellCard: { marginTop: 16 },
   tabWrap: { marginTop: 16, marginBottom: 4 },
   muted: { color: "#A1A1AA", fontSize: 13, marginTop: 24, textAlign: "center" },
+  sampleDataWrap: {
+    marginTop: 4,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "#52525B",
+  },
   rangeRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -538,7 +665,6 @@ const styles = StyleSheet.create({
   },
   rowLabel: { color: "#F4F4F4", fontSize: 14, fontWeight: "600" },
   rowRight: { flexDirection: "row", alignItems: "baseline", gap: 8 },
-  rowRightOverlay: { borderRadius: 0 },
   rowValue: { color: "#d08000", fontSize: 16, fontWeight: "800" },
   rowSub: { color: "#A1A1AA", fontSize: 12 },
 });

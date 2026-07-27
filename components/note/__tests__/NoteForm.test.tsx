@@ -25,6 +25,27 @@ jest.mock("@hooks/useFeatureFlag", () => ({
   useFeatureFlag: jest.fn(() => ({ enabled: true, isLoading: false })),
 }));
 
+// メディア選択（撮影/ライブラリ）はネイティブ境界のためモックする。
+jest.mock("expo-image-picker", () => ({
+  requestMediaLibraryPermissionsAsync: jest
+    .fn()
+    .mockResolvedValue({ granted: true }),
+  requestCameraPermissionsAsync: jest.fn().mockResolvedValue({ granted: true }),
+  launchImageLibraryAsync: jest.fn().mockResolvedValue({
+    canceled: false,
+    assets: [
+      {
+        uri: "file:///picked-photo.jpg",
+        type: "image",
+        mimeType: "image/jpeg",
+        width: 100,
+        height: 100,
+      },
+    ],
+  }),
+  launchCameraAsync: jest.fn(),
+}));
+
 const gameA = buildGameResult({
   game_result_id: 1,
   match_result: buildMatchResult({ opponent_team_name: "対戦相手A" }),
@@ -266,5 +287,94 @@ describe("NoteForm", () => {
       expect(screen.getAllByText(themeB.title)).toHaveLength(1),
     );
     expect(screen.getByText(themeA.title)).toBeOnTheScreen();
+  });
+
+  it("新規作成時（noteId未指定）でもメディア選択ボタンが表示される", async () => {
+    respondFree();
+    setupCommonHandlers();
+
+    renderWithProviders(
+      <NoteForm submitLabel="保存" isSubmitting={false} onSubmit={jest.fn()} />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("メディア（任意）")).toBeOnTheScreen(),
+    );
+    expect(screen.getByText("撮影")).toBeOnTheScreen();
+    expect(screen.getByText("ライブラリ")).toBeOnTheScreen();
+  });
+
+  it("新規作成時に選んだメディアはアップロードせずローカルに保持され、保存時にonSubmitへ渡される", async () => {
+    respondFree();
+    setupCommonHandlers();
+    const handleSubmit = jest.fn().mockResolvedValue(undefined);
+
+    renderWithProviders(
+      <NoteForm
+        submitLabel="保存"
+        isSubmitting={false}
+        onSubmit={handleSubmit}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("ライブラリ")).toBeOnTheScreen(),
+    );
+    fireEvent.press(screen.getByText("ライブラリ"));
+
+    // アップロードAPIは呼ばれず、ローカルプレビュー（サムネイル画像）だけが増える。
+    await waitFor(() =>
+      expect(screen.getAllByRole("img").length).toBeGreaterThan(0),
+    );
+
+    fireEvent.changeText(
+      screen.getByPlaceholderText(/外角が体の開きで詰まる/),
+      "テストメモ",
+    );
+    fireEvent.press(screen.getByText("保存"));
+
+    await waitFor(() => expect(handleSubmit).toHaveBeenCalledTimes(1));
+    const [, stagedMedia] = handleSubmit.mock.calls[0];
+    expect(stagedMedia).toEqual([
+      expect.objectContaining({
+        uri: "file:///picked-photo.jpg",
+        mediaType: "image",
+        contentType: "image/jpeg",
+      }),
+    ]);
+  });
+
+  it("noteId指定時（編集画面）はメディア追加ボタンと既存添付一覧が表示される", async () => {
+    respondFree();
+    setupCommonHandlers();
+
+    renderWithProviders(
+      <NoteForm
+        submitLabel="更新"
+        isSubmitting={false}
+        onSubmit={jest.fn()}
+        noteId={99}
+        mediaAttachments={[
+          {
+            id: 1,
+            media_type: "image",
+            status: "ready",
+            file_size_bytes: 12_345,
+            duration_seconds: null,
+            width: 1080,
+            height: 1920,
+            position: 0,
+            memo: null,
+            playback_url: "https://media.test/image.jpg",
+            thumbnail_url: null,
+            created_at: "2026-07-20T00:00:00Z",
+          },
+        ]}
+      />,
+    );
+
+    await waitFor(() => expect(screen.getByText("撮影")).toBeOnTheScreen());
+    expect(screen.getByText("ライブラリ")).toBeOnTheScreen();
+    expect(screen.getByRole("img")).toBeOnTheScreen();
   });
 });

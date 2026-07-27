@@ -134,3 +134,63 @@ jest.mock("@react-native-community/datetimepicker", () => {
       }),
   };
 });
+
+// expo-video: VideoPlayer/VideoView はネイティブの SharedObject を拡張するクラスで、
+// jest環境ではネイティブバインディングが存在せずimport時に例外になるため手動でモックする。
+jest.mock("expo-video", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require("react");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require("react-native");
+
+  return {
+    useVideoPlayer: (
+      _source: unknown,
+      setup?: (player: Record<string, unknown>) => void,
+    ) => {
+      const player = { play: jest.fn(), pause: jest.fn(), release: jest.fn() };
+      setup?.(player);
+      return player;
+    },
+    createVideoPlayer: () => ({
+      play: jest.fn(),
+      pause: jest.fn(),
+      release: jest.fn(),
+      addListener: jest.fn(() => ({ remove: jest.fn() })),
+    }),
+    VideoView: (props: Record<string, unknown>) =>
+      React.createElement(View, { accessibilityLabel: "mock-video-view" }),
+  };
+});
+
+// expo-video-thumbnails: サムネイル生成はネイティブ処理のため固定のURIを返す。
+jest.mock("expo-video-thumbnails", () => ({
+  getThumbnailAsync: jest.fn().mockResolvedValue({
+    uri: "file:///mock-thumbnail.jpg",
+    width: 100,
+    height: 100,
+  }),
+}));
+
+// react-native-compressor: 圧縮せず入力URIをそのまま返す。
+jest.mock("react-native-compressor", () => ({
+  Video: {
+    compress: jest.fn((uri: string) => Promise.resolve(uri)),
+  },
+  Image: {
+    compress: jest.fn((uri: string) => Promise.resolve(uri)),
+  },
+}));
+
+// react-native-video-trim: showEditorはネイティブUIを開くだけで、テストでは
+// イベント購読の型（EventSubscription）だけ満たせればよい。実際のイベント発火は
+// 各テストファイルでjest.doMockして個別に検証する。
+jest.mock("react-native-video-trim", () => ({
+  __esModule: true,
+  showEditor: jest.fn(),
+  default: {
+    onFinishTrimming: jest.fn(() => ({ remove: jest.fn() })),
+    onCancel: jest.fn(() => ({ remove: jest.fn() })),
+    onError: jest.fn(() => ({ remove: jest.fn() })),
+  },
+}));

@@ -95,6 +95,7 @@ export function ThemePickerField({ selectedThemeIds, onChange }: Props) {
         isOpen={isPaywallOpen}
         onClose={() => setPaywallOpen(false)}
         feature="multi_improvement_theme_links"
+        contextMessage="無料プランでは1つの記録に課題を1件まで紐付けられるため、追加できません。"
       />
     </View>
   );

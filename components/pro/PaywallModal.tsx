@@ -58,10 +58,6 @@ export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     title: "動画・画像を無制限にアップロード",
     description: "月3点までの制限を撤廃。練習映像をいくらでも保存できます。",
   },
-  media_long_term_storage: {
-    title: "動画・画像を長期保管",
-    description: "31日以上前にアップロードしたメディアもいつでも閲覧可能です。",
-  },
   schedule_copy_next_week: {
     title: "今週のプランを来週にまるごとコピー",
     description:
@@ -207,7 +203,6 @@ export const FEATURE_COMPARISONS: Record<ProFeature, FeatureComparison> = {
   grass_full_history: { free: "直近30日", pro: "全期間" },
   unlimited_practice_menus: { free: "3件", pro: "無制限" },
   unlimited_media_uploads: { free: "月3件", pro: "無制限" },
-  media_long_term_storage: { free: "31日以内", pro: "無期限" },
   schedule_copy_next_week: { free: "手動", pro: "1タップ" },
   unlimited_menu_sets: { free: "2件", pro: "無制限" },
   unlimited_monthly_goals: { free: "2件", pro: "無制限" },
@@ -258,7 +253,6 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
       "note_tags",
       "multi_game_result_notes",
       "unlimited_media_uploads",
-      "media_long_term_storage",
       "unlimited_reflection_templates",
     ],
   },
@@ -372,6 +366,13 @@ interface PaywallModalProps {
    * キーを持たない機能からの呼び出し）の場合は汎用コピーのみを表示する。
    */
   feature?: Feature;
+  /**
+   * 「なぜ今このモーダルが表示されているか」を伝える状況説明。
+   * 上限到達時などピンポイントな事実（例:
+   * 「今月の無料上限（3件）に達したため、1件は保存できませんでした」）を渡す。
+   * 未指定時はこのモーダルが持つ汎用の機能訴求のみを表示する。
+   */
+  contextMessage?: string;
 }
 
 /**
@@ -379,7 +380,12 @@ interface PaywallModalProps {
  * feature に対応する訴求コピーを先頭に強調表示し、他の Pro 機能一覧・実際のプラン購入・
  * 購入の復元までをこのシート単体で完結させる。無料機能を誤って渡された場合は汎用コピーで表示する。
  */
-export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
+export function PaywallModal({
+  isOpen,
+  onClose,
+  feature,
+  contextMessage,
+}: PaywallModalProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((s) => s.show);
@@ -526,9 +532,13 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
                 <Text style={styles.brandProBadgeText}>PRO</Text>
               </View>
             </View>
-            <Text style={styles.subtitle}>
-              すべての機能が使い放題になります
-            </Text>
+
+            {contextMessage ? (
+              <View style={styles.contextBanner}>
+                <Ionicons name="information-circle" size={16} color="#D4D4D4" />
+                <Text style={styles.contextBannerText}>{contextMessage}</Text>
+              </View>
+            ) : null}
 
             <View style={styles.highlightCard}>
               <Text style={styles.highlightTitle}>{copy.title}</Text>
@@ -537,6 +547,9 @@ export function PaywallModal({ isOpen, onClose, feature }: PaywallModalProps) {
               </Text>
             </View>
 
+            <Text style={styles.subtitle}>
+              すべての機能が使い放題になります
+            </Text>
             <Text style={styles.sectionTitle}>PRO でできること</Text>
             <View style={styles.groupList}>
               {visibleGroups.map((group) => (
@@ -710,7 +723,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginBottom: 6,
+    marginBottom: 16,
   },
   brandName: {
     color: "#F4F4F4",
@@ -734,7 +747,23 @@ const styles = StyleSheet.create({
     color: "#A1A1AA",
     fontSize: 13,
     marginTop: 4,
-    marginBottom: 20,
+    marginBottom: 8,
+  },
+  contextBanner: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+  },
+  contextBannerText: {
+    flex: 1,
+    color: "#D4D4D4",
+    fontSize: 13,
+    lineHeight: 18,
   },
   highlightCard: {
     width: "100%",
