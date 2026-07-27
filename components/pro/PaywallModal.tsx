@@ -86,11 +86,6 @@ export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     title: "通知メッセージをカスタマイズ",
     description: "練習リマインドや目標達成通知の文言を自分好みに編集できます。",
   },
-  advanced_goal_tracking: {
-    title: "目標達成度を詳細に追跡",
-    description:
-      "達成率の推移グラフや改善ポイントの提示で、目標到達を後押しします。",
-  },
   detailed_condition_log: {
     title: "コンディションを詳しく記録",
     description:
@@ -209,7 +204,6 @@ export const FEATURE_COMPARISONS: Record<ProFeature, FeatureComparison> = {
   season_goals: { free: "✕", pro: "○" },
   tournament_goals: { free: "✕", pro: "○" },
   custom_notification_messages: { free: "標準文言", pro: "自由編集" },
-  advanced_goal_tracking: { free: "簡易", pro: "詳細" },
   detailed_condition_log: { free: "✕", pro: "○" },
   unlimited_improvement_themes: { free: "2件", pro: "無制限" },
   correlation_insights: { free: "✕", pro: "○" },
@@ -236,7 +230,7 @@ interface FeatureGroup {
   keys: ProFeature[];
 }
 
-// 「PRO でできること」表のグループ分け。PRO_FEATURES 全31項目を過不足なく1回ずつ含む
+// 「PRO でできること」表のグループ分け。PRO_FEATURES 全29項目を過不足なく1回ずつ含む
 // （テストで網羅性を担保。詳細は __tests__/PaywallModal.test.tsx）。
 // グループ名・アイコンはホーム画面の実際のセクション名・導線に合わせる
 // （例: PracticeToolsSection="練習ツール", ImprovementToolsSection の各ツール名）。
@@ -274,7 +268,6 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
       "tournament_goals",
       "custom_period_goals",
       "manual_metric_goals",
-      "advanced_goal_tracking",
     ],
   },
   {
