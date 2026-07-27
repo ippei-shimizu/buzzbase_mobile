@@ -89,10 +89,6 @@ type ActiveTab = "batting" | "pitching";
 
 const currentYear = new Date().getFullYear().toString();
 
-// Pro プラン本体（課金・エンタイトルメント判定）実装時に false にすると、
-// 対象4セクションが通常表示に戻り、停止していた hook の API 呼び出しが再開する。
-const PRO_FEATURES_COMING_SOON = true;
-
 // 球種別・対戦投手別は実コンポーネント（PitchTypeCard/PitcherFaceoffList）に
 // サンプルデータを渡すことで、タップして詳細スタッツを展開できる操作感も
 // 無料ユーザーのサンプル表示のまま体験できるようにする。
@@ -293,6 +289,19 @@ const DUMMY_PITCHER_FACEOFF_TOTAL_PA = DUMMY_PITCHER_FACEOFF_ROWS.reduce(
   0,
 );
 const DUMMY_PITCHER_FACEOFF_MIN_PA = 5;
+
+/**
+ * pro/status解決前（isProLoading中）の中立プレースホルダー。
+ * ProUpsellOverlayのwrapperWithCard相当の高さを確保し、判定確定後に
+ * ロック/実データいずれかへ切り替わってもレイアウトシフトが起きないようにする。
+ */
+function ProSectionLoadingPlaceholder() {
+  return (
+    <View style={[styles.proSectionSpacing, styles.proSectionLoading]}>
+      <ActivityIndicator size="small" color="#d08000" />
+    </View>
+  );
+}
 
 // テーブル用FilterDropdown（game-results/index.tsxと同じパターン）
 function TableFilterDropdown({
@@ -579,23 +588,28 @@ export default function StatsScreen() {
   const { tournaments } = useTournaments();
   const { years: availableYears } = useAvailableYears();
   const { months } = useAvailableMonths();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
+  // 打球方向の生データは無料機能のSprayChartでも使うため、Pro判定に関わらず常時取得する
+  // （Proでロックするのはhit_directionsのデータそのものではなく、詳細内訳テーブルの表示のみ）。
   const hitDirections = useHitDirections(filters);
   const hitLocations = useHitLocations(filters);
   const countSituations = useCountSituations(
     filters,
-    !PRO_FEATURES_COMING_SOON,
+    hasEntitlement("count_situation_average"),
   );
   const contactQualities = useContactQualities(filters);
   const timingBreakdown = useTimingBreakdown(filters);
-  const pitchTypes = usePitchTypes(filters, !PRO_FEATURES_COMING_SOON);
+  const pitchTypes = usePitchTypes(
+    filters,
+    hasEntitlement("pitch_type_average"),
+  );
   const pitcherFaceoffs = usePitcherFaceoffs(
     filters,
-    !PRO_FEATURES_COMING_SOON,
+    hasEntitlement("pitcher_faceoff_average"),
   );
   const pitcherAttributeSummary = usePitcherAttributeSummary(filters);
   const [battingTrendGranularity, setBattingTrendGranularity] =
     useState<BattingTrendGranularity>("game");
-  const { hasEntitlement } = useEntitlement();
   const [seasonPaywallOpen, setSeasonPaywallOpen] = useState(false);
   const [comingSoonPaywallOpen, setComingSoonPaywallOpen] = useState(false);
   const battingTrend = useBattingTrend(filters, battingTrendGranularity);
@@ -658,15 +672,15 @@ export default function StatsScreen() {
       hitLocations.refetch(),
       contactQualities.refetch(),
       timingBreakdown.refetch(),
-      // Coming soon 中は disabled な hook（countSituations / pitchTypes /
-      // pitcherFaceoffs）を refetch しない。無駄な API 呼び出しを避ける。
-      ...(PRO_FEATURES_COMING_SOON
-        ? []
-        : [
-            countSituations.refetch(),
-            pitchTypes.refetch(),
-            pitcherFaceoffs.refetch(),
-          ]),
+      // 無料ユーザーには enabled: false で止めている hook（countSituations /
+      // pitchTypes / pitcherFaceoffs）を refetch しない。無駄な API 呼び出しを避ける。
+      ...(hasEntitlement("count_situation_average")
+        ? [countSituations.refetch()]
+        : []),
+      ...(hasEntitlement("pitch_type_average") ? [pitchTypes.refetch()] : []),
+      ...(hasEntitlement("pitcher_faceoff_average")
+        ? [pitcherFaceoffs.refetch()]
+        : []),
       pitcherAttributeSummary.refetch(),
       battingTrend.refetch(),
       paBreakdown.refetch(),
@@ -696,6 +710,7 @@ export default function StatsScreen() {
     battingTable.refetch,
     pitchingTable.refetch,
     eraTrend.refetch,
+    hasEntitlement,
   ]);
 
   const handleBattingPeriodChange = useCallback(
@@ -894,9 +909,18 @@ export default function StatsScreen() {
               </FetchingOverlay>
             )}
             {/* 6. HitDirectionTable */}
-            {PRO_FEATURES_COMING_SOON ? (
+            {hasEntitlement("hit_direction_average") ? (
+              hitDirections.data && (
+                <FetchingOverlay isFetching={hitDirections.isFetching}>
+                  <HitDirectionTable
+                    directions={hitDirections.data.directions}
+                  />
+                </FetchingOverlay>
+              )
+            ) : (
               <ProUpsellOverlay
                 unlocked={false}
+                loading={isProLoading}
                 feature="hit_direction_average"
                 onPressCta={() => {
                   trackProFeatureTapped("hit_direction");
@@ -906,14 +930,6 @@ export default function StatsScreen() {
               >
                 <ProComingSoonHitDirectionField />
               </ProUpsellOverlay>
-            ) : (
-              hitDirections.data && (
-                <FetchingOverlay isFetching={hitDirections.isFetching}>
-                  <HitDirectionTable
-                    directions={hitDirections.data.directions}
-                  />
-                </FetchingOverlay>
-              )
             )}
             {/* 7. PlateAppearanceDonut（打席結果の内訳） */}
             {paBreakdown.data && (
@@ -946,7 +962,18 @@ export default function StatsScreen() {
               </FetchingOverlay>
             )}
             {/* 10. CountSituationCards（カウント別の打率） */}
-            {PRO_FEATURES_COMING_SOON ? (
+            {/* pro/status 解決前は hasEntitlement が false 倒しになり、Pro ユーザーへ
+                一瞬サンプル表示がフラッシュしてしまうため、判定確定まではProUpsellOverlay
+                と同様に高さを確保した中立表示にし、判定確定後のレイアウトシフトを抑える。 */}
+            {isProLoading ? (
+              <ProSectionLoadingPlaceholder />
+            ) : hasEntitlement("count_situation_average") ? (
+              countSituations.data && (
+                <FetchingOverlay isFetching={countSituations.isFetching}>
+                  <CountSituationCards data={countSituations.data} />
+                </FetchingOverlay>
+              )
+            ) : (
               <View style={styles.proSectionSpacing}>
                 <ProUpsellCard
                   feature="count_situation_average"
@@ -960,15 +987,20 @@ export default function StatsScreen() {
                   <CountSituationDummy />
                 </View>
               </View>
-            ) : (
-              countSituations.data && (
-                <FetchingOverlay isFetching={countSituations.isFetching}>
-                  <CountSituationCards data={countSituations.data} />
-                </FetchingOverlay>
-              )
             )}
             {/* 11. PitchTypeCard（球種別の打率） */}
-            {PRO_FEATURES_COMING_SOON ? (
+            {isProLoading ? (
+              <ProSectionLoadingPlaceholder />
+            ) : hasEntitlement("pitch_type_average") ? (
+              pitchTypes.data && (
+                <FetchingOverlay isFetching={pitchTypes.isFetching}>
+                  <PitchTypeCard
+                    rows={pitchTypes.data.rows}
+                    totalTargetPa={pitchTypes.data.total_target_pa}
+                  />
+                </FetchingOverlay>
+              )
+            ) : (
               <View style={styles.proSectionSpacing}>
                 <ProUpsellCard
                   feature="pitch_type_average"
@@ -987,18 +1019,23 @@ export default function StatsScreen() {
                   />
                 </View>
               </View>
-            ) : (
-              pitchTypes.data && (
-                <FetchingOverlay isFetching={pitchTypes.isFetching}>
-                  <PitchTypeCard
-                    rows={pitchTypes.data.rows}
-                    totalTargetPa={pitchTypes.data.total_target_pa}
+            )}
+            {/* 12. PitcherFaceoffList */}
+            {isProLoading ? (
+              <ProSectionLoadingPlaceholder />
+            ) : hasEntitlement("pitcher_faceoff_average") ? (
+              pitcherFaceoffs.data && (
+                <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
+                  <PitcherFaceoffList
+                    rows={pitcherFaceoffs.data.rows}
+                    minPlateAppearances={
+                      pitcherFaceoffs.data.min_plate_appearances
+                    }
+                    totalTargetPa={pitcherFaceoffs.data.total_target_pa}
                   />
                 </FetchingOverlay>
               )
-            )}
-            {/* 12. PitcherFaceoffList */}
-            {PRO_FEATURES_COMING_SOON ? (
+            ) : (
               <View style={styles.proSectionSpacing}>
                 <ProUpsellCard
                   feature="pitcher_faceoff_average"
@@ -1016,18 +1053,6 @@ export default function StatsScreen() {
                   />
                 </View>
               </View>
-            ) : (
-              pitcherFaceoffs.data && (
-                <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
-                  <PitcherFaceoffList
-                    rows={pitcherFaceoffs.data.rows}
-                    minPlateAppearances={
-                      pitcherFaceoffs.data.min_plate_appearances
-                    }
-                    totalTargetPa={pitcherFaceoffs.data.total_target_pa}
-                  />
-                </FetchingOverlay>
-              )
             )}
             {/* 13. PitcherAttributeSummary */}
             {pitcherAttributeSummary.data && (
@@ -1243,6 +1268,11 @@ const styles = StyleSheet.create({
   },
   proSectionSpacing: {
     marginBottom: 16,
+  },
+  proSectionLoading: {
+    minHeight: 200,
+    justifyContent: "center",
+    alignItems: "center",
   },
   comingSoonDummy: {
     padding: 12,
