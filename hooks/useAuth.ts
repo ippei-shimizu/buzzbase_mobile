@@ -1,4 +1,9 @@
-import type { SignInData, SignUpData } from "../types/auth";
+import type {
+  ResetPasswordAuthHeaders,
+  ResetPasswordData,
+  SignInData,
+  SignUpData,
+} from "../types/auth";
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
@@ -10,6 +15,8 @@ import {
   signOut,
   signUp as signUpService,
   resendConfirmation as resendConfirmationService,
+  requestPasswordReset as requestPasswordResetService,
+  resetPassword as resetPasswordService,
   validateToken,
 } from "@services/authService";
 import { googleSignIn } from "@services/googleAuthService";
@@ -102,6 +109,17 @@ export const useAuth = () => {
     await resendConfirmationService(email);
   };
 
+  const requestPasswordReset = async (email: string) => {
+    await requestPasswordResetService(email);
+  };
+
+  const resetPassword = async (
+    data: ResetPasswordData,
+    authHeaders: ResetPasswordAuthHeaders,
+  ) => {
+    await resetPasswordService(data, authHeaders);
+  };
+
   const googleLogin = async () => {
     const response = await googleSignIn();
     setIsLoggedIn(true);
@@ -124,6 +142,8 @@ export const useAuth = () => {
     logout,
     signUp,
     resendConfirmation,
+    requestPasswordReset,
+    resetPassword,
     googleLogin,
     appleLogin,
   };

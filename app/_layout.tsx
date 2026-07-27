@@ -82,6 +82,30 @@ function RootLayoutInner() {
         } else {
           router.replace("/(auth)/sign-in");
         }
+        return;
+      }
+
+      if (
+        parsed.hostname === "reset-password" ||
+        parsed.path === "reset-password"
+      ) {
+        const {
+          "access-token": accessToken,
+          client,
+          uid,
+        } = parsed.queryParams ?? {};
+        if (
+          typeof accessToken === "string" &&
+          typeof client === "string" &&
+          typeof uid === "string"
+        ) {
+          router.push({
+            pathname: "/(auth)/reset-password",
+            params: { accessToken, client, uid },
+          });
+        } else {
+          router.replace("/(auth)/sign-in");
+        }
       }
     },
     [router],
