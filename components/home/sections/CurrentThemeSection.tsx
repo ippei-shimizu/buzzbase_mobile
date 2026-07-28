@@ -29,11 +29,20 @@ export function CurrentThemeSection() {
           <SectionError onRetry={() => void refetch()} />
         </View>
       ) : themes.length === 0 ? (
-        <TouchableOpacity onPress={() => router.push("/(theme)/list")}>
+        <>
           <Text style={styles.empty}>
             いま取り組む課題を決めると、練習やノートがその課題に束ねられます。
           </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.manage}
+            activeOpacity={0.6}
+            accessibilityRole="button"
+            onPress={() => router.push("/(theme)/list")}
+          >
+            <Ionicons name="add" size={14} color="#d08000" />
+            <Text style={styles.manageText}>課題を設定する</Text>
+          </TouchableOpacity>
+        </>
       ) : (
         <>
           {themes.map((theme, index) => (
