@@ -1,6 +1,7 @@
 import type { ActivityLog } from "../../types/activity";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef } from "react";
 import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
+import { formatJaFullDateWithWeekday } from "@utils/formatDate";
 
 interface Props {
   data: ActivityLog[];
@@ -8,10 +9,14 @@ interface Props {
   to: string;
   cellSize?: number;
   scroll?: boolean;
-  /** セルタップで日付・内容のキャプションを表示する（詳細画面向け）。 */
-  interactive?: boolean;
   /** 月（X軸）・曜日（Y軸）ラベルを表示する（詳細画面向け）。 */
   showLabels?: boolean;
+  /** この日付より前のセルを淡色ロック表示にする（無料ユーザーのホーム草ミニ向け）。 */
+  lockedBefore?: string;
+  /** ロックされたセルをタップした時に呼ぶ（Paywall表示用）。 */
+  onLockedPress?: () => void;
+  /** ロックされていないセルをタップした時に呼ぶ（詳細画面への遷移・日次詳細表示用）。 */
+  onCellPress?: (cell: { date: string; log: ActivityLog | null }) => void;
 }
 
 // L0=未記録（背景 #3A3A3A と区別できる色）→ L4=最濃緑。
@@ -23,34 +28,19 @@ const INTENSITY_COLORS = [
   "#22C55E",
 ];
 
+// 実データは見せず「ここに何かある」ことだけ伝える淡いゴールド（Pro訴求のチラ見せ）。
+const LOCKED_CELL_COLOR = "rgba(208, 128, 0, 0.18)";
+
 // 左の曜日ラベル（月・水・金のみ表示、GitHub 流）。
 const WEEKDAY_LABELS = ["", "月", "", "水", "", "金", ""];
 const WEEKDAY_COL_WIDTH = 22;
 
 type Cell = { date: string | null; log: ActivityLog | null };
 
-const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
-
 const pad = (value: number): string => String(value).padStart(2, "0");
 const toDate = (value: string): Date => new Date(`${value}T00:00:00`);
 const fmt = (date: Date): string =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-/** "YYYY-MM-DD" を「2026年7月4日(火)」の年月日表記にする。 */
-const formatJaDate = (iso: string): string => {
-  const date = toDate(iso);
-  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日(${WEEKDAYS[date.getDay()]})`;
-};
-
-const describe = (log: ActivityLog | null): string => {
-  if (!log) return "未記録";
-  const parts: string[] = [];
-  if (log.practice_menu_count > 0)
-    parts.push(`メニュー${log.practice_menu_count}種`);
-  if (log.total_swing_count > 0) parts.push(`素振り${log.total_swing_count}本`);
-  if (log.has_game) parts.push("試合");
-  return parts.length > 0 ? parts.join(" / ") : "記録あり";
-};
 
 /** GitHub 風のヒートマップ。週を列、曜日を行として描く。 */
 export function Heatmap({
@@ -59,11 +49,11 @@ export function Heatmap({
   to,
   cellSize = 13,
   scroll = true,
-  interactive = false,
   showLabels = false,
+  lockedBefore,
+  onLockedPress,
+  onCellPress,
 }: Props) {
-  const [selected, setSelected] = useState<Cell | null>(null);
-
   const weeks = useMemo<Cell[][]>(() => {
     const logByDate = new Map(data.map((log) => [log.activity_date, log]));
     const start = toDate(from);
@@ -142,27 +132,44 @@ export function Heatmap({
   }, [weeks]);
 
   const renderCell = (cell: Cell, dayIndex: number) => {
-    const color = cell.date
-      ? (INTENSITY_COLORS[cell.log?.intensity_level ?? 0] ??
-        INTENSITY_COLORS[0])
-      : "transparent";
-    const isSelected =
-      interactive && selected?.date != null && selected.date === cell.date;
+    const isLocked = Boolean(
+      cell.date && lockedBefore && cell.date < lockedBefore,
+    );
+    const color = !cell.date
+      ? "transparent"
+      : isLocked
+        ? LOCKED_CELL_COLOR
+        : (INTENSITY_COLORS[cell.log?.intensity_level ?? 0] ??
+          INTENSITY_COLORS[0]);
     const cellStyle = {
       width: cellSize,
       height: cellSize,
       borderRadius: 2,
       margin: 1.5,
       backgroundColor: color,
-      borderWidth: isSelected ? 1.5 : 0,
-      borderColor: "#F4F4F4",
     };
-    if (interactive && cell.date) {
+    if (!cell.date) {
+      return <View key={dayIndex} style={cellStyle} />;
+    }
+    const label = formatJaFullDateWithWeekday(cell.date);
+    if (isLocked) {
       return (
         <Pressable
           key={dayIndex}
           style={cellStyle}
-          onPress={() => setSelected(cell)}
+          onPress={onLockedPress}
+          accessibilityLabel={`${label}（Pro限定）`}
+        />
+      );
+    }
+    if (onCellPress) {
+      const date = cell.date;
+      return (
+        <Pressable
+          key={dayIndex}
+          style={cellStyle}
+          onPress={() => onCellPress({ date, log: cell.log })}
+          accessibilityLabel={label}
         />
       );
     }
@@ -179,7 +186,7 @@ export function Heatmap({
     </View>
   );
 
-  if (!showLabels && !interactive) {
+  if (!showLabels) {
     if (!scroll) return grid;
     return (
       <ScrollView
@@ -231,13 +238,6 @@ export function Heatmap({
       ) : (
         labelledGrid
       )}
-      {interactive ? (
-        <Text style={styles.caption}>
-          {selected?.date
-            ? `${formatJaDate(selected.date)} ・ ${describe(selected.log)}`
-            : "セルをタップすると日付と内容が見られます"}
-        </Text>
-      ) : null}
     </View>
   );
 }
@@ -251,10 +251,5 @@ const styles = StyleSheet.create({
     color: "#71717A",
     fontSize: 9,
     textAlignVertical: "center",
-  },
-  caption: {
-    color: "#A1A1AA",
-    fontSize: 12,
-    marginTop: 10,
   },
 });
