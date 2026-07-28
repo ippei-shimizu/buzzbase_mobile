@@ -57,11 +57,19 @@ describe("WebCancelConfirmModal", () => {
   });
 
   it("解約リクエスト中は背景タップで閉じない", async () => {
+    // setTimeoutでの遅延だとwaitForのポーリングと競合し、pending状態を
+    // 観測する前にリクエストが完了してしまうことがある。呼び出し側が
+    // 明示的にresolveするまで待たせ、pending状態を確実に固定して検証する。
+    let resolveRequest: (() => void) | undefined;
     server.use(
-      http.delete(apiUrl("/pro/subscription"), async () => {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        return HttpResponse.json({ message: "ok" });
-      }),
+      http.delete(
+        apiUrl("/pro/subscription"),
+        () =>
+          new Promise((resolve) => {
+            resolveRequest = () =>
+              resolve(HttpResponse.json({ message: "ok" }));
+          }),
+      ),
     );
 
     renderWithProviders(<WebCancelConfirmModal isOpen onClose={onClose} />);
@@ -73,6 +81,8 @@ describe("WebCancelConfirmModal", () => {
     fireEvent.press(screen.getByLabelText("モーダルを閉じる"));
 
     expect(onClose).not.toHaveBeenCalled();
+
+    resolveRequest?.();
     await screen.findByText("解約申請を受け付けました");
   });
 
