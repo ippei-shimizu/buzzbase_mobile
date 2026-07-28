@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { CancelGuideModal } from "@components/pro/CancelGuideModal";
 import { SubscriptionStatusCard } from "@components/pro/SubscriptionStatusCard";
+import { WebCancelConfirmModal } from "@components/pro/WebCancelConfirmModal";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { useProStatus } from "@hooks/useProStatus";
 
@@ -51,10 +52,17 @@ export default function SubscriptionScreen() {
         </TouchableOpacity>
       ) : null}
 
-      <CancelGuideModal
-        isOpen={cancelGuideOpen}
-        onClose={() => setCancelGuideOpen(false)}
-      />
+      {proStatus.subscription.platform === "web" ? (
+        <WebCancelConfirmModal
+          isOpen={cancelGuideOpen}
+          onClose={() => setCancelGuideOpen(false)}
+        />
+      ) : (
+        <CancelGuideModal
+          isOpen={cancelGuideOpen}
+          onClose={() => setCancelGuideOpen(false)}
+        />
+      )}
     </ScrollView>
   );
 }
