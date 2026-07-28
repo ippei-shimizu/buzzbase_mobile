@@ -52,7 +52,7 @@ export function WebCancelConfirmModal({
     >
       <Pressable
         style={styles.backdrop}
-        onPress={handleClose}
+        onPress={isCancelling ? undefined : handleClose}
         accessibilityLabel="モーダルを閉じる"
       >
         <Pressable
