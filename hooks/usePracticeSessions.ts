@@ -25,10 +25,11 @@ export const usePracticeSessions = (params?: {
   };
 };
 
-export const usePracticeSessionByDate = (date: string) => {
+export const usePracticeSessionByDate = (date: string | null) => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["practiceSession", date],
-    queryFn: () => getPracticeSessionByDate(date),
+    queryFn: () => getPracticeSessionByDate(date as string),
+    enabled: date != null,
   });
   return { session: data ?? null, isLoading, isError };
 };
