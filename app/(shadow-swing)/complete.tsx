@@ -1,17 +1,46 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useAudioPlayer } from "expo-audio";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useEffect } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Vibration,
+  StyleSheet,
+} from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 import { useShadowSwingStats } from "@hooks/useShadowSwing";
 
 export default function ShadowSwingCompleteScreen() {
   const router = useRouter();
   const { swingCount } = useLocalSearchParams<{ swingCount: string }>();
   const { stats } = useShadowSwingStats();
+  const chime = useAudioPlayer(require("../../assets/sounds/whistle.wav"));
+  const scale = useSharedValue(0);
+
+  // 完了時の達成感演出(F-08): 振動 + 効果音 + アイコンのバウンドアニメーション。
+  useEffect(() => {
+    Vibration.vibrate([0, 80, 60, 120]);
+    chime.seekTo(0);
+    chime.play();
+    scale.value = withSpring(1, { damping: 8, stiffness: 120 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- マウント時に1回だけ再生する
+  }, []);
+
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   return (
     <View style={styles.container}>
-      <Ionicons name="checkmark-circle" size={56} color="#17C964" />
+      <Animated.View style={iconStyle}>
+        <Ionicons name="checkmark-circle" size={56} color="#17C964" />
+      </Animated.View>
       <Text style={styles.title}>
         {(Number(swingCount) || 0).toLocaleString()}本 達成！
       </Text>
