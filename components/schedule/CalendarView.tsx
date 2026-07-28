@@ -10,10 +10,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { PaywallModal } from "@components/pro/PaywallModal";
 import { eventTypeMeta } from "@constants/schedule";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { useCalendar } from "@hooks/usePlans";
 import { formatJaFullDate } from "@utils/formatDate";
 import { addDays, fromIsoDate, toIsoDate, todayIso } from "@utils/planDate";
+
+const FREE_CALENDAR_WINDOW_DAYS = 15;
 
 type ViewMode = "month" | "week" | "day";
 
@@ -34,6 +38,17 @@ const shortMonthDay = (iso: string): string => {
   return `${date.getMonth() + 1}/${date.getDate()}`;
 };
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/** 無料ユーザーの閲覧範囲(今日の前後15日)を外れているか。backのFREE_CALENDAR_WINDOW_DAYSと揃える。 */
+const isOutsideFreeWindow = (iso: string): boolean => {
+  const diffDays = Math.abs(
+    (fromIsoDate(iso).getTime() - fromIsoDate(todayIso()).getTime()) /
+      MS_PER_DAY,
+  );
+  return diffDays > FREE_CALENDAR_WINDOW_DAYS;
+};
+
 /**
  * 月/週/日カレンダー表示。
  * 練習プラン画面（(menu-set)/list.tsx）のタブと、単独ルート（(schedule)/calendar.tsx）の
@@ -41,9 +56,12 @@ const shortMonthDay = (iso: string): string => {
  */
 export function CalendarView() {
   const router = useRouter();
+  const { hasEntitlement } = useEntitlement();
+  const canViewFullHistory = hasEntitlement("schedule_calendar_full_history");
   const [mode, setMode] = useState<ViewMode>("month");
   const [cursor, setCursor] = useState<string>(todayIso());
   const [selected, setSelected] = useState<string>(todayIso());
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   const range = useMemo(() => {
     const date = fromIsoDate(cursor);
@@ -76,16 +94,22 @@ export function CalendarView() {
   }, [entries]);
 
   const shift = (direction: number) => {
-    if (mode === "month") {
-      const date = fromIsoDate(cursor);
-      setCursor(
-        toIsoDate(new Date(date.getFullYear(), date.getMonth() + direction, 1)),
-      );
-    } else if (mode === "week") {
-      setCursor(addDays(cursor, direction * 7));
-    } else {
-      setCursor(addDays(cursor, direction));
+    const nextCursor =
+      mode === "month"
+        ? toIsoDate(
+            new Date(
+              fromIsoDate(cursor).getFullYear(),
+              fromIsoDate(cursor).getMonth() + direction,
+              1,
+            ),
+          )
+        : addDays(cursor, direction * (mode === "week" ? 7 : 1));
+
+    if (!canViewFullHistory && isOutsideFreeWindow(nextCursor)) {
+      setPaywallOpen(true);
+      return;
     }
+    setCursor(nextCursor);
   };
 
   const headerTitle = useMemo(() => {
@@ -171,6 +195,13 @@ export function CalendarView() {
       >
         <Ionicons name="add" size={30} color="#FFFFFF" />
       </TouchableOpacity>
+
+      <PaywallModal
+        isOpen={paywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        feature="schedule_calendar_full_history"
+        contextMessage="無料プランのカレンダーは直近月のみ閲覧できます"
+      />
     </View>
   );
 }

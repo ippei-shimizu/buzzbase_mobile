@@ -161,6 +161,11 @@ export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     description:
       "画面ロックやアプリの切り替えで途切れず、素振りの本数と経過時間をそのまま継続できます。",
   },
+  schedule_calendar_full_history: {
+    title: "カレンダーを全期間閲覧",
+    description:
+      "先々の予定や過去の練習プランも、月を遡らずカレンダーでいつでも確認できます。",
+  },
   unlimited_groups: {
     title: "グループを無制限に作成・参加",
     description:
@@ -223,6 +228,7 @@ export const FEATURE_COMPARISONS: Record<ProFeature, FeatureComparison> = {
   shadow_swing_custom_interval: { free: "5〜10秒", pro: "1〜20秒" },
   shadow_swing_vibration: { free: "✕", pro: "○" },
   shadow_swing_background: { free: "✕(一時停止)", pro: "○" },
+  schedule_calendar_full_history: { free: "直近月中心", pro: "全期間" },
   unlimited_groups: { free: "1件", pro: "無制限" },
   hit_direction_average: { free: "✕", pro: "○" },
   count_situation_average: { free: "✕", pro: "○" },
@@ -236,7 +242,7 @@ interface FeatureGroup {
   keys: ProFeature[];
 }
 
-// 「PRO でできること」表のグループ分け。PRO_FEATURES 全30項目を過不足なく1回ずつ含む
+// 「PRO でできること」表のグループ分け。PRO_FEATURES 全31項目を過不足なく1回ずつ含む
 // （テストで網羅性を担保。詳細は __tests__/PaywallModal.test.tsx）。
 // グループ名・アイコンはホーム画面の実際のセクション名・導線に合わせる
 // （例: PracticeToolsSection="練習ツール", ImprovementToolsSection の各ツール名）。
@@ -263,6 +269,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
       "unlimited_practice_menus",
       "unlimited_menu_sets",
       "schedule_copy_next_week",
+      "schedule_calendar_full_history",
     ],
   },
   {
