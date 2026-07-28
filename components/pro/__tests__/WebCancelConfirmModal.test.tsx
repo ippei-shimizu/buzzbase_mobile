@@ -67,6 +67,9 @@ describe("WebCancelConfirmModal", () => {
     renderWithProviders(<WebCancelConfirmModal isOpen onClose={onClose} />);
 
     fireEvent.press(screen.getByText("解約する"));
+    await waitFor(() => {
+      expect(screen.queryByText("解約する")).toBeNull();
+    });
     fireEvent.press(screen.getByLabelText("モーダルを閉じる"));
 
     expect(onClose).not.toHaveBeenCalled();

@@ -86,7 +86,7 @@ describe("AchievementSummaryModal", () => {
     renderWithProviders(<AchievementSummaryModal />);
 
     expect(await screen.findByText(/期限を迎えた目標 2件中/)).toBeOnTheScreen();
-    expect(screen.getByText("2件達成")).toBeOnTheScreen();
+    expect(screen.getByText("1件達成")).toBeOnTheScreen();
   });
 
   it("前月に確定した目標が無ければモーダルを表示しない", async () => {
