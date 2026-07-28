@@ -8,22 +8,19 @@ import { StatusBar } from "expo-status-bar";
 import { PostHogProvider } from "posthog-react-native";
 import { useCallback, useEffect } from "react";
 import { Alert, Platform } from "react-native";
+import { ScheduleReminderSync } from "@components/schedule/ScheduleReminderSync";
 import { Snackbar } from "@components/ui/Snackbar";
 import {
   REVENUECAT_API_KEY_ANDROID,
   REVENUECAT_API_KEY_IOS,
 } from "@constants/revenueCat";
 import { usePushNotifications } from "@hooks/usePushNotifications";
-import { useSchedules } from "@hooks/useSchedules";
 import { useStoreReview } from "@hooks/useStoreReview";
 import { configureGoogleSignIn } from "@services/googleAuthService";
 import { configureRevenueCat } from "@services/revenueCatService";
-import { syncScheduleReminders } from "@services/scheduleReminderService";
 import { useAuthStore } from "@stores/authStore";
 import { posthog } from "@utils/posthog";
 import { queryClient } from "@utils/queryClient";
-
-const isExpoGo = Constants.appOwnership === "expo";
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
@@ -61,22 +58,6 @@ function ScreenTracker() {
   useEffect(() => {
     posthog?.screen(pathname);
   }, [pathname]);
-
-  return null;
-}
-
-/**
- * スケジュールの変更(作成/更新/削除/入退場)を端末のローカル通知へ反映する。
- * ログイン中は常時マウントされ、useSchedulesのキャッシュがどの画面で
- * 無効化されても再同期される(特定画面を開いた時だけ同期される問題を解消)。
- */
-function ScheduleReminderSync() {
-  const { schedules } = useSchedules();
-
-  useEffect(() => {
-    if (isExpoGo) return;
-    void syncScheduleReminders(schedules);
-  }, [schedules]);
 
   return null;
 }
