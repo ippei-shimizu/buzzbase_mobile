@@ -13,7 +13,15 @@ import {
 import { renderWithProviders } from "../../../../__tests__/test-utils/renderWithProviders";
 import { server } from "../../../../jest-setup-msw";
 import { DEFAULT_PRO_STATUS } from "../../../../types/pro";
+import { formatJaFullDateWithWeekday } from "../../../../utils/formatDate";
+import { addDays, todayIso } from "../../../../utils/planDate";
 import { StreakHeaderSection } from "../StreakHeaderSection";
+
+const getRouterSpies = () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const m = require("expo-router") as { __routerSpies: { push: jest.Mock } };
+  return m.__routerSpies;
+};
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 jest.mock("expo-router", () => {
@@ -65,5 +73,53 @@ describe("StreakHeaderSection", () => {
 
     expect(await screen.findByText("BUZZ BASE")).toBeOnTheScreen();
     expect(screen.getByText("練習履歴を全期間で確認")).toBeOnTheScreen();
+  });
+
+  it("「詳細を見る」を押すと草の詳細画面へ遷移する", async () => {
+    setupCommonHandlers();
+
+    renderWithProviders(<StreakHeaderSection />);
+
+    fireEvent.press(await screen.findByText("詳細を見る"));
+
+    expect(getRouterSpies().push).toHaveBeenCalledWith("/(grass)/detail");
+  });
+
+  it("無料ユーザーがロック済みセルをタップするとPaywallが開き、未ロックセルは詳細画面へ遷移する", async () => {
+    const today = todayIso();
+    const homeFrom = addDays(today, -83);
+    const clampedFrom = addDays(homeFrom, 10);
+    const lockedDate = addDays(homeFrom, 5);
+    const unlockedDate = addDays(homeFrom, 20);
+
+    server.use(
+      http.get(apiUrl("/pro/status"), () =>
+        HttpResponse.json(DEFAULT_PRO_STATUS),
+      ),
+      http.get(baseUrl("/api/v2/activity_logs"), () =>
+        HttpResponse.json({ data: [], from: clampedFrom, to: today }),
+      ),
+      http.get(baseUrl("/api/v2/activity_logs/streak"), () =>
+        HttpResponse.json({
+          current_streak_days: 0,
+          longest_streak_days: 0,
+          total_active_days: 0,
+        }),
+      ),
+      http.get(baseUrl("/api/v2/shadow_swing_sessions/stats"), () =>
+        HttpResponse.json({ total_count: 0 }),
+      ),
+    );
+
+    renderWithProviders(<StreakHeaderSection />);
+
+    const lockedLabel = `${formatJaFullDateWithWeekday(lockedDate)}（Pro限定）`;
+    fireEvent.press(await screen.findByLabelText(lockedLabel));
+    expect(await screen.findByText("BUZZ BASE")).toBeOnTheScreen();
+
+    fireEvent.press(
+      screen.getByLabelText(formatJaFullDateWithWeekday(unlockedDate)),
+    );
+    expect(getRouterSpies().push).toHaveBeenCalledWith("/(grass)/detail");
   });
 });

@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Heatmap } from "@components/grass/Heatmap";
 import { StreakBadge } from "@components/grass/StreakBadge";
 import { PaywallModal } from "@components/pro/PaywallModal";
@@ -9,7 +10,11 @@ import { useActivityHeatmap, useStreak } from "@hooks/useActivity";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useShadowSwingStats } from "@hooks/useShadowSwing";
 import { useStreakReminder } from "@hooks/useStreakReminder";
+import { addDays, todayIso } from "@utils/planDate";
 import { SectionCard } from "./SectionCard";
+
+// ホームの草ミニは常に直近12週(84日)固定。全期間・年ビューは詳細画面(F-05/F-11)で見せる。
+const HOME_HEATMAP_WEEKS = 12;
 
 const pad = (value: number): string => String(value).padStart(2, "0");
 const dateString = (date: Date): string =>
@@ -42,11 +47,15 @@ const streakNudge = (
 
 /** 継続ヘッダー（Streak ＋ 草ヒートマップ詳細）。ホームに詳細をそのまま表示する。 */
 export function StreakHeaderSection() {
+  const router = useRouter();
+  const homeFrom = addDays(todayIso(), -(HOME_HEATMAP_WEEKS * 7 - 1));
+  const homeTo = todayIso();
   const { streak } = useStreak();
-  const { heatmap } = useActivityHeatmap();
+  const { heatmap } = useActivityHeatmap({ from: homeFrom, to: homeTo });
   const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const isPro = hasEntitlement("grass_full_history");
   const [isPaywallOpen, setPaywallOpen] = useState(false);
+  const goDetail = () => router.push("/(grass)/detail");
 
   const { stats: swingStats } = useShadowSwingStats();
 
@@ -78,13 +87,23 @@ export function StreakHeaderSection() {
         <View style={styles.heatmap}>
           <Heatmap
             data={heatmap.data}
-            from={heatmap.from}
-            to={heatmap.to}
-            interactive
-            showLabels
+            from={homeFrom}
+            to={homeTo}
+            scroll={false}
+            lockedBefore={!isProLoading && !isPro ? heatmap.from : undefined}
+            onLockedPress={() => setPaywallOpen(true)}
+            onCellPress={goDetail}
           />
         </View>
       ) : null}
+      <TouchableOpacity
+        style={styles.detailLink}
+        onPress={goDetail}
+        accessibilityRole="button"
+      >
+        <Text style={styles.detailLinkText}>詳細を見る</Text>
+        <Ionicons name="chevron-forward" size={14} color="#A1A1AA" />
+      </TouchableOpacity>
       <Text style={styles.summary}>通算 {totalActiveDays}日</Text>
 
       {nextActiveDay != null ? (
@@ -127,6 +146,14 @@ export function StreakHeaderSection() {
 
 const styles = StyleSheet.create({
   heatmap: { marginTop: 12 },
+  detailLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+    marginTop: 10,
+    alignSelf: "flex-start",
+  },
+  detailLinkText: { color: "#A1A1AA", fontSize: 12, fontWeight: "600" },
   nudge: {
     flexDirection: "row",
     alignItems: "center",
