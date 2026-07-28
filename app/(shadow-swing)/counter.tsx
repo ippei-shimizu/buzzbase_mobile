@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Speech from "expo-speech";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  AppState,
   BackHandler,
   View,
   Text,
@@ -17,6 +18,7 @@ import {
   withTiming,
 } from "react-native-reanimated";
 import { CircularTimer } from "@components/shadow-swing/CircularTimer";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { useShadowSwingMutations } from "@hooks/useShadowSwing";
 
 export default function ShadowSwingCounterScreen() {
@@ -30,6 +32,11 @@ export default function ShadowSwingCounterScreen() {
     voice: string;
   }>();
   const { completeSession } = useShadowSwingMutations();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
+  // ロード確定前にPro会員が一時停止させられるのを避けるため、setup.tsxの
+  // canVibration等と同じくisLoading中は許可側に倒す。
+  const canContinueInBackground =
+    isProLoading || hasEntitlement("shadow_swing_background");
 
   const targetCount = Number(params.target) || 0;
   const intervalMs = (Number(params.interval) || 2) * 1000;
@@ -39,10 +46,16 @@ export default function ShadowSwingCounterScreen() {
   const sessionId = Number(params.sessionId);
 
   const whistle = useAudioPlayer(require("../../assets/sounds/whistle.wav"));
+  // 無音ループ再生。OSに「バックグラウンドでも音声再生中」と認識させ続けることで、
+  // JS自体がサスペンドされずカウント・バイブ・読み上げがバックグラウンドでも動き続ける
+  // (expo-audioのenableBackgroundPlayback設定により iOS は UIBackgroundModes=audio、
+  // Android はforeground serviceが既に有効になっている前提)。
+  const keepAlive = useAudioPlayer(require("../../assets/sounds/silence.wav"));
 
   const [count, setCount] = useState(0);
   const [running, setRunning] = useState(true);
   const [elapsed, setElapsed] = useState(0);
+  const runningRef = useRef(running);
   const finishedRef = useRef(false);
   const countRef = useRef(0);
 
@@ -67,10 +80,48 @@ export default function ShadowSwingCounterScreen() {
   }, []);
 
   // マナーモードでも音・読み上げが鳴るようにする（どちらかが有効なら設定）。
+  // Pro(shadow_swing_background)が実行中は、無音ループのバックグラウンド再生も
+  // 許可するモードに切り替える。
   useEffect(() => {
-    if (useSound || useVoice)
-      void setAudioModeAsync({ playsInSilentMode: true });
-  }, [useSound, useVoice]);
+    if (useSound || useVoice || canContinueInBackground) {
+      void setAudioModeAsync({
+        playsInSilentMode: true,
+        shouldPlayInBackground: canContinueInBackground,
+        interruptionMode: "mixWithOthers",
+      });
+    }
+  }, [useSound, useVoice, canContinueInBackground]);
+
+  useEffect(() => {
+    runningRef.current = running;
+  }, [running]);
+
+  // Pro(shadow_swing_background)は実行中ずっと無音ループを再生し続け、
+  // バックグラウンドでもカウント・バイブ・読み上げが止まらないようにする。
+  useEffect(() => {
+    if (!running || !canContinueInBackground) {
+      keepAlive.pause();
+      return;
+    }
+    keepAlive.loop = true;
+    keepAlive.volume = 0;
+    keepAlive.play();
+    return () => {
+      keepAlive.pause();
+    };
+  }, [running, canContinueInBackground, keepAlive]);
+
+  // 無料ユーザーはバックグラウンド遷移で自動的に一時停止する（手動の「再開」ボタンで再開）。
+  // Proは無音ループでバックグラウンドでも実行を継続するため対象外。
+  useEffect(() => {
+    if (canContinueInBackground) return;
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "background" && runningRef.current) {
+        setRunning(false);
+      }
+    });
+    return () => subscription.remove();
+  }, [canContinueInBackground]);
 
   // 実行/一時停止に合わせて円形タイマーの針を開始・停止する。
   useEffect(() => {

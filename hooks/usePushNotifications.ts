@@ -1,3 +1,4 @@
+import type { NotificationResponse } from "expo-notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
@@ -37,9 +38,20 @@ export function usePushNotifications() {
       });
 
     responseListener.current =
-      Notifications.addNotificationResponseReceivedListener(() => {
-        router.push("/notifications");
-      });
+      Notifications.addNotificationResponseReceivedListener(
+        (response: NotificationResponse) => {
+          const data = response.notification.request.content.data as
+            | { type?: string; scheduleId?: number }
+            | undefined;
+
+          if (data?.type === "schedule_reminder" && data.scheduleId) {
+            router.push(`/(schedule)/${data.scheduleId}`);
+            return;
+          }
+
+          router.push("/notifications");
+        },
+      );
 
     return () => {
       notificationListener.current?.remove();

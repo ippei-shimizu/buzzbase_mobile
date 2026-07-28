@@ -8,6 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import { PostHogProvider } from "posthog-react-native";
 import { useCallback, useEffect } from "react";
 import { Alert, Platform } from "react-native";
+import { ScheduleReminderSync } from "@components/schedule/ScheduleReminderSync";
 import { Snackbar } from "@components/ui/Snackbar";
 import {
   REVENUECAT_API_KEY_ANDROID,
@@ -17,6 +18,7 @@ import { usePushNotifications } from "@hooks/usePushNotifications";
 import { useStoreReview } from "@hooks/useStoreReview";
 import { configureGoogleSignIn } from "@services/googleAuthService";
 import { configureRevenueCat } from "@services/revenueCatService";
+import { useAuthStore } from "@stores/authStore";
 import { posthog } from "@utils/posthog";
 import { queryClient } from "@utils/queryClient";
 
@@ -64,6 +66,7 @@ function RootLayoutInner() {
   usePushNotifications();
   const router = useRouter();
   const { initInstallDate, initPositiveEventCount } = useStoreReview();
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
   const handleDeepLink = useCallback(
     (url: string) => {
@@ -132,6 +135,7 @@ function RootLayoutInner() {
     <>
       <StatusBar style="light" />
       <ScreenTracker />
+      {isLoggedIn ? <ScheduleReminderSync /> : null}
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: "#2E2E2E" },

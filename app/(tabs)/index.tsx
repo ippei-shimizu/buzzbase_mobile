@@ -4,6 +4,7 @@ import React, { useLayoutEffect, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NotificationBell } from "@components/dashboard/NotificationBell";
+import { AchievementSummaryModal } from "@components/goal/AchievementSummaryModal";
 import { ActivityView } from "@components/home/ActivityView";
 import { DashboardView } from "@components/home/DashboardView";
 import {
@@ -55,6 +56,7 @@ export default function HomeScreen() {
         opacity={menuOpacity}
         onClose={closeMenu}
       />
+      <AchievementSummaryModal />
     </SafeAreaView>
   );
 }

@@ -1,8 +1,14 @@
-import type { Goal, GoalInput } from "../types/goal";
+import type { Goal, GoalBadge, GoalInput } from "../types/goal";
 import { API_BASE_URL } from "@constants/api";
 import axiosInstance from "@utils/axiosInstance";
 
 const URL = `${API_BASE_URL}/api/v2/goals`;
+const GOAL_BADGES_URL = `${API_BASE_URL}/api/v2/goal_badges`;
+
+export const getGoalBadges = async (): Promise<GoalBadge[]> => {
+  const res = await axiosInstance.get<GoalBadge[]>(GOAL_BADGES_URL);
+  return res.data;
+};
 
 export const getGoals = async (): Promise<Goal[]> => {
   const res = await axiosInstance.get<Goal[]>(URL);

@@ -29,9 +29,19 @@ export default function GoalLayout() {
               <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
             </TouchableOpacity>
           ),
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => router.push("/(goal)/badges")}
+              style={{ padding: 8 }}
+              accessibilityLabel="達成バッジ一覧"
+            >
+              <Ionicons name="ribbon-outline" size={22} color="#F4F4F4" />
+            </TouchableOpacity>
+          ),
         }}
       />
       <Stack.Screen name="new" options={{ title: "新しい目標" }} />
+      <Stack.Screen name="badges" options={{ title: "達成バッジ" }} />
       <Stack.Screen
         name="[id]"
         options={{

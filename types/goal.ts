@@ -37,6 +37,15 @@ export interface Goal {
   days_remaining: number;
 }
 
+export interface GoalBadge {
+  id: number;
+  badge_type: string;
+  badge_name: string;
+  awarded_at: string;
+  goal_id: number;
+  goal_title: string;
+}
+
 export interface GoalInput {
   title: string;
   kind: GoalKind;

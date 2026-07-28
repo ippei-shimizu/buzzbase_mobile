@@ -36,11 +36,18 @@ export const syncScheduleReminders = async (
     const [hour, minute] = schedule.scheduled_time.split(":").map(Number);
     const body = reminderBody(schedule);
 
+    // タップ時にusePushNotificationsが該当スケジュールへ遷移できるよう、
+    // 種別とschedule idをdataに乗せておく。
+    const notificationData = {
+      type: "schedule_reminder",
+      scheduleId: schedule.id,
+    };
+
     if (schedule.days_of_week) {
       for (const day of schedule.days_of_week.split(",").map(Number)) {
         await Notifications.scheduleNotificationAsync({
           identifier: `${PREFIX}${schedule.id}-${day}`,
-          content: { title: "BUZZ BASE", body },
+          content: { title: "BUZZ BASE", body, data: notificationData },
           trigger: {
             type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
             weekday: toExpoWeekday(day),
@@ -59,7 +66,7 @@ export const syncScheduleReminders = async (
       if (fireAt.getTime() <= Date.now()) continue;
       await Notifications.scheduleNotificationAsync({
         identifier: `${PREFIX}${schedule.id}-once`,
-        content: { title: "BUZZ BASE", body },
+        content: { title: "BUZZ BASE", body, data: notificationData },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
           date: fireAt,

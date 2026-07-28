@@ -28,3 +28,12 @@ export const syncProStatus = async (): Promise<ProStatus> => {
   const response = await axiosInstance.post<ProStatus>("/pro/sync");
   return response.data;
 };
+
+/**
+ * Web(Stripe)加入者向けの解約申請。cancel_at_period_end で期限まで利用継続する。
+ * iOS/Android の IAP 加入には Stripe サブスクリプションが存在せず使えないため、
+ * subscription.platform === "web" のときのみ呼び出すこと。
+ */
+export const cancelWebSubscription = async (): Promise<void> => {
+  await axiosInstance.delete("/pro/subscription");
+};

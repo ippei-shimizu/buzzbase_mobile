@@ -4,11 +4,21 @@ import {
   achieveGoal,
   createGoal,
   deleteGoal,
+  getGoalBadges,
   getGoalHistory,
   getGoals,
   unachieveGoal,
   updateGoal,
 } from "../services/goalService";
+
+/** 達成バッジ一覧。FinalizeGoalsJobが目標達成時に付与したバッジを新しい順に返す。 */
+export const useGoalBadges = () => {
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["goalBadges"],
+    queryFn: getGoalBadges,
+  });
+  return { badges: data ?? [], isLoading, isError, refetch };
+};
 
 export const useGoals = () => {
   const { data, isLoading, isError, refetch } = useQuery({

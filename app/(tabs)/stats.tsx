@@ -1,6 +1,7 @@
 import type { StatsFilters as StatsFiltersType } from "../../types/profile";
 import type {
   BattingTrendGranularity,
+  EraTrendGranularity,
   PitcherFaceoff,
   PitchTypeRow,
   StatsPeriod,
@@ -610,6 +611,8 @@ export default function StatsScreen() {
   const pitcherAttributeSummary = usePitcherAttributeSummary(filters);
   const [battingTrendGranularity, setBattingTrendGranularity] =
     useState<BattingTrendGranularity>("game");
+  const [eraTrendGranularity, setEraTrendGranularity] =
+    useState<EraTrendGranularity>("month");
   const [seasonPaywallOpen, setSeasonPaywallOpen] = useState(false);
   const [comingSoonPaywallOpen, setComingSoonPaywallOpen] = useState(false);
   const battingTrend = useBattingTrend(filters, battingTrendGranularity);
@@ -642,6 +645,7 @@ export default function StatsScreen() {
     activeTab === "pitching",
     filters.startMonth,
     filters.endMonth,
+    eraTrendGranularity,
   );
   const isLoading =
     hitDirections.isLoading ||
@@ -1140,9 +1144,23 @@ export default function StatsScreen() {
         {/* Pitching Tab */}
         {activeTab === "pitching" && (
           <View style={styles.content}>
-            {eraTrend.data && eraTrend.data.length > 0 && (
+            {eraTrend.data && eraTrend.data.points.length > 0 && (
               <FetchingOverlay isFetching={eraTrend.isFetching}>
-                <EraTrendChart data={eraTrend.data} />
+                <EraTrendChart
+                  points={eraTrend.data.points}
+                  granularity={eraTrendGranularity}
+                  onGranularityChange={(next) => {
+                    // シーズン粒度は Pro 限定。無料は Paywall を出して切替を止める。
+                    if (
+                      next === "season" &&
+                      !hasEntitlement("season_transition_graph")
+                    ) {
+                      setSeasonPaywallOpen(true);
+                      return;
+                    }
+                    setEraTrendGranularity(next);
+                  }}
+                />
               </FetchingOverlay>
             )}
             <View style={styles.tableHeader}>
