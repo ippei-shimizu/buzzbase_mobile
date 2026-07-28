@@ -156,6 +156,7 @@ function RootLayoutInner() {
         <Stack.Screen name="(menu-set)" options={{ headerShown: false }} />
         <Stack.Screen name="(practice-menu)" options={{ headerShown: false }} />
         <Stack.Screen name="(goal)" options={{ headerShown: false }} />
+        <Stack.Screen name="(grass)" options={{ headerShown: false }} />
         <Stack.Screen name="(note)" options={{ headerShown: false }} />
         <Stack.Screen name="(records)" options={{ headerShown: false }} />
         <Stack.Screen name="(theme)" options={{ headerShown: false }} />
