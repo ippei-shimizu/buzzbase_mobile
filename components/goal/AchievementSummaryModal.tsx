@@ -19,7 +19,7 @@ import {
 
 /**
  * 月末に確定した目標の達成サマリーをアプリ起動時に一度だけモーダル表示する。
- * サーバーpushは使わず(#324方針)、端末内フラグ(SecureStore)で月ごとの表示済みを管理する。
+ * サーバーpushは使わず、端末内フラグ(SecureStore)で月ごとの表示済みを管理する。
  */
 export function AchievementSummaryModal() {
   const router = useRouter();
@@ -37,10 +37,14 @@ export function AchievementSummaryModal() {
     );
     if (finalizedInPeriod.length === 0) return;
 
+    let ignore = false;
     getLastShownPeriod().then((lastShown) => {
-      if (lastShown === targetPeriod) return;
+      if (ignore || lastShown === targetPeriod) return;
       setPeriod(targetPeriod);
     });
+    return () => {
+      ignore = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 初回のisLoading完了時のみ判定すればよい
   }, [isHistoryLoading, isBadgesLoading]);
 
