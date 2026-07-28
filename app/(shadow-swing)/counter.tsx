@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Speech from "expo-speech";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  AppState,
   BackHandler,
   View,
   Text,
@@ -17,6 +18,7 @@ import {
   withTiming,
 } from "react-native-reanimated";
 import { CircularTimer } from "@components/shadow-swing/CircularTimer";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { useShadowSwingMutations } from "@hooks/useShadowSwing";
 
 export default function ShadowSwingCounterScreen() {
@@ -30,6 +32,8 @@ export default function ShadowSwingCounterScreen() {
     voice: string;
   }>();
   const { completeSession } = useShadowSwingMutations();
+  const { hasEntitlement } = useEntitlement();
+  const canContinueInBackground = hasEntitlement("shadow_swing_background");
 
   const targetCount = Number(params.target) || 0;
   const intervalMs = (Number(params.interval) || 2) * 1000;
@@ -43,6 +47,8 @@ export default function ShadowSwingCounterScreen() {
   const [count, setCount] = useState(0);
   const [running, setRunning] = useState(true);
   const [elapsed, setElapsed] = useState(0);
+  const runningRef = useRef(running);
+  const backgroundedAtRef = useRef<number | null>(null);
   const finishedRef = useRef(false);
   const countRef = useRef(0);
 
@@ -71,6 +77,40 @@ export default function ShadowSwingCounterScreen() {
     if (useSound || useVoice)
       void setAudioModeAsync({ playsInSilentMode: true });
   }, [useSound, useVoice]);
+
+  useEffect(() => {
+    runningRef.current = running;
+  }, [running]);
+
+  // バックグラウンド遷移時の挙動をPro/無料で出し分ける。
+  // Pro: バックグラウンドに入っていた実時間を計測し、復帰時に本数・経過時間へ一括反映する
+  //     （JSタイマーはOSにより完全停止するため、実際にバックグラウンドで鳴動・カウントし続けるわけではない）。
+  // 無料: バックグラウンド遷移で自動的に一時停止する（手動の「再開」ボタンで再開）。
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "background" || nextState === "inactive") {
+        if (!runningRef.current) return;
+        if (canContinueInBackground) {
+          backgroundedAtRef.current = Date.now();
+        } else {
+          setRunning(false);
+        }
+        return;
+      }
+
+      if (nextState === "active" && backgroundedAtRef.current !== null) {
+        const elapsedMs = Date.now() - backgroundedAtRef.current;
+        backgroundedAtRef.current = null;
+        const catchUpSwings = Math.floor(elapsedMs / intervalMs);
+        if (catchUpSwings > 0) {
+          countRef.current += catchUpSwings;
+          setCount(countRef.current);
+        }
+        setElapsed((prev) => prev + Math.round(elapsedMs / 1000));
+      }
+    });
+    return () => subscription.remove();
+  }, [canContinueInBackground, intervalMs]);
 
   // 実行/一時停止に合わせて円形タイマーの針を開始・停止する。
   useEffect(() => {

@@ -156,6 +156,11 @@ export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     description:
       "音を出せない場所でもバイブレーションでインターバルを把握しながら素振りできます。",
   },
+  shadow_swing_background: {
+    title: "バックグラウンドでも継続実行",
+    description:
+      "画面ロックやアプリの切り替えで途切れず、素振りの本数と経過時間をそのまま継続できます。",
+  },
   unlimited_groups: {
     title: "グループを無制限に作成・参加",
     description:
@@ -217,6 +222,7 @@ export const FEATURE_COMPARISONS: Record<ProFeature, FeatureComparison> = {
   manual_metric_goals: { free: "✕", pro: "○" },
   shadow_swing_custom_interval: { free: "5〜10秒", pro: "1〜20秒" },
   shadow_swing_vibration: { free: "✕", pro: "○" },
+  shadow_swing_background: { free: "✕(一時停止)", pro: "○" },
   unlimited_groups: { free: "1件", pro: "無制限" },
   hit_direction_average: { free: "✕", pro: "○" },
   count_situation_average: { free: "✕", pro: "○" },
@@ -230,7 +236,7 @@ interface FeatureGroup {
   keys: ProFeature[];
 }
 
-// 「PRO でできること」表のグループ分け。PRO_FEATURES 全29項目を過不足なく1回ずつ含む
+// 「PRO でできること」表のグループ分け。PRO_FEATURES 全30項目を過不足なく1回ずつ含む
 // （テストで網羅性を担保。詳細は __tests__/PaywallModal.test.tsx）。
 // グループ名・アイコンはホーム画面の実際のセクション名・導線に合わせる
 // （例: PracticeToolsSection="練習ツール", ImprovementToolsSection の各ツール名）。
@@ -300,7 +306,11 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   {
     title: "練習ツール",
     icon: "timer-outline",
-    keys: ["shadow_swing_custom_interval", "shadow_swing_vibration"],
+    keys: [
+      "shadow_swing_custom_interval",
+      "shadow_swing_vibration",
+      "shadow_swing_background",
+    ],
   },
   {
     title: "継続",
