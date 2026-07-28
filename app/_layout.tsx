@@ -14,11 +14,16 @@ import {
   REVENUECAT_API_KEY_IOS,
 } from "@constants/revenueCat";
 import { usePushNotifications } from "@hooks/usePushNotifications";
+import { useSchedules } from "@hooks/useSchedules";
 import { useStoreReview } from "@hooks/useStoreReview";
 import { configureGoogleSignIn } from "@services/googleAuthService";
 import { configureRevenueCat } from "@services/revenueCatService";
+import { syncScheduleReminders } from "@services/scheduleReminderService";
+import { useAuthStore } from "@stores/authStore";
 import { posthog } from "@utils/posthog";
 import { queryClient } from "@utils/queryClient";
+
+const isExpoGo = Constants.appOwnership === "expo";
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
@@ -60,10 +65,27 @@ function ScreenTracker() {
   return null;
 }
 
+/**
+ * スケジュールの変更(作成/更新/削除/入退場)を端末のローカル通知へ反映する。
+ * ログイン中は常時マウントされ、useSchedulesのキャッシュがどの画面で
+ * 無効化されても再同期される(特定画面を開いた時だけ同期される問題を解消)。
+ */
+function ScheduleReminderSync() {
+  const { schedules } = useSchedules();
+
+  useEffect(() => {
+    if (isExpoGo) return;
+    void syncScheduleReminders(schedules);
+  }, [schedules]);
+
+  return null;
+}
+
 function RootLayoutInner() {
   usePushNotifications();
   const router = useRouter();
   const { initInstallDate, initPositiveEventCount } = useStoreReview();
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
   const handleDeepLink = useCallback(
     (url: string) => {
@@ -132,6 +154,7 @@ function RootLayoutInner() {
     <>
       <StatusBar style="light" />
       <ScreenTracker />
+      {isLoggedIn ? <ScheduleReminderSync /> : null}
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: "#2E2E2E" },
