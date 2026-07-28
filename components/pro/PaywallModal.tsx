@@ -228,7 +228,7 @@ export const FEATURE_COMPARISONS: Record<ProFeature, FeatureComparison> = {
   shadow_swing_custom_interval: { free: "5〜10秒", pro: "1〜20秒" },
   shadow_swing_vibration: { free: "✕", pro: "○" },
   shadow_swing_background: { free: "✕(一時停止)", pro: "○" },
-  schedule_calendar_full_history: { free: "直近月中心", pro: "全期間" },
+  schedule_calendar_full_history: { free: "前後3ヶ月", pro: "全期間" },
   unlimited_groups: { free: "1件", pro: "無制限" },
   hit_direction_average: { free: "✕", pro: "○" },
   count_situation_average: { free: "✕", pro: "○" },

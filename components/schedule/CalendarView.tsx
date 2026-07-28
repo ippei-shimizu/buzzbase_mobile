@@ -17,7 +17,7 @@ import { useCalendar } from "@hooks/usePlans";
 import { formatJaFullDate } from "@utils/formatDate";
 import { addDays, fromIsoDate, toIsoDate, todayIso } from "@utils/planDate";
 
-const FREE_CALENDAR_WINDOW_DAYS = 15;
+const FREE_CALENDAR_WINDOW_MONTHS = 3;
 
 type ViewMode = "month" | "week" | "day";
 
@@ -38,15 +38,24 @@ const shortMonthDay = (iso: string): string => {
   return `${date.getMonth() + 1}/${date.getDate()}`;
 };
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-/** 無料ユーザーの閲覧範囲(今日の前後15日)を外れているか。backのFREE_CALENDAR_WINDOW_DAYSと揃える。 */
+/** 無料ユーザーの閲覧範囲(今日の前後3ヶ月)を外れているか。backのFREE_CALENDAR_WINDOW_MONTHSと揃える。 */
 const isOutsideFreeWindow = (iso: string): boolean => {
-  const diffDays = Math.abs(
-    (fromIsoDate(iso).getTime() - fromIsoDate(todayIso()).getTime()) /
-      MS_PER_DAY,
+  const target = fromIsoDate(iso);
+  const today = fromIsoDate(todayIso());
+  const lowerBound = new Date(
+    today.getFullYear(),
+    today.getMonth() - FREE_CALENDAR_WINDOW_MONTHS,
+    today.getDate(),
   );
-  return diffDays > FREE_CALENDAR_WINDOW_DAYS;
+  const upperBound = new Date(
+    today.getFullYear(),
+    today.getMonth() + FREE_CALENDAR_WINDOW_MONTHS,
+    today.getDate(),
+  );
+  return (
+    target.getTime() < lowerBound.getTime() ||
+    target.getTime() > upperBound.getTime()
+  );
 };
 
 /**
@@ -200,7 +209,7 @@ export function CalendarView() {
         isOpen={paywallOpen}
         onClose={() => setPaywallOpen(false)}
         feature="schedule_calendar_full_history"
-        contextMessage="無料プランのカレンダーは直近月のみ閲覧できます"
+        contextMessage="無料プランのカレンダーは今日の前後3ヶ月のみ閲覧できます"
       />
     </View>
   );
