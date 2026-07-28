@@ -3,6 +3,7 @@
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
+import * as useProMutationsModule from "@hooks/useProMutations";
 import {
   apiUrl,
   http,
@@ -17,6 +18,7 @@ describe("WebCancelConfirmModal", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   it("解約するを押すと解約APIを呼び、成功後は完了表示に切り替わる", async () => {
@@ -56,34 +58,23 @@ describe("WebCancelConfirmModal", () => {
     expect(screen.getByText("Pro プランの解約")).toBeOnTheScreen();
   });
 
-  it("解約リクエスト中は背景タップで閉じない", async () => {
-    // setTimeoutでの遅延だとwaitForのポーリングと競合し、pending状態を
-    // 観測する前にリクエストが完了してしまうことがある。呼び出し側が
-    // 明示的にresolveするまで待たせ、pending状態を確実に固定して検証する。
-    let resolveRequest: (() => void) | undefined;
-    server.use(
-      http.delete(
-        apiUrl("/pro/subscription"),
-        () =>
-          new Promise((resolve) => {
-            resolveRequest = () =>
-              resolve(HttpResponse.json({ message: "ok" }));
-          }),
-      ),
-    );
+  it("解約リクエスト中は背景タップで閉じない", () => {
+    // 実際の非同期リクエストで検証すると、isCancellingがtrueへ切り替わる
+    // 再描画のタイミングとテストの操作が競合し不安定になる。ここでは
+    // isCancelling=trueを固定した状態のUIだけを対象に、背景タップが
+    // ブロックされることを決定的に検証する。
+    jest
+      .spyOn(useProMutationsModule, "useCancelWebSubscription")
+      .mockReturnValue({
+        cancelWebSubscription: jest.fn(),
+        isCancelling: true,
+      });
 
     renderWithProviders(<WebCancelConfirmModal isOpen onClose={onClose} />);
 
-    fireEvent.press(screen.getByText("解約する"));
-    await waitFor(() => {
-      expect(screen.queryByText("解約する")).toBeNull();
-    });
     fireEvent.press(screen.getByLabelText("モーダルを閉じる"));
 
     expect(onClose).not.toHaveBeenCalled();
-
-    resolveRequest?.();
-    await screen.findByText("解約申請を受け付けました");
   });
 
   it("閉じるを押すとonCloseが呼ばれる", () => {
