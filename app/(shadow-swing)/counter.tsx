@@ -32,8 +32,11 @@ export default function ShadowSwingCounterScreen() {
     voice: string;
   }>();
   const { completeSession } = useShadowSwingMutations();
-  const { hasEntitlement } = useEntitlement();
-  const canContinueInBackground = hasEntitlement("shadow_swing_background");
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
+  // ロード確定前にPro会員が一時停止させられるのを避けるため、setup.tsxの
+  // canVibration等と同じくisLoading中は許可側に倒す。
+  const canContinueInBackground =
+    isProLoading || hasEntitlement("shadow_swing_background");
 
   const targetCount = Number(params.target) || 0;
   const intervalMs = (Number(params.interval) || 2) * 1000;
@@ -88,7 +91,10 @@ export default function ShadowSwingCounterScreen() {
   // 無料: バックグラウンド遷移で自動的に一時停止する（手動の「再開」ボタンで再開）。
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "background" || nextState === "inactive") {
+      // "inactive"はコントロールセンター表示・着信バナー等の一時的な前面状態でJSは止まらないため、
+      // ここに含めるとタイマーが動き続けたまま二重にカウントしてしまう。実際にOSがJSを止める
+      // "background"だけを対象にする。
+      if (nextState === "background") {
         if (!runningRef.current) return;
         if (canContinueInBackground) {
           backgroundedAtRef.current = Date.now();
