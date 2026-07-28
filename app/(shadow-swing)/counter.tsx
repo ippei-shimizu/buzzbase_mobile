@@ -46,12 +46,16 @@ export default function ShadowSwingCounterScreen() {
   const sessionId = Number(params.sessionId);
 
   const whistle = useAudioPlayer(require("../../assets/sounds/whistle.wav"));
+  // 無音ループ再生。OSに「バックグラウンドでも音声再生中」と認識させ続けることで、
+  // JS自体がサスペンドされずカウント・バイブ・読み上げがバックグラウンドでも動き続ける
+  // (expo-audioのenableBackgroundPlayback設定により iOS は UIBackgroundModes=audio、
+  // Android はforeground serviceが既に有効になっている前提)。
+  const keepAlive = useAudioPlayer(require("../../assets/sounds/silence.wav"));
 
   const [count, setCount] = useState(0);
   const [running, setRunning] = useState(true);
   const [elapsed, setElapsed] = useState(0);
   const runningRef = useRef(running);
-  const backgroundedAtRef = useRef<number | null>(null);
   const finishedRef = useRef(false);
   const countRef = useRef(0);
 
@@ -76,47 +80,48 @@ export default function ShadowSwingCounterScreen() {
   }, []);
 
   // マナーモードでも音・読み上げが鳴るようにする（どちらかが有効なら設定）。
+  // Pro(shadow_swing_background)が実行中は、無音ループのバックグラウンド再生も
+  // 許可するモードに切り替える。
   useEffect(() => {
-    if (useSound || useVoice)
-      void setAudioModeAsync({ playsInSilentMode: true });
-  }, [useSound, useVoice]);
+    if (useSound || useVoice || canContinueInBackground) {
+      void setAudioModeAsync({
+        playsInSilentMode: true,
+        shouldPlayInBackground: canContinueInBackground,
+        interruptionMode: "mixWithOthers",
+      });
+    }
+  }, [useSound, useVoice, canContinueInBackground]);
 
   useEffect(() => {
     runningRef.current = running;
   }, [running]);
 
-  // バックグラウンド遷移時の挙動をPro/無料で出し分ける。
-  // Pro: バックグラウンドに入っていた実時間を計測し、復帰時に本数・経過時間へ一括反映する
-  //     （JSタイマーはOSにより完全停止するため、実際にバックグラウンドで鳴動・カウントし続けるわけではない）。
-  // 無料: バックグラウンド遷移で自動的に一時停止する（手動の「再開」ボタンで再開）。
+  // Pro(shadow_swing_background)は実行中ずっと無音ループを再生し続け、
+  // バックグラウンドでもカウント・バイブ・読み上げが止まらないようにする。
   useEffect(() => {
-    const subscription = AppState.addEventListener("change", (nextState) => {
-      // "inactive"はコントロールセンター表示・着信バナー等の一時的な前面状態でJSは止まらないため、
-      // ここに含めるとタイマーが動き続けたまま二重にカウントしてしまう。実際にOSがJSを止める
-      // "background"だけを対象にする。
-      if (nextState === "background") {
-        if (!runningRef.current) return;
-        if (canContinueInBackground) {
-          backgroundedAtRef.current = Date.now();
-        } else {
-          setRunning(false);
-        }
-        return;
-      }
+    if (!running || !canContinueInBackground) {
+      keepAlive.pause();
+      return;
+    }
+    keepAlive.loop = true;
+    keepAlive.volume = 0;
+    keepAlive.play();
+    return () => {
+      keepAlive.pause();
+    };
+  }, [running, canContinueInBackground, keepAlive]);
 
-      if (nextState === "active" && backgroundedAtRef.current !== null) {
-        const elapsedMs = Date.now() - backgroundedAtRef.current;
-        backgroundedAtRef.current = null;
-        const catchUpSwings = Math.floor(elapsedMs / intervalMs);
-        if (catchUpSwings > 0) {
-          countRef.current += catchUpSwings;
-          setCount(countRef.current);
-        }
-        setElapsed((prev) => prev + Math.round(elapsedMs / 1000));
+  // 無料ユーザーはバックグラウンド遷移で自動的に一時停止する（手動の「再開」ボタンで再開）。
+  // Proは無音ループでバックグラウンドでも実行を継続するため対象外。
+  useEffect(() => {
+    if (canContinueInBackground) return;
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "background" && runningRef.current) {
+        setRunning(false);
       }
     });
     return () => subscription.remove();
-  }, [canContinueInBackground, intervalMs]);
+  }, [canContinueInBackground]);
 
   // 実行/一時停止に合わせて円形タイマーの針を開始・停止する。
   useEffect(() => {
