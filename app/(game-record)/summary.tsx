@@ -6,9 +6,11 @@ import { Share, View } from "react-native";
 import { SummaryView } from "@components/game-record/SummaryView";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { BottomTabBar } from "@components/ui/BottomTabBar";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { usePlateAppearancesByGame } from "@hooks/usePlateAppearances";
 import { useStoreReview } from "@hooks/useStoreReview";
+import { showMatchSaveInterstitial } from "@services/interstitialAdService";
 import {
   trackGameRecordCompleted,
   trackGameRecordStepViewed,
@@ -26,6 +28,7 @@ export default function SummaryScreen() {
   const store = useGameRecordStore();
   const { incrementPositiveEvent, checkAndShowPrePrompt, requestNativeReview } =
     useStoreReview();
+  const { hasEntitlement } = useEntitlement();
   const [prePromptVisible, setPrePromptVisible] = useState(false);
   const sourceRef = useRef<PrePromptSource>("complete");
 
@@ -152,13 +155,15 @@ export default function SummaryScreen() {
 
     const shown = await tryShowPrePrompt("complete");
     if (shown) return;
+
+    await showMatchSaveInterstitial(hasEntitlement("no_ads"));
     router.replace({
       pathname: "/(tabs)/(game-results)",
       params: { tab: "list" },
     });
   };
 
-  const handleRecordNote = () => {
+  const handleRecordNote = async () => {
     // resetFlow() で store がクリアされる前に gameResultId を退避する。
     const gameResultId = store.gameResultId;
     if (!store.isEditMode) {
@@ -170,6 +175,7 @@ export default function SummaryScreen() {
     }
     resetFlow();
     invalidateGameResultRelated(queryClient);
+    await showMatchSaveInterstitial(hasEntitlement("no_ads"));
     router.replace({
       pathname: "/(note)/new",
       params: gameResultId ? { gameResultId: String(gameResultId) } : {},
