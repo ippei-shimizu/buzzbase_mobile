@@ -21,6 +21,7 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
+import { AppBannerAd } from "@components/ads/AppBannerAd";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { FilterResetButton } from "@components/stats/FilterResetButton";
@@ -922,6 +923,7 @@ export default function GameResultsScreen() {
         </View>
       )}
 
+      <AppBannerAd />
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}
