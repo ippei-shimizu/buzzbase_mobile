@@ -878,7 +878,7 @@ export default function StatsScreen() {
               </FetchingOverlay>
             )}
             {/* 4. BattingTrendChart */}
-            {battingTrend.data && (
+            {battingTrend.data && battingTrend.data.points && (
               <FetchingOverlay isFetching={battingTrend.isFetching}>
                 <BattingTrendChart
                   points={battingTrend.data.points}
@@ -1144,25 +1144,27 @@ export default function StatsScreen() {
         {/* Pitching Tab */}
         {activeTab === "pitching" && (
           <View style={styles.content}>
-            {eraTrend.data && eraTrend.data.points.length > 0 && (
-              <FetchingOverlay isFetching={eraTrend.isFetching}>
-                <EraTrendChart
-                  points={eraTrend.data.points}
-                  granularity={eraTrendGranularity}
-                  onGranularityChange={(next) => {
-                    // シーズン粒度は Pro 限定。無料は Paywall を出して切替を止める。
-                    if (
-                      next === "season" &&
-                      !hasEntitlement("season_transition_graph")
-                    ) {
-                      setSeasonPaywallOpen(true);
-                      return;
-                    }
-                    setEraTrendGranularity(next);
-                  }}
-                />
-              </FetchingOverlay>
-            )}
+            {eraTrend.data &&
+              eraTrend.data.points &&
+              eraTrend.data.points.length > 0 && (
+                <FetchingOverlay isFetching={eraTrend.isFetching}>
+                  <EraTrendChart
+                    points={eraTrend.data.points}
+                    granularity={eraTrendGranularity}
+                    onGranularityChange={(next) => {
+                      // シーズン粒度は Pro 限定。無料は Paywall を出して切替を止める。
+                      if (
+                        next === "season" &&
+                        !hasEntitlement("season_transition_graph")
+                      ) {
+                        setSeasonPaywallOpen(true);
+                        return;
+                      }
+                      setEraTrendGranularity(next);
+                    }}
+                  />
+                </FetchingOverlay>
+              )}
             <View style={styles.tableHeader}>
               <Text style={styles.tableHeaderLabel}>投球成績</Text>
               <PeriodToggle
