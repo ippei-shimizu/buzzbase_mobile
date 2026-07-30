@@ -25,7 +25,8 @@ export function AppBannerAd({ placement }: AppBannerAdProps) {
       unitId={unitId}
       // 固定320x50のBANNERだと横幅の広い端末で画面いっぱいにならないため、
       // 画面幅に応じて自動調整されるアンカー型アダプティブバナーを使う。
-      size={BannerAdSize.LARGE_ANCHORED_ADAPTIVE_BANNER}
+      // LARGE版は高さも大きく画面を圧迫するため、通常サイズの方を使う。
+      size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
       requestOptions={{ requestNonPersonalizedAdsOnly: false }}
     />
   );
