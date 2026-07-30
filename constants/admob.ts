@@ -46,6 +46,14 @@ export const bannerAdUnitIdFor = (
   return Platform.OS === "ios" ? ids.ios : ids.android;
 };
 
+// ボトムナビ直上に全画面共通で常時表示するバナー。画面ごとのバナー
+// (bannerAdUnitIdFor)とは別に、スクロール位置に関わらず常に見える枠として使う。
+export const BOTTOM_NAV_BANNER_AD_UNIT_ID = __DEV__
+  ? TestIds.BANNER
+  : Platform.OS === "ios"
+    ? process.env.EXPO_PUBLIC_ADMOB_BANNER_UNIT_ID_BOTTOM_NAV_IOS
+    : process.env.EXPO_PUBLIC_ADMOB_BANNER_UNIT_ID_BOTTOM_NAV_ANDROID;
+
 export const INTERSTITIAL_AD_UNIT_ID = __DEV__
   ? TestIds.INTERSTITIAL
   : Platform.OS === "ios"

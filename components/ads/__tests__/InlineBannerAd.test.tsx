@@ -1,5 +1,5 @@
 /**
- * 全画面共通バナー広告(Banner - Bottom Nav)のPro非表示判定の振る舞いテスト。
+ * 画面専用バナー広告(スクロール末尾)のPro非表示判定の振る舞いテスト。
  */
 import { screen, waitFor } from "@testing-library/react-native";
 import {
@@ -10,9 +10,9 @@ import {
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
 import { server } from "../../../jest-setup-msw";
 import { DEFAULT_PRO_STATUS } from "../../../types/pro";
-import { AppBannerAd } from "../AppBannerAd";
+import { InlineBannerAd } from "../InlineBannerAd";
 
-describe("AppBannerAd", () => {
+describe("InlineBannerAd", () => {
   it("無料ユーザーにはバナー広告を表示する", async () => {
     server.use(
       http.get(apiUrl("/pro/status"), () =>
@@ -20,7 +20,7 @@ describe("AppBannerAd", () => {
       ),
     );
 
-    renderWithProviders(<AppBannerAd />);
+    renderWithProviders(<InlineBannerAd placement="stats" />);
 
     expect(await screen.findByLabelText("mock-banner-ad")).toBeOnTheScreen();
   });
@@ -40,7 +40,7 @@ describe("AppBannerAd", () => {
       ),
     );
 
-    renderWithProviders(<AppBannerAd />);
+    renderWithProviders(<InlineBannerAd placement="stats" />);
 
     await waitFor(() => {
       expect(screen.queryByLabelText("mock-banner-ad")).toBeNull();

@@ -1,28 +1,23 @@
-import type { BannerPlacement } from "@constants/admob";
 import { BannerAd, BannerAdSize } from "react-native-google-mobile-ads";
-import { bannerAdUnitIdFor } from "@constants/admob";
+import { BOTTOM_NAV_BANNER_AD_UNIT_ID } from "@constants/admob";
 import { useEntitlement } from "@hooks/useEntitlement";
-
-interface AppBannerAdProps {
-  /** 画面ごとに広告ユニットを分けるための識別子。 */
-  placement: BannerPlacement;
-}
 
 /**
  * ボトムナビの5タブ(Home/試合結果/成績/グループ/マイページ)のルート画面
- * 直下にのみ配置するバナー広告。画面ごとに別の広告ユニットIDを使う。
- * Pro加入者(no_ads entitlement)には表示しない。ネストされた画面
- * (詳細・入力・編集等)には配置しない方針のため、このコンポーネント自体を
- * 各ルート画面以外にimportしないこと。
+ * 直下に、全画面共通で常時表示するバナー広告(Banner - Bottom Nav)。
+ * スクロール位置に関わらず常に見える固定枠として、各画面のスクロール領域
+ * (flex:1)の直後に配置する。Pro加入者(no_ads entitlement)には表示しない。
+ * ネストされた画面(詳細・入力・編集等)には配置しない方針のため、この
+ * コンポーネント自体を各ルート画面以外にimportしないこと。
+ * 画面ごとの広告は`InlineBannerAd`を使う。
  */
-export function AppBannerAd({ placement }: AppBannerAdProps) {
+export function AppBannerAd() {
   const { hasEntitlement } = useEntitlement();
-  const unitId = bannerAdUnitIdFor(placement);
-  if (hasEntitlement("no_ads") || !unitId) return null;
+  if (hasEntitlement("no_ads") || !BOTTOM_NAV_BANNER_AD_UNIT_ID) return null;
 
   return (
     <BannerAd
-      unitId={unitId}
+      unitId={BOTTOM_NAV_BANNER_AD_UNIT_ID}
       // 固定320x50のBANNERだと横幅の広い端末で画面いっぱいにならないため、
       // 画面幅に応じて自動調整されるアンカー型アダプティブバナーを使う。
       // LARGE版は高さも大きく画面を圧迫するため、通常サイズの方を使う。
