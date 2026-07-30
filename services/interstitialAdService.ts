@@ -13,6 +13,9 @@ const KEYS = {
 const GRACE_PERIOD_DAYS = 7;
 const GRACE_PERIOD_LAUNCH_COUNT = 5;
 const DAILY_LIMIT = 1;
+// ロード/表示のいずれのイベントも発火しないケース(ネットワーク異常等)で
+// 保存完了後の画面遷移が無期限にブロックされないためのフォールバック。
+const LOAD_TIMEOUT_MS = 10_000;
 
 const todayString = (): string => new Date().toISOString().slice(0, 10);
 
@@ -23,8 +26,9 @@ const daysSince = (dateString: string | null): number => {
 };
 
 /**
- * インストール日の記録と起動回数のカウントアップ。app/_layout.tsxから
- * アプリ起動のたびに1回だけ呼ぶ。
+ * インストール日の記録と起動回数のカウントアップ。app/(tabs)/_layout.tsxの
+ * ログイン確定時(isLoggedIn===true)に呼ぶ。ログアウト→再ログインを同一
+ * セッション内で繰り返すとその都度カウントされる想定(厳密な起動回数ではない)。
  */
 export const trackAppLaunchForAds = async (): Promise<void> => {
   const existing = await SecureStore.getItemAsync(KEYS.INSTALL_DATE);
@@ -81,10 +85,20 @@ export const showMatchSaveInterstitial = async (
   );
 
   await new Promise<void>((resolve) => {
+    let settled = false;
     const unsubscribers: (() => void)[] = [];
     const cleanup = () => {
+      clearTimeout(timeoutId);
       unsubscribers.forEach((unsubscribe) => unsubscribe());
     };
+    const settleOnce = (afterResolve?: () => Promise<void>) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      (afterResolve?.() ?? Promise.resolve()).finally(resolve);
+    };
+
+    const timeoutId = setTimeout(() => settleOnce(), LOAD_TIMEOUT_MS);
 
     unsubscribers.push(
       interstitial.addAdEventListener(AdEventType.LOADED, () => {
@@ -93,14 +107,12 @@ export const showMatchSaveInterstitial = async (
     );
     unsubscribers.push(
       interstitial.addAdEventListener(AdEventType.CLOSED, () => {
-        cleanup();
-        recordShown().finally(resolve);
+        settleOnce(recordShown);
       }),
     );
     unsubscribers.push(
       interstitial.addAdEventListener(AdEventType.ERROR, () => {
-        cleanup();
-        resolve();
+        settleOnce();
       }),
     );
 
