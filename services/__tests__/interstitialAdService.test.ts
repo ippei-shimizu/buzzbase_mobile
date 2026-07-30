@@ -1,43 +1,63 @@
 /**
  * 試合記録保存後インタースティシャル広告の振る舞いテスト。
  * 猶予期間・1日1回上限・Pro加入者の非表示判定を検証する。
- * react-native-google-mobile-adsはこのファイル専用にローカルモックし、
- * イベント発火を手動でシミュレートする。
+ *
+ * react-native-google-mobile-adsはこのファイル専用にローカルモックする。
+ * jest.mock(...)のファクトリはモジュールのrequire解決時に呼ばれるため、
+ * ファクトリ外側で宣言したconstを参照すると初期化前に読まれることがある
+ * (jest.mockはjest.fn/importより先にホイストされるが、周囲のconst宣言は
+ * ホイストされない)。そのため、モックの状態は全てファクトリ内で完結させ、
+ * テスト側からは`InterstitialAd.createForAdRequest`のmock.resultsを
+ * 経由して生成済みインスタンスを取得する。
  */
 import * as SecureStore from "expo-secure-store";
+import { InterstitialAd } from "react-native-google-mobile-ads";
 import {
   showMatchSaveInterstitial,
   trackAppLaunchForAds,
 } from "../interstitialAdService";
 
-const mockListeners: Record<string, (() => void)[]> = {};
-const mockLoad = jest.fn();
-const mockShow = jest.fn();
-const mockCreateForAdRequest = jest.fn(() => ({
-  addAdEventListener: (type: string, callback: () => void) => {
-    mockListeners[type] = [...(mockListeners[type] ?? []), callback];
-    return () => {
-      mockListeners[type] = (mockListeners[type] ?? []).filter(
-        (registered) => registered !== callback,
-      );
-    };
-  },
-  load: mockLoad,
-  show: mockShow,
-}));
+interface MockInterstitialInstance {
+  addAdEventListener: jest.Mock;
+  load: jest.Mock;
+  show: jest.Mock;
+  fireEvent: (type: "loaded" | "closed" | "error") => void;
+}
 
 jest.mock("react-native-google-mobile-ads", () => ({
   AdEventType: { LOADED: "loaded", CLOSED: "closed", ERROR: "error" },
-  InterstitialAd: { createForAdRequest: mockCreateForAdRequest },
   TestIds: {
     BANNER: "test-banner-unit-id",
     INTERSTITIAL: "test-interstitial-unit-id",
   },
+  InterstitialAd: {
+    createForAdRequest: jest.fn(() => {
+      const listeners: Record<string, (() => void)[]> = {};
+      return {
+        addAdEventListener: jest.fn((type: string, callback: () => void) => {
+          listeners[type] = [...(listeners[type] ?? []), callback];
+          return () => {
+            listeners[type] = (listeners[type] ?? []).filter(
+              (registered) => registered !== callback,
+            );
+          };
+        }),
+        load: jest.fn(),
+        show: jest.fn().mockResolvedValue(undefined),
+        fireEvent: (type: string) => {
+          (listeners[type] ?? []).forEach((callback) => callback());
+        },
+      };
+    }),
+  },
 }));
 
-const fireAdEvent = (type: "loaded" | "closed" | "error") => {
-  (mockListeners[type] ?? []).forEach((callback) => callback());
-};
+const mockCreateForAdRequest = InterstitialAd.createForAdRequest as jest.Mock;
+
+const latestInstance = (): MockInterstitialInstance =>
+  mockCreateForAdRequest.mock.results[
+    mockCreateForAdRequest.mock.results.length - 1
+  ].value as MockInterstitialInstance;
 
 // SecureStoreの複数回await解決を待つため、マイクロタスク数に依存せず
 // 実タイマー(setTimeout 0)でポーリングする。
@@ -69,7 +89,6 @@ const daysAgoIso = (days: number): string => {
 describe("showMatchSaveInterstitial", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    for (const key of Object.keys(mockListeners)) delete mockListeners[key];
   });
 
   it("Pro加入者(no_ads entitlement)には表示しない", async () => {
@@ -127,14 +146,16 @@ describe("showMatchSaveInterstitial", () => {
     });
 
     const resultPromise = showMatchSaveInterstitial(false);
-    await waitUntil(() => mockLoad.mock.calls.length > 0);
-    fireAdEvent("loaded");
-    await waitUntil(() => mockShow.mock.calls.length > 0);
-    fireAdEvent("closed");
+    await waitUntil(() => mockCreateForAdRequest.mock.results.length > 0);
+    const instance = latestInstance();
+    await waitUntil(() => instance.load.mock.calls.length > 0);
+    instance.fireEvent("loaded");
+    await waitUntil(() => instance.show.mock.calls.length > 0);
+    instance.fireEvent("closed");
     await resultPromise;
 
-    expect(mockLoad).toHaveBeenCalled();
-    expect(mockShow).toHaveBeenCalled();
+    expect(instance.load).toHaveBeenCalled();
+    expect(instance.show).toHaveBeenCalled();
     expect(getSecureStore().setItemAsync).toHaveBeenCalledWith(
       "admob_interstitial_shown_count_today",
       "1",
