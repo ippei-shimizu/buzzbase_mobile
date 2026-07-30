@@ -12,8 +12,12 @@ import { useEntitlement } from "@hooks/useEntitlement";
  * 画面ごとの広告は`InlineBannerAd`を使う。
  */
 export function AppBannerAd() {
-  const { hasEntitlement } = useEntitlement();
-  if (hasEntitlement("no_ads") || !BOTTOM_NAV_BANNER_AD_UNIT_ID) return null;
+  const { hasEntitlement, isLoading } = useEntitlement();
+  // Pro状態確定前はhasEntitlementが常にfalse(無料扱い)になるため、
+  // isLoading中も広告を出さないことでPro加入者への一瞬の広告フラッシュを防ぐ。
+  if (isLoading || hasEntitlement("no_ads") || !BOTTOM_NAV_BANNER_AD_UNIT_ID) {
+    return null;
+  }
 
   return (
     <BannerAd
@@ -22,6 +26,10 @@ export function AppBannerAd() {
       // 画面幅に応じて自動調整されるアンカー型アダプティブバナーを使う。
       // LARGE版は高さも大きく画面を圧迫するため、通常サイズの方を使う。
       size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+      // ATT拒否時はiOS側がIDFAアクセス自体をブロックするため、この値に
+      // 関わらずGoogle側で非パーソナライズ配信にフォールバックする。ターゲットは
+      // 現状日本国内が主軸でEEA/GDPR圏のUMP同意管理は対象外のため、ATTの
+      // 許諾結果をここに反映する対応は見送っている(EEA展開時に要再検討)。
       requestOptions={{ requestNonPersonalizedAdsOnly: false }}
     />
   );
