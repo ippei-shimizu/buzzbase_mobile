@@ -29,6 +29,10 @@ const mockCreateForAdRequest = jest.fn(() => ({
 jest.mock("react-native-google-mobile-ads", () => ({
   AdEventType: { LOADED: "loaded", CLOSED: "closed", ERROR: "error" },
   InterstitialAd: { createForAdRequest: mockCreateForAdRequest },
+  TestIds: {
+    BANNER: "test-banner-unit-id",
+    INTERSTITIAL: "test-interstitial-unit-id",
+  },
 }));
 
 const fireAdEvent = (type: "loaded" | "closed" | "error") => {
