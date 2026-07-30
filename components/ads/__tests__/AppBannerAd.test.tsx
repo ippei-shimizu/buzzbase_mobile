@@ -20,7 +20,7 @@ describe("AppBannerAd", () => {
       ),
     );
 
-    renderWithProviders(<AppBannerAd />);
+    renderWithProviders(<AppBannerAd placement="home" />);
 
     expect(await screen.findByLabelText("mock-banner-ad")).toBeOnTheScreen();
   });
@@ -40,7 +40,7 @@ describe("AppBannerAd", () => {
       ),
     );
 
-    renderWithProviders(<AppBannerAd />);
+    renderWithProviders(<AppBannerAd placement="home" />);
 
     await waitFor(() => {
       expect(screen.queryByLabelText("mock-banner-ad")).toBeNull();

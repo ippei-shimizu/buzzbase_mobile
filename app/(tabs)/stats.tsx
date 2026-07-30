@@ -1252,7 +1252,7 @@ export default function StatsScreen() {
         </Pressable>
       )}
 
-      <AppBannerAd />
+      <AppBannerAd placement="stats" />
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}

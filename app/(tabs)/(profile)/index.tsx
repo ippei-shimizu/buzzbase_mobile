@@ -475,7 +475,7 @@ export default function ProfileScreen() {
           </View>
         </ScrollView>
 
-        <AppBannerAd />
+        <AppBannerAd placement="profile" />
         <GlobalMenuOverlay
           visible={menuVisible}
           opacity={menuOpacity}
@@ -658,7 +658,7 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
-      <AppBannerAd />
+      <AppBannerAd placement="profile" />
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}

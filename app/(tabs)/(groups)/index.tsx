@@ -129,7 +129,7 @@ export default function GroupsTabScreen() {
           />
         }
       />
-      <AppBannerAd />
+      <AppBannerAd placement="groups" />
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}

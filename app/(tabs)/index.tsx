@@ -52,7 +52,7 @@ export default function HomeScreen() {
         onSelect={setActiveSegment}
       />
       {activeSegment === 0 ? <ActivityView /> : <DashboardView />}
-      <AppBannerAd />
+      <AppBannerAd placement="home" />
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}

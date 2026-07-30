@@ -923,7 +923,7 @@ export default function GameResultsScreen() {
         </View>
       )}
 
-      <AppBannerAd />
+      <AppBannerAd placement="game_results" />
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}
