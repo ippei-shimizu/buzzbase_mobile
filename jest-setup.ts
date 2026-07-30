@@ -206,7 +206,10 @@ jest.mock("react-native-google-mobile-ads", () => {
         ...props,
         accessibilityLabel: "mock-banner-ad",
       }),
-    BannerAdSize: { BANNER: "BANNER" },
+    BannerAdSize: {
+      BANNER: "BANNER",
+      LARGE_ANCHORED_ADAPTIVE_BANNER: "LARGE_ANCHORED_ADAPTIVE_BANNER",
+    },
     TestIds: {
       BANNER: "test-banner-unit-id",
       INTERSTITIAL: "test-interstitial-unit-id",
