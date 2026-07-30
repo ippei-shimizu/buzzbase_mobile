@@ -153,6 +153,8 @@ export default function SummaryScreen() {
     resetFlow();
     invalidateGameResultRelated(queryClient);
 
+    // ストアレビュー促進プロンプトとインタースティシャル広告を同時に出すと
+    // 割り込みが二重になるため、プロンプトが出た場合は広告を出さずに優先する。
     const shown = await tryShowPrePrompt("complete");
     if (shown) return;
 
