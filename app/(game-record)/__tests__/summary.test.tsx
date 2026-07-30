@@ -47,9 +47,11 @@ describe("SummaryScreen", () => {
     );
     fireEvent.press(screen.getByText("野球ノートを記録する"));
 
-    expect(getRouterSpies().replace).toHaveBeenCalledWith({
-      pathname: "/(note)/new",
-      params: { gameResultId: "123" },
+    await waitFor(() => {
+      expect(getRouterSpies().replace).toHaveBeenCalledWith({
+        pathname: "/(note)/new",
+        params: { gameResultId: "123" },
+      });
     });
   });
 });

@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { AppBannerAd } from "@components/ads/AppBannerAd";
+import { InlineBannerAd } from "@components/ads/InlineBannerAd";
 import { GroupListCard } from "@components/groups/GroupListCard";
 import {
   GlobalMenuButton,
@@ -127,7 +129,9 @@ export default function GroupsTabScreen() {
             tintColor="#d08000"
           />
         }
+        ListFooterComponent={<InlineBannerAd placement="groups" />}
       />
+      <AppBannerAd />
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}

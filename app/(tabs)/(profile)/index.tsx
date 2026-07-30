@@ -16,6 +16,8 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
+import { AppBannerAd } from "@components/ads/AppBannerAd";
+import { InlineBannerAd } from "@components/ads/InlineBannerAd";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
@@ -471,9 +473,11 @@ export default function ProfileScreen() {
                 }
               />
             )}
+            <InlineBannerAd placement="profile" />
           </View>
         </ScrollView>
 
+        <AppBannerAd />
         <GlobalMenuOverlay
           visible={menuVisible}
           opacity={menuOpacity}
@@ -653,9 +657,11 @@ export default function ProfileScreen() {
               </>
             )}
           </View>
+          <InlineBannerAd placement="profile" />
         </View>
       </ScrollView>
 
+      <AppBannerAd />
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}

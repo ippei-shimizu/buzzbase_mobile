@@ -8,6 +8,7 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import { InlineBannerAd } from "@components/ads/InlineBannerAd";
 import { BackToTopButton } from "@components/ui/BackToTopButton";
 import { useBackToTop } from "@hooks/useBackToTop";
 import { useInviteCardDismissal } from "@hooks/useInviteCardDismissal";
@@ -126,6 +127,7 @@ export const DashboardContent = ({
           onCreateGroup={handleCreateGroup}
           onJoinGroup={handleJoinGroup}
         />
+        <InlineBannerAd placement="home" />
       </ScrollView>
       <BackToTopButton visible={showBackToTop} onPress={scrollToTop} />
     </View>

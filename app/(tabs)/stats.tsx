@@ -23,6 +23,8 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
+import { AppBannerAd } from "@components/ads/AppBannerAd";
+import { InlineBannerAd } from "@components/ads/InlineBannerAd";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellCard } from "@components/pro/ProUpsellCard";
 import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
@@ -1238,6 +1240,7 @@ export default function StatsScreen() {
             <View style={styles.tableBottomSpacer} />
           </View>
         )}
+        <InlineBannerAd placement="stats" />
       </ScrollView>
 
       {showBackToTop && (
@@ -1251,6 +1254,7 @@ export default function StatsScreen() {
         </Pressable>
       )}
 
+      <AppBannerAd />
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}

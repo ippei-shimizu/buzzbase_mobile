@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useCallback, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { InlineBannerAd } from "@components/ads/InlineBannerAd";
 import { BackToTopButton } from "@components/ui/BackToTopButton";
 import { useBackToTop } from "@hooks/useBackToTop";
 import { CurrentThemeSection } from "./sections/CurrentThemeSection";
@@ -83,6 +84,7 @@ export function ActivityView() {
         <ImprovementToolsSection />
         <MonthlySummarySection />
         <RecentPracticeSection />
+        <InlineBannerAd placement="home" />
       </ScrollView>
       <BackToTopButton visible={showBackToTop} onPress={scrollToTop} />
     </View>

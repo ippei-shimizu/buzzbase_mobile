@@ -194,3 +194,51 @@ jest.mock("react-native-video-trim", () => ({
     onError: jest.fn(() => ({ remove: jest.fn() })),
   },
 }));
+
+// react-native-google-mobile-ads: バナーはダミーViewを描画し、
+// インタースティシャルはイベント発火無しの静的モック（個別テストでjest.doMockして上書き可能）。
+jest.mock("react-native-google-mobile-ads", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  return {
+    BannerAd: (props: Record<string, unknown>) =>
+      React.createElement(View, {
+        ...props,
+        accessibilityLabel: "mock-banner-ad",
+      }),
+    BannerAdSize: {
+      BANNER: "BANNER",
+      ANCHORED_ADAPTIVE_BANNER: "ANCHORED_ADAPTIVE_BANNER",
+      LARGE_ANCHORED_ADAPTIVE_BANNER: "LARGE_ANCHORED_ADAPTIVE_BANNER",
+      MEDIUM_RECTANGLE: "MEDIUM_RECTANGLE",
+    },
+    TestIds: {
+      BANNER: "test-banner-unit-id",
+      INTERSTITIAL: "test-interstitial-unit-id",
+    },
+    AdEventType: { LOADED: "loaded", CLOSED: "closed", ERROR: "error" },
+    InterstitialAd: {
+      createForAdRequest: jest.fn(() => ({
+        addAdEventListener: jest.fn(() => jest.fn()),
+        load: jest.fn(),
+        show: jest.fn().mockResolvedValue(undefined),
+      })),
+    },
+  };
+});
+
+// expo-tracking-transparency: ATTダイアログはネイティブUIのため、常に許可済みとして返す。
+jest.mock("expo-tracking-transparency", () => ({
+  requestTrackingPermissionsAsync: jest.fn().mockResolvedValue({
+    status: "granted",
+    granted: true,
+    canAskAgain: false,
+    expires: "never",
+  }),
+  getTrackingPermissionsAsync: jest.fn().mockResolvedValue({
+    status: "granted",
+    granted: true,
+    canAskAgain: false,
+    expires: "never",
+  }),
+}));

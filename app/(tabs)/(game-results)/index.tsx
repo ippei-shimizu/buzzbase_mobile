@@ -21,6 +21,8 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
+import { AppBannerAd } from "@components/ads/AppBannerAd";
+import { InlineBannerAd } from "@components/ads/InlineBannerAd";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { FilterResetButton } from "@components/stats/FilterResetButton";
@@ -857,6 +859,7 @@ export default function GameResultsScreen() {
               <GameResultSummary summary={gameSummary.data} />
             </View>
           ) : null}
+          <InlineBannerAd placement="game_results" />
         </ScrollView>
       )}
 
@@ -908,20 +911,24 @@ export default function GameResultsScreen() {
               <Text style={styles.emptyText}>試合結果がありません</Text>
             }
             ListFooterComponent={
-              pagination ? (
-                <GamePagination
-                  currentPage={pagination.current_page}
-                  totalPages={pagination.total_pages}
-                  totalCount={pagination.total_count}
-                  perPage={pagination.per_page}
-                  onPageChange={handlePageChange}
-                />
-              ) : null
+              <>
+                {pagination ? (
+                  <GamePagination
+                    currentPage={pagination.current_page}
+                    totalPages={pagination.total_pages}
+                    totalCount={pagination.total_count}
+                    perPage={pagination.per_page}
+                    onPageChange={handlePageChange}
+                  />
+                ) : null}
+                <InlineBannerAd placement="game_results" />
+              </>
             }
           />
         </View>
       )}
 
+      <AppBannerAd />
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}

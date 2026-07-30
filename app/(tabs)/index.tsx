@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import React, { useLayoutEffect, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppBannerAd } from "@components/ads/AppBannerAd";
 import { NotificationBell } from "@components/dashboard/NotificationBell";
 import { AchievementSummaryModal } from "@components/goal/AchievementSummaryModal";
 import { ActivityView } from "@components/home/ActivityView";
@@ -51,6 +52,7 @@ export default function HomeScreen() {
         onSelect={setActiveSegment}
       />
       {activeSegment === 0 ? <ActivityView /> : <DashboardView />}
+      <AppBannerAd />
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}
