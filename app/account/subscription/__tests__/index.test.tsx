@@ -34,10 +34,19 @@ const getRouterSpies = (): RouterSpies => {
   return m.__routerSpies;
 };
 
+const getRedirectSpy = (): jest.Mock => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const m = require("expo-router") as { __redirectSpy: jest.Mock };
+  return m.__redirectSpy;
+};
+
 const useFeatureFlagMock = useFeatureFlag as jest.Mock;
 const useProStatusMock = useProStatus as jest.Mock;
 
-const stubProStatus = (overrides: Partial<ProStatus> = {}) => {
+const stubProStatus = (
+  overrides: Partial<ProStatus> = {},
+  hookOverrides: { isError?: boolean; refetch?: jest.Mock } = {},
+) => {
   useProStatusMock.mockReturnValue({
     proStatus: { ...DEFAULT_PRO_STATUS, ...overrides },
     isPro: false,
@@ -46,6 +55,7 @@ const stubProStatus = (overrides: Partial<ProStatus> = {}) => {
     error: null,
     refetch: jest.fn(),
     isRefreshing: false,
+    ...hookOverrides,
   });
 };
 
@@ -54,14 +64,40 @@ describe("SubscriptionScreen", () => {
     jest.clearAllMocks();
   });
 
-  it("pro_features=false なら / にリダイレクト（状態取得しない）", () => {
+  it("pro_features=false なら / にリダイレクトし、画面内容を描画しない", () => {
     useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: false });
     stubProStatus();
 
-    renderWithProviders(<SubscriptionScreen />);
+    const { queryByLabelText } = renderWithProviders(<SubscriptionScreen />);
 
-    // Redirect 自体は描画されるが、router.push は呼ばれない
-    expect(getRouterSpies().push).not.toHaveBeenCalled();
+    expect(getRedirectSpy()).toHaveBeenCalledWith("/");
+    expect(queryByLabelText("Pro に加入する")).toBeNull();
+  });
+
+  it("flag 取得中はローディング表示し、リダイレクトも画面描画もしない", () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: true });
+    stubProStatus();
+
+    const { queryByLabelText } = renderWithProviders(<SubscriptionScreen />);
+
+    expect(getRedirectSpy()).not.toHaveBeenCalled();
+    expect(queryByLabelText("Pro に加入する")).toBeNull();
+  });
+
+  it("状態取得エラー時は「未加入」と誤表示せず、エラーと再試行ボタンを出す", () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    const refetch = jest.fn();
+    stubProStatus({}, { isError: true, refetch });
+
+    const { getByText, getByLabelText, queryByLabelText } = renderWithProviders(
+      <SubscriptionScreen />,
+    );
+
+    expect(getByText("状態の取得に失敗しました")).toBeTruthy();
+    expect(queryByLabelText("Pro に加入する")).toBeNull();
+
+    fireEvent.press(getByLabelText("再試行"));
+    expect(refetch).toHaveBeenCalled();
   });
 
   it("free 状態のとき「Pro に加入する」ボタンを表示、タップで /pro に push", () => {

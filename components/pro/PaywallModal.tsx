@@ -1,10 +1,9 @@
 import type { Feature, ProFeature } from "../../types/pro";
-import type { PACKAGE_TYPE, PurchasesOffering } from "react-native-purchases";
 import { Ionicons } from "@expo/vector-icons";
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -15,6 +14,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  PURCHASES_ERROR_CODE,
+  type PACKAGE_TYPE,
+  type PurchasesOffering,
+} from "react-native-purchases";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { syncProStatus } from "@services/proService";
 import {
@@ -410,8 +414,21 @@ export function PaywallModal({
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(
     null,
   );
-  const [purchasing, setPurchasing] = useState(false);
-  const [restoring, setRestoring] = useState(false);
+  // 多重起動の判定は、レンダーを跨がず同期的に読める ref で行う。課金・復元は
+  // 非冪等な操作のため、state の反映タイミングに依存させない。UI 表示用の state は
+  // ref と常に同時更新するので、呼び出し側は従来どおり setPurchasing / setRestoring を使う。
+  const purchasingRef = useRef(false);
+  const restoringRef = useRef(false);
+  const [purchasing, setPurchasingState] = useState(false);
+  const [restoring, setRestoringState] = useState(false);
+  const setPurchasing = (value: boolean) => {
+    purchasingRef.current = value;
+    setPurchasingState(value);
+  };
+  const setRestoring = (value: boolean) => {
+    restoringRef.current = value;
+    setRestoringState(value);
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -465,18 +482,30 @@ export function PaywallModal({
   const visibleGroups = filterFeatureGroups(FEATURE_GROUPS, feature);
 
   const handlePurchase = async () => {
-    if (!selectedPackage) return;
+    // disabled プロパティだけに頼らず、連打による purchasePackage の多重起動を関数側でも防ぐ。
+    if (!selectedPackage || purchasingRef.current) return;
     setPurchasing(true);
     try {
       await purchasePackage(selectedPackage);
-      await syncProStatus();
-      await queryClient.invalidateQueries({ queryKey: ["pro", "status"] });
-      onClose();
-      router.push("/pro/success");
     } catch (error: unknown) {
+      setPurchasing(false);
       if (isUserCancelled(error)) return;
-      // 課金成功後の syncProStatus 失敗も含め、購入フローの失敗は必ず監視に乗せる
-      // （課金済みなのに Pro 状態が同期されない事態を検知するため）。
+      const code = (error as { code?: PURCHASES_ERROR_CODE })?.code;
+      if (code === PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR) {
+        showSnackbar({
+          type: "info",
+          message:
+            "お支払いが保留中です。承認が完了し次第、Proが有効になります",
+        });
+        return;
+      }
+      if (code === PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR) {
+        showSnackbar({
+          type: "info",
+          message: "既に購入済みです。「購入を復元」をお試しください",
+        });
+        return;
+      }
       Sentry.captureException(error, {
         tags: { source: "revenue_cat_purchase" },
       });
@@ -484,26 +513,66 @@ export function PaywallModal({
         type: "error",
         message: "購入に失敗しました。時間を置いて再度お試しください",
       });
-    } finally {
-      setPurchasing(false);
+      return;
     }
+
+    // ここから先は Apple への課金が既に成功している。バックエンドへの同期失敗を
+    // 「購入失敗」と誤表示すると二重購入を誘発するため、Sentry への記録に留めて
+    // 成功画面へ進める（Pro 状態は webhook / 次回起動時の同期でも回復する）。
+    try {
+      await syncProStatus();
+    } catch (error: unknown) {
+      Sentry.captureException(error, {
+        tags: { source: "revenue_cat_purchase_sync" },
+      });
+    }
+    await queryClient.invalidateQueries({ queryKey: ["pro", "status"] });
+    setPurchasing(false);
+    onClose();
+    router.push("/pro/success");
   };
 
   const handleRestore = async () => {
+    // disabled プロパティだけに頼らず、連打による restorePurchases の多重起動を関数側でも防ぐ。
+    if (restoringRef.current) return;
     setRestoring(true);
+    let customerInfo;
     try {
-      await restorePurchases();
-      await syncProStatus();
-      await queryClient.invalidateQueries({ queryKey: ["pro", "status"] });
-      showSnackbar({ type: "success", message: "購入情報を復元しました" });
-      onClose();
+      customerInfo = await restorePurchases();
     } catch {
+      setRestoring(false);
       showSnackbar({
         type: "error",
         message: "復元に失敗しました。時間を置いて再度お試しください",
       });
-    } finally {
-      setRestoring(false);
+      return;
+    }
+
+    // ここから先は RevenueCat 上の復元が既に成功している。purchase と同様、
+    // バックエンドへの同期失敗を「復元失敗」と誤表示せず Sentry 記録に留める
+    // （Pro 状態は webhook / 次回起動時の同期でも回復する）。
+    try {
+      await syncProStatus();
+    } catch (error: unknown) {
+      Sentry.captureException(error, {
+        tags: { source: "revenue_cat_restore_sync" },
+      });
+    }
+    await queryClient.invalidateQueries({ queryKey: ["pro", "status"] });
+    setRestoring(false);
+
+    // 復元対象が 0 件でも restorePurchases 自体は成功するため、
+    // active な entitlement の有無で成功メッセージと出し分ける。
+    const hasActiveEntitlement =
+      Object.keys(customerInfo.entitlements.active).length > 0;
+    if (hasActiveEntitlement) {
+      showSnackbar({ type: "success", message: "購入情報を復元しました" });
+      onClose();
+    } else {
+      showSnackbar({
+        type: "info",
+        message: "復元できる購入情報がありませんでした",
+      });
     }
   };
 

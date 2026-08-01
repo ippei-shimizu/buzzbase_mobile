@@ -196,6 +196,43 @@ describe("ProScreen", () => {
     });
   });
 
+  it("PROを始めるボタンを連打しても購入処理は1回しか実行されない", async () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    setupSnackbar();
+    setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    // 解決しない Promise を返して「処理中にもう一度押される」状況を作る。
+    purchasePackageMock.mockReturnValueOnce(new Promise(() => {}));
+
+    const { findByLabelText } = renderWithProviders(<ProScreen />);
+    const ctaButton = await findByLabelText("PROを始める");
+    fireEvent.press(ctaButton);
+    fireEvent.press(ctaButton);
+    fireEvent.press(ctaButton);
+
+    await waitFor(() => {
+      expect(purchasePackageMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("購入を復元を連打しても復元処理は1回しか実行されない", async () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    setupSnackbar();
+    setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    restorePurchasesMock.mockReturnValueOnce(new Promise(() => {}));
+
+    const { findByLabelText } = renderWithProviders(<ProScreen />);
+    const restoreLink = await findByLabelText("購入を復元");
+    fireEvent.press(restoreLink);
+    fireEvent.press(restoreLink);
+    fireEvent.press(restoreLink);
+
+    await waitFor(() => {
+      expect(restorePurchasesMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("ユーザーキャンセル（userCancelled=true）では snackbar も画面遷移もしない", async () => {
     useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     const showMock = setupSnackbar();
@@ -249,11 +286,35 @@ describe("ProScreen", () => {
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });
 
-  it("購入を復元を押すと restorePurchases が呼ばれ、成功時は前の画面に戻る", async () => {
+  it("課金成功後に /pro/sync が失敗しても「購入失敗」にせず success 画面へ遷移する", async () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    const showMock = setupSnackbar();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    purchasePackageMock.mockResolvedValueOnce(undefined);
+    server.use(
+      http.post(apiUrl("/pro/sync"), () =>
+        HttpResponse.json({ error: "revenuecat_api_error" }, { status: 502 }),
+      ),
+    );
+
+    const { findByLabelText } = renderWithProviders(<ProScreen />);
+    fireEvent.press(await findByLabelText("PROを始める"));
+
+    await waitFor(() => {
+      expect(getRouterSpies().replace).toHaveBeenCalledWith("/pro/success");
+    });
+    expect(showMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: "error" }),
+    );
+  });
+
+  it("購入を復元を押すと restorePurchases が呼ばれ、復元対象があれば前の画面に戻る", async () => {
     setupSyncEndpoint();
     useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
-    restorePurchasesMock.mockResolvedValueOnce(undefined);
+    restorePurchasesMock.mockResolvedValueOnce({
+      entitlements: { active: { buzzbase_pro: {} } },
+    });
     const showMock = setupSnackbar();
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
@@ -269,5 +330,55 @@ describe("ProScreen", () => {
     expect(showMock).toHaveBeenCalledWith(
       expect.objectContaining({ type: "success" }),
     );
+  });
+
+  it("復元成功後に /pro/sync が失敗しても「復元失敗」にせず成功表示する", async () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    restorePurchasesMock.mockResolvedValueOnce({
+      entitlements: { active: { buzzbase_pro: {} } },
+    });
+    const showMock = setupSnackbar();
+    server.use(
+      http.post(apiUrl("/pro/sync"), () =>
+        HttpResponse.json({ error: "revenuecat_api_error" }, { status: 502 }),
+      ),
+    );
+
+    const { findByLabelText } = renderWithProviders(<ProScreen />);
+    fireEvent.press(await findByLabelText("購入を復元"));
+
+    await waitFor(() => {
+      expect(showMock).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "success" }),
+      );
+    });
+    expect(showMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: "error" }),
+    );
+    expect(getRouterSpies().back).toHaveBeenCalled();
+  });
+
+  it("復元対象が 0 件のときは成功表示せず画面に留まり、案内を出す", async () => {
+    setupSyncEndpoint();
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    restorePurchasesMock.mockResolvedValueOnce({
+      entitlements: { active: {} },
+    });
+    const showMock = setupSnackbar();
+
+    const { findByLabelText } = renderWithProviders(<ProScreen />);
+    fireEvent.press(await findByLabelText("購入を復元"));
+
+    await waitFor(() => {
+      expect(showMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "info",
+          message: "復元できる購入情報がありませんでした",
+        }),
+      );
+    });
+    expect(getRouterSpies().back).not.toHaveBeenCalled();
   });
 });

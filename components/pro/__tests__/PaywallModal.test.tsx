@@ -8,6 +8,7 @@
  * - 購入成功時の syncProStatus は /pro/sync への実リクエストを MSW で観測する。
  */
 import { fireEvent, waitFor } from "@testing-library/react-native";
+import { PURCHASES_ERROR_CODE } from "react-native-purchases";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import {
   getOfferings,
@@ -280,6 +281,43 @@ describe("PaywallModal", () => {
     });
   });
 
+  it("PROを始めるボタンを連打しても購入処理は1回しか実行されない", async () => {
+    setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    // 解決しない Promise を返して「処理中にもう一度押される」状況を作る。
+    purchasePackageMock.mockReturnValueOnce(new Promise(() => {}));
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    const ctaButton = await findByLabelText("PROを始める");
+    fireEvent.press(ctaButton);
+    fireEvent.press(ctaButton);
+    fireEvent.press(ctaButton);
+
+    await waitFor(() => {
+      expect(purchasePackageMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("購入を復元を連打しても復元処理は1回しか実行されない", async () => {
+    setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    restorePurchasesMock.mockReturnValueOnce(new Promise(() => {}));
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    const restoreLink = await findByLabelText("購入を復元");
+    fireEvent.press(restoreLink);
+    fireEvent.press(restoreLink);
+    fireEvent.press(restoreLink);
+
+    await waitFor(() => {
+      expect(restorePurchasesMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("ユーザーキャンセル（userCancelled=true）では snackbar も画面遷移もしない", async () => {
     const syncTracker = setupSyncEndpoint();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
@@ -321,10 +359,87 @@ describe("PaywallModal", () => {
     expect(mockOnClose).not.toHaveBeenCalled();
   });
 
-  it("購入を復元を押すと restorePurchases が呼ばれ、成功時は onClose される", async () => {
+  it("課金成功後に /pro/sync が失敗しても「購入失敗」にせず success 画面へ遷移する", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    purchasePackageMock.mockResolvedValueOnce(undefined);
+    const showMock = setupSnackbar();
+    server.use(
+      http.post(apiUrl("/pro/sync"), () =>
+        HttpResponse.json({ error: "revenuecat_api_error" }, { status: 502 }),
+      ),
+    );
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    const ctaButton = await findByLabelText("PROを始める");
+    fireEvent.press(ctaButton);
+
+    await waitFor(() => {
+      expect(mockOnClose).toHaveBeenCalled();
+      expect(getRouterSpies().push).toHaveBeenCalledWith("/pro/success");
+    });
+    expect(showMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: "error" }),
+    );
+  });
+
+  it("PAYMENT_PENDING_ERROR ではエラーではなく保留中の案内を出す", async () => {
+    const showMock = setupSnackbar();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    purchasePackageMock.mockRejectedValueOnce(
+      Object.assign(new Error("payment pending"), {
+        code: PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR,
+      }),
+    );
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    fireEvent.press(await findByLabelText("PROを始める"));
+
+    await waitFor(() => {
+      expect(showMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "info",
+          message: expect.stringContaining("保留中"),
+        }),
+      );
+    });
+    expect(mockOnClose).not.toHaveBeenCalled();
+  });
+
+  it("PRODUCT_ALREADY_PURCHASED_ERROR では購入の復元を案内する", async () => {
+    const showMock = setupSnackbar();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    purchasePackageMock.mockRejectedValueOnce(
+      Object.assign(new Error("already purchased"), {
+        code: PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR,
+      }),
+    );
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    fireEvent.press(await findByLabelText("PROを始める"));
+
+    await waitFor(() => {
+      expect(showMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "info",
+          message: expect.stringContaining("購入を復元"),
+        }),
+      );
+    });
+    expect(mockOnClose).not.toHaveBeenCalled();
+  });
+
+  it("購入を復元を押すと restorePurchases が呼ばれ、復元対象があれば onClose される", async () => {
     setupSyncEndpoint();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
-    restorePurchasesMock.mockResolvedValueOnce(undefined);
+    restorePurchasesMock.mockResolvedValueOnce({
+      entitlements: { active: { buzzbase_pro: {} } },
+    });
     const showMock = setupSnackbar();
 
     const { findByLabelText } = renderWithProviders(
@@ -342,6 +457,58 @@ describe("PaywallModal", () => {
     expect(showMock).toHaveBeenCalledWith(
       expect.objectContaining({ type: "success" }),
     );
+  });
+
+  it("復元成功後に /pro/sync が失敗しても「復元失敗」にせず成功表示する", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    restorePurchasesMock.mockResolvedValueOnce({
+      entitlements: { active: { buzzbase_pro: {} } },
+    });
+    const showMock = setupSnackbar();
+    server.use(
+      http.post(apiUrl("/pro/sync"), () =>
+        HttpResponse.json({ error: "revenuecat_api_error" }, { status: 502 }),
+      ),
+    );
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    fireEvent.press(await findByLabelText("購入を復元"));
+
+    await waitFor(() => {
+      expect(showMock).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "success" }),
+      );
+    });
+    expect(showMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: "error" }),
+    );
+    expect(mockOnClose).toHaveBeenCalled();
+  });
+
+  it("復元対象が 0 件のときは成功表示せず「復元できる購入情報がない」案内を出す", async () => {
+    setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    restorePurchasesMock.mockResolvedValueOnce({
+      entitlements: { active: {} },
+    });
+    const showMock = setupSnackbar();
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    fireEvent.press(await findByLabelText("購入を復元"));
+
+    await waitFor(() => {
+      expect(showMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "info",
+          message: "復元できる購入情報がありませんでした",
+        }),
+      );
+    });
+    expect(mockOnClose).not.toHaveBeenCalled();
   });
 
   it("ハイライトカードで表示中の機能は「PRO でできること」表に重複表示されない", () => {

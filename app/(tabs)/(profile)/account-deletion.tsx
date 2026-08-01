@@ -1,4 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
+import { isAxiosError } from "axios";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   View,
@@ -13,6 +15,7 @@ import { useAuth } from "@hooks/useAuth";
 import { deleteAccount } from "@services/profileService";
 
 export default function AccountDeletionScreen() {
+  const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   const { logout } = useAuth();
 
@@ -30,8 +33,28 @@ export default function AccountDeletionScreen() {
             try {
               await deleteAccount();
               await logout();
-            } catch {
+            } catch (error) {
               setIsDeleting(false);
+              // back は Pro 加入中の削除を 422 + error: "pro_active" でブロックする。
+              // 汎用エラーにせず、解約導線付きの専用ダイアログを出す。
+              const code = isAxiosError(error)
+                ? (error.response?.data as { error?: string } | undefined)
+                    ?.error
+                : null;
+              if (code === "pro_active") {
+                Alert.alert(
+                  "削除できません",
+                  "Pro 加入中のため、先に解約してください。",
+                  [
+                    { text: "キャンセル", style: "cancel" },
+                    {
+                      text: "解約する",
+                      onPress: () => router.push("/account/subscription"),
+                    },
+                  ],
+                );
+                return;
+              }
               Alert.alert("エラー", "アカウントの削除に失敗しました");
             }
           },
