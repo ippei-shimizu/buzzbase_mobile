@@ -16,19 +16,21 @@ import { useProStatus } from "@hooks/useProStatus";
 
 export default function SubscriptionScreen() {
   const router = useRouter();
-  const proFeatures = useFeatureFlag("pro_features");
+  const { enabled: proFeatures, isLoading: flagLoading } =
+    useFeatureFlag("pro_features");
   const { proStatus, isLoading } = useProStatus();
   const [cancelGuideOpen, setCancelGuideOpen] = useState(false);
 
-  if (!proFeatures) return <Redirect href="/" />;
-
-  if (isLoading) {
+  // flag 取得中に false 倒しで redirect すると、Pro ユーザーが初回アクセスでこの画面を開けない。
+  if (flagLoading || isLoading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#d08000" />
       </View>
     );
   }
+
+  if (!proFeatures) return <Redirect href="/" />;
 
   const showJoinCta =
     proStatus.subscription.status === "free" ||

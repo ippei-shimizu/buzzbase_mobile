@@ -39,9 +39,13 @@ export interface ExpoRouterMockOptions {
 export const buildExpoRouterMock = (options: ExpoRouterMockOptions = {}) => {
   const routerSpies = options.routerSpies ?? createRouterSpies();
   const searchParams = options.searchParams ?? {};
+  // <Redirect> は router.push 等を呼ばない宣言的コンポーネントのため、
+  // 遷移先 href を記録するスパイを別途用意して「リダイレクトが発火したか」を検証可能にする。
+  const redirectSpy = jest.fn();
 
   return {
     __routerSpies: routerSpies,
+    __redirectSpy: redirectSpy,
     useRouter: () => routerSpies,
     useLocalSearchParams: () => searchParams,
     useSegments: () => [] as string[],
@@ -51,7 +55,10 @@ export const buildExpoRouterMock = (options: ExpoRouterMockOptions = {}) => {
     // テスト側では呼び出し回数の検証はせず no-op で十分。
     useNavigation: () => ({ setOptions: jest.fn() }),
     Link: ({ children }: { children: React.ReactNode }) => children,
-    Redirect: () => null,
+    Redirect: ({ href }: { href: string }) => {
+      redirectSpy(href);
+      return null;
+    },
     Stack: Object.assign(
       ({ children }: { children?: React.ReactNode }) => children,
       { Screen: ({ children }: { children?: React.ReactNode }) => children },

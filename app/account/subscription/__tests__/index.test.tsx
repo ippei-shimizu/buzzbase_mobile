@@ -34,6 +34,12 @@ const getRouterSpies = (): RouterSpies => {
   return m.__routerSpies;
 };
 
+const getRedirectSpy = (): jest.Mock => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const m = require("expo-router") as { __redirectSpy: jest.Mock };
+  return m.__redirectSpy;
+};
+
 const useFeatureFlagMock = useFeatureFlag as jest.Mock;
 const useProStatusMock = useProStatus as jest.Mock;
 
@@ -54,14 +60,24 @@ describe("SubscriptionScreen", () => {
     jest.clearAllMocks();
   });
 
-  it("pro_features=false なら / にリダイレクト（状態取得しない）", () => {
+  it("pro_features=false なら / にリダイレクトし、画面内容を描画しない", () => {
     useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: false });
     stubProStatus();
 
-    renderWithProviders(<SubscriptionScreen />);
+    const { queryByLabelText } = renderWithProviders(<SubscriptionScreen />);
 
-    // Redirect 自体は描画されるが、router.push は呼ばれない
-    expect(getRouterSpies().push).not.toHaveBeenCalled();
+    expect(getRedirectSpy()).toHaveBeenCalledWith("/");
+    expect(queryByLabelText("Pro に加入する")).toBeNull();
+  });
+
+  it("flag 取得中はローディング表示し、リダイレクトも画面描画もしない", () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: true });
+    stubProStatus();
+
+    const { queryByLabelText } = renderWithProviders(<SubscriptionScreen />);
+
+    expect(getRedirectSpy()).not.toHaveBeenCalled();
+    expect(queryByLabelText("Pro に加入する")).toBeNull();
   });
 
   it("free 状態のとき「Pro に加入する」ボタンを表示、タップで /pro に push", () => {
