@@ -295,6 +295,33 @@ describe("ProScreen", () => {
     );
   });
 
+  it("復元成功後に /pro/sync が失敗しても「復元失敗」にせず成功表示する", async () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    restorePurchasesMock.mockResolvedValueOnce({
+      entitlements: { active: { buzzbase_pro: {} } },
+    });
+    const showMock = setupSnackbar();
+    server.use(
+      http.post(apiUrl("/pro/sync"), () =>
+        HttpResponse.json({ error: "revenuecat_api_error" }, { status: 502 }),
+      ),
+    );
+
+    const { findByLabelText } = renderWithProviders(<ProScreen />);
+    fireEvent.press(await findByLabelText("購入を復元"));
+
+    await waitFor(() => {
+      expect(showMock).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "success" }),
+      );
+    });
+    expect(showMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: "error" }),
+    );
+    expect(getRouterSpies().back).toHaveBeenCalled();
+  });
+
   it("復元対象が 0 件のときは成功表示せず画面に留まり、案内を出す", async () => {
     setupSyncEndpoint();
     useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });

@@ -522,31 +522,43 @@ export function PaywallModal({
     // disabled プロパティだけに頼らず、連打による restorePurchases の多重起動を関数側でも防ぐ。
     if (restoring) return;
     setRestoring(true);
+    let customerInfo;
     try {
-      const customerInfo = await restorePurchases();
-      await syncProStatus();
-      await queryClient.invalidateQueries({ queryKey: ["pro", "status"] });
-
-      // 復元対象が 0 件でも restorePurchases 自体は成功するため、
-      // active な entitlement の有無で成功メッセージと出し分ける。
-      const hasActiveEntitlement =
-        Object.keys(customerInfo.entitlements.active).length > 0;
-      if (hasActiveEntitlement) {
-        showSnackbar({ type: "success", message: "購入情報を復元しました" });
-        onClose();
-      } else {
-        showSnackbar({
-          type: "info",
-          message: "復元できる購入情報がありませんでした",
-        });
-      }
+      customerInfo = await restorePurchases();
     } catch {
+      setRestoring(false);
       showSnackbar({
         type: "error",
         message: "復元に失敗しました。時間を置いて再度お試しください",
       });
-    } finally {
-      setRestoring(false);
+      return;
+    }
+
+    // ここから先は RevenueCat 上の復元が既に成功している。purchase と同様、
+    // バックエンドへの同期失敗を「復元失敗」と誤表示せず Sentry 記録に留める
+    // （Pro 状態は webhook / 次回起動時の同期でも回復する）。
+    try {
+      await syncProStatus();
+    } catch (error: unknown) {
+      Sentry.captureException(error, {
+        tags: { source: "revenue_cat_restore_sync" },
+      });
+    }
+    await queryClient.invalidateQueries({ queryKey: ["pro", "status"] });
+    setRestoring(false);
+
+    // 復元対象が 0 件でも restorePurchases 自体は成功するため、
+    // active な entitlement の有無で成功メッセージと出し分ける。
+    const hasActiveEntitlement =
+      Object.keys(customerInfo.entitlements.active).length > 0;
+    if (hasActiveEntitlement) {
+      showSnackbar({ type: "success", message: "購入情報を復元しました" });
+      onClose();
+    } else {
+      showSnackbar({
+        type: "info",
+        message: "復元できる購入情報がありませんでした",
+      });
     }
   };
 
