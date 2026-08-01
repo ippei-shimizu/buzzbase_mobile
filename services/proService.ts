@@ -22,7 +22,8 @@ export const fetchEntitlements = async (): Promise<EntitlementsResponse> => {
 
 /**
  * RevenueCat と Rails の Pro 状態を再同期する。
- * 本Issueはスタブで last_synced_at の更新のみ。実同期ロジックは #318 で実装する。
+ * サーバー側が RevenueCat REST API から subscriber 状態を取得して Subscription に反映する。
+ * Webhook の取りこぼし・配信遅延時のリカバリとして購入直後や同期ボタンから呼ぶ。
  */
 export const syncProStatus = async (): Promise<ProStatus> => {
   const response = await axiosInstance.post<ProStatus>("/pro/sync");
