@@ -1,5 +1,4 @@
 import type { Feature, ProFeature } from "../../types/pro";
-import type { PACKAGE_TYPE, PurchasesOffering } from "react-native-purchases";
 import { Ionicons } from "@expo/vector-icons";
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,6 +14,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  PURCHASES_ERROR_CODE,
+  type PACKAGE_TYPE,
+  type PurchasesOffering,
+} from "react-native-purchases";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { syncProStatus } from "@services/proService";
 import {
@@ -473,6 +477,21 @@ export function PaywallModal({
     } catch (error: unknown) {
       setPurchasing(false);
       if (isUserCancelled(error)) return;
+      const code = (error as { code?: PURCHASES_ERROR_CODE })?.code;
+      if (code === PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR) {
+        showSnackbar({
+          type: "info",
+          message: "お支払いが保留中です。承認が完了し次第、Proが有効になります",
+        });
+        return;
+      }
+      if (code === PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR) {
+        showSnackbar({
+          type: "info",
+          message: "既に購入済みです。「購入を復元」をお試しください",
+        });
+        return;
+      }
       Sentry.captureException(error, {
         tags: { source: "revenue_cat_purchase" },
       });

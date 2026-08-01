@@ -34,6 +34,12 @@ jest.mock("react-native-purchases", () => ({
       .fn()
       .mockResolvedValue({ entitlements: { active: {} } }),
   },
+  // 実パッケージの enum 値（文字列の数値コード）に合わせる。
+  // エラーコード分岐（PaywallModal / pro 画面）のテストで参照する。
+  PURCHASES_ERROR_CODE: {
+    PRODUCT_ALREADY_PURCHASED_ERROR: "6",
+    PAYMENT_PENDING_ERROR: "20",
+  },
 }));
 
 // @sentry/react-native: テストでは no-op

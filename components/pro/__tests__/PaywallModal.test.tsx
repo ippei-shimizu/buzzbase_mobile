@@ -8,6 +8,7 @@
  * - 購入成功時の syncProStatus は /pro/sync への実リクエストを MSW で観測する。
  */
 import { fireEvent, waitFor } from "@testing-library/react-native";
+import { PURCHASES_ERROR_CODE } from "react-native-purchases";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import {
   getOfferings,
@@ -344,6 +345,56 @@ describe("PaywallModal", () => {
     expect(showMock).not.toHaveBeenCalledWith(
       expect.objectContaining({ type: "error" }),
     );
+  });
+
+  it("PAYMENT_PENDING_ERROR ではエラーではなく保留中の案内を出す", async () => {
+    const showMock = setupSnackbar();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    purchasePackageMock.mockRejectedValueOnce(
+      Object.assign(new Error("payment pending"), {
+        code: PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR,
+      }),
+    );
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    fireEvent.press(await findByLabelText("PROを始める"));
+
+    await waitFor(() => {
+      expect(showMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "info",
+          message: expect.stringContaining("保留中"),
+        }),
+      );
+    });
+    expect(mockOnClose).not.toHaveBeenCalled();
+  });
+
+  it("PRODUCT_ALREADY_PURCHASED_ERROR では購入の復元を案内する", async () => {
+    const showMock = setupSnackbar();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    purchasePackageMock.mockRejectedValueOnce(
+      Object.assign(new Error("already purchased"), {
+        code: PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR,
+      }),
+    );
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    fireEvent.press(await findByLabelText("PROを始める"));
+
+    await waitFor(() => {
+      expect(showMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "info",
+          message: expect.stringContaining("購入を復元"),
+        }),
+      );
+    });
+    expect(mockOnClose).not.toHaveBeenCalled();
   });
 
   it("購入を復元を押すと restorePurchases が呼ばれ、復元対象があれば onClose される", async () => {
