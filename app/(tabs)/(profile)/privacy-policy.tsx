@@ -5,7 +5,7 @@ export default function PrivacyPolicyScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.lastUpdated}>最終更新日: 2026年3月15日</Text>
+        <Text style={styles.lastUpdated}>最終更新日: 2026年8月1日</Text>
 
         <Section title="はじめに">
           BUZZ
@@ -24,6 +24,12 @@ export default function PrivacyPolicyScreen() {
           ・当サービスウェブサイトの滞在時間、入力履歴等の当サービスウェブサイトにおけるお客様の行動履歴
           {"\n"}
           ・当サービスアプリの起動時間、入力履歴等の当サービスアプリの利用履歴
+          {"\n"}
+          ・お支払い情報（決済に必要な範囲の情報。クレジットカード番号本体は決済代行会社が管理し、当サービスでは保持しません）
+          {"\n"}
+          ・サブスクリプションの契約状態（プラン種別、契約期間、更新・解約状況等）
+          {"\n"}
+          ・広告識別子（IDFA等。iOSアプリでトラッキングの許可をいただいた場合のみ）
         </Section>
 
         <Section title="利用目的">
@@ -33,7 +39,20 @@ export default function PrivacyPolicyScreen() {
           ・本サービスの改善と開発{"\n"}
           ・新サービスの案内や更新情報の提供{"\n"}
           ・不正アクセスや不正利用の防止{"\n"}
+          ・有料プラン（Proプラン）の提供、課金処理及び契約管理{"\n"}
           ・広告の配信および広告効果の測定
+        </Section>
+
+        <Section title="決済代行サービスについて">
+          本サービスの有料プラン（Proプラン）のお申込みにあたり、以下の決済代行サービスを利用しています。
+          {"\n\n"}
+          Web版: Stripe, Inc.
+          の決済サービス「Stripe」でクレジットカード決済を処理しています。Stripeにおける情報の取扱いはStripeのプライバシーポリシー（https://stripe.com/jp/privacy）をご確認ください。
+          {"\n\n"}
+          iOSアプリ版: RevenueCat, Inc. の「RevenueCat」で、App Store（Apple
+          ID）決済によるサブスクリプションの契約状態を管理しています。RevenueCatにおける情報の取扱いはRevenueCatのプライバシーポリシー（https://www.revenuecat.com/privacy/）をご確認ください。iOSアプリ内課金自体はApple
+          Inc.のApp
+          Store決済システムを通じて行われ、決済情報はApple社が管理します。
         </Section>
 
         <Section title="広告について">
@@ -44,6 +63,12 @@ export default function PrivacyPolicyScreen() {
           Cookieを使用することで、お客様のコンピュータやデバイスを識別できるようになりますが、お客様個人を特定できるものではありません。
           {"\n\n"}
           お客様はGoogleの広告設定ページから、パーソナライズド広告を無効にすることができます。また、aboutads.infoのページにアクセスすることで、パーソナライズド広告に使われる第三者配信事業者のCookieを無効にすることができます。
+          {"\n\n"}
+          本サービスのモバイルアプリ（iOS版）では、Google
+          LLCが提供する広告配信サービス「Google
+          AdMob」を利用しています。パーソナライズド広告の配信にあたり端末の広告識別子（IDFA）を使用することがあり、iOS
+          14.5以降ではApp Tracking
+          Transparency（ATT）フレームワークによりトラッキングの許可を確認した上で使用します。許可しない場合でも非パーソナライズド広告は表示されます。
         </Section>
 
         <Section title="アクセス解析ツールについて">
@@ -62,6 +87,13 @@ export default function PrivacyPolicyScreen() {
           ・人の生命、身体または財産の保護のために必要がある場合であって、お客様の同意を得ることが困難であるとき
           {"\n"}
           ・本サービスの運営に必要な範囲で業務委託先に提供する場合（広告配信、アクセス解析等）
+          {"\n"}
+          ・決済処理のため、Stripe,
+          Inc.（Web版のクレジットカード決済）及びRevenueCat,
+          Inc.（App内課金の契約管理）に必要な範囲の情報を提供する場合
+          {"\n"}
+          ・広告配信のため、Google LLC（Google AdMob / AdSense /
+          Analytics）に必要な範囲の情報を提供する場合
         </Section>
 
         <Section title="個人情報の安全管理">

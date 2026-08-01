@@ -672,6 +672,43 @@ export function PaywallModal({
               契約期間は開始日から月額・年額などプランの周期ごとに自動更新されます。解約は
               App Store / Google Play のサブスクリプション設定から行えます。
             </Text>
+
+            <View style={styles.legalLinksRow}>
+              <TouchableOpacity
+                onPress={() => {
+                  onClose();
+                  router.push("/(profile)/terms-of-service");
+                }}
+                accessibilityRole="link"
+                accessibilityLabel="利用規約"
+              >
+                <Text style={styles.legalLinkText}>利用規約</Text>
+              </TouchableOpacity>
+              <Text style={styles.legalLinkSeparator}>・</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  onClose();
+                  router.push("/(profile)/privacy-policy");
+                }}
+                accessibilityRole="link"
+                accessibilityLabel="プライバシーポリシー"
+              >
+                <Text style={styles.legalLinkText}>プライバシーポリシー</Text>
+              </TouchableOpacity>
+              <Text style={styles.legalLinkSeparator}>・</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  onClose();
+                  router.push("/(profile)/tokushoho");
+                }}
+                accessibilityRole="link"
+                accessibilityLabel="特定商取引法に基づく表記"
+              >
+                <Text style={styles.legalLinkText}>
+                  特定商取引法に基づく表記
+                </Text>
+              </TouchableOpacity>
+            </View>
           </ScrollView>
 
           <View style={styles.footer}>
@@ -970,6 +1007,22 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
     textAlign: "center",
+  },
+  legalLinksRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 4,
+    marginTop: 8,
+  },
+  legalLinkText: {
+    color: "#d08000",
+    fontSize: 11,
+    textDecorationLine: "underline",
+  },
+  legalLinkSeparator: {
+    color: "#7A7A7A",
+    fontSize: 11,
   },
   footer: {
     paddingHorizontal: 20,
