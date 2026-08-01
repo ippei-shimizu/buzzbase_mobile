@@ -112,6 +112,12 @@ export default function SettingsScreen() {
           description: "サービスの利用条件について",
           onPress: () => router.push("/(profile)/terms-of-service"),
         },
+        {
+          icon: "receipt-outline",
+          title: "特定商取引法に基づく表記",
+          description: "販売事業者・支払方法・解約について",
+          onPress: () => router.push("/(profile)/tokushoho"),
+        },
       ],
     },
   ];

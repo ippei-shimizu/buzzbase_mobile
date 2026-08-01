@@ -21,6 +21,10 @@ export default function ProfileLayout() {
         options={{ title: "プライバシーポリシー" }}
       />
       <Stack.Screen name="terms-of-service" options={{ title: "利用規約" }} />
+      <Stack.Screen
+        name="tokushoho"
+        options={{ title: "特定商取引法に基づく表記" }}
+      />
       <Stack.Screen name="contact" options={{ title: "お問い合わせ" }} />
       <Stack.Screen
         name="account-deletion"
