@@ -45,10 +45,12 @@ end
 **方針**: 最小修正。`purchasePackage()`が成功した時点で「購入成功」とし、以降の`syncProStatus()`失敗はSentryに記録するのみで購入失敗表示にはしない。
 
 対象ファイル（同一パターンが重複しているため両方修正）:
+
 - `mobile/components/pro/PaywallModal.tsx`（`handlePurchase`, L467-490）
 - `mobile/app/pro/index.tsx`（同等の`handlePurchase`実装）
 
 修正イメージ:
+
 ```ts
 const handlePurchase = async () => {
   if (!selectedPackage) return;
@@ -57,8 +59,13 @@ const handlePurchase = async () => {
     await purchasePackage(selectedPackage);
   } catch (error) {
     if (isUserCancelled(error)) return setPurchasing(false);
-    Sentry.captureException(error, { tags: { source: "revenue_cat_purchase" } });
-    showSnackbar({ type: "error", message: "購入に失敗しました。時間を置いて再度お試しください" });
+    Sentry.captureException(error, {
+      tags: { source: "revenue_cat_purchase" },
+    });
+    showSnackbar({
+      type: "error",
+      message: "購入に失敗しました。時間を置いて再度お試しください",
+    });
     return setPurchasing(false);
   }
 
@@ -66,7 +73,9 @@ const handlePurchase = async () => {
   try {
     await syncProStatus();
   } catch (error) {
-    Sentry.captureException(error, { tags: { source: "revenue_cat_purchase_sync" } });
+    Sentry.captureException(error, {
+      tags: { source: "revenue_cat_purchase_sync" },
+    });
   }
   await queryClient.invalidateQueries({ queryKey: ["pro", "status"] });
   setPurchasing(false);
@@ -248,7 +257,10 @@ const handleRestore = async () => {
       });
     }
   } catch {
-    showSnackbar({ type: "error", message: "復元に失敗しました。時間を置いて再度お試しください" });
+    showSnackbar({
+      type: "error",
+      message: "復元に失敗しました。時間を置いて再度お試しください",
+    });
   } finally {
     setRestoring(false);
   }
@@ -360,7 +372,7 @@ useEffect(() => {
    - #11 PaywallModal.tsx / app/pro/index.tsx の handleRestore に entitlements.active 分岐追加
    - #12 handlePurchase / handleRestore に二重タップガード追加
    - #13 RevenueCatエラーコード（PAYMENT_PENDING_ERROR, PRODUCT_ALREADY_PURCHASED_ERROR）出し分け追加
-   - #14 revenueCatService.ts に addCustomerInfoUpdateListener 追加、_layout.tsx に登録
+   - #14 revenueCatService.ts に addCustomerInfoUpdateListener 追加、\_layout.tsx に登録
    - #16 proService.ts のコメントからissue番号削除
    - 検証: `yarn lint`, `yarn typecheck`（`yarn test`はローカル実行せずCI任せ）
 

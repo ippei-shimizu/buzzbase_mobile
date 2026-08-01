@@ -481,7 +481,8 @@ export function PaywallModal({
       if (code === PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR) {
         showSnackbar({
           type: "info",
-          message: "お支払いが保留中です。承認が完了し次第、Proが有効になります",
+          message:
+            "お支払いが保留中です。承認が完了し次第、Proが有効になります",
         });
         return;
       }

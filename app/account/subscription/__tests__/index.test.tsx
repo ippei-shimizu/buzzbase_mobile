@@ -89,8 +89,9 @@ describe("SubscriptionScreen", () => {
     const refetch = jest.fn();
     stubProStatus({}, { isError: true, refetch });
 
-    const { getByText, getByLabelText, queryByLabelText } =
-      renderWithProviders(<SubscriptionScreen />);
+    const { getByText, getByLabelText, queryByLabelText } = renderWithProviders(
+      <SubscriptionScreen />,
+    );
 
     expect(getByText("状態の取得に失敗しました")).toBeTruthy();
     expect(queryByLabelText("Pro に加入する")).toBeNull();
