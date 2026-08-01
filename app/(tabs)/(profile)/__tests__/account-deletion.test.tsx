@@ -1,17 +1,17 @@
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import React from "react";
 import { Alert } from "react-native";
+import {
+  apiUrl,
+  http,
+  HttpResponse,
+} from "../../../../__tests__/test-utils/handlers";
+import { renderWithProviders } from "../../../../__tests__/test-utils/renderWithProviders";
+import { server } from "../../../../jest-setup-msw";
 import AccountDeletionScreen from "../account-deletion";
 
 const mockPush = jest.fn();
 const mockLogout = jest.fn();
-const mockDeleteAccount = jest.fn();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ push: mockPush }),
@@ -21,11 +21,25 @@ jest.mock("@hooks/useAuth", () => ({
   useAuth: () => ({ logout: mockLogout }),
 }));
 
-jest.mock("@services/profileService", () => ({
-  deleteAccount: () => mockDeleteAccount(),
-}));
+// DELETE /user のレスポンスを差し替える。削除APIの結果ごとの UI 分岐を検証する。
+const stubDeleteAccount = (
+  responder: () => Response,
+): { get callCount(): number } => {
+  let calledCount = 0;
+  server.use(
+    http.delete(apiUrl("/user"), () => {
+      calledCount += 1;
+      return responder();
+    }),
+  );
+  return {
+    get callCount() {
+      return calledCount;
+    },
+  };
+};
 
-// Alert のボタン配列から指定ラベルのボタンを取り出すヘルパー。
+// Alert のボタン配列から指定ラベルのボタンを取り出す。
 const getAlertButton = (label: string) => {
   const alertCalls = (Alert.alert as jest.Mock).mock.calls;
   const lastCall = alertCalls[alertCalls.length - 1];
@@ -52,20 +66,29 @@ describe("AccountDeletionScreen", () => {
   });
 
   it("削除成功時は logout まで実行する", async () => {
-    mockDeleteAccount.mockResolvedValue(undefined);
-    render(<AccountDeletionScreen />);
+    const tracker = stubDeleteAccount(
+      () => new HttpResponse(null, { status: 200 }),
+    );
+    renderWithProviders(<AccountDeletionScreen />);
 
     await confirmDelete();
 
     await waitFor(() => expect(mockLogout).toHaveBeenCalled());
+    expect(tracker.callCount).toBe(1);
   });
 
   it("pro_active エラー時は解約導線付きの専用ダイアログを表示する", async () => {
-    mockDeleteAccount.mockRejectedValue({
-      isAxiosError: true,
-      response: { data: { success: false, error: "pro_active" } },
-    });
-    render(<AccountDeletionScreen />);
+    stubDeleteAccount(() =>
+      HttpResponse.json(
+        {
+          success: false,
+          error: "pro_active",
+          message: "Pro 加入中のため、先に解約してください",
+        },
+        { status: 422 },
+      ),
+    );
+    renderWithProviders(<AccountDeletionScreen />);
 
     await confirmDelete();
 
@@ -83,8 +106,10 @@ describe("AccountDeletionScreen", () => {
   });
 
   it("pro_active 以外のエラー時は汎用エラーダイアログを表示する", async () => {
-    mockDeleteAccount.mockRejectedValue(new Error("network error"));
-    render(<AccountDeletionScreen />);
+    stubDeleteAccount(() =>
+      HttpResponse.json({ error: "internal_server_error" }, { status: 500 }),
+    );
+    renderWithProviders(<AccountDeletionScreen />);
 
     await confirmDelete();
 
