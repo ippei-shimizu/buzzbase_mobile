@@ -43,7 +43,10 @@ const getRedirectSpy = (): jest.Mock => {
 const useFeatureFlagMock = useFeatureFlag as jest.Mock;
 const useProStatusMock = useProStatus as jest.Mock;
 
-const stubProStatus = (overrides: Partial<ProStatus> = {}) => {
+const stubProStatus = (
+  overrides: Partial<ProStatus> = {},
+  hookOverrides: { isError?: boolean; refetch?: jest.Mock } = {},
+) => {
   useProStatusMock.mockReturnValue({
     proStatus: { ...DEFAULT_PRO_STATUS, ...overrides },
     isPro: false,
@@ -52,6 +55,7 @@ const stubProStatus = (overrides: Partial<ProStatus> = {}) => {
     error: null,
     refetch: jest.fn(),
     isRefreshing: false,
+    ...hookOverrides,
   });
 };
 
@@ -78,6 +82,21 @@ describe("SubscriptionScreen", () => {
 
     expect(getRedirectSpy()).not.toHaveBeenCalled();
     expect(queryByLabelText("Pro に加入する")).toBeNull();
+  });
+
+  it("状態取得エラー時は「未加入」と誤表示せず、エラーと再試行ボタンを出す", () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    const refetch = jest.fn();
+    stubProStatus({}, { isError: true, refetch });
+
+    const { getByText, getByLabelText, queryByLabelText } =
+      renderWithProviders(<SubscriptionScreen />);
+
+    expect(getByText("状態の取得に失敗しました")).toBeTruthy();
+    expect(queryByLabelText("Pro に加入する")).toBeNull();
+
+    fireEvent.press(getByLabelText("再試行"));
+    expect(refetch).toHaveBeenCalled();
   });
 
   it("free 状態のとき「Pro に加入する」ボタンを表示、タップで /pro に push", () => {
