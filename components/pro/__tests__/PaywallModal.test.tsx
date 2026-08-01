@@ -281,6 +281,43 @@ describe("PaywallModal", () => {
     });
   });
 
+  it("PROを始めるボタンを連打しても購入処理は1回しか実行されない", async () => {
+    setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    // 解決しない Promise を返して「処理中にもう一度押される」状況を作る。
+    purchasePackageMock.mockReturnValueOnce(new Promise(() => {}));
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    const ctaButton = await findByLabelText("PROを始める");
+    fireEvent.press(ctaButton);
+    fireEvent.press(ctaButton);
+    fireEvent.press(ctaButton);
+
+    await waitFor(() => {
+      expect(purchasePackageMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("購入を復元を連打しても復元処理は1回しか実行されない", async () => {
+    setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    restorePurchasesMock.mockReturnValueOnce(new Promise(() => {}));
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    const restoreLink = await findByLabelText("購入を復元");
+    fireEvent.press(restoreLink);
+    fireEvent.press(restoreLink);
+    fireEvent.press(restoreLink);
+
+    await waitFor(() => {
+      expect(restorePurchasesMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("ユーザーキャンセル（userCancelled=true）では snackbar も画面遷移もしない", async () => {
     const syncTracker = setupSyncEndpoint();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);

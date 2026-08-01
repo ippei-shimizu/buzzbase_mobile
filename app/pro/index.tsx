@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { Redirect, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -55,8 +55,21 @@ export default function ProScreen() {
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(
     null,
   );
-  const [purchasing, setPurchasing] = useState(false);
-  const [restoring, setRestoring] = useState(false);
+  // 多重起動の判定は、レンダーを跨がず同期的に読める ref で行う。課金・復元は
+  // 非冪等な操作のため、state の反映タイミングに依存させない。UI 表示用の state は
+  // ref と常に同時更新するので、呼び出し側は従来どおり setPurchasing / setRestoring を使う。
+  const purchasingRef = useRef(false);
+  const restoringRef = useRef(false);
+  const [purchasing, setPurchasingState] = useState(false);
+  const [restoring, setRestoringState] = useState(false);
+  const setPurchasing = (value: boolean) => {
+    purchasingRef.current = value;
+    setPurchasingState(value);
+  };
+  const setRestoring = (value: boolean) => {
+    restoringRef.current = value;
+    setRestoringState(value);
+  };
 
   useEffect(() => {
     if (!proFeatures) return;
@@ -115,7 +128,7 @@ export default function ProScreen() {
 
   const handlePurchase = async () => {
     // disabled プロパティだけに頼らず、連打による purchasePackage の多重起動を関数側でも防ぐ。
-    if (!selectedPackage || purchasing) return;
+    if (!selectedPackage || purchasingRef.current) return;
     setPurchasing(true);
     try {
       await purchasePackage(selectedPackage);
@@ -165,7 +178,7 @@ export default function ProScreen() {
 
   const handleRestore = async () => {
     // disabled プロパティだけに頼らず、連打による restorePurchases の多重起動を関数側でも防ぐ。
-    if (restoring) return;
+    if (restoringRef.current) return;
     setRestoring(true);
     let customerInfo;
     try {
