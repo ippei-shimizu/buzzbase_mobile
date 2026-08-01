@@ -67,3 +67,19 @@ export async function restorePurchases(): Promise<CustomerInfo> {
   if (!configured) throw new Error("RevenueCat is not configured");
   return Purchases.restorePurchases();
 }
+
+/**
+ * RevenueCat 側で顧客情報が更新されたとき（更新・解約・返金・別端末での購入など）に
+ * 呼ばれるリスナーを登録する。アプリ内購入フローを経由しない Pro 状態の変化を
+ * クライアントへ反映する用途で、アプリ起動時に常設登録する想定。
+ * @returns リスナー解除関数（アンマウント時に呼ぶ）
+ */
+export function addCustomerInfoUpdateListener(
+  listener: (customerInfo: CustomerInfo) => void,
+): () => void {
+  if (!configured) return () => {};
+  Purchases.addCustomerInfoUpdateListener(listener);
+  return () => {
+    Purchases.removeCustomerInfoUpdateListener(listener);
+  };
+}

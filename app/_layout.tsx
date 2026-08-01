@@ -17,7 +17,10 @@ import {
 import { usePushNotifications } from "@hooks/usePushNotifications";
 import { useStoreReview } from "@hooks/useStoreReview";
 import { configureGoogleSignIn } from "@services/googleAuthService";
-import { configureRevenueCat } from "@services/revenueCatService";
+import {
+  addCustomerInfoUpdateListener,
+  configureRevenueCat,
+} from "@services/revenueCatService";
 import { useAuthStore } from "@stores/authStore";
 import { posthog } from "@utils/posthog";
 import { queryClient } from "@utils/queryClient";
@@ -130,6 +133,15 @@ function RootLayoutInner() {
     initInstallDate();
     initPositiveEventCount();
   }, [initInstallDate, initPositiveEventCount]);
+
+  // RevenueCat 側の顧客情報更新（更新・解約・返金・別端末購入など）を検知して
+  // Pro 状態のキャッシュを無効化し、アプリ内購入フローを経由しない変化を反映する。
+  useEffect(() => {
+    const unsubscribe = addCustomerInfoUpdateListener(() => {
+      void queryClient.invalidateQueries({ queryKey: ["pro", "status"] });
+    });
+    return unsubscribe;
+  }, []);
 
   return (
     <>

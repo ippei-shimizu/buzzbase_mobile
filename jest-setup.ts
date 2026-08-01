@@ -33,6 +33,8 @@ jest.mock("react-native-purchases", () => ({
     restorePurchases: jest
       .fn()
       .mockResolvedValue({ entitlements: { active: {} } }),
+    addCustomerInfoUpdateListener: jest.fn(),
+    removeCustomerInfoUpdateListener: jest.fn(),
   },
   // 実パッケージの enum 値（文字列の数値コード）に合わせる。
   // エラーコード分岐（PaywallModal / pro 画面）のテストで参照する。
