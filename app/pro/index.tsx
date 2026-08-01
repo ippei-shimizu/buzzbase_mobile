@@ -111,7 +111,8 @@ export default function ProScreen() {
       : null;
 
   const handlePurchase = async () => {
-    if (!selectedPackage) return;
+    // disabled プロパティだけに頼らず、連打による purchasePackage の多重起動を関数側でも防ぐ。
+    if (!selectedPackage || purchasing) return;
     setPurchasing(true);
     try {
       await purchasePackage(selectedPackage);
@@ -144,6 +145,8 @@ export default function ProScreen() {
   };
 
   const handleRestore = async () => {
+    // disabled プロパティだけに頼らず、連打による restorePurchases の多重起動を関数側でも防ぐ。
+    if (restoring) return;
     setRestoring(true);
     try {
       const customerInfo = await restorePurchases();
