@@ -346,10 +346,12 @@ describe("PaywallModal", () => {
     );
   });
 
-  it("購入を復元を押すと restorePurchases が呼ばれ、成功時は onClose される", async () => {
+  it("購入を復元を押すと restorePurchases が呼ばれ、復元対象があれば onClose される", async () => {
     setupSyncEndpoint();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
-    restorePurchasesMock.mockResolvedValueOnce(undefined);
+    restorePurchasesMock.mockResolvedValueOnce({
+      entitlements: { active: { buzzbase_pro: {} } },
+    });
     const showMock = setupSnackbar();
 
     const { findByLabelText } = renderWithProviders(
@@ -367,6 +369,30 @@ describe("PaywallModal", () => {
     expect(showMock).toHaveBeenCalledWith(
       expect.objectContaining({ type: "success" }),
     );
+  });
+
+  it("復元対象が 0 件のときは成功表示せず「復元できる購入情報がない」案内を出す", async () => {
+    setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    restorePurchasesMock.mockResolvedValueOnce({
+      entitlements: { active: {} },
+    });
+    const showMock = setupSnackbar();
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    fireEvent.press(await findByLabelText("購入を復元"));
+
+    await waitFor(() => {
+      expect(showMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "info",
+          message: "復元できる購入情報がありませんでした",
+        }),
+      );
+    });
+    expect(mockOnClose).not.toHaveBeenCalled();
   });
 
   it("ハイライトカードで表示中の機能は「PRO でできること」表に重複表示されない", () => {

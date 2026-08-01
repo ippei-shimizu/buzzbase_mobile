@@ -501,11 +501,23 @@ export function PaywallModal({
   const handleRestore = async () => {
     setRestoring(true);
     try {
-      await restorePurchases();
+      const customerInfo = await restorePurchases();
       await syncProStatus();
       await queryClient.invalidateQueries({ queryKey: ["pro", "status"] });
-      showSnackbar({ type: "success", message: "購入情報を復元しました" });
-      onClose();
+
+      // 復元対象が 0 件でも restorePurchases 自体は成功するため、
+      // active な entitlement の有無で成功メッセージと出し分ける。
+      const hasActiveEntitlement =
+        Object.keys(customerInfo.entitlements.active).length > 0;
+      if (hasActiveEntitlement) {
+        showSnackbar({ type: "success", message: "購入情報を復元しました" });
+        onClose();
+      } else {
+        showSnackbar({
+          type: "info",
+          message: "復元できる購入情報がありませんでした",
+        });
+      }
     } catch {
       showSnackbar({
         type: "error",

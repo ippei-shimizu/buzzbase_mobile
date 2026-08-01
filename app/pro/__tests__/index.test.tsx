@@ -271,11 +271,13 @@ describe("ProScreen", () => {
     );
   });
 
-  it("購入を復元を押すと restorePurchases が呼ばれ、成功時は前の画面に戻る", async () => {
+  it("購入を復元を押すと restorePurchases が呼ばれ、復元対象があれば前の画面に戻る", async () => {
     setupSyncEndpoint();
     useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
-    restorePurchasesMock.mockResolvedValueOnce(undefined);
+    restorePurchasesMock.mockResolvedValueOnce({
+      entitlements: { active: { buzzbase_pro: {} } },
+    });
     const showMock = setupSnackbar();
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
@@ -291,5 +293,28 @@ describe("ProScreen", () => {
     expect(showMock).toHaveBeenCalledWith(
       expect.objectContaining({ type: "success" }),
     );
+  });
+
+  it("復元対象が 0 件のときは成功表示せず画面に留まり、案内を出す", async () => {
+    setupSyncEndpoint();
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    restorePurchasesMock.mockResolvedValueOnce({
+      entitlements: { active: {} },
+    });
+    const showMock = setupSnackbar();
+
+    const { findByLabelText } = renderWithProviders(<ProScreen />);
+    fireEvent.press(await findByLabelText("購入を復元"));
+
+    await waitFor(() => {
+      expect(showMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "info",
+          message: "復元できる購入情報がありませんでした",
+        }),
+      );
+    });
+    expect(getRouterSpies().back).not.toHaveBeenCalled();
   });
 });
