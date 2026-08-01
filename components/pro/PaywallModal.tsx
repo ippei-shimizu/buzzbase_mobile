@@ -469,14 +469,9 @@ export function PaywallModal({
     setPurchasing(true);
     try {
       await purchasePackage(selectedPackage);
-      await syncProStatus();
-      await queryClient.invalidateQueries({ queryKey: ["pro", "status"] });
-      onClose();
-      router.push("/pro/success");
     } catch (error: unknown) {
+      setPurchasing(false);
       if (isUserCancelled(error)) return;
-      // 課金成功後の syncProStatus 失敗も含め、購入フローの失敗は必ず監視に乗せる
-      // （課金済みなのに Pro 状態が同期されない事態を検知するため）。
       Sentry.captureException(error, {
         tags: { source: "revenue_cat_purchase" },
       });
@@ -484,9 +479,23 @@ export function PaywallModal({
         type: "error",
         message: "購入に失敗しました。時間を置いて再度お試しください",
       });
-    } finally {
-      setPurchasing(false);
+      return;
     }
+
+    // ここから先は Apple への課金が既に成功している。バックエンドへの同期失敗を
+    // 「購入失敗」と誤表示すると二重購入を誘発するため、Sentry への記録に留めて
+    // 成功画面へ進める（Pro 状態は webhook / 次回起動時の同期でも回復する）。
+    try {
+      await syncProStatus();
+    } catch (error: unknown) {
+      Sentry.captureException(error, {
+        tags: { source: "revenue_cat_purchase_sync" },
+      });
+    }
+    await queryClient.invalidateQueries({ queryKey: ["pro", "status"] });
+    setPurchasing(false);
+    onClose();
+    router.push("/pro/success");
   };
 
   const handleRestore = async () => {

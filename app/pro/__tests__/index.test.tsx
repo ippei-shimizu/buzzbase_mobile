@@ -249,6 +249,28 @@ describe("ProScreen", () => {
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });
 
+  it("課金成功後に /pro/sync が失敗しても「購入失敗」にせず success 画面へ遷移する", async () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    const showMock = setupSnackbar();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    purchasePackageMock.mockResolvedValueOnce(undefined);
+    server.use(
+      http.post(apiUrl("/pro/sync"), () =>
+        HttpResponse.json({ error: "revenuecat_api_error" }, { status: 502 }),
+      ),
+    );
+
+    const { findByLabelText } = renderWithProviders(<ProScreen />);
+    fireEvent.press(await findByLabelText("PROを始める"));
+
+    await waitFor(() => {
+      expect(getRouterSpies().replace).toHaveBeenCalledWith("/pro/success");
+    });
+    expect(showMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: "error" }),
+    );
+  });
+
   it("購入を復元を押すと restorePurchases が呼ばれ、成功時は前の画面に戻る", async () => {
     setupSyncEndpoint();
     useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });

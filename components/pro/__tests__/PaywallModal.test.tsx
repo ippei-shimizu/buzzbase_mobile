@@ -321,6 +321,31 @@ describe("PaywallModal", () => {
     expect(mockOnClose).not.toHaveBeenCalled();
   });
 
+  it("課金成功後に /pro/sync が失敗しても「購入失敗」にせず success 画面へ遷移する", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    purchasePackageMock.mockResolvedValueOnce(undefined);
+    const showMock = setupSnackbar();
+    server.use(
+      http.post(apiUrl("/pro/sync"), () =>
+        HttpResponse.json({ error: "revenuecat_api_error" }, { status: 502 }),
+      ),
+    );
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    const ctaButton = await findByLabelText("PROを始める");
+    fireEvent.press(ctaButton);
+
+    await waitFor(() => {
+      expect(mockOnClose).toHaveBeenCalled();
+      expect(getRouterSpies().push).toHaveBeenCalledWith("/pro/success");
+    });
+    expect(showMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: "error" }),
+    );
+  });
+
   it("購入を復元を押すと restorePurchases が呼ばれ、成功時は onClose される", async () => {
     setupSyncEndpoint();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
