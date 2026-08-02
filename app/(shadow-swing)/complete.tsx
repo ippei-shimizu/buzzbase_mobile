@@ -18,7 +18,11 @@ import { useShadowSwingStats } from "@hooks/useShadowSwing";
 
 export default function ShadowSwingCompleteScreen() {
   const router = useRouter();
-  const { swingCount } = useLocalSearchParams<{ swingCount: string }>();
+  const { swingCount, saved } = useLocalSearchParams<{
+    swingCount: string;
+    saved?: string;
+  }>();
+  const isSaved = saved !== "0";
   const { stats } = useShadowSwingStats();
   const chime = useAudioPlayer(require("../../assets/sounds/whistle.wav"));
   const scale = useSharedValue(0);
@@ -39,12 +43,20 @@ export default function ShadowSwingCompleteScreen() {
   return (
     <View style={styles.container}>
       <Animated.View style={iconStyle}>
-        <Ionicons name="checkmark-circle" size={56} color="#17C964" />
+        <Ionicons
+          name={isSaved ? "checkmark-circle" : "alert-circle"}
+          size={56}
+          color={isSaved ? "#17C964" : "#F5A524"}
+        />
       </Animated.View>
       <Text style={styles.title}>
         {(Number(swingCount) || 0).toLocaleString()}本 達成！
       </Text>
-      <Text style={styles.subtitle}>練習記録に保存しました</Text>
+      <Text style={isSaved ? styles.subtitle : styles.warning}>
+        {isSaved
+          ? "練習記録に保存しました"
+          : "通信エラーのため練習記録に保存できませんでした"}
+      </Text>
 
       {stats ? (
         <View style={styles.statsCard}>
@@ -96,6 +108,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   subtitle: { color: "#A1A1AA", fontSize: 14, marginTop: 8 },
+  warning: {
+    color: "#F5A524",
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: "center",
+  },
   statsCard: {
     width: "100%",
     backgroundColor: "#3A3A3A",

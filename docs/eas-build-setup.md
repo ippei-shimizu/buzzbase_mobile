@@ -91,7 +91,18 @@ eas secret:create \
   --scope project \
   --name EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID \
   --value "goog_placeholder"
+
+# AdMob の Android アプリ ID（AdMob 管理画面 > アプリ > アプリ設定 で発行）
+# 未登録のまま production / preview をビルドすると app.config.js がエラーで停止する。
+eas secret:create \
+  --scope project \
+  --name EXPO_PUBLIC_ADMOB_ANDROID_APP_ID \
+  --value "ca-app-pub-xxxxxxxxxxxxxxxx~xxxxxxxxxx"
 ```
+
+AdMob のアプリ ID は `app.config.js` が環境変数から注入する。開発ビルド
+（`EXPO_PUBLIC_APP_ENV` が production / preview 以外）では Google 公開の
+サンプル ID にフォールバックするため、ローカルの prebuild では設定不要。
 
 確認:
 

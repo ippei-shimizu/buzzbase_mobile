@@ -79,6 +79,26 @@ describe("ScheduleReminderSync", () => {
     expect(mockSchedule).not.toHaveBeenCalled();
   });
 
+  // オフライン起動で予定一覧の取得に失敗すると、空配列が「予定ゼロ」と解釈されて
+  // 登録済みリマインドが全消去され、オンラインに戻すまで復活しなかった。
+  it("取得に失敗したときは既存の通知を消さない", async () => {
+    mockGetAll.mockResolvedValue([{ identifier: "schedule-99-once" }]);
+    let requested = false;
+    server.use(
+      http.get(baseUrl("/api/v2/schedules"), () => {
+        requested = true;
+        return HttpResponse.error();
+      }),
+    );
+
+    renderWithProviders(<ScheduleReminderSync />);
+
+    await waitFor(() => expect(requested).toBe(true));
+    expect(mockGetAll).not.toHaveBeenCalled();
+    expect(mockCancel).not.toHaveBeenCalled();
+    expect(mockSchedule).not.toHaveBeenCalled();
+  });
+
   it("マウント時に既存のschedule-系通知を一旦解除してから貼り直す", async () => {
     mockGetAll.mockResolvedValue([
       { identifier: "schedule-99-once" },

@@ -8,11 +8,14 @@ import {
 } from "../services/scheduleService";
 
 export const useSchedules = () => {
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch, isSuccess } = useQuery({
     queryKey: ["schedules"],
     queryFn: getSchedules,
   });
-  return { schedules: data ?? [], isLoading, isError, refetch };
+  // isSuccess は「サーバーの予定一覧を実際に取得できた」ことを表す。取得前・取得失敗時の
+  // 空配列を「予定ゼロ」と解釈されるとローカル通知の全消去などの破壊的な同期が走るため、
+  // 呼び出し側が両者を区別できるように公開する。
+  return { schedules: data ?? [], isLoading, isError, isSuccess, refetch };
 };
 
 export const useScheduleMutations = () => {
