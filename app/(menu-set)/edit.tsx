@@ -15,7 +15,11 @@ import {
 } from "react-native";
 import { useMenuSets, useMenuSetMutations } from "@hooks/useMenuSets";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
+import { serverErrorMessage } from "@utils/axiosError";
 import { formatAmount } from "@utils/formatAmount";
+
+// バックエンドの MenuSet#name のバリデーション（length: { maximum: 50 }）に合わせる。
+const MENU_SET_NAME_MAX_LENGTH = 50;
 
 export default function MenuSetEditScreen() {
   const router = useRouter();
@@ -84,7 +88,7 @@ export default function MenuSetEditScreen() {
           ],
         );
       } else {
-        Alert.alert("保存に失敗しました");
+        Alert.alert("保存に失敗しました", serverErrorMessage(error));
       }
     }
   };
@@ -98,6 +102,8 @@ export default function MenuSetEditScreen() {
         style={styles.input}
         value={name}
         onChangeText={setName}
+        // バックエンドの name は50文字までなので、超過して422になる前に入力段階で止める。
+        maxLength={MENU_SET_NAME_MAX_LENGTH}
         placeholder="例: オフ日ルーティン"
         placeholderTextColor="#71717A"
       />

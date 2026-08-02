@@ -1,6 +1,7 @@
 import type { MenuTrend } from "../types/practice";
 import type {
   ShadowSwingSession,
+  ShadowSwingSessionInput,
   ShadowSwingStats,
 } from "../types/shadowSwing";
 import { API_BASE_URL } from "@constants/api";
@@ -9,10 +10,10 @@ import axiosInstance from "@utils/axiosInstance";
 const URL = `${API_BASE_URL}/api/v2/shadow_swing_sessions`;
 
 export const startShadowSwingSession = async (
-  targetCount: number,
+  input: ShadowSwingSessionInput,
 ): Promise<ShadowSwingSession> => {
   const res = await axiosInstance.post<ShadowSwingSession>(URL, {
-    shadow_swing_session: { target_count: targetCount },
+    shadow_swing_session: input,
   });
   return res.data;
 };

@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Speech from "expo-speech";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Alert,
   AppState,
   BackHandler,
   View,
@@ -170,23 +171,45 @@ export default function ShadowSwingCounterScreen() {
     return () => clearInterval(id);
   }, [running]);
 
+  const goToComplete = useCallback(
+    (swing: number, saved: boolean) => {
+      router.replace({
+        pathname: "/(shadow-swing)/complete",
+        params: { swingCount: String(swing), saved: saved ? "1" : "0" },
+      });
+    },
+    [router],
+  );
+
+  // グラウンドなど電波の弱い環境では保存APIが落ちうる。完了画面を無条件に見せると
+  // 実際には1本も記録されていないのに「保存済み」と誤認させるため、失敗はその場で
+  // 伝えて再試行できるようにする（自分で選ばない限り未保存のまま進ませない）。
   const finish = useCallback(
-    async (swing: number) => {
+    async function finishWith(swing: number): Promise<void> {
       if (finishedRef.current) return;
       finishedRef.current = true;
       setRunning(false);
       Speech.stop();
       try {
         await completeSession({ id: sessionId, swingCount: swing });
+        goToComplete(swing, true);
       } catch {
-        // 保存失敗でも完了画面は見せる（再送は今後の課題）。
+        finishedRef.current = false;
+        Alert.alert(
+          "保存に失敗しました",
+          `${swing}本の記録をサーバーに保存できませんでした。通信状況を確認して再試行してください。`,
+          [
+            {
+              text: "保存せず終了",
+              style: "destructive",
+              onPress: () => goToComplete(swing, false),
+            },
+            { text: "再試行", onPress: () => void finishWith(swing) },
+          ],
+        );
       }
-      router.replace({
-        pathname: "/(shadow-swing)/complete",
-        params: { swingCount: String(swing) },
-      });
     },
-    [completeSession, sessionId, router],
+    [completeSession, sessionId, goToComplete],
   );
 
   // 目標到達で自動完了。

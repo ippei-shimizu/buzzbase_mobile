@@ -16,6 +16,7 @@ import {
   useShadowSwingMutations,
   useShadowSwingStats,
 } from "@hooks/useShadowSwing";
+import { serverErrorMessage } from "@utils/axiosError";
 
 const INTERVALS = [
   1.0, 1.5, 2.0, 3.0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
@@ -50,20 +51,28 @@ export default function ShadowSwingSetupScreen() {
       return;
     }
     try {
-      const session = await startSession(targetCount);
+      const session = await startSession({
+        target_count: targetCount,
+        interval_seconds: interval,
+        vibration_enabled: vibration,
+        sound_enabled: sound,
+        voice_enabled: voice,
+      });
+      // カウンターの動作はサーバーが受理した設定に従う。Pro 限定値の可否判定を
+      // クライアント側の表示ロックだけに依存させない。
       router.push({
         pathname: "/(shadow-swing)/counter",
         params: {
           sessionId: String(session.id),
-          target: String(targetCount),
-          interval: String(interval),
-          vibration: vibration ? "1" : "0",
-          sound: sound ? "1" : "0",
-          voice: voice ? "1" : "0",
+          target: String(session.target_count),
+          interval: String(session.interval_seconds),
+          vibration: session.vibration_enabled ? "1" : "0",
+          sound: session.sound_enabled ? "1" : "0",
+          voice: session.voice_enabled ? "1" : "0",
         },
       });
-    } catch {
-      Alert.alert("開始に失敗しました");
+    } catch (thrown) {
+      Alert.alert(serverErrorMessage(thrown) ?? "開始に失敗しました");
     }
   };
 

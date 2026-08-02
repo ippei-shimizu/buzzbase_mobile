@@ -13,3 +13,22 @@ import axios from "axios";
 export const isAxios404 = (error: unknown): boolean => {
   return axios.isAxiosError(error) && error.response?.status === 404;
 };
+
+/**
+ * APIが返した日本語エラーメッセージを取り出す。
+ *
+ * バックエンドはバリデーション失敗を `{ errors: [...] }`、権限エラーを `{ error: "..." }` で
+ * 返すため、どちらの形でも1つの文字列に畳んで返す。
+ *
+ * @param error - try/catchで受けた error 値（unknown）
+ * @returns 表示可能なメッセージ。API由来のメッセージが無ければ undefined
+ */
+export const serverErrorMessage = (error: unknown): string | undefined => {
+  if (!axios.isAxiosError(error)) return undefined;
+
+  const data = error.response?.data as
+    | { errors?: string[]; error?: string }
+    | undefined;
+  if (data?.errors?.length) return data.errors.join("\n");
+  return data?.error;
+};
