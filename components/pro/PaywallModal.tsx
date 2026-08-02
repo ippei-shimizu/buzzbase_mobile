@@ -431,7 +431,9 @@ export function PaywallModal({
   };
 
   useEffect(() => {
-    if (!isOpen) return;
+    // pro_features off の間は購入導線自体を出さないため、Offerings取得も不要
+    // （RevenueCatへの無駄なリクエストを避ける）。
+    if (!isOpen || !proFeaturesFlag) return;
     let cancelled = false;
     setLoadingOfferings(true);
     void (async () => {
@@ -459,10 +461,56 @@ export function PaywallModal({
     return () => {
       cancelled = true;
     };
-  }, [isOpen]);
+  }, [isOpen, proFeaturesFlag]);
 
-  // Pro リリース前 / kill switch off では加入導線を完全に隠す。
-  if (!proFeaturesFlag) return null;
+  // Pro リリース前 / kill switch off では購入導線（プラン一覧・加入・復元）だけを隠す。
+  // 無料プランの上限自体はこのフラグと無関係に常時有効なため、理由の説明は出し続ける
+  // （説明ごと消すと「操作しても無言で何も起きない」デッドエンドになる）。
+  if (!proFeaturesFlag) {
+    return (
+      <Modal
+        visible={isOpen}
+        transparent
+        animationType="slide"
+        statusBarTranslucent
+        onRequestClose={onClose}
+      >
+        <View style={styles.overlay}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={onClose}
+            accessibilityLabel="閉じる"
+          />
+          <View style={styles.sheet} accessibilityViewIsModal>
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.closeButton}
+              accessibilityRole="button"
+              accessibilityLabel="閉じる"
+              hitSlop={8}
+            >
+              <Ionicons name="close" size={22} color="#F4F4F4" />
+            </TouchableOpacity>
+            <View style={styles.scrollContent}>
+              {contextMessage ? (
+                <View style={styles.contextBanner}>
+                  <Ionicons
+                    name="information-circle"
+                    size={16}
+                    color="#D4D4D4"
+                  />
+                  <Text style={styles.contextBannerText}>{contextMessage}</Text>
+                </View>
+              ) : null}
+              <Text style={styles.highlightDescription}>
+                Proプランは近日公開予定です。もうしばらくお待ちください。
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  }
 
   const packages = offering?.availablePackages ?? [];
   const selectedPackage =

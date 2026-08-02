@@ -191,10 +191,30 @@ describe("PaywallModal", () => {
     expect(queryByText("シーズンを跨いだ成長を可視化")).not.toBeOnTheScreen();
   });
 
-  it("pro_features=false のときは isOpen でも何も描画しない（kill switch）", () => {
+  it("pro_features=false のときは購入導線（プラン一覧・加入・復元）を隠すが、上限到達の説明は表示する", () => {
     useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: false });
 
-    const { queryByText } = renderWithProviders(
+    const { queryByText, getByText } = renderWithProviders(
+      <PaywallModal
+        isOpen
+        onClose={mockOnClose}
+        feature="season_transition_graph"
+        contextMessage="無料プランで設定できる目標は2件までのため、追加できません。"
+      />,
+    );
+
+    expect(
+      getByText("無料プランで設定できる目標は2件までのため、追加できません。"),
+    ).toBeOnTheScreen();
+    expect(queryByText("シーズンを跨いだ成長を可視化")).not.toBeOnTheScreen();
+    expect(queryByText("PROを始める")).not.toBeOnTheScreen();
+    expect(queryByText("購入を復元")).not.toBeOnTheScreen();
+  });
+
+  it("pro_features=false でもOfferings取得は行わない", () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: false });
+
+    renderWithProviders(
       <PaywallModal
         isOpen
         onClose={mockOnClose}
@@ -202,7 +222,7 @@ describe("PaywallModal", () => {
       />,
     );
 
-    expect(queryByText("シーズンを跨いだ成長を可視化")).not.toBeOnTheScreen();
+    expect(getOfferingsMock).not.toHaveBeenCalled();
   });
 
   it("閉じるボタンで onClose が呼ばれる", () => {
