@@ -8,6 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   View,
   Text,
   TextInput,
@@ -52,6 +53,11 @@ interface Props {
   submitLabel: string;
   isSubmitting: boolean;
   /**
+   * 保存中バナーに出す文言。動画の圧縮・アップロードは数十秒かかることがあるため、
+   * 呼び出し側が進捗（何件目か）を渡して「固まった」と誤解されるのを防ぐ。
+   */
+  submittingMessage?: string;
+  /**
    * stagedMediaは新規作成時にローカルで選択済み（未アップロード）のメディア。
    * baseball_note_idが未確定のため、呼び出し側でノート作成成功後にまとめてアップロードする。
    * 編集時（noteIdあり）は常に空配列。
@@ -88,6 +94,7 @@ export function NoteForm({
   showDatePicker = true,
   submitLabel,
   isSubmitting,
+  submittingMessage,
   onSubmit,
   templateLocked = false,
   noteId,
@@ -237,300 +244,331 @@ export function NoteForm({
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {showDatePicker ? (
-        <>
-          <Text style={styles.label}>日付</Text>
-          <TouchableOpacity
-            style={styles.dateRow}
-            onPress={() => setShowNoteDate((prev) => !prev)}
-          >
-            <Text style={styles.dateText}>
-              {formatJaFullDate(toDateString(date))}
-            </Text>
-            <Ionicons name="calendar-outline" size={18} color="#A1A1AA" />
-          </TouchableOpacity>
-          {showNoteDate ? (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              maximumDate={new Date()}
-              themeVariant="dark"
-              accentColor="#d08000"
-              display={Platform.OS === "ios" ? "inline" : "default"}
-              onChange={(_event, selected) => {
-                setShowNoteDate(false);
-                if (selected) setDate(selected);
-              }}
-            />
-          ) : null}
-        </>
+    <View style={styles.container}>
+      {isSubmitting ? (
+        <View
+          style={styles.savingBanner}
+          accessibilityRole="progressbar"
+          accessibilityLabel={submittingMessage ?? "保存中"}
+        >
+          <ActivityIndicator size="small" color="#d08000" />
+          <Text style={styles.savingBannerText}>
+            {submittingMessage ?? "保存中..."}
+          </Text>
+        </View>
       ) : null}
-
-      <Text style={styles.label}>タイトル（任意）</Text>
-      <TextInput
-        style={styles.input}
-        value={title}
-        onChangeText={setTitle}
-        placeholder="例: フォームの気づき"
-        placeholderTextColor="#71717A"
-      />
-
-      <Text style={styles.label}>メモ</Text>
-      <TextInput
-        style={[styles.input, styles.memoInput]}
-        value={memo}
-        onChangeText={setMemo}
-        multiline
-        placeholder="外角が体の開きで詰まる。右肩を我慢、と指摘された…"
-        placeholderTextColor="#71717A"
-      />
-
-      <Text style={styles.label}>メディア（任意）</Text>
-      {noteId != null ? (
-        <>
-          <MediaPicker baseballNoteId={noteId} />
-          <MediaAttachmentList
-            attachments={mediaAttachments}
-            editable
-            noteId={noteId}
-          />
-        </>
-      ) : (
-        <>
-          <MediaPicker
-            onStage={(asset) => setStagedMedia((prev) => [...prev, asset])}
-          />
-          <StagedMediaList
-            assets={stagedMedia}
-            onRemove={(localId) =>
-              setStagedMedia((prev) =>
-                prev.filter((item) => item.localId !== localId),
-              )
-            }
-            onUpdateMemo={(localId, memo) =>
-              setStagedMedia((prev) =>
-                prev.map((item) =>
-                  item.localId === localId ? { ...item, memo } : item,
-                ),
-              )
-            }
-            onUpdateUri={(localId, uri, previewUri) =>
-              setStagedMedia((prev) =>
-                prev.map((item) =>
-                  item.localId === localId
-                    ? { ...item, uri, previewUri }
-                    : item,
-                ),
-              )
-            }
-          />
-        </>
-      )}
-
-      <ReflectionTemplateSection
-        selectedTemplateId={reflectionTemplateId}
-        answers={answers}
-        onSelectTemplate={handleSelectTemplate}
-        onChangeAnswer={handleChangeAnswer}
-        locked={templateLocked}
-      />
-
-      <Text style={styles.label}>タグ（任意・複数選択可）</Text>
-      <ProUpsellOverlay
-        unlocked={hasEntitlement("note_tags")}
-        loading={isProLoading}
-        feature="note_tags"
-        onPressCta={() => setTagPaywallOpen(true)}
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
       >
-        <TagSection
-          selectedIds={tagIds}
-          onChange={setTagIds}
-          disabled={!hasEntitlement("note_tags")}
-          showLabel={false}
+        {showDatePicker ? (
+          <>
+            <Text style={styles.label}>日付</Text>
+            <TouchableOpacity
+              style={styles.dateRow}
+              onPress={() => setShowNoteDate((prev) => !prev)}
+            >
+              <Text style={styles.dateText}>
+                {formatJaFullDate(toDateString(date))}
+              </Text>
+              <Ionicons name="calendar-outline" size={18} color="#A1A1AA" />
+            </TouchableOpacity>
+            {showNoteDate ? (
+              <DateTimePicker
+                value={date}
+                mode="date"
+                maximumDate={new Date()}
+                themeVariant="dark"
+                accentColor="#d08000"
+                display={Platform.OS === "ios" ? "inline" : "default"}
+                onChange={(_event, selected) => {
+                  setShowNoteDate(false);
+                  if (selected) setDate(selected);
+                }}
+              />
+            ) : null}
+          </>
+        ) : null}
+
+        <Text style={styles.label}>タイトル（任意）</Text>
+        <TextInput
+          style={styles.input}
+          value={title}
+          onChangeText={setTitle}
+          placeholder="例: フォームの気づき"
+          placeholderTextColor="#71717A"
         />
-      </ProUpsellOverlay>
-      <PaywallModal
-        isOpen={isTagPaywallOpen}
-        onClose={() => setTagPaywallOpen(false)}
-        feature="note_tags"
-      />
 
-      <Text style={styles.label}>紐付け（任意）</Text>
+        <Text style={styles.label}>メモ</Text>
+        <TextInput
+          style={[styles.input, styles.memoInput]}
+          value={memo}
+          onChangeText={setMemo}
+          multiline
+          placeholder="外角が体の開きで詰まる。右肩を我慢、と指摘された…"
+          placeholderTextColor="#71717A"
+        />
 
-      <ThemePickerField
-        selectedThemeIds={improvementThemeIds}
-        onChange={setImprovementThemeIds}
-      />
-
-      <TouchableOpacity
-        style={styles.linkButton}
-        onPress={() => togglePicker("practice")}
-      >
-        <Ionicons name="barbell-outline" size={18} color="#d08000" />
-        <Text style={styles.linkButtonText}>
-          {practiceLabel ??
-            (practiceSessionId != null
-              ? "練習記録に紐付け済み"
-              : "練習記録に紐付け")}
-        </Text>
-        {practiceSessionId != null ? (
-          <TouchableOpacity onPress={() => setPracticeSessionId(null)}>
-            <Ionicons name="close-circle" size={18} color="#A1A1AA" />
-          </TouchableOpacity>
+        <Text style={styles.label}>メディア（任意）</Text>
+        {noteId != null ? (
+          <>
+            <MediaPicker baseballNoteId={noteId} />
+            <MediaAttachmentList
+              attachments={mediaAttachments}
+              editable
+              noteId={noteId}
+            />
+          </>
         ) : (
+          <>
+            <MediaPicker
+              onStage={(asset) => setStagedMedia((prev) => [...prev, asset])}
+            />
+            <StagedMediaList
+              assets={stagedMedia}
+              onRemove={(localId) =>
+                setStagedMedia((prev) =>
+                  prev.filter((item) => item.localId !== localId),
+                )
+              }
+              onUpdateMemo={(localId, memo) =>
+                setStagedMedia((prev) =>
+                  prev.map((item) =>
+                    item.localId === localId ? { ...item, memo } : item,
+                  ),
+                )
+              }
+              onUpdateUri={(localId, uri, previewUri) =>
+                setStagedMedia((prev) =>
+                  prev.map((item) =>
+                    item.localId === localId
+                      ? { ...item, uri, previewUri }
+                      : item,
+                  ),
+                )
+              }
+            />
+          </>
+        )}
+
+        <ReflectionTemplateSection
+          selectedTemplateId={reflectionTemplateId}
+          answers={answers}
+          onSelectTemplate={handleSelectTemplate}
+          onChangeAnswer={handleChangeAnswer}
+          locked={templateLocked}
+        />
+
+        <Text style={styles.label}>タグ（任意・複数選択可）</Text>
+        <ProUpsellOverlay
+          unlocked={hasEntitlement("note_tags")}
+          loading={isProLoading}
+          feature="note_tags"
+          onPressCta={() => setTagPaywallOpen(true)}
+        >
+          <TagSection
+            selectedIds={tagIds}
+            onChange={setTagIds}
+            disabled={!hasEntitlement("note_tags")}
+            showLabel={false}
+          />
+        </ProUpsellOverlay>
+        <PaywallModal
+          isOpen={isTagPaywallOpen}
+          onClose={() => setTagPaywallOpen(false)}
+          feature="note_tags"
+        />
+
+        <Text style={styles.label}>紐付け（任意）</Text>
+
+        <ThemePickerField
+          selectedThemeIds={improvementThemeIds}
+          onChange={setImprovementThemeIds}
+        />
+
+        <TouchableOpacity
+          style={styles.linkButton}
+          onPress={() => togglePicker("practice")}
+        >
+          <Ionicons name="barbell-outline" size={18} color="#d08000" />
+          <Text style={styles.linkButtonText}>
+            {practiceLabel ??
+              (practiceSessionId != null
+                ? "練習記録に紐付け済み"
+                : "練習記録に紐付け")}
+          </Text>
+          {practiceSessionId != null ? (
+            <TouchableOpacity onPress={() => setPracticeSessionId(null)}>
+              <Ionicons name="close-circle" size={18} color="#A1A1AA" />
+            </TouchableOpacity>
+          ) : (
+            <Ionicons
+              name={openPicker === "practice" ? "chevron-up" : "chevron-down"}
+              size={18}
+              color="#A1A1AA"
+            />
+          )}
+        </TouchableOpacity>
+        {openPicker === "practice" ? (
+          <View style={styles.picker}>
+            <TouchableOpacity
+              style={styles.filterRow}
+              onPress={() => setShowPracticeFilter((prev) => !prev)}
+            >
+              <Ionicons name="calendar-outline" size={16} color="#A1A1AA" />
+              <Text style={styles.filterText}>
+                {practiceFilter
+                  ? `${formatJaFullDate(toDateString(practiceFilter))} で絞り込み中`
+                  : "日付で絞り込む"}
+              </Text>
+              {practiceFilter ? (
+                <TouchableOpacity onPress={() => setPracticeFilter(null)}>
+                  <Ionicons name="close-circle" size={16} color="#A1A1AA" />
+                </TouchableOpacity>
+              ) : null}
+            </TouchableOpacity>
+            {showPracticeFilter ? (
+              <DateTimePicker
+                value={practiceFilter ?? new Date()}
+                mode="date"
+                maximumDate={new Date()}
+                themeVariant="dark"
+                accentColor="#d08000"
+                display={Platform.OS === "ios" ? "inline" : "default"}
+                onChange={(_event, selected) => {
+                  setShowPracticeFilter(false);
+                  if (selected) setPracticeFilter(selected);
+                }}
+              />
+            ) : null}
+            {filteredSessions.length === 0 ? (
+              <Text style={styles.pickerEmpty}>
+                {practiceFilter
+                  ? "その日の練習記録がありません"
+                  : "練習記録がありません"}
+              </Text>
+            ) : (
+              filteredSessions.map((session) => (
+                <TouchableOpacity
+                  key={session.id}
+                  style={styles.pickerRow}
+                  onPress={() => {
+                    setPracticeSessionId(session.id);
+                    setOpenPicker("none");
+                  }}
+                >
+                  <Text style={styles.pickerRowDate}>
+                    {formatJaFullDate(session.logged_on)}
+                  </Text>
+                  {session.practice_logs.length > 0 ? (
+                    <Text style={styles.pickerRowMenus} numberOfLines={1}>
+                      {session.practice_logs
+                        .map((log) => log.menu_name)
+                        .join(", ")}
+                    </Text>
+                  ) : null}
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
+        ) : null}
+
+        {gameResultIds.map((gameResultId) => (
+          <View key={gameResultId} style={styles.linkButton}>
+            <Ionicons name="baseball-outline" size={18} color="#d08000" />
+            <Text style={styles.linkButtonText} numberOfLines={1}>
+              {gameLabelFor(gameResultId) ?? "試合に紐付け済み"}
+            </Text>
+            <TouchableOpacity onPress={() => handleRemoveGame(gameResultId)}>
+              <Ionicons name="close-circle" size={18} color="#A1A1AA" />
+            </TouchableOpacity>
+          </View>
+        ))}
+        <TouchableOpacity
+          style={styles.linkButton}
+          onPress={handleOpenGamePicker}
+        >
+          <Ionicons name="baseball-outline" size={18} color="#d08000" />
+          <Text style={styles.linkButtonText}>
+            {gameResultIds.length > 0
+              ? "試合をもう1件追加"
+              : "試合記録に紐付け"}
+          </Text>
           <Ionicons
-            name={openPicker === "practice" ? "chevron-up" : "chevron-down"}
+            name={openPicker === "game" ? "chevron-up" : "chevron-down"}
             size={18}
             color="#A1A1AA"
           />
-        )}
-      </TouchableOpacity>
-      {openPicker === "practice" ? (
-        <View style={styles.picker}>
-          <TouchableOpacity
-            style={styles.filterRow}
-            onPress={() => setShowPracticeFilter((prev) => !prev)}
-          >
-            <Ionicons name="calendar-outline" size={16} color="#A1A1AA" />
-            <Text style={styles.filterText}>
-              {practiceFilter
-                ? `${formatJaFullDate(toDateString(practiceFilter))} で絞り込み中`
-                : "日付で絞り込む"}
-            </Text>
-            {practiceFilter ? (
-              <TouchableOpacity onPress={() => setPracticeFilter(null)}>
-                <Ionicons name="close-circle" size={16} color="#A1A1AA" />
-              </TouchableOpacity>
-            ) : null}
-          </TouchableOpacity>
-          {showPracticeFilter ? (
-            <DateTimePicker
-              value={practiceFilter ?? new Date()}
-              mode="date"
-              maximumDate={new Date()}
-              themeVariant="dark"
-              accentColor="#d08000"
-              display={Platform.OS === "ios" ? "inline" : "default"}
-              onChange={(_event, selected) => {
-                setShowPracticeFilter(false);
-                if (selected) setPracticeFilter(selected);
-              }}
-            />
-          ) : null}
-          {filteredSessions.length === 0 ? (
-            <Text style={styles.pickerEmpty}>
-              {practiceFilter
-                ? "その日の練習記録がありません"
-                : "練習記録がありません"}
-            </Text>
-          ) : (
-            filteredSessions.map((session) => (
-              <TouchableOpacity
-                key={session.id}
-                style={styles.pickerRow}
-                onPress={() => {
-                  setPracticeSessionId(session.id);
-                  setOpenPicker("none");
-                }}
-              >
-                <Text style={styles.pickerRowDate}>
-                  {formatJaFullDate(session.logged_on)}
-                </Text>
-                {session.practice_logs.length > 0 ? (
-                  <Text style={styles.pickerRowMenus} numberOfLines={1}>
-                    {session.practice_logs
-                      .map((log) => log.menu_name)
-                      .join(", ")}
+        </TouchableOpacity>
+        {openPicker === "game" ? (
+          <View style={styles.picker}>
+            <View style={styles.searchBox}>
+              <Ionicons name="search" size={16} color="#71717A" />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="対戦相手で検索"
+                placeholderTextColor="#71717A"
+                value={gameSearch}
+                onChangeText={setGameSearch}
+              />
+            </View>
+            {selectableGameResults.length === 0 ? (
+              <Text style={styles.pickerEmpty}>試合記録がありません</Text>
+            ) : (
+              selectableGameResults.slice(0, 15).map((game) => (
+                <TouchableOpacity
+                  key={game.game_result_id}
+                  style={styles.pickerRow}
+                  onPress={() => handleSelectGame(game.game_result_id)}
+                >
+                  <Text style={styles.pickerText}>
+                    {formatJaFullDate(
+                      game.match_result.date_and_time.slice(0, 10),
+                    )}{" "}
+                    vs {game.match_result.opponent_team_name}
                   </Text>
-                ) : null}
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
-      ) : null}
-
-      {gameResultIds.map((gameResultId) => (
-        <View key={gameResultId} style={styles.linkButton}>
-          <Ionicons name="baseball-outline" size={18} color="#d08000" />
-          <Text style={styles.linkButtonText} numberOfLines={1}>
-            {gameLabelFor(gameResultId) ?? "試合に紐付け済み"}
-          </Text>
-          <TouchableOpacity onPress={() => handleRemoveGame(gameResultId)}>
-            <Ionicons name="close-circle" size={18} color="#A1A1AA" />
-          </TouchableOpacity>
-        </View>
-      ))}
-      <TouchableOpacity
-        style={styles.linkButton}
-        onPress={handleOpenGamePicker}
-      >
-        <Ionicons name="baseball-outline" size={18} color="#d08000" />
-        <Text style={styles.linkButtonText}>
-          {gameResultIds.length > 0 ? "試合をもう1件追加" : "試合記録に紐付け"}
-        </Text>
-        <Ionicons
-          name={openPicker === "game" ? "chevron-up" : "chevron-down"}
-          size={18}
-          color="#A1A1AA"
-        />
-      </TouchableOpacity>
-      {openPicker === "game" ? (
-        <View style={styles.picker}>
-          <View style={styles.searchBox}>
-            <Ionicons name="search" size={16} color="#71717A" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="対戦相手で検索"
-              placeholderTextColor="#71717A"
-              value={gameSearch}
-              onChangeText={setGameSearch}
-            />
+                </TouchableOpacity>
+              ))
+            )}
           </View>
-          {selectableGameResults.length === 0 ? (
-            <Text style={styles.pickerEmpty}>試合記録がありません</Text>
-          ) : (
-            selectableGameResults.slice(0, 15).map((game) => (
-              <TouchableOpacity
-                key={game.game_result_id}
-                style={styles.pickerRow}
-                onPress={() => handleSelectGame(game.game_result_id)}
-              >
-                <Text style={styles.pickerText}>
-                  {formatJaFullDate(
-                    game.match_result.date_and_time.slice(0, 10),
-                  )}{" "}
-                  vs {game.match_result.opponent_team_name}
-                </Text>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
-      ) : null}
-      <PaywallModal
-        isOpen={isGamePaywallOpen}
-        onClose={() => setGamePaywallOpen(false)}
-        feature="multi_game_result_notes"
-        contextMessage="無料プランでは1つのノートに試合を1件まで紐付けられるため、追加できません。"
-      />
+        ) : null}
+        <PaywallModal
+          isOpen={isGamePaywallOpen}
+          onClose={() => setGamePaywallOpen(false)}
+          feature="multi_game_result_notes"
+          contextMessage="無料プランでは1つのノートに試合を1件まで紐付けられるため、追加できません。"
+        />
 
-      <TouchableOpacity
-        style={[
-          styles.saveButton,
-          (isSubmitting || isProLoading) && styles.saveButtonDisabled,
-        ]}
-        onPress={handleSubmit}
-        disabled={isSubmitting || isProLoading}
-      >
-        <Text style={styles.saveButtonText}>{submitLabel}</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity
+          style={[
+            styles.saveButton,
+            (isSubmitting || isProLoading) && styles.saveButtonDisabled,
+          ]}
+          onPress={handleSubmit}
+          disabled={isSubmitting || isProLoading}
+        >
+          <Text style={styles.saveButtonText}>{submitLabel}</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#2E2E2E" },
   content: { padding: 16, paddingBottom: 40 },
+  savingBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: "#424242",
+    borderBottomWidth: 1,
+    borderBottomColor: "#5A5A5A",
+  },
+  savingBannerText: { color: "#F4F4F4", fontSize: 13, fontWeight: "600" },
   label: {
     color: "#A1A1AA",
     fontSize: 13,

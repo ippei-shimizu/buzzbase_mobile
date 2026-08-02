@@ -19,6 +19,7 @@ import {
 import { CategoryPicker } from "@components/practice/CategoryPicker";
 import { UnitPicker } from "@components/practice/UnitPicker";
 import { FieldLabel } from "@components/ui/FieldLabel";
+import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import { PRACTICE_UNITS } from "@constants/practice";
 import {
   usePracticeMenuMutations,
@@ -98,57 +99,62 @@ function MenuForm({ menu }: { menu?: PracticeMenu }) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Stack.Screen
-        options={{ title: menu ? "メニューを編集" : "メニューを作る" }}
-      />
-      <FieldLabel text="名前" required />
-      <TextInput
-        style={styles.input}
-        value={name}
-        onChangeText={setName}
-        placeholder="例: 素振り、ティー、ランニング"
-        placeholderTextColor="#71717A"
-      />
-
-      <FieldLabel text="カテゴリ" required />
-      <CategoryPicker
-        value={category}
-        onChange={(next) => {
-          setCategory(next);
-          // 筋トレは重さ×回数を既定にする。
-          if (next === "strength") setUnit("weight_reps");
-          else if (unit === "weight_reps") setUnit("count");
-        }}
-      />
-
-      <FieldLabel text="計測" required />
-      <UnitPicker value={unit} onChange={setUnit} />
-
-      <FieldLabel text="初期値（任意）" />
-      <View style={styles.valueRow}>
+    <KeyboardAwareScreen>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
+        <Stack.Screen
+          options={{ title: menu ? "メニューを編集" : "メニューを作る" }}
+        />
+        <FieldLabel text="名前" required />
         <TextInput
-          style={[styles.input, styles.valueInput]}
-          value={defaultValue}
-          onChangeText={setDefaultValue}
-          keyboardType="numeric"
-          placeholder={`例: ${unitMeta.placeholderValue}`}
+          style={styles.input}
+          value={name}
+          onChangeText={setName}
+          placeholder="例: 素振り、ティー、ランニング"
           placeholderTextColor="#71717A"
         />
-        <Text style={styles.valueUnit}>{unitMeta.defaultLabel}</Text>
-      </View>
-      <Text style={styles.hint}>
-        記録するときに初期表示される量です。毎回変更できます。
-      </Text>
 
-      <TouchableOpacity
-        style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-        onPress={handleSave}
-        disabled={isSaving}
-      >
-        <Text style={styles.saveButtonText}>保存</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <FieldLabel text="カテゴリ" required />
+        <CategoryPicker
+          value={category}
+          onChange={(next) => {
+            setCategory(next);
+            // 筋トレは重さ×回数を既定にする。
+            if (next === "strength") setUnit("weight_reps");
+            else if (unit === "weight_reps") setUnit("count");
+          }}
+        />
+
+        <FieldLabel text="計測" required />
+        <UnitPicker value={unit} onChange={setUnit} />
+
+        <FieldLabel text="初期値（任意）" />
+        <View style={styles.valueRow}>
+          <TextInput
+            style={[styles.input, styles.valueInput]}
+            value={defaultValue}
+            onChangeText={setDefaultValue}
+            keyboardType="numeric"
+            placeholder={`例: ${unitMeta.placeholderValue}`}
+            placeholderTextColor="#71717A"
+          />
+          <Text style={styles.valueUnit}>{unitMeta.defaultLabel}</Text>
+        </View>
+        <Text style={styles.hint}>
+          記録するときに初期表示される量です。毎回変更できます。
+        </Text>
+
+        <TouchableOpacity
+          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+          onPress={handleSave}
+          disabled={isSaving}
+        >
+          <Text style={styles.saveButtonText}>保存</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAwareScreen>
   );
 }
 

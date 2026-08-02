@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import { THEME_CATEGORIES } from "@constants/improvementTheme";
 import {
   useImprovementThemeMutations,
@@ -71,59 +72,67 @@ function ThemeForm({ editing }: { editing?: ImprovementTheme }) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Stack.Screen
-        options={{ title: editing ? "課題を編集" : "課題を決める" }}
-      />
-      <Text style={styles.label}>いま取り組む課題</Text>
-      <TextInput
-        style={styles.input}
-        value={title}
-        onChangeText={setTitle}
-        placeholder="例: 肩の開きを抑える"
-        placeholderTextColor="#71717A"
-      />
-
-      <Text style={styles.label}>カテゴリ</Text>
-      <View style={styles.chips}>
-        {THEME_CATEGORIES.map((item) => (
-          <TouchableOpacity
-            key={item.value}
-            style={[styles.chip, category === item.value && styles.chipActive]}
-            onPress={() => setCategory(item.value)}
-          >
-            <Text
-              style={[
-                styles.chipText,
-                category === item.value && styles.chipTextActive,
-              ]}
-            >
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <Text style={styles.label}>目的・メモ（任意）</Text>
-      <TextInput
-        style={[styles.input, styles.multiline]}
-        value={purpose}
-        onChangeText={setPurpose}
-        multiline
-        placeholder="何のために取り組むか。克服の基準など"
-        placeholderTextColor="#71717A"
-      />
-
-      <TouchableOpacity
-        style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-        onPress={handleSubmit}
-        disabled={isSaving}
+    <KeyboardAwareScreen>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
       >
-        <Text style={styles.saveButtonText}>
-          {editing ? "更新" : "この課題に取り組む"}
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <Stack.Screen
+          options={{ title: editing ? "課題を編集" : "課題を決める" }}
+        />
+        <Text style={styles.label}>いま取り組む課題</Text>
+        <TextInput
+          style={styles.input}
+          value={title}
+          onChangeText={setTitle}
+          placeholder="例: 肩の開きを抑える"
+          placeholderTextColor="#71717A"
+        />
+
+        <Text style={styles.label}>カテゴリ</Text>
+        <View style={styles.chips}>
+          {THEME_CATEGORIES.map((item) => (
+            <TouchableOpacity
+              key={item.value}
+              style={[
+                styles.chip,
+                category === item.value && styles.chipActive,
+              ]}
+              onPress={() => setCategory(item.value)}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  category === item.value && styles.chipTextActive,
+                ]}
+              >
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.label}>目的・メモ（任意）</Text>
+        <TextInput
+          style={[styles.input, styles.multiline]}
+          value={purpose}
+          onChangeText={setPurpose}
+          multiline
+          placeholder="何のために取り組むか。克服の基準など"
+          placeholderTextColor="#71717A"
+        />
+
+        <TouchableOpacity
+          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+          onPress={handleSubmit}
+          disabled={isSaving}
+        >
+          <Text style={styles.saveButtonText}>
+            {editing ? "更新" : "この課題に取り組む"}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAwareScreen>
   );
 }
 

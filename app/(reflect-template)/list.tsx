@@ -81,23 +81,29 @@ export default function ReflectTemplateListScreen() {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.sectionTitle}>プリセット</Text>
-        {presets.map((template) => (
-          <TouchableOpacity
-            key={template.id}
-            style={styles.card}
-            activeOpacity={0.6}
-            accessibilityRole="button"
-            onPress={() => handleEdit(template)}
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>{template.title}</Text>
-              <Ionicons name="pencil" size={16} color="#A1A1AA" />
-            </View>
-            <Text style={styles.cardQuestions}>
-              {template.questions.join("・")}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {presets.length === 0 ? (
+          <Text style={styles.emptyText}>
+            プリセットを読み込めませんでした。下の「テンプレを作る」から自分専用の問いかけを作れます。
+          </Text>
+        ) : (
+          presets.map((template) => (
+            <TouchableOpacity
+              key={template.id}
+              style={styles.card}
+              activeOpacity={0.6}
+              accessibilityRole="button"
+              onPress={() => handleEdit(template)}
+            >
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>{template.title}</Text>
+                <Ionicons name="pencil" size={16} color="#A1A1AA" />
+              </View>
+              <Text style={styles.cardQuestions}>
+                {template.questions.join("・")}
+              </Text>
+            </TouchableOpacity>
+          ))
+        )}
 
         <Text style={[styles.sectionTitle, styles.customTitle]}>
           自作テンプレ

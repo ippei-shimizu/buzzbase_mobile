@@ -1,7 +1,7 @@
 import type { CalendarEntry } from "../../types/plan";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -14,6 +14,7 @@ import { PaywallModal } from "@components/pro/PaywallModal";
 import { eventTypeMeta } from "@constants/schedule";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useCalendar } from "@hooks/usePlans";
+import { buildTimelineLayout, minutesFromMidnight } from "@utils/dayTimeline";
 import { formatJaFullDate } from "@utils/formatDate";
 import { addDays, fromIsoDate, toIsoDate, todayIso } from "@utils/planDate";
 
@@ -28,6 +29,24 @@ const VIEW_MODES: { value: ViewMode; label: string }[] = [
   { value: "day", label: "日" },
 ];
 const pad = (value: number): string => String(value).padStart(2, "0");
+
+// 「日」表示のタイムライン。1時間ぶんの高さと、スクロール枠の高さ。
+const HOUR_HEIGHT = 56;
+const TIMELINE_VIEWPORT_HEIGHT = 420;
+const HOUR_LABEL_WIDTH = 48;
+const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
+
+/** 指定時刻がスクロール枠の少し上に来るオフセットを、可動域内に収めて返す。 */
+const timelineOffsetFor = (minutes: number): number => {
+  const maxOffset = 24 * HOUR_HEIGHT - TIMELINE_VIEWPORT_HEIGHT;
+  const target = (minutes / 60) * HOUR_HEIGHT - HOUR_HEIGHT / 2;
+  return Math.min(Math.max(target, 0), Math.max(maxOffset, 0));
+};
+
+const currentMinutesOfDay = (): number => {
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
+};
 
 /** iso を含む週の日曜日を返す（週の起点を日曜に統一）。 */
 const sundayOf = (iso: string): string =>
@@ -389,6 +408,7 @@ function WeekView({
   );
 }
 
+/** 24時間タイムライン。時刻のない予定は上部にまとめ、時刻付きは時間軸へ配置する。 */
 function DayView({
   cursor,
   byDate,
@@ -398,20 +418,120 @@ function DayView({
   byDate: Map<string, CalendarEntry[]>;
   onEntry: (entry: CalendarEntry) => void;
 }) {
-  const dayEntries = byDate.get(cursor) ?? [];
+  const timelineRef = useRef<ScrollView>(null);
+
+  const { timed, allDay } = useMemo(() => {
+    const timedEntries: { entry: CalendarEntry; minutes: number }[] = [];
+    const allDayEntries: CalendarEntry[] = [];
+    for (const entry of byDate.get(cursor) ?? []) {
+      const minutes = entry.scheduled_time
+        ? minutesFromMidnight(entry.scheduled_time)
+        : null;
+      if (minutes === null) allDayEntries.push(entry);
+      else timedEntries.push({ entry, minutes });
+    }
+    return { timed: timedEntries, allDay: allDayEntries };
+  }, [byDate, cursor]);
+  const hasEntries = timed.length > 0 || allDay.length > 0;
+
+  const placements = useMemo(
+    () => buildTimelineLayout(timed, (item) => item.minutes),
+    [timed],
+  );
+
+  // 分単位で再評価すると、他要因の再レンダリングのたびに初期スクロールがやり直され、
+  // ユーザーのスクロール位置を奪ってしまう。表示中の日付ごとに1回だけ確定させる。
+  const nowMinutes = useMemo(
+    () => (cursor === todayIso() ? currentMinutesOfDay() : null),
+    [cursor],
+  );
+  const focusMinutes = placements[0]?.minutes ?? nowMinutes ?? 0;
+
+  // 0時に張り付いたままだと当日の予定を探して長くスクロールさせることになるため、
+  // 最初の予定（無ければ現在時刻）が見える位置から開始する。
+  useEffect(() => {
+    timelineRef.current?.scrollTo({
+      y: timelineOffsetFor(focusMinutes),
+      animated: false,
+    });
+  }, [cursor, focusMinutes]);
+
   return (
-    <View style={styles.detail}>
-      {dayEntries.length === 0 ? (
+    <View>
+      {allDay.length > 0 ? (
+        <View style={styles.allDaySection}>
+          <Text style={styles.allDayLabel}>終日・時間未設定</Text>
+          {allDay.map((entry, index) => (
+            <DetailRow
+              key={`allday-${entry.schedule_id}-${index}`}
+              entry={entry}
+              onPress={() => onEntry(entry)}
+            />
+          ))}
+        </View>
+      ) : null}
+
+      {hasEntries ? null : (
         <Text style={styles.detailEmpty}>予定はありません</Text>
-      ) : (
-        dayEntries.map((entry, index) => (
-          <DetailRow
-            key={`${entry.schedule_id}-${index}`}
-            entry={entry}
-            onPress={() => onEntry(entry)}
-          />
-        ))
       )}
+
+      <ScrollView
+        ref={timelineRef}
+        style={styles.timeline}
+        nestedScrollEnabled
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.timelineBody}>
+          {HOURS.map((hour) => (
+            <View key={hour} style={styles.hourRow}>
+              <Text style={styles.hourLabel}>{`${pad(hour)}:00`}</Text>
+              <View style={styles.hourLine} />
+            </View>
+          ))}
+
+          <View style={styles.timelineOverlay}>
+            {nowMinutes === null ? null : (
+              <View
+                style={[
+                  styles.nowLine,
+                  { top: (nowMinutes / 60) * HOUR_HEIGHT },
+                ]}
+                pointerEvents="none"
+              >
+                <View style={styles.nowDot} />
+                <View style={styles.nowBar} />
+              </View>
+            )}
+
+            {placements.map((placement, index) => {
+              const { entry } = placement.item;
+              const meta = eventTypeMeta(entry.event_type);
+              return (
+                <TouchableOpacity
+                  key={`${entry.schedule_id}-${index}`}
+                  style={[
+                    styles.timelineBlock,
+                    {
+                      top: (placement.minutes / 60) * HOUR_HEIGHT,
+                      left: `${(placement.column * 100) / placement.columnCount}%`,
+                      width: `${100 / placement.columnCount}%`,
+                      borderLeftColor: meta.color,
+                    },
+                  ]}
+                  onPress={() => onEntry(entry)}
+                >
+                  <Text style={styles.timelineBlockTime}>
+                    {entry.scheduled_time}
+                  </Text>
+                  <Text style={styles.timelineBlockTitle} numberOfLines={1}>
+                    {entry.title ?? meta.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -519,6 +639,70 @@ const styles = StyleSheet.create({
   },
   detailBar: { width: 4, height: 20, borderRadius: 2 },
   detailTitle: { color: "#F4F4F4", fontSize: 14, flex: 1 },
+  allDaySection: {
+    backgroundColor: "#3A3A3A",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginBottom: 12,
+  },
+  allDayLabel: {
+    color: "#A1A1AA",
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 8,
+  },
+  timeline: { height: TIMELINE_VIEWPORT_HEIGHT },
+  timelineBody: { height: 24 * HOUR_HEIGHT },
+  hourRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    height: HOUR_HEIGHT,
+  },
+  hourLabel: {
+    width: HOUR_LABEL_WIDTH,
+    color: "#71717A",
+    fontSize: 11,
+    // 目盛り線と数字の中心を合わせる。
+    marginTop: -6,
+  },
+  hourLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "#4A4A4A",
+  },
+  timelineOverlay: {
+    position: "absolute",
+    top: 0,
+    left: HOUR_LABEL_WIDTH,
+    right: 0,
+    height: 24 * HOUR_HEIGHT,
+  },
+  timelineBlock: {
+    position: "absolute",
+    minHeight: 40,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderLeftWidth: 4,
+    borderRadius: 6,
+    backgroundColor: "#424242",
+  },
+  timelineBlockTime: { color: "#A1A1AA", fontSize: 10, fontWeight: "600" },
+  timelineBlockTitle: { color: "#F4F4F4", fontSize: 13, fontWeight: "600" },
+  nowLine: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  nowDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#d08000",
+  },
+  nowBar: { flex: 1, height: 1, backgroundColor: "#d08000" },
   weekDayRow: {
     flexDirection: "row",
     gap: 12,

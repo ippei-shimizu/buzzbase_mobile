@@ -23,12 +23,23 @@ jest.mock("expo-file-system", () => ({
 
 describe("compressVideo", () => {
   it("react-native-compressorで指定した長辺(maxSize)まで圧縮したURIを返す", async () => {
-    const uri = await compressVideo("file:///original.mp4", 1080);
+    const uri = await compressVideo("file:///original.mp4", { maxSize: 1080 });
     expect(VideoCompressor.compress).toHaveBeenCalledWith(
       "file:///original.mp4",
       { compressionMethod: "manual", maxSize: 1080 },
     );
     expect(uri).toBe("file:///original.mp4");
+  });
+
+  it("bitrate を指定するとそのまま圧縮オプションへ渡す", async () => {
+    await compressVideo("file:///original.mp4", {
+      maxSize: 1280,
+      bitrate: 3_000_000,
+    });
+    expect(VideoCompressor.compress).toHaveBeenCalledWith(
+      "file:///original.mp4",
+      { compressionMethod: "manual", maxSize: 1280, bitrate: 3_000_000 },
+    );
   });
 });
 
