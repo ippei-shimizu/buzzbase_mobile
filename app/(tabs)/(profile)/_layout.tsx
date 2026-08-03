@@ -5,11 +5,17 @@ import { TouchableOpacity } from "react-native";
 export default function ProfileLayout() {
   const router = useRouter();
 
-  // 設定画面（ルートStack）から router.push で直接遷移してくる画面は、
-  // このStackの先頭になり canGoBack() が効かないため、戻るボタンを明示する。
+  // 設定画面（ルートStack）から router.push で直接遷移してくる画面は、このStackの
+  // 先頭になり canGoBack() が効かない。この状態で router.back() を呼ぶと親の Tab
+  // Navigator まで GO_BACK がバブルし、無関係な最初のタブ（ホーム）へ遷移したうえに
+  // 自タブの nested Stack 状態は戻らないため、以後マイページタブをタップしてもこの
+  // 画面が残り続ける。そのため canGoBack() が false の場合は明示的にこの Stack の
+  // index へ replace する。
   const backHeaderLeft = () => (
     <TouchableOpacity
-      onPress={() => router.back()}
+      onPress={() =>
+        router.canGoBack() ? router.back() : router.replace("/(tabs)/(profile)")
+      }
       style={{ paddingHorizontal: 8, paddingVertical: 4 }}
       accessibilityRole="button"
       accessibilityLabel="戻る"
@@ -36,21 +42,6 @@ export default function ProfileLayout() {
       <Stack.Screen name="follows" options={{ title: "フォロー" }} />
       <Stack.Screen name="search" options={{ title: "ユーザー検索" }} />
       <Stack.Screen name="notes" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="privacy-policy"
-        options={{ title: "プライバシーポリシー", headerLeft: backHeaderLeft }}
-      />
-      <Stack.Screen
-        name="terms-of-service"
-        options={{ title: "利用規約", headerLeft: backHeaderLeft }}
-      />
-      <Stack.Screen
-        name="tokushoho"
-        options={{
-          title: "特定商取引法に基づく表記",
-          headerLeft: backHeaderLeft,
-        }}
-      />
       <Stack.Screen
         name="contact"
         options={{ title: "お問い合わせ", headerLeft: backHeaderLeft }}

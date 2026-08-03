@@ -796,7 +796,7 @@ export function PaywallModal({
               <TouchableOpacity
                 onPress={() => {
                   onClose();
-                  router.push("/(profile)/terms-of-service");
+                  router.push("/terms-of-service");
                 }}
                 accessibilityRole="link"
                 accessibilityLabel="利用規約"
@@ -807,7 +807,7 @@ export function PaywallModal({
               <TouchableOpacity
                 onPress={() => {
                   onClose();
-                  router.push("/(profile)/privacy-policy");
+                  router.push("/privacy-policy");
                 }}
                 accessibilityRole="link"
                 accessibilityLabel="プライバシーポリシー"
@@ -818,7 +818,7 @@ export function PaywallModal({
               <TouchableOpacity
                 onPress={() => {
                   onClose();
-                  router.push("/(profile)/tokushoho");
+                  router.push("/tokushoho");
                 }}
                 accessibilityRole="link"
                 accessibilityLabel="特定商取引法に基づく表記"

@@ -192,6 +192,21 @@ function RootLayoutInner() {
           options={{ title: "設定", headerBackTitle: "戻る" }}
         />
         <Stack.Screen
+          name="privacy-policy"
+          options={{ title: "プライバシーポリシー", headerBackTitle: "戻る" }}
+        />
+        <Stack.Screen
+          name="terms-of-service"
+          options={{ title: "利用規約", headerBackTitle: "戻る" }}
+        />
+        <Stack.Screen
+          name="tokushoho"
+          options={{
+            title: "特定商取引法に基づく表記",
+            headerBackTitle: "戻る",
+          }}
+        />
+        <Stack.Screen
           name="pro"
           options={{
             headerShown: false,
