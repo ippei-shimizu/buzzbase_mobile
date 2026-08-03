@@ -12,6 +12,7 @@ import { useOnboarding } from "@hooks/useOnboarding";
 import { useProStatus } from "@hooks/useProStatus";
 import { trackAppLaunchForAds } from "@services/interstitialAdService";
 import { requestTrackingPermissionOnce } from "@services/trackingTransparencyService";
+import { shouldResetTabStack } from "@utils/tabStackReset";
 
 export default function TabLayout() {
   const { isLoggedIn, isLoading } = useAuth();
@@ -95,6 +96,9 @@ export default function TabLayout() {
           const Icon = tab.Icon;
           const isGroupRoute = tab.name === "(groups)";
           // カッコ付きグループ route 配下に積まれたスタックは、再タップで先頭(index)へ戻す。
+          // ルートStack（設定画面・Paywall の規約リンク等）から直接 push された画面は
+          // そのタブのスタックに index を挟まず先頭に載るため、index を持たない場合も
+          // リセット対象に含める（含めないとタブを押しても何も起きず戻れなくなる）。
           const needsStackReset =
             tab.name === "(game-results)" ||
             tab.name === "(profile)" ||
@@ -124,10 +128,9 @@ export default function TabLayout() {
                         const route = state.routes.find(
                           (r: { name: string }) => r.name === tab.name,
                         );
-                        if (route?.state && route.state.index > 0) {
-                          e.preventDefault();
-                          navigation.navigate(tab.name, { screen: "index" });
-                        }
+                        if (!shouldResetTabStack(route?.state)) return;
+                        e.preventDefault();
+                        navigation.navigate(tab.name, { screen: "index" });
                       },
                     })
                   : undefined

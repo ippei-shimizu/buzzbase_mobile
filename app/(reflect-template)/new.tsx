@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import {
   useReflectionTemplateMutations,
   useReflectionTemplates,
@@ -87,50 +88,55 @@ function TemplateForm({ template }: { template?: ReflectionTemplate }) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Stack.Screen
-        options={{ title: template ? "テンプレを編集" : "テンプレを作る" }}
-      />
-      <Text style={styles.label}>テンプレ名</Text>
-      <TextInput
-        style={styles.input}
-        value={title}
-        onChangeText={setTitle}
-        placeholder="例: 今日のフォーム意識"
-        placeholderTextColor="#71717A"
-      />
-
-      <Text style={styles.label}>問い</Text>
-      {questions.map((question, index) => (
-        <View key={index} style={styles.questionRow}>
-          <TextInput
-            style={[styles.input, styles.questionInput]}
-            value={question}
-            onChangeText={(text) => setQuestion(index, text)}
-            placeholder={`問い ${index + 1}`}
-            placeholderTextColor="#71717A"
-          />
-          {questions.length > 1 ? (
-            <TouchableOpacity onPress={() => removeQuestion(index)}>
-              <Icon name="close-circle" size={20} color="#A1A1AA" />
-            </TouchableOpacity>
-          ) : null}
-        </View>
-      ))}
-
-      <TouchableOpacity style={styles.addRow} onPress={addQuestion}>
-        <Icon name="add" size={18} color="#d08000" />
-        <Text style={styles.addRowText}>問いを追加</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-        onPress={handleSubmit}
-        disabled={isSaving}
+    <KeyboardAwareScreen>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
       >
-        <Text style={styles.saveButtonText}>保存</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <Stack.Screen
+          options={{ title: template ? "テンプレを編集" : "テンプレを作る" }}
+        />
+        <Text style={styles.label}>テンプレ名</Text>
+        <TextInput
+          style={styles.input}
+          value={title}
+          onChangeText={setTitle}
+          placeholder="例: 今日のフォーム意識"
+          placeholderTextColor="#71717A"
+        />
+
+        <Text style={styles.label}>問い</Text>
+        {questions.map((question, index) => (
+          <View key={index} style={styles.questionRow}>
+            <TextInput
+              style={[styles.input, styles.questionInput]}
+              value={question}
+              onChangeText={(text) => setQuestion(index, text)}
+              placeholder={`問い ${index + 1}`}
+              placeholderTextColor="#71717A"
+            />
+            {questions.length > 1 ? (
+              <TouchableOpacity onPress={() => removeQuestion(index)}>
+                <Icon name="close-circle" size={20} color="#A1A1AA" />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        ))}
+
+        <TouchableOpacity style={styles.addRow} onPress={addQuestion}>
+          <Icon name="add" size={18} color="#d08000" />
+          <Text style={styles.addRowText}>問いを追加</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+          onPress={handleSubmit}
+          disabled={isSaving}
+        >
+          <Text style={styles.saveButtonText}>保存</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAwareScreen>
   );
 }
 

@@ -28,6 +28,7 @@ export interface CalendarEntry {
   event_type: EventType;
   title: string | null;
   schedule_id: number;
+  scheduled_time: string | null; // "06:00"。終日・時間未設定は null
 }
 
 export interface CalendarResponse {

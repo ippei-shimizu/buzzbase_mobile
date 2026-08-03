@@ -13,6 +13,7 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
+import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import { useMenuSets, useMenuSetMutations } from "@hooks/useMenuSets";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
 import { serverErrorMessage } from "@utils/axiosError";
@@ -96,78 +97,85 @@ export default function MenuSetEditScreen() {
   const saving = isCreating || isUpdating;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.label}>セット名</Text>
-      <TextInput
-        style={styles.input}
-        value={name}
-        onChangeText={setName}
-        // バックエンドの name は50文字までなので、超過して422になる前に入力段階で止める。
-        maxLength={MENU_SET_NAME_MAX_LENGTH}
-        placeholder="例: オフ日ルーティン"
-        placeholderTextColor="#71717A"
-      />
-
-      <Text style={styles.label}>メモ（任意）</Text>
-      <TextInput
-        style={styles.input}
-        value={note}
-        onChangeText={setNote}
-        placeholder="例: 試合前日の軽め調整"
-        placeholderTextColor="#71717A"
-      />
-
-      <Text style={styles.label}>メニュー</Text>
-      {menus.length === 0 ? (
-        <Text style={styles.hint}>
-          練習メニューがありません。先に練習記録からメニューを作成してください。
-        </Text>
-      ) : (
-        <View>
-          {menus.map((menu) => {
-            const isSelected = menu.id in menuAmounts;
-            return (
-              <View key={menu.id} style={styles.menuItem}>
-                <TouchableOpacity
-                  style={styles.menuItemRow}
-                  onPress={() => toggleMenu(menu)}
-                >
-                  <Ionicons
-                    name={isSelected ? "checkbox" : "square-outline"}
-                    size={22}
-                    color={isSelected ? "#d08000" : "#71717A"}
-                  />
-                  <Text style={styles.menuItemName}>{menu.name}</Text>
-                </TouchableOpacity>
-                {isSelected ? (
-                  <View style={styles.amountRow}>
-                    <TextInput
-                      style={styles.amountInput}
-                      value={menuAmounts[menu.id]}
-                      onChangeText={(text) => setMenuAmount(menu.id, text)}
-                      keyboardType="numeric"
-                      placeholder="0"
-                      placeholderTextColor="#71717A"
-                    />
-                    <Text style={styles.unitLabel}>
-                      {menu.unit_label ?? "回"}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
-            );
-          })}
-        </View>
-      )}
-
-      <TouchableOpacity
-        style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-        onPress={handleSave}
-        disabled={saving}
+    <KeyboardAwareScreen>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
       >
-        <Text style={styles.saveButtonText}>{editingId ? "更新" : "作成"}</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <Text style={styles.label}>セット名</Text>
+        <TextInput
+          style={styles.input}
+          value={name}
+          onChangeText={setName}
+          // バックエンドの name は50文字までなので、超過して422になる前に入力段階で止める。
+          maxLength={MENU_SET_NAME_MAX_LENGTH}
+          placeholder="例: オフ日ルーティン"
+          placeholderTextColor="#71717A"
+        />
+
+        <Text style={styles.label}>メモ（任意）</Text>
+        <TextInput
+          style={styles.input}
+          value={note}
+          onChangeText={setNote}
+          placeholder="例: 試合前日の軽め調整"
+          placeholderTextColor="#71717A"
+        />
+
+        <Text style={styles.label}>メニュー</Text>
+        {menus.length === 0 ? (
+          <Text style={styles.hint}>
+            練習メニューがありません。先に練習記録からメニューを作成してください。
+          </Text>
+        ) : (
+          <View>
+            {menus.map((menu) => {
+              const isSelected = menu.id in menuAmounts;
+              return (
+                <View key={menu.id} style={styles.menuItem}>
+                  <TouchableOpacity
+                    style={styles.menuItemRow}
+                    onPress={() => toggleMenu(menu)}
+                  >
+                    <Ionicons
+                      name={isSelected ? "checkbox" : "square-outline"}
+                      size={22}
+                      color={isSelected ? "#d08000" : "#71717A"}
+                    />
+                    <Text style={styles.menuItemName}>{menu.name}</Text>
+                  </TouchableOpacity>
+                  {isSelected ? (
+                    <View style={styles.amountRow}>
+                      <TextInput
+                        style={styles.amountInput}
+                        value={menuAmounts[menu.id]}
+                        onChangeText={(text) => setMenuAmount(menu.id, text)}
+                        keyboardType="numeric"
+                        placeholder="0"
+                        placeholderTextColor="#71717A"
+                      />
+                      <Text style={styles.unitLabel}>
+                        {menu.unit_label ?? "回"}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+          onPress={handleSave}
+          disabled={saving}
+        >
+          <Text style={styles.saveButtonText}>
+            {editingId ? "更新" : "作成"}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAwareScreen>
   );
 }
 

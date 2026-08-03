@@ -19,7 +19,11 @@ export default function NoteNewScreen() {
   }>();
   const { createNote, deleteNote, isCreating } = useNoteMutations();
   const { upload } = useMediaAttachmentUpload();
-  const [isUploadingMedia, setUploadingMedia] = useState(false);
+  // 動画は圧縮＋アップロードで数十秒かかることがあるため、進捗を保存中バナーに出す。
+  const [mediaProgress, setMediaProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   const [isPaywallOpen, setPaywallOpen] = useState(false);
   const [limitReachedCount, setLimitReachedCount] = useState(0);
 
@@ -45,7 +49,12 @@ export default function NoteNewScreen() {
         }}
         showDatePicker={!fromPracticeFlow}
         submitLabel="保存"
-        isSubmitting={isCreating || isUploadingMedia}
+        isSubmitting={isCreating || mediaProgress !== null}
+        submittingMessage={
+          mediaProgress
+            ? `画像・動画を保存中…（${mediaProgress.current}/${mediaProgress.total}）`
+            : "保存中…"
+        }
         onSubmit={async (input, stagedMedia) => {
           let note;
           try {
@@ -60,10 +69,10 @@ export default function NoteNewScreen() {
             return;
           }
 
-          setUploadingMedia(true);
           let technicalFailureCount = 0;
           let limitReachedCountThisRun = 0;
-          for (const asset of stagedMedia) {
+          for (const [index, asset] of stagedMedia.entries()) {
+            setMediaProgress({ current: index + 1, total: stagedMedia.length });
             try {
               await upload(
                 {
@@ -88,7 +97,7 @@ export default function NoteNewScreen() {
               }
             }
           }
-          setUploadingMedia(false);
+          setMediaProgress(null);
 
           // technicalFailureCountを優先判定する。上限到達（limitReachedCountThisRun）と
           // 技術的失敗が同時に起きた場合、後者を握りつぶしてPaywallだけ出すと

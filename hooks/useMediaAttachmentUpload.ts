@@ -8,6 +8,7 @@ import {
 } from "../services/mediaAttachmentService";
 import {
   FREE_VIDEO_MAX_HEIGHT,
+  PRO_VIDEO_BITRATE_BPS,
   PRO_VIDEO_MAX_HEIGHT,
 } from "../utils/mediaLimits";
 import {
@@ -61,10 +62,10 @@ export const useMediaAttachmentUpload = () => {
 
         if (asset.mediaType === "video") {
           setPhase("compressing");
-          const maxSize = hasEntitlement("unlimited_media_uploads")
-            ? PRO_VIDEO_MAX_HEIGHT
-            : FREE_VIDEO_MAX_HEIGHT;
-          fileUri = await compressVideo(fileUri, maxSize);
+          const compression = hasEntitlement("unlimited_media_uploads")
+            ? { maxSize: PRO_VIDEO_MAX_HEIGHT, bitrate: PRO_VIDEO_BITRATE_BPS }
+            : { maxSize: FREE_VIDEO_MAX_HEIGHT };
+          fileUri = await compressVideo(fileUri, compression);
           thumbnailUri = await generateVideoThumbnail(fileUri);
           const meta = await getVideoMeta(fileUri);
           width = meta.width;

@@ -28,6 +28,7 @@ import {
 } from "@components/practice/ConditionForm";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
+import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import { CATEGORY_ICON, PRACTICE_CATEGORIES } from "@constants/practice";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
@@ -395,58 +396,63 @@ export default function DailyRecordScreen() {
   const router = useRouter();
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.label}>日付</Text>
-      <TouchableOpacity
-        style={styles.dateRow}
-        onPress={() => setShowPicker((prev) => !prev)}
+    <KeyboardAwareScreen>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
       >
-        <Text style={styles.dateText}>{formatJaFullDate(dateString)}</Text>
-        <Ionicons name="calendar-outline" size={18} color="#A1A1AA" />
-      </TouchableOpacity>
-      {showPicker ? (
-        <DateTimePicker
-          value={date}
-          mode="date"
-          maximumDate={new Date()}
-          themeVariant="dark"
-          accentColor="#d08000"
-          display={Platform.OS === "ios" ? "inline" : "default"}
-          onChange={(_event, selected) => {
-            setShowPicker(false);
-            if (selected) setDate(selected);
-          }}
-        />
-      ) : null}
+        <Text style={styles.label}>日付</Text>
+        <TouchableOpacity
+          style={styles.dateRow}
+          onPress={() => setShowPicker((prev) => !prev)}
+        >
+          <Text style={styles.dateText}>{formatJaFullDate(dateString)}</Text>
+          <Ionicons name="calendar-outline" size={18} color="#A1A1AA" />
+        </TouchableOpacity>
+        {showPicker ? (
+          <DateTimePicker
+            value={date}
+            mode="date"
+            maximumDate={new Date()}
+            themeVariant="dark"
+            accentColor="#d08000"
+            display={Platform.OS === "ios" ? "inline" : "default"}
+            onChange={(_event, selected) => {
+              setShowPicker(false);
+              if (selected) setDate(selected);
+            }}
+          />
+        ) : null}
 
-      {isMenusLoading || isSessionLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#d08000" />
-        </View>
-      ) : menus.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyTitle}>まだ練習メニューがありません</Text>
-          <Text style={styles.emptyText}>
-            よくやる練習を登録すると、ワンタップで選べます
-          </Text>
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={() => router.push("/(practice-menu)/form")}
-          >
-            <Ionicons name="add" size={18} color="#FFFFFF" />
-            <Text style={styles.primaryButtonText}>最初のメニューを作る</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <DailyEditor
-          key={dateString}
-          dateString={dateString}
-          initialSession={session}
-          menus={menus}
-          presetMenus={presetMenus}
-        />
-      )}
-    </ScrollView>
+        {isMenusLoading || isSessionLoading ? (
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color="#d08000" />
+          </View>
+        ) : menus.length === 0 ? (
+          <View style={styles.empty}>
+            <Text style={styles.emptyTitle}>まだ練習メニューがありません</Text>
+            <Text style={styles.emptyText}>
+              よくやる練習を登録すると、ワンタップで選べます
+            </Text>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => router.push("/(practice-menu)/form")}
+            >
+              <Ionicons name="add" size={18} color="#FFFFFF" />
+              <Text style={styles.primaryButtonText}>最初のメニューを作る</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <DailyEditor
+            key={dateString}
+            dateString={dateString}
+            initialSession={session}
+            menus={menus}
+            presetMenus={presetMenus}
+          />
+        )}
+      </ScrollView>
+    </KeyboardAwareScreen>
   );
 }
 

@@ -37,16 +37,30 @@ const withTimeout = <T>(
     );
   });
 
+export interface VideoCompressionOptions {
+  /** 出力動画の長辺の最大px（react-native-compressor の maxSize と同義）。 */
+  maxSize: number;
+  /** 目標ビットレート(bps)。未指定なら解像度から自動算出させる。 */
+  bitrate?: number;
+}
+
 /**
  * 動画をクライアント側で圧縮する（サーバーffmpegは使わない）。R2の保存コストを抑えるため、
  * 長辺をプランごとの解像度上限（maxSize）まで縮小する。圧縮後のファイルURIを返す。
+ *
+ * 自動算出のビットレートは解像度を上げても比例して上がらず、素振りフォームのような
+ * 動きの速い被写体でブロックノイズが出るため、bitrate を明示できるようにしている。
  */
 export const compressVideo = async (
   uri: string,
-  maxSize: number,
+  { maxSize, bitrate }: VideoCompressionOptions,
 ): Promise<string> =>
   withTimeout(
-    VideoCompressor.compress(uri, { compressionMethod: "manual", maxSize }),
+    VideoCompressor.compress(uri, {
+      compressionMethod: "manual",
+      maxSize,
+      ...(bitrate === undefined ? {} : { bitrate }),
+    }),
     VIDEO_COMPRESSION_TIMEOUT_MS,
     "動画の圧縮がタイムアウトしました",
   );

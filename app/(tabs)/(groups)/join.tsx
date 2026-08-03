@@ -14,6 +14,7 @@ import {
 import { GroupDefaultIcon } from "@components/icon/GroupDefaultIcon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
+import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import { API_BASE_URL } from "@constants/api";
 import { GROUP_FREE_LIMIT } from "@constants/group";
 import { useEntitlement } from "@hooks/useEntitlement";
@@ -78,95 +79,97 @@ export default function JoinGroupScreen() {
     inviterImageUrl.length > 0;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>招待コードを入力</Text>
-      <TextInput
-        style={styles.input}
-        value={code}
-        onChangeText={(text) => setCode(text.toUpperCase())}
-        placeholder="例: ABC12DEF"
-        placeholderTextColor="#52525b"
-        autoCapitalize="characters"
-        autoCorrect={false}
-        maxLength={8}
-      />
+    <KeyboardAwareScreen>
+      <View style={styles.container}>
+        <Text style={styles.label}>招待コードを入力</Text>
+        <TextInput
+          style={styles.input}
+          value={code}
+          onChangeText={(text) => setCode(text.toUpperCase())}
+          placeholder="例: ABC12DEF"
+          placeholderTextColor="#52525b"
+          autoCapitalize="characters"
+          autoCorrect={false}
+          maxLength={8}
+        />
 
-      <TouchableOpacity
-        style={[
-          styles.lookupButton,
-          code.length === 0 && styles.buttonDisabled,
-        ]}
-        onPress={handleLookup}
-        disabled={code.length === 0 || isLookingUp}
-      >
-        {isLookingUp ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
-        ) : (
-          <Text style={styles.lookupButtonText}>確認する</Text>
-        )}
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.lookupButton,
+            code.length === 0 && styles.buttonDisabled,
+          ]}
+          onPress={handleLookup}
+          disabled={code.length === 0 || isLookingUp}
+        >
+          {isLookingUp ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.lookupButtonText}>確認する</Text>
+          )}
+        </TouchableOpacity>
 
-      {inviteInfo && (
-        <View style={styles.previewCard}>
-          <View style={styles.groupRow}>
-            {hasValidGroupIcon ? (
-              <Image
-                source={{
-                  uri: groupIconUrl.startsWith("http")
-                    ? groupIconUrl
-                    : `${API_BASE_URL}${groupIconUrl}`,
-                }}
-                style={styles.groupIcon}
-              />
-            ) : (
-              <GroupDefaultIcon size={48} />
-            )}
-            <View style={styles.groupInfo}>
-              <Text style={styles.groupName}>{inviteInfo.group.name}</Text>
-              <Text style={styles.memberCount}>
-                メンバー: {inviteInfo.group.member_count}人
+        {inviteInfo && (
+          <View style={styles.previewCard}>
+            <View style={styles.groupRow}>
+              {hasValidGroupIcon ? (
+                <Image
+                  source={{
+                    uri: groupIconUrl.startsWith("http")
+                      ? groupIconUrl
+                      : `${API_BASE_URL}${groupIconUrl}`,
+                  }}
+                  style={styles.groupIcon}
+                />
+              ) : (
+                <GroupDefaultIcon size={48} />
+              )}
+              <View style={styles.groupInfo}>
+                <Text style={styles.groupName}>{inviteInfo.group.name}</Text>
+                <Text style={styles.memberCount}>
+                  メンバー: {inviteInfo.group.member_count}人
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.inviterRow}>
+              {hasValidInviterImage ? (
+                <Image
+                  source={{
+                    uri: inviterImageUrl!.startsWith("http")
+                      ? inviterImageUrl!
+                      : `${API_BASE_URL}${inviterImageUrl!}`,
+                  }}
+                  style={styles.inviterIcon}
+                />
+              ) : (
+                <DefaultUserIcon size={24} />
+              )}
+              <Text style={styles.inviterName}>
+                招待者: {inviteInfo.inviter.name}
               </Text>
             </View>
-          </View>
 
-          <View style={styles.inviterRow}>
-            {hasValidInviterImage ? (
-              <Image
-                source={{
-                  uri: inviterImageUrl!.startsWith("http")
-                    ? inviterImageUrl!
-                    : `${API_BASE_URL}${inviterImageUrl!}`,
-                }}
-                style={styles.inviterIcon}
-              />
-            ) : (
-              <DefaultUserIcon size={24} />
-            )}
-            <Text style={styles.inviterName}>
-              招待者: {inviteInfo.inviter.name}
-            </Text>
+            <TouchableOpacity
+              style={styles.joinButton}
+              onPress={handleJoin}
+              disabled={isAccepting}
+            >
+              {isAccepting ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.joinButtonText}>グループに参加</Text>
+              )}
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            style={styles.joinButton}
-            onPress={handleJoin}
-            disabled={isAccepting}
-          >
-            {isAccepting ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text style={styles.joinButtonText}>グループに参加</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
-      <PaywallModal
-        isOpen={isPaywallOpen}
-        onClose={() => setPaywallOpen(false)}
-        feature="unlimited_groups"
-        contextMessage={`無料プランで参加できるグループは${GROUP_FREE_LIMIT}件までのため、参加できませんでした。`}
-      />
-    </View>
+        )}
+        <PaywallModal
+          isOpen={isPaywallOpen}
+          onClose={() => setPaywallOpen(false)}
+          feature="unlimited_groups"
+          contextMessage={`無料プランで参加できるグループは${GROUP_FREE_LIMIT}件までのため、参加できませんでした。`}
+        />
+      </View>
+    </KeyboardAwareScreen>
   );
 }
 

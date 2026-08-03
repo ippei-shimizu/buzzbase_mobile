@@ -51,6 +51,7 @@ export default function NoteEditScreen() {
       mediaAttachments={note.media_attachments}
       submitLabel="更新"
       isSubmitting={isUpdating}
+      submittingMessage="更新中…"
       templateLocked
       onSubmit={async (input) => {
         try {

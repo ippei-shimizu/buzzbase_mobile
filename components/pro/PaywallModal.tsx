@@ -229,7 +229,7 @@ export const FEATURE_COMPARISONS: Record<ProFeature, FeatureComparison> = {
   practice_menu_trend_detail: { free: "✕", pro: "○" },
   custom_period_goals: { free: "✕", pro: "○" },
   manual_metric_goals: { free: "✕", pro: "○" },
-  shadow_swing_custom_interval: { free: "5〜10秒", pro: "1〜20秒" },
+  shadow_swing_custom_interval: { free: "5〜8秒", pro: "1〜20秒" },
   shadow_swing_vibration: { free: "✕", pro: "○" },
   shadow_swing_background: { free: "✕(一時停止)", pro: "○" },
   schedule_calendar_full_history: { free: "前後3ヶ月", pro: "全期間" },
@@ -249,7 +249,9 @@ interface FeatureGroup {
 // 「PRO でできること」表のグループ分け。PRO_FEATURES 全31項目を過不足なく1回ずつ含む
 // （テストで網羅性を担保。詳細は __tests__/PaywallModal.test.tsx）。
 // グループ名・アイコンはホーム画面の実際のセクション名・導線に合わせる
-// （例: PracticeToolsSection="練習ツール", ImprovementToolsSection の各ツール名）。
+// （例: ImprovementToolsSection の各ツール名）。ただし「練習ツール」だけは
+// 中身が素振りカウントタイマーの機能に限られるため、何が使えるようになるかが
+// 伝わるようツール名そのものを見出しにしている。
 export const FEATURE_GROUPS: FeatureGroup[] = [
   {
     title: "練習を記録",
@@ -315,7 +317,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     keys: ["correlation_insights"],
   },
   {
-    title: "練習ツール",
+    title: "素振りカウントタイマー",
     icon: "timer-outline",
     keys: [
       "shadow_swing_custom_interval",

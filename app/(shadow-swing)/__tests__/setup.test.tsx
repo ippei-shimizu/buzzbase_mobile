@@ -104,7 +104,7 @@ describe("素振りカウンター設定", () => {
     server.use(
       http.post(baseUrl("/api/v2/shadow_swing_sessions"), () =>
         HttpResponse.json(
-          { errors: ["インターバルは無料プランでは5〜10秒のみ選べます"] },
+          { errors: ["インターバルは無料プランでは5〜8秒のみ選べます"] },
           { status: 422 },
         ),
       ),
@@ -118,7 +118,7 @@ describe("素振りカウンター設定", () => {
 
     await waitFor(() =>
       expect(alertSpy).toHaveBeenCalledWith(
-        "インターバルは無料プランでは5〜10秒のみ選べます",
+        "インターバルは無料プランでは5〜8秒のみ選べます",
       ),
     );
     expect(getRouterSpies().push).not.toHaveBeenCalled();

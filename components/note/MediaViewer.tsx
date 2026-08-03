@@ -4,7 +4,6 @@ import { VideoView, useVideoPlayer } from "expo-video";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -15,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { ZoomableImage } from "@components/ui/ZoomableImage";
 
 export interface MediaViewerContent {
   mediaType: MediaType;
@@ -83,11 +83,16 @@ export function MediaViewer({
           {content?.mediaType === "video" && content.mediaUri ? (
             <VideoContent uri={content.mediaUri} />
           ) : content?.mediaUri ? (
-            <Image
-              source={{ uri: content.mediaUri }}
-              style={styles.media}
-              resizeMode="contain"
-            />
+            <>
+              <ZoomableImage
+                uri={content.mediaUri}
+                style={styles.media}
+                accessibilityLabel="添付画像"
+              />
+              <Text style={styles.zoomHint}>
+                ピンチまたはダブルタップで拡大できます
+              </Text>
+            </>
           ) : null}
 
           {editableMemo ? (
@@ -142,6 +147,12 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   media: { width: "100%", height: 320 },
+  zoomHint: {
+    color: "#A1A1AA",
+    fontSize: 12,
+    marginTop: 8,
+    alignSelf: "center",
+  },
   memoSection: { width: "100%", marginTop: 16 },
   memoInput: {
     backgroundColor: "#3A3A3A",

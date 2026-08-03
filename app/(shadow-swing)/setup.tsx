@@ -11,6 +11,7 @@ import {
   Alert,
 } from "react-native";
 import { PaywallModal } from "@components/pro/PaywallModal";
+import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import { useEntitlement } from "@hooks/useEntitlement";
 import {
   useShadowSwingMutations,
@@ -25,7 +26,7 @@ const INTERVALS = [
 
 // 無料プランで選択できるインターバルの範囲（back の Entitlement 'shadow_swing_custom_interval' と対応）。
 const FREE_INTERVAL_MIN = 5;
-const FREE_INTERVAL_MAX = 10;
+const FREE_INTERVAL_MAX = 8;
 
 export default function ShadowSwingSetupScreen() {
   const router = useRouter();
@@ -77,206 +78,208 @@ export default function ShadowSwingSetupScreen() {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-    >
-      <Text style={styles.intro}>
-        設定したインターバルで自動的にカウントアップし、素振りの本数を練習記録に
-        保存します。笛の音や読み上げでテンポを取りながら振れます。
-      </Text>
-
-      <Text style={styles.label}>目標本数</Text>
-      <View style={styles.targetRow}>
-        <TextInput
-          style={styles.targetInput}
-          value={target}
-          onChangeText={setTarget}
-          keyboardType="numeric"
-          placeholder="200"
-          placeholderTextColor="#71717A"
-        />
-        <Text style={styles.unit}>本</Text>
-      </View>
-
-      <Text style={styles.label}>インターバル</Text>
-      <View style={styles.optionRow}>
-        {INTERVALS.map((value) => {
-          const active = value === interval;
-          const locked =
-            !canCustomInterval &&
-            (value < FREE_INTERVAL_MIN || value > FREE_INTERVAL_MAX);
-          return (
-            <TouchableOpacity
-              key={value}
-              style={[
-                styles.option,
-                active && styles.optionActive,
-                locked && styles.optionLocked,
-              ]}
-              onPress={() => {
-                if (locked) {
-                  setIntervalPaywallOpen(true);
-                  return;
-                }
-                setIntervalValue(value);
-              }}
-            >
-              <Text
-                style={[styles.optionText, active && styles.optionTextActive]}
-              >
-                {value.toFixed(1)}秒
-              </Text>
-              {locked ? (
-                <Ionicons
-                  name="lock-closed"
-                  size={10}
-                  color="#71717A"
-                  style={styles.lockIcon}
-                />
-              ) : null}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-      {!canCustomInterval ? (
-        <Text style={styles.hint}>
-          無料プランはインターバル{FREE_INTERVAL_MIN}〜{FREE_INTERVAL_MAX}
-          秒のみ選択できます。Pro で1〜20秒の全範囲を解放できます。
-        </Text>
-      ) : null}
-
-      <Text style={styles.hint}>
-        「笛の音」と「カウント読み上げ」はどちらか一方のみ選べます。
-      </Text>
-
-      <Text style={styles.label}>笛の音</Text>
-      <View style={styles.optionRow}>
-        {[
-          { key: true, label: "あり" },
-          { key: false, label: "なし" },
-        ].map((item) => {
-          const active = item.key === sound;
-          return (
-            <TouchableOpacity
-              key={String(item.key)}
-              style={[styles.option, active && styles.optionActive]}
-              // 笛と読み上げは排他。笛をONにしたら読み上げをOFFにする。
-              onPress={() => {
-                setSound(item.key);
-                if (item.key) setVoice(false);
-              }}
-            >
-              <Text
-                style={[styles.optionText, active && styles.optionTextActive]}
-              >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      <Text style={styles.label}>カウント読み上げ</Text>
-      <View style={styles.optionRow}>
-        {[
-          { key: true, label: "あり" },
-          { key: false, label: "なし" },
-        ].map((item) => {
-          const active = item.key === voice;
-          return (
-            <TouchableOpacity
-              key={String(item.key)}
-              style={[styles.option, active && styles.optionActive]}
-              // 笛と読み上げは排他。読み上げをONにしたら笛をOFFにする。
-              onPress={() => {
-                setVoice(item.key);
-                if (item.key) setSound(false);
-              }}
-            >
-              <Text
-                style={[styles.optionText, active && styles.optionTextActive]}
-              >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      <Text style={styles.label}>バイブレーション</Text>
-      <View style={styles.optionRow}>
-        {[
-          { key: true, label: "あり" },
-          { key: false, label: "なし" },
-        ].map((item) => {
-          const active = item.key === vibration;
-          const locked = !canVibration && item.key;
-          return (
-            <TouchableOpacity
-              key={String(item.key)}
-              style={[
-                styles.option,
-                active && styles.optionActive,
-                locked && styles.optionLocked,
-              ]}
-              onPress={() => {
-                if (locked) {
-                  setVibrationPaywallOpen(true);
-                  return;
-                }
-                setVibration(item.key);
-              }}
-            >
-              <Text
-                style={[styles.optionText, active && styles.optionTextActive]}
-              >
-                {item.label}
-              </Text>
-              {locked ? (
-                <Ionicons
-                  name="lock-closed"
-                  size={10}
-                  color="#71717A"
-                  style={styles.lockIcon}
-                />
-              ) : null}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-      {!canVibration ? (
-        <Text style={styles.hint}>
-          バイブレーションは Pro プラン限定の機能です。
-        </Text>
-      ) : null}
-
-      <TouchableOpacity
-        style={[styles.startButton, isStarting && styles.startButtonDisabled]}
-        onPress={handleStart}
-        disabled={isStarting}
+    <KeyboardAwareScreen>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.startButtonText}>開始する</Text>
-      </TouchableOpacity>
-
-      {stats ? (
-        <Text style={styles.total}>
-          通算 {stats.total_count.toLocaleString()}本
+        <Text style={styles.intro}>
+          設定したインターバルで自動的にカウントアップし、素振りの本数を練習記録に
+          保存します。笛の音や読み上げでテンポを取りながら振れます。
         </Text>
-      ) : null}
 
-      <PaywallModal
-        isOpen={isIntervalPaywallOpen}
-        onClose={() => setIntervalPaywallOpen(false)}
-        feature="shadow_swing_custom_interval"
-      />
-      <PaywallModal
-        isOpen={isVibrationPaywallOpen}
-        onClose={() => setVibrationPaywallOpen(false)}
-        feature="shadow_swing_vibration"
-      />
-    </ScrollView>
+        <Text style={styles.label}>目標本数</Text>
+        <View style={styles.targetRow}>
+          <TextInput
+            style={styles.targetInput}
+            value={target}
+            onChangeText={setTarget}
+            keyboardType="numeric"
+            placeholder="200"
+            placeholderTextColor="#71717A"
+          />
+          <Text style={styles.unit}>本</Text>
+        </View>
+
+        <Text style={styles.label}>インターバル</Text>
+        <View style={styles.optionRow}>
+          {INTERVALS.map((value) => {
+            const active = value === interval;
+            const locked =
+              !canCustomInterval &&
+              (value < FREE_INTERVAL_MIN || value > FREE_INTERVAL_MAX);
+            return (
+              <TouchableOpacity
+                key={value}
+                style={[
+                  styles.option,
+                  active && styles.optionActive,
+                  locked && styles.optionLocked,
+                ]}
+                onPress={() => {
+                  if (locked) {
+                    setIntervalPaywallOpen(true);
+                    return;
+                  }
+                  setIntervalValue(value);
+                }}
+              >
+                <Text
+                  style={[styles.optionText, active && styles.optionTextActive]}
+                >
+                  {value.toFixed(1)}秒
+                </Text>
+                {locked ? (
+                  <Ionicons
+                    name="lock-closed"
+                    size={10}
+                    color="#71717A"
+                    style={styles.lockIcon}
+                  />
+                ) : null}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        {!canCustomInterval ? (
+          <Text style={styles.hint}>
+            無料プランはインターバル{FREE_INTERVAL_MIN}〜{FREE_INTERVAL_MAX}
+            秒のみ選択できます。Pro で1〜20秒の全範囲を解放できます。
+          </Text>
+        ) : null}
+
+        <Text style={styles.hint}>
+          「笛の音」と「カウント読み上げ」はどちらか一方のみ選べます。
+        </Text>
+
+        <Text style={styles.label}>笛の音</Text>
+        <View style={styles.optionRow}>
+          {[
+            { key: true, label: "あり" },
+            { key: false, label: "なし" },
+          ].map((item) => {
+            const active = item.key === sound;
+            return (
+              <TouchableOpacity
+                key={String(item.key)}
+                style={[styles.option, active && styles.optionActive]}
+                // 笛と読み上げは排他。笛をONにしたら読み上げをOFFにする。
+                onPress={() => {
+                  setSound(item.key);
+                  if (item.key) setVoice(false);
+                }}
+              >
+                <Text
+                  style={[styles.optionText, active && styles.optionTextActive]}
+                >
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <Text style={styles.label}>カウント読み上げ</Text>
+        <View style={styles.optionRow}>
+          {[
+            { key: true, label: "あり" },
+            { key: false, label: "なし" },
+          ].map((item) => {
+            const active = item.key === voice;
+            return (
+              <TouchableOpacity
+                key={String(item.key)}
+                style={[styles.option, active && styles.optionActive]}
+                // 笛と読み上げは排他。読み上げをONにしたら笛をOFFにする。
+                onPress={() => {
+                  setVoice(item.key);
+                  if (item.key) setSound(false);
+                }}
+              >
+                <Text
+                  style={[styles.optionText, active && styles.optionTextActive]}
+                >
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <Text style={styles.label}>バイブレーション</Text>
+        <View style={styles.optionRow}>
+          {[
+            { key: true, label: "あり" },
+            { key: false, label: "なし" },
+          ].map((item) => {
+            const active = item.key === vibration;
+            const locked = !canVibration && item.key;
+            return (
+              <TouchableOpacity
+                key={String(item.key)}
+                style={[
+                  styles.option,
+                  active && styles.optionActive,
+                  locked && styles.optionLocked,
+                ]}
+                onPress={() => {
+                  if (locked) {
+                    setVibrationPaywallOpen(true);
+                    return;
+                  }
+                  setVibration(item.key);
+                }}
+              >
+                <Text
+                  style={[styles.optionText, active && styles.optionTextActive]}
+                >
+                  {item.label}
+                </Text>
+                {locked ? (
+                  <Ionicons
+                    name="lock-closed"
+                    size={10}
+                    color="#71717A"
+                    style={styles.lockIcon}
+                  />
+                ) : null}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        {!canVibration ? (
+          <Text style={styles.hint}>
+            バイブレーションは Pro プラン限定の機能です。
+          </Text>
+        ) : null}
+
+        <TouchableOpacity
+          style={[styles.startButton, isStarting && styles.startButtonDisabled]}
+          onPress={handleStart}
+          disabled={isStarting}
+        >
+          <Text style={styles.startButtonText}>開始する</Text>
+        </TouchableOpacity>
+
+        {stats ? (
+          <Text style={styles.total}>
+            通算 {stats.total_count.toLocaleString()}本
+          </Text>
+        ) : null}
+
+        <PaywallModal
+          isOpen={isIntervalPaywallOpen}
+          onClose={() => setIntervalPaywallOpen(false)}
+          feature="shadow_swing_custom_interval"
+        />
+        <PaywallModal
+          isOpen={isVibrationPaywallOpen}
+          onClose={() => setVibrationPaywallOpen(false)}
+          feature="shadow_swing_vibration"
+        />
+      </ScrollView>
+    </KeyboardAwareScreen>
   );
 }
 

@@ -23,6 +23,7 @@ import {
 } from "react-native";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellCard } from "@components/pro/ProUpsellCard";
+import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import {
   GOAL_METRIC_CATEGORIES,
   GOAL_METRICS,
@@ -307,7 +308,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
   );
 
   return (
-    <>
+    <KeyboardAwareScreen>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
@@ -706,7 +707,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
         onClose={() => setProNotePaywallFeature(null)}
         feature={proNotePaywallFeature ?? undefined}
       />
-    </>
+    </KeyboardAwareScreen>
   );
 }
 
