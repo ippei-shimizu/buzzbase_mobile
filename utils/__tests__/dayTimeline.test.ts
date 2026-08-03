@@ -45,6 +45,18 @@ describe("buildTimelineLayout", () => {
     expect(placements.map((p) => p.columnCount)).toEqual([2, 2]);
   });
 
+  // 先頭からの差で判定すると 7:15 が別グループになり、6:40 のブロックと視覚的に重なる。
+  it("少しずつずれて連なる予定も同じグループにまとめる", () => {
+    const placements = layout([360, 400, 435]);
+    expect(placements.map((p) => p.columnCount)).toEqual([3, 3, 3]);
+    expect(placements.map((p) => p.column)).toEqual([0, 1, 2]);
+  });
+
+  it("間隔が空いたところでグループを切る", () => {
+    const placements = layout([360, 400, 600]);
+    expect(placements.map((p) => p.columnCount)).toEqual([2, 2, 1]);
+  });
+
   it("空配列なら空を返す", () => {
     expect(layout([])).toEqual([]);
   });

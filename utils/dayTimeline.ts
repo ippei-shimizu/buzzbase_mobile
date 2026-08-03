@@ -26,9 +26,9 @@ export interface TimelinePlacement<T> {
 /**
  * 時刻付き要素をタイムラインへ配置するための列割りを計算する。
  *
- * 予定は終了時刻を持たないため、開始が TIMELINE_BLOCK_MINUTES 以内に固まっているものを
+ * 予定は終了時刻を持たないため、直前の予定から TIMELINE_BLOCK_MINUTES 以内に始まるものを
  * 「重なっている」とみなして横に並べる。そうしないとブロック同士が重なって
- * 後ろの予定が読めなくなる。
+ * 後ろの予定が読めなくなる。数珠つなぎに近接する場合は1つのグループにまとめる。
  *
  * @param items 時刻付き要素（順不同でよい）
  * @param minutesOf 要素から0時からの経過分を取り出す関数
@@ -44,7 +44,14 @@ export const buildTimelineLayout = <T>(
   for (const item of sorted) {
     const minutes = minutesOf(item);
     const lastGroup = groups.at(-1);
-    if (lastGroup && minutes - lastGroup[0].minutes < TIMELINE_BLOCK_MINUTES) {
+    // 比較対象はグループ先頭ではなく直前の要素。先頭基準だと 6:00 / 6:40 / 7:15 のように
+    // 少しずつずれる並びで 7:15 が別グループになり、6:40 のブロックと視覚的に重なる。
+    const previousMinutes = lastGroup?.at(-1)?.minutes;
+    if (
+      lastGroup &&
+      previousMinutes !== undefined &&
+      minutes - previousMinutes < TIMELINE_BLOCK_MINUTES
+    ) {
       lastGroup.push({ item, minutes });
     } else {
       groups.push([{ item, minutes }]);

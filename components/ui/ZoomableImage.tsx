@@ -41,7 +41,7 @@ interface Props {
  *
  * react-native-gesture-handler を追加すると native ビルドが必要になるため、
  * RN 標準の PanResponder でマルチタッチ座標から倍率を算出している。
- * 等倍のときは1本指ジェスチャを横取りしないので、親のスクロールを妨げない。
+ * 等倍のときは親スクロールへレスポンダーを譲り、拡大中だけ保持する。
  */
 export function ZoomableImage({
   uri,
@@ -56,6 +56,8 @@ export function ZoomableImage({
   // Animated.Value は同期的に読めないため、ジェスチャ計算用の実値を別途保持する。
   const current = useRef({ scale: MIN_SCALE, x: 0, y: 0 });
   const gestureStart = useRef({ scale: MIN_SCALE, x: 0, y: 0, distance: 0 });
+  const activeTouchCount = useRef(0);
+  const panOrigin = useRef({ dx: 0, dy: 0 });
   const lastTapAt = useRef(0);
 
   const reset = () => {
@@ -102,13 +104,20 @@ export function ZoomableImage({
 
   const responder = useRef(
     PanResponder.create({
+      // ダブルタップを検知するにはタッチ開始時点でレスポンダーを取る必要がある。
+      // 親スクロールとの調停は onPanResponderTerminationRequest 側で行う。
       onStartShouldSetPanResponder: () => true,
-      // 等倍で1本指のときは親（モーダルのScrollView）にジェスチャを譲る。
       onMoveShouldSetPanResponder: (event) =>
         event.nativeEvent.touches.length === 2 ||
         current.current.scale > MIN_SCALE,
+      // 等倍のときは親（モーダルのScrollView）にスクロールを譲る。拡大中は譲ると
+      // ドラッグでの移動ができなくなるため保持する（未指定時の既定は常に譲る）。
+      onPanResponderTerminationRequest: () =>
+        current.current.scale <= MIN_SCALE,
       onPanResponderGrant: (event) => {
         const touches = event.nativeEvent.touches;
+        activeTouchCount.current = touches.length;
+        panOrigin.current = { dx: 0, dy: 0 };
         gestureStart.current = {
           scale: current.current.scale,
           x: current.current.x,
@@ -130,6 +139,21 @@ export function ZoomableImage({
       },
       onPanResponderMove: (event, gesture) => {
         const touches = event.nativeEvent.touches;
+
+        // gesture.dx/dy はジェスチャ開始からの累積で、ピンチ中の指の動きも含む。
+        // 指の本数が変わったらそこを新しい基準にしないと、ピンチ→ドラッグへ移る瞬間に
+        // ピンチ中の移動量がそのまま平行移動として反映されて画像が飛ぶ。
+        if (touches.length !== activeTouchCount.current) {
+          activeTouchCount.current = touches.length;
+          panOrigin.current = { dx: gesture.dx, dy: gesture.dy };
+          gestureStart.current = {
+            scale: current.current.scale,
+            x: current.current.x,
+            y: current.current.y,
+            distance: touches.length === 2 ? touchDistance(touches) : 0,
+          };
+        }
+
         if (touches.length === 2) {
           if (gestureStart.current.distance === 0) {
             gestureStart.current.distance = touchDistance(touches);
@@ -147,8 +171,10 @@ export function ZoomableImage({
         }
 
         if (current.current.scale <= MIN_SCALE) return;
-        current.current.x = gestureStart.current.x + gesture.dx;
-        current.current.y = gestureStart.current.y + gesture.dy;
+        current.current.x =
+          gestureStart.current.x + (gesture.dx - panOrigin.current.dx);
+        current.current.y =
+          gestureStart.current.y + (gesture.dy - panOrigin.current.dy);
         translateX.setValue(current.current.x);
         translateY.setValue(current.current.y);
       },

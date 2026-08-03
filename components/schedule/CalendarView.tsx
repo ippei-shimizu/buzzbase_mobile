@@ -35,6 +35,7 @@ const HOUR_HEIGHT = 56;
 const TIMELINE_VIEWPORT_HEIGHT = 420;
 const HOUR_LABEL_WIDTH = 48;
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
+const NOW_LINE_REFRESH_MS = 60_000;
 
 /** 指定時刻がスクロール枠の少し上に来るオフセットを、可動域内に収めて返す。 */
 const timelineOffsetFor = (minutes: number): number => {
@@ -439,13 +440,31 @@ function DayView({
     [timed],
   );
 
-  // 分単位で再評価すると、他要因の再レンダリングのたびに初期スクロールがやり直され、
-  // ユーザーのスクロール位置を奪ってしまう。表示中の日付ごとに1回だけ確定させる。
-  const nowMinutes = useMemo(
-    () => (cursor === todayIso() ? currentMinutesOfDay() : null),
+  const isToday = cursor === todayIso();
+  // 現在時刻の線は開きっぱなしでも実時刻からずれないよう1分ごとに更新する。
+  const [nowMinutes, setNowMinutes] = useState(() =>
+    isToday ? currentMinutesOfDay() : null,
+  );
+  useEffect(() => {
+    if (!isToday) {
+      setNowMinutes(null);
+      return;
+    }
+    setNowMinutes(currentMinutesOfDay());
+    const timer = setInterval(
+      () => setNowMinutes(currentMinutesOfDay()),
+      NOW_LINE_REFRESH_MS,
+    );
+    return () => clearInterval(timer);
+  }, [isToday]);
+
+  // 初期スクロール位置は日付ごとに1回だけ確定させる。現在時刻を直接使うと1分ごとに
+  // 再計算が走り、ユーザーがスクロールした位置を奪ってしまう。
+  const scrollAnchorMinutes = useMemo(
+    () => (cursor === todayIso() ? currentMinutesOfDay() : 0),
     [cursor],
   );
-  const focusMinutes = placements[0]?.minutes ?? nowMinutes ?? 0;
+  const focusMinutes = placements[0]?.minutes ?? scrollAnchorMinutes;
 
   // 0時に張り付いたままだと当日の予定を探して長くスクロールさせることになるため、
   // 最初の予定（無ければ現在時刻）が見える位置から開始する。
