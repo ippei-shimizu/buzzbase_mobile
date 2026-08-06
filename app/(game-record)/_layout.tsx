@@ -1,11 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as Sentry from "@sentry/react-native";
+import { useQueryClient } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
 import { TouchableOpacity, Alert } from "react-native";
+import { deleteGameResult } from "@services/gameResultService";
+import { isAxios404 } from "@utils/axiosError";
+import { invalidateGameResultRelated } from "@utils/queryInvalidation";
 import { useBattingRecordStore } from "../../stores/battingRecordStore";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 
 export default function GameRecordLayout() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const reset = useGameRecordStore((s) => s.reset);
 
   const handleClose = () => {
@@ -14,7 +20,22 @@ export default function GameRecordLayout() {
       {
         text: "中断する",
         style: "destructive",
-        onPress: () => {
+        onPress: async () => {
+          const { gameResultId, isEditMode } = useGameRecordStore.getState();
+          // 編集モードでは元々存在していたデータのため削除しない。新規記録モードのみ、
+          // Step1送信時点でサーバーに作成済みの未完成ドラフトを削除する。
+          if (!isEditMode && gameResultId) {
+            try {
+              await deleteGameResult(gameResultId);
+              invalidateGameResultRelated(queryClient, "refetch");
+            } catch (error) {
+              if (!isAxios404(error)) {
+                Sentry.captureException(error, {
+                  tags: { source: "game-record-cancel", action: "delete" },
+                });
+              }
+            }
+          }
           reset();
           // v2 ステップ式ウィザードの一時状態（打席途中入力）も同時に破棄する。
           useBattingRecordStore.getState().reset();
