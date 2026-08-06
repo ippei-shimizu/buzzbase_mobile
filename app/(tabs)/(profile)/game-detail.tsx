@@ -42,7 +42,10 @@ export default function ProfileGameDetailScreen() {
   };
 
   const handleEdit = () => {
-    loadFromGameResult(game);
+    const gameWithUserId = game.user_id
+      ? game
+      : { ...game, user_id: profile?.id ?? 0 };
+    loadFromGameResult(gameWithUserId);
     router.push("/(game-record)/step1-game-info");
   };
 
