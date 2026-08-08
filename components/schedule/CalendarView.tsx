@@ -437,9 +437,8 @@ function DayView({
   onAddAt: (date: string, time: string) => void;
 }) {
   const timelineRef = useRef<ScrollView>(null);
-  const [viewportHeight, setViewportHeight] = useState(
-    TIMELINE_MIN_VIEWPORT_HEIGHT,
-  );
+  // 実測前に暫定値でスクロールすると測定後に位置が飛ぶため、測るまでは null にしておく。
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
 
   const { timed, allDay } = useMemo(() => {
     const timedEntries: { entry: CalendarEntry; minutes: number }[] = [];
@@ -489,6 +488,7 @@ function DayView({
   // 0時に張り付いたままだと当日の予定を探して長くスクロールさせることになるため、
   // 最初の予定（無ければ現在時刻）が見える位置から開始する。
   useEffect(() => {
+    if (viewportHeight === null) return;
     timelineRef.current?.scrollTo({
       y: timelineOffsetFor(focusMinutes, viewportHeight),
       animated: false,
