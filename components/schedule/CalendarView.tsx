@@ -496,12 +496,15 @@ function DayView({
       ) : null}
 
       {hasEntries ? null : (
-        <Text style={styles.detailEmpty}>予定はありません</Text>
+        <Text style={[styles.detailEmpty, styles.dayEmpty]}>
+          予定はありません
+        </Text>
       )}
 
       <ScrollView
         ref={timelineRef}
         style={styles.timeline}
+        contentContainerStyle={styles.timelineContent}
         nestedScrollEnabled
         showsVerticalScrollIndicator={false}
         onLayout={(event) => setViewportHeight(event.nativeEvent.layout.height)}
@@ -679,7 +682,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   dayRoot: { flex: 1 },
+  dayEmpty: { marginBottom: 12 },
   timeline: { flex: 1, minHeight: TIMELINE_MIN_VIEWPORT_HEIGHT },
+  // 00:00 のラベルは目盛り線に合わせて上へはみ出すため、枠の先頭で切れないよう余白を取る。
+  timelineContent: { paddingTop: 8 },
   timelineBody: { height: TIMELINE_BODY_HEIGHT },
   hourRow: {
     flexDirection: "row",
