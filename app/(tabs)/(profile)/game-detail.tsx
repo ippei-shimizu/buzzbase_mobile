@@ -10,10 +10,10 @@ import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { useProfile } from "@hooks/useProfile";
 import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
 import { deleteGameResult } from "@services/gameResultService";
+import { useGameRecordStore } from "@stores/gameRecordStore";
 import { isAxios404 } from "@utils/axiosError";
 import { invalidateGameResultRelated } from "@utils/queryInvalidation";
 import { shareGameResult } from "@utils/shareGameResult";
-import { useGameRecordStore } from "../../../stores/gameRecordStore";
 
 export default function ProfileGameDetailScreen() {
   const { game: gameJson } = useLocalSearchParams<{ game: string }>();
@@ -99,6 +99,12 @@ export default function ProfileGameDetailScreen() {
                   <Ionicons name="trash-outline" size={22} color="#F31260" />
                 </TouchableOpacity>
               )}
+              <TouchableOpacity
+                onPress={handleShare}
+                style={styles.headerButton}
+              >
+                <Ionicons name="share-outline" size={22} color="#F4F4F4" />
+              </TouchableOpacity>
             </View>
           ),
         }}
