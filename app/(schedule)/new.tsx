@@ -34,6 +34,8 @@ const parseTime = (value: string | null): Date => {
   const base = new Date(2000, 0, 1, 6, 0);
   if (!value) return base;
   const [hour, minute] = value.split(":").map(Number);
+  // 時刻は URL パラメータ経由でも渡るため、壊れた値では既定時刻に戻す。
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return base;
   base.setHours(hour, minute, 0, 0);
   return base;
 };
@@ -43,10 +45,12 @@ export default function ScheduleFormScreen() {
   const params = useLocalSearchParams<{
     id?: string;
     date?: string;
+    time?: string;
     singleOnly?: string;
   }>();
   const editingId = params.id ? Number(params.id) : null;
   const prefillDate = params.date ?? null;
+  const prefillTime = params.time ?? null;
   // 週プランの「＋」は日付が確定した文脈なので「この日だけ」に固定し、毎週への切替を出さない。
   const singleOnly = params.singleOnly === "1";
 
@@ -81,7 +85,7 @@ export default function ScheduleFormScreen() {
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [time, setTime] = useState<Date>(
-    parseTime(editing?.scheduled_time ?? null),
+    parseTime(editing?.scheduled_time ?? prefillTime),
   );
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [menuSource, setMenuSource] = useState<MenuSource>(
