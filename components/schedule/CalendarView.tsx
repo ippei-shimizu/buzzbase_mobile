@@ -30,16 +30,18 @@ const VIEW_MODES: { value: ViewMode; label: string }[] = [
 ];
 const pad = (value: number): string => String(value).padStart(2, "0");
 
-// 「日」表示のタイムライン。1時間ぶんの高さと、スクロール枠の高さ。
+// 「日」表示のタイムライン。1時間ぶんの高さと、24時間ぶんの全体高さ。
 const HOUR_HEIGHT = 56;
-const TIMELINE_VIEWPORT_HEIGHT = 420;
+const TIMELINE_BODY_HEIGHT = 24 * HOUR_HEIGHT;
+// スクロール枠は画面の残り高さいっぱいに伸ばすが、小さい端末でも最低これだけは確保する。
+const TIMELINE_MIN_VIEWPORT_HEIGHT = 420;
 const HOUR_LABEL_WIDTH = 48;
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
 const NOW_LINE_REFRESH_MS = 60_000;
 
 /** 指定時刻がスクロール枠の少し上に来るオフセットを、可動域内に収めて返す。 */
-const timelineOffsetFor = (minutes: number): number => {
-  const maxOffset = 24 * HOUR_HEIGHT - TIMELINE_VIEWPORT_HEIGHT;
+const timelineOffsetFor = (minutes: number, viewportHeight: number): number => {
+  const maxOffset = TIMELINE_BODY_HEIGHT - viewportHeight;
   const target = (minutes / 60) * HOUR_HEIGHT - HOUR_HEIGHT / 2;
   return Math.min(Math.max(target, 0), Math.max(maxOffset, 0));
 };
@@ -420,6 +422,9 @@ function DayView({
   onEntry: (entry: CalendarEntry) => void;
 }) {
   const timelineRef = useRef<ScrollView>(null);
+  const [viewportHeight, setViewportHeight] = useState(
+    TIMELINE_MIN_VIEWPORT_HEIGHT,
+  );
 
   const { timed, allDay } = useMemo(() => {
     const timedEntries: { entry: CalendarEntry; minutes: number }[] = [];
@@ -470,13 +475,13 @@ function DayView({
   // 最初の予定（無ければ現在時刻）が見える位置から開始する。
   useEffect(() => {
     timelineRef.current?.scrollTo({
-      y: timelineOffsetFor(focusMinutes),
+      y: timelineOffsetFor(focusMinutes, viewportHeight),
       animated: false,
     });
-  }, [cursor, focusMinutes]);
+  }, [cursor, focusMinutes, viewportHeight]);
 
   return (
-    <View>
+    <View style={styles.dayRoot}>
       {allDay.length > 0 ? (
         <View style={styles.allDaySection}>
           <Text style={styles.allDayLabel}>終日・時間未設定</Text>
@@ -499,6 +504,7 @@ function DayView({
         style={styles.timeline}
         nestedScrollEnabled
         showsVerticalScrollIndicator={false}
+        onLayout={(event) => setViewportHeight(event.nativeEvent.layout.height)}
       >
         <View style={styles.timelineBody}>
           {HOURS.map((hour) => (
@@ -577,7 +583,8 @@ function DetailRow({
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#2E2E2E" },
   container: { flex: 1, backgroundColor: "#2E2E2E" },
-  content: { padding: 16, paddingBottom: 96 },
+  // 「日」表示のタイムラインが画面の残り高さいっぱいに伸びるよう flexGrow を効かせる。
+  content: { padding: 16, paddingBottom: 96, flexGrow: 1 },
   segment: {
     flexDirection: "row",
     backgroundColor: "#3A3A3A",
@@ -671,8 +678,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 8,
   },
-  timeline: { height: TIMELINE_VIEWPORT_HEIGHT },
-  timelineBody: { height: 24 * HOUR_HEIGHT },
+  dayRoot: { flex: 1 },
+  timeline: { flex: 1, minHeight: TIMELINE_MIN_VIEWPORT_HEIGHT },
+  timelineBody: { height: TIMELINE_BODY_HEIGHT },
   hourRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -695,7 +703,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: HOUR_LABEL_WIDTH,
     right: 0,
-    height: 24 * HOUR_HEIGHT,
+    height: TIMELINE_BODY_HEIGHT,
   },
   timelineBlock: {
     position: "absolute",
