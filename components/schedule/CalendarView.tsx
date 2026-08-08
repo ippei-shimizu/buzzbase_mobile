@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -38,6 +39,22 @@ const TIMELINE_MIN_VIEWPORT_HEIGHT = 420;
 const HOUR_LABEL_WIDTH = 48;
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
 const NOW_LINE_REFRESH_MS = 60_000;
+// タップ位置から予定を作るときの丸め幅（分）。
+const TIMELINE_SLOT_MINUTES = 30;
+
+/** タイムライン上の y 座標を、30分刻みに丸めた "HH:MM" に変換する。 */
+const slotTimeAt = (offsetY: number): string => {
+  const rawMinutes = Number.isFinite(offsetY)
+    ? (offsetY / HOUR_HEIGHT) * 60
+    : 0;
+  const snapped =
+    Math.floor(rawMinutes / TIMELINE_SLOT_MINUTES) * TIMELINE_SLOT_MINUTES;
+  const minutes = Math.min(
+    Math.max(snapped, 0),
+    24 * 60 - TIMELINE_SLOT_MINUTES,
+  );
+  return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+};
 
 /** 指定時刻がスクロール枠の少し上に来るオフセットを、可動域内に収めて返す。 */
 const timelineOffsetFor = (minutes: number, viewportHeight: number): number => {
@@ -158,6 +175,8 @@ export function CalendarView() {
   const goEntry = (entry: CalendarEntry) =>
     router.push(`/(schedule)/${entry.schedule_id}?date=${entry.date}`);
   const goAdd = (date: string) => router.push(`/(schedule)/new?date=${date}`);
+  const goAddAt = (date: string, time: string) =>
+    router.push(`/(schedule)/new?date=${date}&time=${time}`);
 
   const fabDate = mode === "month" ? selected : cursor;
 
@@ -215,7 +234,12 @@ export function CalendarView() {
             onAdd={goAdd}
           />
         ) : (
-          <DayView cursor={cursor} byDate={byDate} onEntry={goEntry} />
+          <DayView
+            cursor={cursor}
+            byDate={byDate}
+            onEntry={goEntry}
+            onAddAt={goAddAt}
+          />
         )}
       </ScrollView>
 
@@ -416,10 +440,12 @@ function DayView({
   cursor,
   byDate,
   onEntry,
+  onAddAt,
 }: {
   cursor: string;
   byDate: Map<string, CalendarEntry[]>;
   onEntry: (entry: CalendarEntry) => void;
+  onAddAt: (date: string, time: string) => void;
 }) {
   const timelineRef = useRef<ScrollView>(null);
   const [viewportHeight, setViewportHeight] = useState(
@@ -510,14 +536,23 @@ function DayView({
         onLayout={(event) => setViewportHeight(event.nativeEvent.layout.height)}
       >
         <View style={styles.timelineBody}>
-          {HOURS.map((hour) => (
-            <View key={hour} style={styles.hourRow}>
-              <Text style={styles.hourLabel}>{`${pad(hour)}:00`}</Text>
-              <View style={styles.hourLine} />
-            </View>
-          ))}
+          <Pressable
+            style={styles.timelineGrid}
+            accessibilityRole="button"
+            accessibilityLabel="タイムラインをタップして予定を追加"
+            onPress={(event) =>
+              onAddAt(cursor, slotTimeAt(event.nativeEvent.locationY))
+            }
+          >
+            {HOURS.map((hour) => (
+              <View key={hour} style={styles.hourRow}>
+                <Text style={styles.hourLabel}>{`${pad(hour)}:00`}</Text>
+                <View style={styles.hourLine} />
+              </View>
+            ))}
+          </Pressable>
 
-          <View style={styles.timelineOverlay}>
+          <View style={styles.timelineOverlay} pointerEvents="box-none">
             {nowMinutes === null ? null : (
               <View
                 style={[
@@ -687,6 +722,7 @@ const styles = StyleSheet.create({
   // 00:00 のラベルは目盛り線に合わせて上へはみ出すため、枠の先頭で切れないよう余白を取る。
   timelineContent: { paddingTop: 8 },
   timelineBody: { height: TIMELINE_BODY_HEIGHT },
+  timelineGrid: { height: TIMELINE_BODY_HEIGHT },
   hourRow: {
     flexDirection: "row",
     alignItems: "flex-start",
