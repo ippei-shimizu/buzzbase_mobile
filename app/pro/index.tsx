@@ -34,7 +34,6 @@ import {
 import { useSnackbarStore } from "@stores/snackbarStore";
 
 const NOTICES = [
-  "7 日間の無料トライアル期間中に解約すれば料金はかかりません。",
   "アプリを削除しても支払い情報は残ります。",
   "契約期間は開始日から月額（月額プラン）または1年（年額プラン）ごとに自動更新されます。",
   "解約は App Store のサブスクリプション設定から行います。",
