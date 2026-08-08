@@ -39,21 +39,10 @@ const TIMELINE_MIN_VIEWPORT_HEIGHT = 420;
 const HOUR_LABEL_WIDTH = 48;
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
 const NOW_LINE_REFRESH_MS = 60_000;
-// タップ位置から予定を作るときの丸め幅（分）。
-const TIMELINE_SLOT_MINUTES = 30;
-
-/** タイムライン上の y 座標を、30分刻みに丸めた "HH:MM" に変換する。 */
-const slotTimeAt = (offsetY: number): string => {
-  const rawMinutes = Number.isFinite(offsetY)
-    ? (offsetY / HOUR_HEIGHT) * 60
-    : 0;
-  const snapped =
-    Math.floor(rawMinutes / TIMELINE_SLOT_MINUTES) * TIMELINE_SLOT_MINUTES;
-  const minutes = Math.min(
-    Math.max(snapped, 0),
-    24 * 60 - TIMELINE_SLOT_MINUTES,
-  );
-  return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+/** 時間行内のタップ位置を30分刻みに丸め、"HH:MM" として返す。 */
+const slotTimeAt = (hour: number, offsetY: number): string => {
+  const isLaterHalf = Number.isFinite(offsetY) && offsetY >= HOUR_HEIGHT / 2;
+  return `${pad(hour)}:${isLaterHalf ? "30" : "00"}`;
 };
 
 /** 指定時刻がスクロール枠の少し上に来るオフセットを、可動域内に収めて返す。 */
@@ -536,21 +525,20 @@ function DayView({
         onLayout={(event) => setViewportHeight(event.nativeEvent.layout.height)}
       >
         <View style={styles.timelineBody}>
-          <Pressable
-            style={styles.timelineGrid}
-            accessibilityRole="button"
-            accessibilityLabel="タイムラインをタップして予定を追加"
-            onPress={(event) =>
-              onAddAt(cursor, slotTimeAt(event.nativeEvent.locationY))
-            }
-          >
-            {HOURS.map((hour) => (
-              <View key={hour} style={styles.hourRow}>
-                <Text style={styles.hourLabel}>{`${pad(hour)}:00`}</Text>
-                <View style={styles.hourLine} />
-              </View>
-            ))}
-          </Pressable>
+          {HOURS.map((hour) => (
+            <Pressable
+              key={hour}
+              style={styles.hourRow}
+              accessibilityRole="button"
+              accessibilityLabel={`${hour}時に予定を追加`}
+              onPress={(event) =>
+                onAddAt(cursor, slotTimeAt(hour, event.nativeEvent.locationY))
+              }
+            >
+              <Text style={styles.hourLabel}>{`${pad(hour)}:00`}</Text>
+              <View style={styles.hourLine} />
+            </Pressable>
+          ))}
 
           <View style={styles.timelineOverlay} pointerEvents="box-none">
             {nowMinutes === null ? null : (
@@ -722,7 +710,6 @@ const styles = StyleSheet.create({
   // 00:00 のラベルは目盛り線に合わせて上へはみ出すため、枠の先頭で切れないよう余白を取る。
   timelineContent: { paddingTop: 8 },
   timelineBody: { height: TIMELINE_BODY_HEIGHT },
-  timelineGrid: { height: TIMELINE_BODY_HEIGHT },
   hourRow: {
     flexDirection: "row",
     alignItems: "flex-start",
