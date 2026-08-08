@@ -34,7 +34,6 @@ import {
 import { useSnackbarStore } from "@stores/snackbarStore";
 
 const NOTICES = [
-  "7 日間の無料トライアル期間中に解約すれば料金はかかりません。",
   "アプリを削除しても支払い情報は残ります。",
   "契約期間は開始日から月額（月額プラン）または1年（年額プラン）ごとに自動更新されます。",
   "解約は App Store のサブスクリプション設定から行います。",
@@ -376,6 +375,9 @@ export default function ProScreen() {
       <View
         style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 24) }]}
       >
+        <Text style={styles.trialNotice}>
+          7 日間の無料トライアル期間中に解約すれば料金はかかりません
+        </Text>
         <TouchableOpacity
           onPress={handlePurchase}
           disabled={!selectedPackage || purchasing}
@@ -416,6 +418,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   brandRow: {
+    alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
@@ -440,6 +443,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   subtitle: {
+    alignSelf: "flex-start",
     color: "#A1A1AA",
     fontSize: 13,
     marginTop: 4,
@@ -656,6 +660,12 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: "#424242",
+  },
+  trialNotice: {
+    color: "#A1A1AA",
+    fontSize: 12,
+    textAlign: "center",
+    marginBottom: 8,
   },
   ctaButton: {
     backgroundColor: "#d08000",

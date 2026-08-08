@@ -226,18 +226,26 @@ export default function NoteDetailScreen() {
             ))}
           </View>
         ) : null}
-        {showFreeMemo ? <Text style={styles.memo}>{memoText}</Text> : null}
+        {showFreeMemo ? (
+          <View style={styles.sectionCard}>
+            <Text style={styles.cardLabel}>メモ</Text>
+            <Text style={styles.memo}>{memoText}</Text>
+          </View>
+        ) : null}
         <MediaAttachmentList attachments={note.media_attachments} />
         {reflectionAnswers.length > 0 ? (
-          <View style={styles.reflection}>
-            {reflectionAnswers.map((item) => (
-              <View key={item.question} style={styles.reflectionItem}>
-                <Text style={styles.reflectionQuestion}>
-                  【{item.question}】
-                </Text>
-                <Text style={styles.reflectionAnswer}>{item.answer}</Text>
-              </View>
-            ))}
+          <View style={styles.sectionCard}>
+            <Text style={styles.cardLabel}>振り返り</Text>
+            <View style={styles.reflection}>
+              {reflectionAnswers.map((item) => (
+                <View key={item.question} style={styles.reflectionItem}>
+                  <Text style={styles.reflectionQuestion}>
+                    【{item.question}】
+                  </Text>
+                  <Text style={styles.reflectionAnswer}>{item.answer}</Text>
+                </View>
+              ))}
+            </View>
           </View>
         ) : null}
 
@@ -278,13 +286,19 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   tagChipText: { color: "#D4D4D8", fontSize: 12, fontWeight: "600" },
+  sectionCard: {
+    backgroundColor: "#3A3A3A",
+    borderRadius: 14,
+    padding: 16,
+    marginTop: 20,
+    gap: 8,
+  },
   memo: {
     color: "#F4F4F4",
     fontSize: 15,
     lineHeight: 22,
-    marginTop: 12,
   },
-  reflection: { marginTop: 12, gap: 16 },
+  reflection: { gap: 16 },
   reflectionItem: { gap: 4 },
   reflectionQuestion: {
     color: "#d08000",
@@ -300,7 +314,12 @@ const styles = StyleSheet.create({
   gameLabel: { marginBottom: 10 },
   cardLink: { color: "#d08000", fontSize: 13, fontWeight: "600" },
   muted: { color: "#A1A1AA", fontSize: 13, marginTop: 10 },
-  gameSection: { marginTop: 20 },
+  gameSection: {
+    marginTop: 24,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#3A3A3A",
+  },
 
   practiceCard: {
     backgroundColor: "#3A3A3A",

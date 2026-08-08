@@ -85,8 +85,8 @@ export default function ShadowSwingSetupScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.intro}>
-          設定したインターバルで自動的にカウントアップし、素振りの本数を練習記録に
-          保存します。笛の音や読み上げでテンポを取りながら振れます。
+          設定したインターバルでアプリが自動で素振りの回数を数えてくれます。振った
+          本数は練習記録に保存され、笛の音や読み上げでテンポを取りながら振れます。
         </Text>
 
         <Text style={styles.label}>目標本数</Text>
