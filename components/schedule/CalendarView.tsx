@@ -17,13 +17,20 @@ import { useEntitlement } from "@hooks/useEntitlement";
 import { useCalendar } from "@hooks/usePlans";
 import { buildTimelineLayout, minutesFromMidnight } from "@utils/dayTimeline";
 import { formatJaFullDate } from "@utils/formatDate";
-import { addDays, fromIsoDate, toIsoDate, todayIso } from "@utils/planDate";
+import {
+  addDays,
+  fromIsoDate,
+  mondayOf,
+  toIsoDate,
+  todayIso,
+  weekdayNumber,
+} from "@utils/planDate";
 
 const FREE_CALENDAR_WINDOW_MONTHS = 3;
 
 type ViewMode = "month" | "week" | "day";
 
-const WEEKDAY_HEADER = ["日", "月", "火", "水", "木", "金", "土"];
+const WEEKDAY_HEADER = ["月", "火", "水", "木", "金", "土", "日"];
 const VIEW_MODES: { value: ViewMode; label: string }[] = [
   { value: "month", label: "月" },
   { value: "week", label: "週" },
@@ -56,10 +63,6 @@ const currentMinutesOfDay = (): number => {
   const now = new Date();
   return now.getHours() * 60 + now.getMinutes();
 };
-
-/** iso を含む週の日曜日を返す（週の起点を日曜に統一）。 */
-const sundayOf = (iso: string): string =>
-  addDays(iso, -fromIsoDate(iso).getDay());
 
 const shortMonthDay = (iso: string): string => {
   const date = fromIsoDate(iso);
@@ -112,8 +115,8 @@ export function CalendarView() {
       };
     }
     if (mode === "week") {
-      const sunday = sundayOf(cursor);
-      return { from: sunday, to: addDays(sunday, 6) };
+      const monday = mondayOf(cursor);
+      return { from: monday, to: addDays(monday, 6) };
     }
     return { from: cursor, to: cursor };
   }, [mode, cursor]);
@@ -154,8 +157,8 @@ export function CalendarView() {
     if (mode === "month")
       return `${date.getFullYear()}年 ${date.getMonth() + 1}月`;
     if (mode === "week") {
-      const sunday = sundayOf(cursor);
-      return `${shortMonthDay(sunday)} - ${shortMonthDay(addDays(sunday, 6))}`;
+      const monday = mondayOf(cursor);
+      return `${shortMonthDay(monday)} - ${shortMonthDay(addDays(monday, 6))}`;
     }
     return formatJaFullDate(cursor);
   }, [mode, cursor]);
@@ -287,7 +290,7 @@ function MonthView({
   const year = date.getFullYear();
   const month = date.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const lead = new Date(year, month, 1).getDay();
+  const lead = weekdayNumber(new Date(year, month, 1)) - 1;
   const cells: (number | null)[] = [
     ...Array(lead).fill(null),
     ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
@@ -383,8 +386,8 @@ function WeekView({
   onEntry: (entry: CalendarEntry) => void;
   onAdd: (date: string) => void;
 }) {
-  const sunday = sundayOf(cursor);
-  const days = Array.from({ length: 7 }, (_, index) => addDays(sunday, index));
+  const monday = mondayOf(cursor);
+  const days = Array.from({ length: 7 }, (_, index) => addDays(monday, index));
 
   return (
     <View>
@@ -396,7 +399,7 @@ function WeekView({
           <View key={iso} style={styles.weekDayRow}>
             <View style={styles.weekDayHead}>
               <Text style={[styles.weekDayLabel, isToday && styles.cellToday]}>
-                {WEEKDAY_HEADER[date.getDay()]}
+                {WEEKDAY_HEADER[weekdayNumber(date) - 1]}
               </Text>
               <Text style={[styles.weekDayNum, isToday && styles.cellToday]}>
                 {date.getDate()}
