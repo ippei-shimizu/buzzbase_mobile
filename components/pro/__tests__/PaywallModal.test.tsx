@@ -8,6 +8,7 @@
  * - 購入成功時の syncProStatus は /pro/sync への実リクエストを MSW で観測する。
  */
 import { fireEvent, waitFor } from "@testing-library/react-native";
+import { delay } from "msw";
 import { PURCHASES_ERROR_CODE } from "react-native-purchases";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import {
@@ -257,6 +258,47 @@ describe("PaywallModal", () => {
 
     // 月額980円×12=11,760円 に対し年額9,800円 → 1,960円お得。
     expect(await findByText("年間¥1,960お得")).toBeTruthy();
+  });
+
+  it("Pro状態の判定確定前は、実際はトライアル利用済みでもCTAボタンに中立文言を表示する", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    server.use(
+      http.get(apiUrl("/pro/status"), async () => {
+        await delay("infinite");
+        return HttpResponse.json({
+          ...DEFAULT_PRO_STATUS,
+          subscription: {
+            ...DEFAULT_PRO_STATUS.subscription,
+            has_used_trial: true,
+          },
+        });
+      }),
+    );
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    expect(await findByLabelText("PROを始める")).toBeOnTheScreen();
+  });
+
+  it("Pro状態の判定確定前はトライアル案内文を表示しない", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    server.use(
+      http.get(apiUrl("/pro/status"), async () => {
+        await delay("infinite");
+        return HttpResponse.json(DEFAULT_PRO_STATUS);
+      }),
+    );
+
+    const { findByText, queryByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    await findByText("月額プラン");
+    expect(
+      queryByText("7 日間の無料トライアル期間中に解約すれば料金はかかりません"),
+    ).not.toBeOnTheScreen();
   });
 
   it("getOfferings が失敗してもシートは表示され、プラン欄が空状態になる", async () => {
