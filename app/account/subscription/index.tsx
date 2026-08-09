@@ -81,6 +81,10 @@ export default function SubscriptionScreen() {
         <CancelGuideModal
           isOpen={cancelGuideOpen}
           onClose={() => setCancelGuideOpen(false)}
+          // 加入媒体が不明（webhook 未到達等）なときは iOS 向け案内にフォールバックする。
+          platform={
+            proStatus.subscription.platform === "android" ? "android" : "ios"
+          }
         />
       )}
     </ScrollView>
