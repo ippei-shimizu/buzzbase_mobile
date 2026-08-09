@@ -1,7 +1,8 @@
 /**
- * 目標作成フォームの Pro 制限（カスタム期間・自由指標）の振る舞いテスト。
+ * 目標作成フォームの Pro 制限（カスタム期間・自由指標）と入力検証の振る舞いテスト。
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { Alert } from "react-native";
 import {
   apiUrl,
   baseUrl,
@@ -133,5 +134,34 @@ describe("GoalFormScreen（新規）", () => {
     expect(
       screen.queryByText("カスタム期間で目標を設定"),
     ).not.toBeOnTheScreen();
+  });
+
+  it("目標値に負の数を入力して保存すると、エラーを表示して作成リクエストを送らない", async () => {
+    respondFree();
+    setupCommonHandlers();
+    const createRequests: string[] = [];
+    server.use(
+      http.post(baseUrl("/api/v2/goals"), async ({ request }) => {
+        createRequests.push(await request.text());
+        return HttpResponse.json({}, { status: 201 });
+      }),
+    );
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+
+    renderWithProviders(<GoalFormScreen />);
+
+    // pro/status 解決前は保存ボタンが無効なため、無料判定が確定してから操作する。
+    await screen.findByLabelText("自由指標（Pro限定）");
+    fireEvent.changeText(screen.getByPlaceholderText("例: 20"), "-1");
+    fireEvent.press(screen.getByText("保存"));
+
+    await waitFor(() =>
+      expect(alertSpy).toHaveBeenCalledWith(
+        "目標値は0以上の数値を入力してください",
+      ),
+    );
+    expect(createRequests).toHaveLength(0);
+
+    alertSpy.mockRestore();
   });
 });

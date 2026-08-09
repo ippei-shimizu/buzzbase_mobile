@@ -189,6 +189,10 @@ function GoalForm({ editing }: { editing?: Goal }) {
     if (!isQualitative && !target) {
       return Alert.alert("目標値を入力してください");
     }
+    // 0 は「エラー0」「四球0」のような正当な目標値として許容する。負値だけを弾く。
+    if (!isQualitative && Number(target) < 0) {
+      return Alert.alert("目標値は0以上の数値を入力してください");
+    }
     if (isMenuMetric && !practiceMenuId) {
       return Alert.alert("対象の練習メニューを選択してください");
     }
