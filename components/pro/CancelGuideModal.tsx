@@ -13,6 +13,8 @@ interface StoreGuideContent {
   steps: string[];
   url: string;
   openLabel: string;
+  /** 「設定アプリを開く」ボタンの表示テキスト。 */
+  buttonLabel: string;
 }
 
 // ストア課金の解約はアプリ内で完結できないため、それぞれの管理画面へ誘導する。
@@ -27,6 +29,7 @@ const STORE_GUIDE: Record<"ios" | "android", StoreGuideContent> = {
     ],
     url: "https://apps.apple.com/account/subscriptions",
     openLabel: "Apple サブスクリプション設定を開く",
+    buttonLabel: "設定アプリを開く",
   },
   android: {
     description: "Google Play の定期購入から解約手続きを行います。",
@@ -38,6 +41,7 @@ const STORE_GUIDE: Record<"ios" | "android", StoreGuideContent> = {
     ],
     url: "https://play.google.com/store/account/subscriptions",
     openLabel: "Google Play の定期購入を開く",
+    buttonLabel: "Google Play を開く",
   },
 };
 
@@ -112,9 +116,7 @@ export function CancelGuideModal({
               accessibilityRole="button"
               accessibilityLabel={guide.openLabel}
             >
-              <Text style={styles.primaryButtonText}>
-                {platform === "ios" ? "設定アプリを開く" : "Google Play を開く"}
-              </Text>
+              <Text style={styles.primaryButtonText}>{guide.buttonLabel}</Text>
             </TouchableOpacity>
           </View>
         </Pressable>
