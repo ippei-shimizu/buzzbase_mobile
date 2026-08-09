@@ -39,6 +39,12 @@ const getRouterSpies = (): RouterSpies => {
   return m.__routerSpies;
 };
 
+// router のスパイはモジュールスコープで使い回されるため、
+// テスト間で呼び出し履歴が混ざらないよう毎回クリアする。
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
 const inviteLinkInfo = {
   group: { id: 1, name: "招待先グループ", icon: null, member_count: 3 },
   inviter: { name: "招待者", image: { url: null } },

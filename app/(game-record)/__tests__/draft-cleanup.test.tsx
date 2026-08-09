@@ -35,6 +35,9 @@ const DRAFT_GAME_RESULT_ID = 55;
 const deletedIds: string[] = [];
 
 beforeEach(() => {
+  // navigation のスパイはモジュールスコープで使い回されるため、
+  // テスト間で呼び出し履歴が混ざらないよう毎回クリアする。
+  jest.clearAllMocks();
   deletedIds.length = 0;
   useGameRecordStore.getState().reset();
   // 「中断する」を選んだ状態を再現する。
