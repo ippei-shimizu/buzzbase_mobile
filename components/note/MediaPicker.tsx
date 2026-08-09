@@ -167,7 +167,9 @@ export function MediaPicker({ baseballNoteId, onStage, onUploaded }: Props) {
     let uri = asset.uri;
     if (mediaType === "video") {
       const resolvedUri = await resolveVideoUri(asset.uri);
-      if (resolvedUri == null) return; // 上限超過でユーザーがトリミングをキャンセル
+      // 上限超過でユーザーがトリミングをキャンセルした場合と、必須トリミング自体が
+      // 失敗した場合のどちらもnullになる（後者はresolveVideoUri内でアラート済み）。
+      if (resolvedUri == null) return;
       uri = resolvedUri;
     }
 
