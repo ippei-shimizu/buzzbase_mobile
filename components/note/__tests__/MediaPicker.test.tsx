@@ -2,11 +2,15 @@
  * MediaPicker の動画トリミング失敗時の振る舞いテスト。
  * ネイティブトリミング（react-native-video-trim）が失敗しても選択操作自体を
  * 未処理の Promise rejection にせず、ユーザーに結果を伝えて安全に復帰することを確認する。
+ *
+ * react-native-video-trim はネイティブ境界としてモックし、useVideoTrim・trimVideo は
+ * 実装をそのまま通す（utils/__tests__/videoTrim.test.ts と同じ境界の取り方）。
+ * これにより、トリミング失敗後に isTrimming が実際に false へ戻ることまで
+ * （「トリミング中…」表示が消えることで）検証できる。
  */
 import { fireEvent, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import { useEntitlement } from "@hooks/useEntitlement";
-import { useVideoTrim } from "@hooks/useVideoTrim";
 import { getVideoMeta } from "@utils/mediaProcessing";
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
 import { MediaPicker } from "../MediaPicker";
@@ -29,10 +33,6 @@ jest.mock("expo-image-picker", () => ({
   launchCameraAsync: jest.fn(),
 }));
 
-jest.mock("@hooks/useVideoTrim", () => ({
-  useVideoTrim: jest.fn(),
-}));
-
 jest.mock("@hooks/useEntitlement", () => ({
   useEntitlement: jest.fn(),
 }));
@@ -42,16 +42,31 @@ jest.mock("@utils/mediaProcessing", () => ({
   generateVideoThumbnail: jest.fn().mockResolvedValue("file:///thumb.jpg"),
 }));
 
-const mockUseVideoTrim = useVideoTrim as jest.Mock;
+const mockShowEditor = jest.fn();
+let mockErrorListener: ((payload: { message: string }) => void) | null = null;
+
+jest.mock("react-native-video-trim", () => ({
+  __esModule: true,
+  showEditor: (...args: unknown[]) => mockShowEditor(...args),
+  default: {
+    onFinishTrimming: jest.fn(() => ({ remove: jest.fn() })),
+    onCancel: jest.fn(() => ({ remove: jest.fn() })),
+    onError: (listener: (payload: { message: string }) => void) => {
+      mockErrorListener = listener;
+      return { remove: jest.fn() };
+    },
+  },
+}));
+
 const mockUseEntitlement = useEntitlement as jest.Mock;
 const mockGetVideoMeta = getVideoMeta as jest.Mock;
 
 describe("MediaPicker の動画トリミング失敗時の挙動", () => {
   let alertSpy: jest.SpyInstance;
-  let trimMock: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockErrorListener = null;
     alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     mockUseEntitlement.mockReturnValue({ hasEntitlement: () => false });
     // 無料プランの上限（120秒）を超える動画として、必須トリミングの分岐を通す。
@@ -60,30 +75,34 @@ describe("MediaPicker の動画トリミング失敗時の挙動", () => {
       width: 1080,
       height: 1920,
     });
-    trimMock = jest.fn();
-    mockUseVideoTrim.mockReturnValue({ trim: trimMock, isTrimming: false });
   });
 
   afterEach(() => {
     alertSpy.mockRestore();
   });
 
-  it("上限超過で必須トリミングが失敗したら、選択を中断してアラートで伝える（onStageは呼ばれない）", async () => {
-    trimMock.mockRejectedValue(new Error("native trim failed"));
+  it("上限超過で必須トリミングが失敗したら、選択を中断してアラートで伝え、ビジー表示を解除する（onStageは呼ばれない）", async () => {
     const onStage = jest.fn();
 
-    const { getByText } = renderWithProviders(
+    const { getByText, queryByText } = renderWithProviders(
       <MediaPicker onStage={onStage} />,
     );
     fireEvent.press(getByText("ライブラリ"));
 
-    await waitFor(() => expect(trimMock).toHaveBeenCalled());
+    await waitFor(() => expect(mockShowEditor).toHaveBeenCalled());
+    // isTrimming が true の間はビジー表示が出ている。
+    expect(getByText("トリミング中…")).toBeTruthy();
+
+    mockErrorListener?.({ message: "native trim failed" });
+
     await waitFor(() =>
       expect(alertSpy).toHaveBeenCalledWith(
         "トリミングに失敗しました",
         expect.stringContaining("別の動画を選び直してください"),
       ),
     );
+    // isTrimming が false に戻り、ビジー表示が消えている（操作可能な状態に復帰）。
+    await waitFor(() => expect(queryByText("トリミング中…")).toBeNull());
     expect(onStage).not.toHaveBeenCalled();
   });
 
@@ -93,7 +112,6 @@ describe("MediaPicker の動画トリミング失敗時の挙動", () => {
       width: 1080,
       height: 1920,
     });
-    trimMock.mockRejectedValue(new Error("native trim failed"));
     const onStage = jest.fn();
 
     const { getByText } = renderWithProviders(
@@ -111,7 +129,9 @@ describe("MediaPicker の動画トリミング失敗時の挙動", () => {
     );
     trimButton?.onPress?.();
 
-    await waitFor(() => expect(trimMock).toHaveBeenCalled());
+    await waitFor(() => expect(mockShowEditor).toHaveBeenCalled());
+    mockErrorListener?.({ message: "native trim failed" });
+
     await waitFor(() =>
       expect(alertSpy).toHaveBeenCalledWith(
         "トリミングに失敗しました",
