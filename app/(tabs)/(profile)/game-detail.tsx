@@ -87,6 +87,8 @@ export default function ProfileGameDetailScreen() {
                 <TouchableOpacity
                   onPress={handleEdit}
                   style={styles.headerButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="試合結果を編集"
                 >
                   <Ionicons name="create-outline" size={22} color="#F4F4F4" />
                 </TouchableOpacity>
@@ -95,6 +97,8 @@ export default function ProfileGameDetailScreen() {
                 <TouchableOpacity
                   onPress={handleDelete}
                   style={styles.headerButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="試合結果を削除"
                 >
                   <Ionicons name="trash-outline" size={22} color="#F31260" />
                 </TouchableOpacity>
@@ -102,6 +106,8 @@ export default function ProfileGameDetailScreen() {
               <TouchableOpacity
                 onPress={handleShare}
                 style={styles.headerButton}
+                accessibilityRole="button"
+                accessibilityLabel="試合結果を共有"
               >
                 <Ionicons name="share-outline" size={22} color="#F4F4F4" />
               </TouchableOpacity>
