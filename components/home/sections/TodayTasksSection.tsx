@@ -12,11 +12,7 @@ import {
 } from "react-native";
 import { PlanMenuRow } from "@components/schedule/PlanMenuRow";
 import { eventTypeMeta } from "@constants/schedule";
-import {
-  dayPlanMenuKey,
-  useDayPlan,
-  useToggleDayPlanMenu,
-} from "@hooks/usePlans";
+import { useDayPlan, useToggleDayPlanMenu } from "@hooks/usePlans";
 import { todayIso } from "@utils/planDate";
 import { SectionCard, SectionPlaceholder } from "./SectionCard";
 
@@ -25,7 +21,7 @@ export function TodayTasksSection() {
   const router = useRouter();
   const today = todayIso();
   const { plans, isLoading } = useDayPlan(today);
-  const { toggleMenu, togglingMenuKey } = useToggleDayPlanMenu(today);
+  const { toggleMenu, isToggling } = useToggleDayPlanMenu(today);
 
   // 今日の全予定メニューを practice_menu_id で dedupe（先勝ち）し、記録画面のプリセットに使う。
   const presetMenus = useMemo<PresetMenu[]>(() => {
@@ -62,7 +58,7 @@ export function TodayTasksSection() {
                 done: menu.done,
               })
             }
-            togglingMenuKey={togglingMenuKey}
+            isToggling={isToggling}
           />
         ))
       )}
@@ -119,12 +115,12 @@ function PlanBlock({
   plan,
   router,
   onToggleMenu,
-  togglingMenuKey,
+  isToggling,
 }: {
   plan: Plan;
   router: RouterType;
   onToggleMenu: (menu: PlanMenu) => void;
-  togglingMenuKey: string | null;
+  isToggling: (scheduleId: number, practiceMenuId: number) => boolean;
 }) {
   const meta = eventTypeMeta(plan.event_type);
   const isGame = plan.event_type === "game";
@@ -167,9 +163,7 @@ function PlanBlock({
           key={menu.practice_menu_id}
           menu={menu}
           onToggle={onToggleMenu}
-          isToggling={
-            togglingMenuKey === dayPlanMenuKey(plan.id, menu.practice_menu_id)
-          }
+          isToggling={isToggling(plan.id, menu.practice_menu_id)}
         />
       ))}
 

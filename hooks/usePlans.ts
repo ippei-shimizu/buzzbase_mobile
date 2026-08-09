@@ -1,5 +1,6 @@
 import type { Plan } from "../types/plan";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { getCalendar, getDayPlan } from "../services/planService";
 import {
   createPracticeLog,
@@ -39,7 +40,7 @@ export const useCalendar = (from: string, to: string) => {
 };
 
 /** 予定（schedule）× メニューを一意に指す複合キー。同一メニューが複数予定にある場合の識別に使う。 */
-export const dayPlanMenuKey = (scheduleId: number, practiceMenuId: number) =>
+const dayPlanMenuKey = (scheduleId: number, practiceMenuId: number) =>
   `${scheduleId}:${practiceMenuId}`;
 
 /** 対象メニューの done を反転させた plans を返す。予定全体の done も再計算する。 */
@@ -72,6 +73,9 @@ const toggleMenuInPlans = (
 export const useToggleDayPlanMenu = (date: string) => {
   const queryClient = useQueryClient();
   const plansQueryKey = ["plans", "by_date", date];
+  // 複数メニューを続けてタップしても互いの処理中状態を打ち消さないよう、
+  // 単一 mutation の variables ではなく進行中のキー集合で管理する。
+  const [togglingKeys, setTogglingKeys] = useState<Set<string>>(new Set());
   // ログの増減は予定の done・当日の活動集計（草・Streak）・セッションに波及する。
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["plans"] });
@@ -110,26 +114,34 @@ export const useToggleDayPlanMenu = (date: string) => {
     },
     onMutate: async ({ scheduleId, practiceMenuId }) => {
       await queryClient.cancelQueries({ queryKey: plansQueryKey });
+      const key = dayPlanMenuKey(scheduleId, practiceMenuId);
+      setTogglingKeys((prev) => new Set(prev).add(key));
       const previousPlans = queryClient.getQueryData<Plan[]>(plansQueryKey);
       queryClient.setQueryData<Plan[]>(plansQueryKey, (plans) =>
         toggleMenuInPlans(plans, scheduleId, practiceMenuId),
       );
-      return { previousPlans };
+      return { previousPlans, key };
     },
     onError: (_error, _variables, context) => {
       if (context?.previousPlans) {
         queryClient.setQueryData(plansQueryKey, context.previousPlans);
       }
     },
-    onSettled: invalidate,
+    onSettled: (_data, _error, _variables, context) => {
+      invalidate();
+      if (context?.key) {
+        setTogglingKeys((prev) => {
+          const next = new Set(prev);
+          next.delete(context.key);
+          return next;
+        });
+      }
+    },
   });
-
-  const pending = mutation.isPending ? mutation.variables : null;
 
   return {
     toggleMenu: mutation.mutateAsync,
-    togglingMenuKey: pending
-      ? dayPlanMenuKey(pending.scheduleId, pending.practiceMenuId)
-      : null,
+    isToggling: (scheduleId: number, practiceMenuId: number) =>
+      togglingKeys.has(dayPlanMenuKey(scheduleId, practiceMenuId)),
   };
 };
