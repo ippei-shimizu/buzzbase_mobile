@@ -129,7 +129,7 @@ describe("SubscriptionScreen", () => {
     expect(getByLabelText("解約方法を見る")).toBeTruthy();
   });
 
-  it("解約方法を見る → CancelGuideModal が開く", () => {
+  it("解約方法を見る → CancelGuideModal が開く（iOS 加入者は Apple の案内）", () => {
     useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     stubProStatus({
       subscription: {
@@ -137,6 +137,7 @@ describe("SubscriptionScreen", () => {
         status: "active",
         pro_active: true,
         plan_type: "monthly",
+        platform: "ios",
       },
     });
 
@@ -147,5 +148,28 @@ describe("SubscriptionScreen", () => {
     fireEvent.press(getByLabelText("解約方法を見る"));
 
     expect(getByText("Pro プランの解約方法")).toBeTruthy();
+    expect(getByLabelText("Apple サブスクリプション設定を開く")).toBeTruthy();
+  });
+
+  it("解約方法を見る → Android 加入者には Google Play の案内を出す（Apple の案内を誤表示しない）", () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    stubProStatus({
+      subscription: {
+        ...DEFAULT_PRO_STATUS.subscription,
+        status: "active",
+        pro_active: true,
+        plan_type: "monthly",
+        platform: "android",
+      },
+    });
+
+    const { getByLabelText, queryByLabelText } = renderWithProviders(
+      <SubscriptionScreen />,
+    );
+
+    fireEvent.press(getByLabelText("解約方法を見る"));
+
+    expect(getByLabelText("Google Play の定期購入を開く")).toBeTruthy();
+    expect(queryByLabelText("Apple サブスクリプション設定を開く")).toBeNull();
   });
 });

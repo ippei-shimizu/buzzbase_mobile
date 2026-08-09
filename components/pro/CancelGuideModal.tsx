@@ -8,20 +8,59 @@ import {
   View,
 } from "react-native";
 
-const APPLE_SUBSCRIPTIONS_URL = "https://apps.apple.com/account/subscriptions";
+interface StoreGuideContent {
+  description: string;
+  steps: string[];
+  url: string;
+  openLabel: string;
+}
+
+// ストア課金の解約はアプリ内で完結できないため、それぞれの管理画面へ誘導する。
+const STORE_GUIDE: Record<"ios" | "android", StoreGuideContent> = {
+  ios: {
+    description: "App Store のサブスクリプション設定から解約手続きを行います。",
+    steps: [
+      "設定アプリを開く",
+      "上部のあなたの名前（Apple ID）をタップ",
+      "「サブスクリプション」をタップ",
+      "「BUZZ BASE Pro」を選び、解約を完了",
+    ],
+    url: "https://apps.apple.com/account/subscriptions",
+    openLabel: "Apple サブスクリプション設定を開く",
+  },
+  android: {
+    description: "Google Play の定期購入から解約手続きを行います。",
+    steps: [
+      "Google Play ストアを開く",
+      "右上のプロフィールアイコンをタップ",
+      "「お支払いと定期購入」→「定期購入」をタップ",
+      "「BUZZ BASE Pro」を選び、解約を完了",
+    ],
+    url: "https://play.google.com/store/account/subscriptions",
+    openLabel: "Google Play の定期購入を開く",
+  },
+};
 
 interface CancelGuideModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** ストア課金の種別。判別できない場合は iOS 向け案内にフォールバックする。 */
+  platform?: "ios" | "android";
 }
 
 /**
- * iOS IAP 解約手順を案内するモーダル。
- * Apple ガイドライン上、アプリ内で解約を完結させられないため、設定アプリへ誘導する。
+ * ストア課金（iOS App内課金 / Google Play 定期購入）の解約手順を案内するモーダル。
+ * プラットフォームのガイドライン上、アプリ内で解約を完結させられないため、それぞれの管理画面へ誘導する。
  */
-export function CancelGuideModal({ isOpen, onClose }: CancelGuideModalProps) {
+export function CancelGuideModal({
+  isOpen,
+  onClose,
+  platform = "ios",
+}: CancelGuideModalProps) {
+  const guide = STORE_GUIDE[platform];
+
   const handleOpenSettings = () => {
-    void Linking.openURL(APPLE_SUBSCRIPTIONS_URL);
+    void Linking.openURL(guide.url);
     onClose();
   };
 
@@ -44,19 +83,14 @@ export function CancelGuideModal({ isOpen, onClose }: CancelGuideModalProps) {
           accessibilityViewIsModal
         >
           <Text style={styles.title}>Pro プランの解約方法</Text>
-          <Text style={styles.description}>
-            App Store のサブスクリプション設定から解約手続きを行います。
-          </Text>
+          <Text style={styles.description}>{guide.description}</Text>
 
           <View style={styles.steps}>
-            <Text style={styles.step}>1. 設定アプリを開く</Text>
-            <Text style={styles.step}>
-              2. 上部のあなたの名前（Apple ID）をタップ
-            </Text>
-            <Text style={styles.step}>3.「サブスクリプション」をタップ</Text>
-            <Text style={styles.step}>
-              4.「BUZZ BASE Pro」を選び、解約を完了
-            </Text>
+            {guide.steps.map((step, index) => (
+              <Text key={step} style={styles.step}>
+                {index + 1}. {step}
+              </Text>
+            ))}
           </View>
 
           <Text style={styles.note}>
@@ -76,9 +110,11 @@ export function CancelGuideModal({ isOpen, onClose }: CancelGuideModalProps) {
               onPress={handleOpenSettings}
               style={[styles.button, styles.primaryButton]}
               accessibilityRole="button"
-              accessibilityLabel="Apple サブスクリプション設定を開く"
+              accessibilityLabel={guide.openLabel}
             >
-              <Text style={styles.primaryButtonText}>設定アプリを開く</Text>
+              <Text style={styles.primaryButtonText}>
+                {platform === "ios" ? "設定アプリを開く" : "Google Play を開く"}
+              </Text>
             </TouchableOpacity>
           </View>
         </Pressable>
