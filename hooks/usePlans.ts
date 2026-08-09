@@ -43,17 +43,18 @@ export const useCalendar = (from: string, to: string) => {
 const dayPlanMenuKey = (scheduleId: number, practiceMenuId: number) =>
   `${scheduleId}:${practiceMenuId}`;
 
-/** 対象メニューの done を反転させた plans を返す。予定全体の done も再計算する。 */
-const toggleMenuInPlans = (
+/** 対象メニューの done を nextDone で書き換えた plans を返す。予定全体の done も再計算する。 */
+const updateMenuInPlans = (
   plans: Plan[] | undefined,
   scheduleId: number,
   practiceMenuId: number,
+  nextDone: (done: boolean) => boolean,
 ): Plan[] | undefined =>
   plans?.map((plan) => {
     if (plan.id !== scheduleId) return plan;
     const menus = plan.menus.map((menu) =>
       menu.practice_menu_id === practiceMenuId
-        ? { ...menu, done: !menu.done }
+        ? { ...menu, done: nextDone(menu.done) }
         : menu,
     );
     return {
@@ -116,16 +117,17 @@ export const useToggleDayPlanMenu = (date: string) => {
       await queryClient.cancelQueries({ queryKey: plansQueryKey });
       const key = dayPlanMenuKey(scheduleId, practiceMenuId);
       setTogglingKeys((prev) => new Set(prev).add(key));
-      const previousPlans = queryClient.getQueryData<Plan[]>(plansQueryKey);
       queryClient.setQueryData<Plan[]>(plansQueryKey, (plans) =>
-        toggleMenuInPlans(plans, scheduleId, practiceMenuId),
+        updateMenuInPlans(plans, scheduleId, practiceMenuId, (done) => !done),
       );
-      return { previousPlans, key };
+      return { key };
     },
-    onError: (_error, _variables, context) => {
-      if (context?.previousPlans) {
-        queryClient.setQueryData(plansQueryKey, context.previousPlans);
-      }
+    // 複数メニューを同時にトグルしうるため、キャッシュ全体をスナップショットに戻すと
+    // 他メニューの楽観的更新まで巻き戻る。失敗したメニューの done だけを元の値に戻す。
+    onError: (_error, { scheduleId, practiceMenuId, done }) => {
+      queryClient.setQueryData<Plan[]>(plansQueryKey, (plans) =>
+        updateMenuInPlans(plans, scheduleId, practiceMenuId, () => done),
+      );
     },
     onSettled: (_data, _error, _variables, context) => {
       invalidate();
@@ -140,7 +142,9 @@ export const useToggleDayPlanMenu = (date: string) => {
   });
 
   return {
-    toggleMenu: mutation.mutateAsync,
+    // 呼び出し側は結果を待たない（楽観的更新で即時反映する）ため、
+    // 失敗時に未処理の rejection を投げない mutate を返す。
+    toggleMenu: mutation.mutate,
     isToggling: (scheduleId: number, practiceMenuId: number) =>
       togglingKeys.has(dayPlanMenuKey(scheduleId, practiceMenuId)),
   };
