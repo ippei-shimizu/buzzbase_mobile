@@ -19,6 +19,9 @@ import { useEntitlement } from "@hooks/useEntitlement";
 import { useCreateGroup, useInviteMembers } from "@hooks/useGroupMutations";
 import { useFollowingUsers, useGroups } from "@hooks/useGroups";
 import { useProfile } from "@hooks/useProfile";
+import { isAxios403, serverErrorMessage } from "@utils/axiosError";
+
+const GROUP_LIMIT_MESSAGE = `無料プランで参加できるグループは${GROUP_FREE_LIMIT}件までのため、作成できませんでした。`;
 
 export default function GroupCreateScreen() {
   const router = useRouter();
@@ -32,7 +35,7 @@ export default function GroupCreateScreen() {
   const [name, setName] = useState("");
   const [iconUri, setIconUri] = useState<string | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
-  const [isPaywallOpen, setPaywallOpen] = useState(false);
+  const [paywallMessage, setPaywallMessage] = useState<string | null>(null);
 
   const isSaving = isCreating || isInviting;
   const canSave = name.trim().length > 0 && !isSaving;
@@ -67,7 +70,7 @@ export default function GroupCreateScreen() {
       !hasEntitlement("unlimited_groups") &&
       groups.length >= GROUP_FREE_LIMIT
     ) {
-      setPaywallOpen(true);
+      setPaywallMessage(GROUP_LIMIT_MESSAGE);
       return;
     }
 
@@ -104,6 +107,12 @@ export default function GroupCreateScreen() {
 
       router.replace(`/(groups)/share-invite?id=${group.id}`);
     } catch (error) {
+      // サーバー側の上限チェックによる 403 は障害ではないため、
+      // 汎用エラーに潰さず Pro への導線を出す。
+      if (isAxios403(error)) {
+        setPaywallMessage(serverErrorMessage(error) ?? GROUP_LIMIT_MESSAGE);
+        return;
+      }
       Sentry.captureException(error, {
         tags: { source: "group-create", action: "create" },
       });
@@ -166,10 +175,10 @@ export default function GroupCreateScreen() {
         </View>
       </ScrollView>
       <PaywallModal
-        isOpen={isPaywallOpen}
-        onClose={() => setPaywallOpen(false)}
+        isOpen={paywallMessage !== null}
+        onClose={() => setPaywallMessage(null)}
         feature="unlimited_groups"
-        contextMessage={`無料プランで参加できるグループは${GROUP_FREE_LIMIT}件までのため、作成できませんでした。`}
+        contextMessage={paywallMessage ?? GROUP_LIMIT_MESSAGE}
       />
     </>
   );

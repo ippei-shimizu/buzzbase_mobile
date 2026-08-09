@@ -154,6 +154,29 @@ describe("JoinGroupScreen", () => {
     );
   });
 
+  it("サーバー側の上限エラー（403）では汎用エラーではなくPaywallとサーバーの文言を表示する", async () => {
+    respondFree();
+    setupCommonHandlers(0);
+    server.use(
+      http.post(apiUrl("/invite_links/ABC12345/accept"), () =>
+        HttpResponse.json(
+          { error: "Pro プランでグループを無制限に作成・参加できます" },
+          { status: 403 },
+        ),
+      ),
+    );
+
+    renderWithProviders(<JoinGroupScreen />);
+    await lookupAndPressJoin();
+
+    await waitFor(() =>
+      expect(
+        screen.getByText("Pro プランでグループを無制限に作成・参加できます"),
+      ).toBeOnTheScreen(),
+    );
+    expect(getRouterSpies().replace).not.toHaveBeenCalled();
+  });
+
   it("招待コードの確認（プレビュー表示）は所属グループ数に関わらず常に実行できる", async () => {
     respondFree();
     setupCommonHandlers(1);

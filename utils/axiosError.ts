@@ -15,6 +15,19 @@ export const isAxios404 = (error: unknown): boolean => {
 };
 
 /**
+ * axiosの403エラーかどうかを判定する。
+ *
+ * 用途: Pro プランの上限に達したときにバックエンドが返す 403 を、
+ * 汎用エラー表示ではなく Paywall 誘導に振り分けるための判定。
+ *
+ * @param error - try/catchで受けた error 値（unknown）
+ * @returns AxiosErrorかつ status が 403 の場合のみ true
+ */
+export const isAxios403 = (error: unknown): boolean => {
+  return axios.isAxiosError(error) && error.response?.status === 403;
+};
+
+/**
  * APIが返した日本語エラーメッセージを取り出す。
  *
  * バックエンドはバリデーション失敗を `{ errors: [...] }`、権限エラーを `{ error: "..." }` で
