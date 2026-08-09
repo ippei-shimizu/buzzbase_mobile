@@ -20,6 +20,7 @@ import {
   type PurchasesOffering,
 } from "react-native-purchases";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
+import { useProStatus } from "@hooks/useProStatus";
 import { syncProStatus } from "@services/proService";
 import {
   getOfferings,
@@ -406,6 +407,9 @@ export function PaywallModal({
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((s) => s.show);
   const { enabled: proFeaturesFlag } = useFeatureFlag("pro_features");
+  // 既に使い切ったユーザーに「7日間無料」と誤案内しないため、CTAまわりの文言はここで出し分ける。
+  const { proStatus } = useProStatus();
+  const isTrialEligible = !proStatus.subscription.has_used_trial;
   const copy = feature
     ? ((PRO_PAYWALL_COPY as Record<string, PaywallCopy>)[feature] ??
       DEFAULT_COPY)
@@ -831,9 +835,11 @@ export function PaywallModal({
           </ScrollView>
 
           <View style={styles.footer}>
-            <Text style={styles.trialNotice}>
-              7 日間の無料トライアル期間中に解約すれば料金はかかりません
-            </Text>
+            {isTrialEligible ? (
+              <Text style={styles.trialNotice}>
+                7 日間の無料トライアル期間中に解約すれば料金はかかりません
+              </Text>
+            ) : null}
             <TouchableOpacity
               onPress={handlePurchase}
               disabled={!selectedPackage || purchasing}
@@ -842,12 +848,16 @@ export function PaywallModal({
                 (!selectedPackage || purchasing) && styles.ctaButtonDisabled,
               ]}
               accessibilityRole="button"
-              accessibilityLabel="PROを始める"
+              accessibilityLabel={
+                isTrialEligible ? "7日間無料で試す" : "Proに加入する"
+              }
             >
               {purchasing ? (
                 <ActivityIndicator size="small" color="#F4F4F4" />
               ) : (
-                <Text style={styles.ctaButtonText}>PROを始める</Text>
+                <Text style={styles.ctaButtonText}>
+                  {isTrialEligible ? "7日間無料で試す" : "Proに加入する"}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
