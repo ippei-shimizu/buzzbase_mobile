@@ -25,6 +25,7 @@ import {
   PRO_PAYWALL_COPY,
 } from "@components/pro/PaywallModal";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
+import { useProStatus } from "@hooks/useProStatus";
 import { syncProStatus } from "@services/proService";
 import {
   getOfferings,
@@ -48,6 +49,12 @@ export default function ProScreen() {
   // fullScreenModal で表示すると SafeAreaView の top inset が反映されないことがあるため、
   // useSafeAreaInsets で取得して直接 paddingTop に適用する。
   const insets = useSafeAreaInsets();
+  // 既に使い切ったユーザーに「7日間無料」と誤案内しないため、CTAまわりの文言はここで出し分ける。
+  // 判定確定前（isLoading）は DEFAULT_PRO_STATUS（has_used_trial: false）にフォールバックし
+  // isTrialEligible が常に true になるため、確定するまではトライアル訴求を一切出さない。
+  const { proStatus, isLoading: isProStatusLoading } = useProStatus();
+  const isTrialEligible =
+    !isProStatusLoading && !proStatus.subscription.has_used_trial;
 
   const [offering, setOffering] = useState<PurchasesOffering | null>(null);
   const [loadingOfferings, setLoadingOfferings] = useState(true);
@@ -375,9 +382,11 @@ export default function ProScreen() {
       <View
         style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 24) }]}
       >
-        <Text style={styles.trialNotice}>
-          7 日間の無料トライアル期間中に解約すれば料金はかかりません
-        </Text>
+        {isTrialEligible ? (
+          <Text style={styles.trialNotice}>
+            7 日間の無料トライアル期間中に解約すれば料金はかかりません
+          </Text>
+        ) : null}
         <TouchableOpacity
           onPress={handlePurchase}
           disabled={!selectedPackage || purchasing}
@@ -386,12 +395,24 @@ export default function ProScreen() {
             (!selectedPackage || purchasing) && styles.ctaButtonDisabled,
           ]}
           accessibilityRole="button"
-          accessibilityLabel="PROを始める"
+          accessibilityLabel={
+            isProStatusLoading
+              ? "PROを始める"
+              : isTrialEligible
+                ? "7日間無料で試す"
+                : "Proに加入する"
+          }
         >
           {purchasing ? (
             <ActivityIndicator size="small" color="#F4F4F4" />
           ) : (
-            <Text style={styles.ctaButtonText}>PROを始める</Text>
+            <Text style={styles.ctaButtonText}>
+              {isProStatusLoading
+                ? "PROを始める"
+                : isTrialEligible
+                  ? "7日間無料で試す"
+                  : "Proに加入する"}
+            </Text>
           )}
         </TouchableOpacity>
       </View>

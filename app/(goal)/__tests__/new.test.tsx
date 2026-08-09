@@ -91,7 +91,7 @@ describe("GoalFormScreen（新規）", () => {
     fireEvent.press(screen.getByText("Pro プランを見る"));
 
     expect(await screen.findByText("BUZZ BASE")).toBeOnTheScreen();
-    expect(screen.getByLabelText("PROを始める")).toBeOnTheScreen();
+    expect(screen.getByLabelText("7日間無料で試す")).toBeOnTheScreen();
   });
 
   it("無料ユーザーがカスタム期間を選ぶと Pro 訴求カードが表示され、タップで PaywallModal が開く", async () => {
@@ -109,7 +109,7 @@ describe("GoalFormScreen（新規）", () => {
     fireEvent.press(screen.getByText("Pro プランを見る"));
 
     expect(await screen.findByText("BUZZ BASE")).toBeOnTheScreen();
-    expect(screen.getByLabelText("PROを始める")).toBeOnTheScreen();
+    expect(screen.getByLabelText("7日間無料で試す")).toBeOnTheScreen();
   });
 
   it("Proユーザーは自由指標を選択でき、カスタム期間にもPro訴求が出ない", async () => {

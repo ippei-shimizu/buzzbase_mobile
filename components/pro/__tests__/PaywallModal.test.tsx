@@ -8,6 +8,7 @@
  * - 購入成功時の syncProStatus は /pro/sync への実リクエストを MSW で観測する。
  */
 import { fireEvent, waitFor } from "@testing-library/react-native";
+import { delay } from "msw";
 import { PURCHASES_ERROR_CODE } from "react-native-purchases";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import {
@@ -207,7 +208,7 @@ describe("PaywallModal", () => {
       getByText("無料プランで設定できる目標は2件までのため、追加できません。"),
     ).toBeOnTheScreen();
     expect(queryByText("シーズンを跨いだ成長を可視化")).not.toBeOnTheScreen();
-    expect(queryByText("PROを始める")).not.toBeOnTheScreen();
+    expect(queryByText("7日間無料で試す")).not.toBeOnTheScreen();
     expect(queryByText("購入を復元")).not.toBeOnTheScreen();
   });
 
@@ -259,6 +260,47 @@ describe("PaywallModal", () => {
     expect(await findByText("年間¥1,960お得")).toBeTruthy();
   });
 
+  it("Pro状態の判定確定前は、実際はトライアル利用済みでもCTAボタンに中立文言を表示する", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    server.use(
+      http.get(apiUrl("/pro/status"), async () => {
+        await delay("infinite");
+        return HttpResponse.json({
+          ...DEFAULT_PRO_STATUS,
+          subscription: {
+            ...DEFAULT_PRO_STATUS.subscription,
+            has_used_trial: true,
+          },
+        });
+      }),
+    );
+
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    expect(await findByLabelText("PROを始める")).toBeOnTheScreen();
+  });
+
+  it("Pro状態の判定確定前はトライアル案内文を表示しない", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    server.use(
+      http.get(apiUrl("/pro/status"), async () => {
+        await delay("infinite");
+        return HttpResponse.json(DEFAULT_PRO_STATUS);
+      }),
+    );
+
+    const { findByText, queryByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    await findByText("月額プラン");
+    expect(
+      queryByText("7 日間の無料トライアル期間中に解約すれば料金はかかりません"),
+    ).not.toBeOnTheScreen();
+  });
+
   it("getOfferings が失敗してもシートは表示され、プラン欄が空状態になる", async () => {
     getOfferingsMock.mockRejectedValueOnce(new Error("offerings unavailable"));
 
@@ -284,7 +326,7 @@ describe("PaywallModal", () => {
 
     // 年額プランがあるので初期選択は年額プランになる。
     await waitFor(() => expect(getOfferingsMock).toHaveBeenCalledTimes(1));
-    const ctaButton = await findByLabelText("PROを始める");
+    const ctaButton = await findByLabelText("7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
@@ -310,7 +352,7 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
-    const ctaButton = await findByLabelText("PROを始める");
+    const ctaButton = await findByLabelText("7日間無料で試す");
     fireEvent.press(ctaButton);
     fireEvent.press(ctaButton);
     fireEvent.press(ctaButton);
@@ -349,7 +391,7 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
-    const ctaButton = await findByLabelText("PROを始める");
+    const ctaButton = await findByLabelText("7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
@@ -368,7 +410,7 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
-    const ctaButton = await findByLabelText("PROを始める");
+    const ctaButton = await findByLabelText("7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
@@ -392,7 +434,7 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
-    const ctaButton = await findByLabelText("PROを始める");
+    const ctaButton = await findByLabelText("7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
@@ -416,7 +458,7 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
-    fireEvent.press(await findByLabelText("PROを始める"));
+    fireEvent.press(await findByLabelText("7日間無料で試す"));
 
     await waitFor(() => {
       expect(showMock).toHaveBeenCalledWith(
@@ -441,7 +483,7 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
-    fireEvent.press(await findByLabelText("PROを始める"));
+    fireEvent.press(await findByLabelText("7日間無料で試す"));
 
     await waitFor(() => {
       expect(showMock).toHaveBeenCalledWith(

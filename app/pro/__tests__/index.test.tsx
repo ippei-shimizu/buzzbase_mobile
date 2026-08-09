@@ -160,7 +160,7 @@ describe("ProScreen", () => {
 
     // 年額プランがあるので初期選択は年額プランになる。
     await waitFor(() => expect(getOfferingsMock).toHaveBeenCalledTimes(1));
-    const ctaButton = await findByLabelText("PROを始める");
+    const ctaButton = await findByLabelText("7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
@@ -187,7 +187,7 @@ describe("ProScreen", () => {
 
     const monthlyCard = await findByLabelText("月額プラン ¥980");
     fireEvent.press(monthlyCard);
-    fireEvent.press(await findByLabelText("PROを始める"));
+    fireEvent.press(await findByLabelText("7日間無料で試す"));
 
     await waitFor(() => {
       expect(purchasePackageMock).toHaveBeenCalledWith(
@@ -205,7 +205,7 @@ describe("ProScreen", () => {
     purchasePackageMock.mockReturnValueOnce(new Promise(() => {}));
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
-    const ctaButton = await findByLabelText("PROを始める");
+    const ctaButton = await findByLabelText("7日間無料で試す");
     fireEvent.press(ctaButton);
     fireEvent.press(ctaButton);
     fireEvent.press(ctaButton);
@@ -243,7 +243,7 @@ describe("ProScreen", () => {
     );
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
-    const ctaButton = await findByLabelText("PROを始める");
+    const ctaButton = await findByLabelText("7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
@@ -275,7 +275,7 @@ describe("ProScreen", () => {
     purchasePackageMock.mockRejectedValueOnce(new Error("network down"));
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
-    const ctaButton = await findByLabelText("PROを始める");
+    const ctaButton = await findByLabelText("7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
@@ -298,7 +298,7 @@ describe("ProScreen", () => {
     );
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
-    fireEvent.press(await findByLabelText("PROを始める"));
+    fireEvent.press(await findByLabelText("7日間無料で試す"));
 
     await waitFor(() => {
       expect(getRouterSpies().replace).toHaveBeenCalledWith("/pro/success");

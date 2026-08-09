@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { API_BASE_URL, API_V1_URL } from "@constants/api";
+import { DEFAULT_PRO_STATUS } from "../../types/pro";
 
 /**
  * MSW の既定ハンドラ集。
@@ -30,6 +31,11 @@ export const defaultHandlers = [
   ),
   http.get(`${API_V1_URL}/match_results/available_months`, () =>
     HttpResponse.json([]),
+  ),
+  // useProStatus がペイウォール系コンポーネントのマウント時に走らせる。
+  // 既定は無料・トライアル未使用（DEFAULT_PRO_STATUS）を返す。
+  http.get(`${API_V1_URL}/pro/status`, () =>
+    HttpResponse.json(DEFAULT_PRO_STATUS),
   ),
 ];
 

@@ -69,6 +69,6 @@ describe("相関インサイト", () => {
     fireEvent.press(screen.getByText("Pro プランを見る"));
 
     expect(await screen.findByText("BUZZ BASE")).toBeOnTheScreen();
-    expect(screen.getByLabelText("PROを始める")).toBeOnTheScreen();
+    expect(screen.getByLabelText("7日間無料で試す")).toBeOnTheScreen();
   });
 });
