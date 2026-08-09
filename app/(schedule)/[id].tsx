@@ -14,11 +14,7 @@ import {
 } from "react-native";
 import { PlanMenuRow } from "@components/schedule/PlanMenuRow";
 import { dayLabels, eventTypeMeta } from "@constants/schedule";
-import {
-  dayPlanMenuKey,
-  useDayPlan,
-  useToggleDayPlanMenu,
-} from "@hooks/usePlans";
+import { useDayPlan, useToggleDayPlanMenu } from "@hooks/usePlans";
 import { useScheduleMutations, useSchedules } from "@hooks/useSchedules";
 import { useGameRecordStore } from "@stores/gameRecordStore";
 import { formatJaFullDate } from "@utils/formatDate";
@@ -41,7 +37,7 @@ export default function ScheduleDetailScreen() {
   const schedule = schedules.find((item) => item.id === scheduleId);
 
   const { plans } = useDayPlan(dateContext);
-  const { toggleMenu, togglingMenuKey } = useToggleDayPlanMenu(
+  const { toggleMenu, isToggling } = useToggleDayPlanMenu(
     dateContext ?? todayIso(),
   );
   const dayPlan = dateContext
@@ -188,10 +184,7 @@ export default function ScheduleDetailScreen() {
                   done: target.done,
                 })
               }
-              isToggling={
-                togglingMenuKey ===
-                dayPlanMenuKey(scheduleId, menu.practice_menu_id)
-              }
+              isToggling={isToggling(scheduleId, menu.practice_menu_id)}
             />
           ))}
         </View>
