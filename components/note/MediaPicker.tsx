@@ -110,15 +110,30 @@ export function MediaPicker({ baseballNoteId, onStage, onUploaded }: Props) {
     }
 
     if (rawDurationSeconds > limitSeconds) {
-      const result = await trim(rawUri, limitSeconds);
-      return result?.uri ?? null;
+      try {
+        const result = await trim(rawUri, limitSeconds);
+        return result?.uri ?? null;
+      } catch {
+        // 上限超過の動画は必須トリミングのため、失敗時は元動画を使わず選択自体を中断する。
+        Alert.alert(
+          "トリミングに失敗しました",
+          `動画は${limitSeconds}秒以内にする必要があります。別の動画を選び直してください。`,
+        );
+        return null;
+      }
     }
 
     const shouldTrim = await confirmOptionalTrim();
     if (!shouldTrim) return rawUri;
 
-    const result = await trim(rawUri, limitSeconds);
-    return result?.uri ?? rawUri;
+    try {
+      const result = await trim(rawUri, limitSeconds);
+      return result?.uri ?? rawUri;
+    } catch {
+      // 任意トリミングは上限内の動画が前提のため、失敗時は元動画のまま進める。
+      Alert.alert("トリミングに失敗しました", "元の動画のまま追加します。");
+      return rawUri;
+    }
   };
 
   const handlePick = async (source: "library" | "camera") => {
