@@ -166,7 +166,10 @@ describe("JoinGroupScreen", () => {
     server.use(
       http.post(apiUrl("/invite_links/ABC12345/accept"), () =>
         HttpResponse.json(
-          { error: "Pro プランでグループを無制限に作成・参加できます" },
+          {
+            error: "group_limit_exceeded",
+            message: "Pro プランでグループを無制限に作成・参加できます",
+          },
           { status: 403 },
         ),
       ),

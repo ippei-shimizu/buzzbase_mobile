@@ -21,7 +21,7 @@ import { useEntitlement } from "@hooks/useEntitlement";
 import { useAcceptInviteLink } from "@hooks/useGroupMutations";
 import { useGroups } from "@hooks/useGroups";
 import { getInviteLinkInfo } from "@services/groupService";
-import { isAxios403, serverErrorMessage } from "@utils/axiosError";
+import { groupLimitErrorMessage, isGroupLimitError } from "@utils/axiosError";
 
 const GROUP_LIMIT_MESSAGE = `無料プランで参加できるグループは${GROUP_FREE_LIMIT}件までのため、参加できませんでした。`;
 
@@ -69,8 +69,8 @@ export default function JoinGroupScreen() {
     } catch (error) {
       // サーバー側の上限チェックによる 403 は障害ではないため、
       // 汎用エラーに潰さず Pro への導線を出す。
-      if (isAxios403(error)) {
-        setPaywallMessage(serverErrorMessage(error) ?? GROUP_LIMIT_MESSAGE);
+      if (isGroupLimitError(error)) {
+        setPaywallMessage(groupLimitErrorMessage(error) ?? GROUP_LIMIT_MESSAGE);
         return;
       }
       Alert.alert("エラー", "グループへの参加に失敗しました");

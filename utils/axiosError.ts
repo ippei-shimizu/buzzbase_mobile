@@ -28,6 +28,36 @@ export const isAxios403 = (error: unknown): boolean => {
 };
 
 /**
+ * グループの作成・参加が無料枠の上限で拒否された403かどうかを判定する。
+ *
+ * 対象エンドポイントに将来別理由の403が増えても誤判定しないよう、
+ * status だけでなく back が返す安定コード（`group_limit_exceeded`）まで見る。
+ *
+ * @param error - try/catchで受けた error 値（unknown）
+ * @returns AxiosErrorかつグループ上限到達による403の場合のみ true
+ */
+export const isGroupLimitError = (error: unknown): boolean => {
+  if (!axios.isAxiosError(error) || error.response?.status !== 403)
+    return false;
+
+  const data = error.response.data as { error?: string } | undefined;
+  return data?.error === "group_limit_exceeded";
+};
+
+/**
+ * グループ上限エラー（403 group_limit_exceeded）のサーバー文言を取り出す。
+ *
+ * @param error - try/catchで受けた error 値（unknown）
+ * @returns サーバーが返した表示用メッセージ。無ければ undefined
+ */
+export const groupLimitErrorMessage = (error: unknown): string | undefined => {
+  if (!axios.isAxiosError(error)) return undefined;
+
+  const data = error.response?.data as { message?: string } | undefined;
+  return data?.message;
+};
+
+/**
  * APIが返した日本語エラーメッセージを取り出す。
  *
  * バックエンドはバリデーション失敗を `{ errors: [...] }`、権限エラーを `{ error: "..." }` で
