@@ -39,6 +39,12 @@ const getRouterSpies = (): RouterSpies => {
   return m.__routerSpies;
 };
 
+// router のスパイはモジュールスコープで使い回されるため、
+// テスト間で呼び出し履歴が混ざらないよう毎回クリアする。
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
 const inviteLinkInfo = {
   group: { id: 1, name: "招待先グループ", icon: null, member_count: 3 },
   inviter: { name: "招待者", image: { url: null } },
@@ -152,6 +158,32 @@ describe("JoinGroupScreen", () => {
     await waitFor(() =>
       expect(getRouterSpies().replace).toHaveBeenCalledWith("/(groups)/1"),
     );
+  });
+
+  it("サーバー側の上限エラー（403）では汎用エラーではなくPaywallとサーバーの文言を表示する", async () => {
+    respondFree();
+    setupCommonHandlers(0);
+    server.use(
+      http.post(apiUrl("/invite_links/ABC12345/accept"), () =>
+        HttpResponse.json(
+          {
+            error: "group_limit_exceeded",
+            message: "Pro プランでグループを無制限に作成・参加できます",
+          },
+          { status: 403 },
+        ),
+      ),
+    );
+
+    renderWithProviders(<JoinGroupScreen />);
+    await lookupAndPressJoin();
+
+    await waitFor(() =>
+      expect(
+        screen.getByText("Pro プランでグループを無制限に作成・参加できます"),
+      ).toBeOnTheScreen(),
+    );
+    expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });
 
   it("招待コードの確認（プレビュー表示）は所属グループ数に関わらず常に実行できる", async () => {

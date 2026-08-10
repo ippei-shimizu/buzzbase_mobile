@@ -9,6 +9,7 @@
  * を直接呼ぶ。これらはテスト時にネイティブ依存を含むため、モジュール全体を
  * モックする必要がある。
  */
+import { createElement, Fragment } from "react";
 
 export interface RouterSpies {
   push: jest.Mock;
@@ -31,13 +32,66 @@ export const createRouterSpies = (): RouterSpies => ({
   canDismiss: jest.fn(() => true),
 });
 
-export interface ExpoRouterMockOptions {
-  routerSpies?: RouterSpies;
-  searchParams?: Record<string, string | string[]>;
+export interface NavigationSpies {
+  setOptions: jest.Mock;
+  dispatch: jest.Mock;
+  addListener: jest.Mock;
+  /** 登録済みリスナーを発火させ、スワイプ／物理戻るなどの離脱を再現する。 */
+  emit: (type: string, event: unknown) => void;
 }
 
+export const createNavigationSpies = (): NavigationSpies => {
+  const listeners = new Map<string, Set<(event: unknown) => void>>();
+  return {
+    setOptions: jest.fn(),
+    dispatch: jest.fn(),
+    addListener: jest.fn((type: string, listener: (event: unknown) => void) => {
+      const registered = listeners.get(type) ?? new Set();
+      registered.add(listener);
+      listeners.set(type, registered);
+      return () => registered.delete(listener);
+    }),
+    emit: (type, event) => {
+      listeners.get(type)?.forEach((listener) => listener(event));
+    },
+  };
+};
+
+export interface ExpoRouterMockOptions {
+  routerSpies?: RouterSpies;
+  navigationSpies?: NavigationSpies;
+  searchParams?: Record<string, string | string[]>;
+  /** Stack.Screen の headerLeft / headerRight も描画する。既定は無効。 */
+  renderScreenOptions?: boolean;
+}
+
+interface ScreenProps {
+  children?: React.ReactNode;
+  options?: {
+    headerLeft?: () => React.ReactNode;
+    headerRight?: () => React.ReactNode;
+  };
+}
+
+const ScreenPassthrough = ({ children }: ScreenProps) => children ?? null;
+
+/**
+ * headerLeft / headerRight も描画する Stack.Screen。
+ * ヘッダー内のボタン（編集・削除など）を検証したいテストでのみ有効化する。
+ */
+const ScreenWithHeader = ({ children, options }: ScreenProps) =>
+  createElement(
+    Fragment,
+    null,
+    options?.headerLeft?.(),
+    options?.headerRight?.(),
+    children,
+  );
+
 export const buildExpoRouterMock = (options: ExpoRouterMockOptions = {}) => {
+  const renderScreenOptions = options.renderScreenOptions ?? false;
   const routerSpies = options.routerSpies ?? createRouterSpies();
+  const navigationSpies = options.navigationSpies ?? createNavigationSpies();
   const searchParams = options.searchParams ?? {};
   // <Redirect> は router.push 等を呼ばない宣言的コンポーネントのため、
   // 遷移先 href を記録するスパイを別途用意して「リダイレクトが発火したか」を検証可能にする。
@@ -45,27 +99,31 @@ export const buildExpoRouterMock = (options: ExpoRouterMockOptions = {}) => {
 
   return {
     __routerSpies: routerSpies,
+    __navigationSpies: navigationSpies,
     __redirectSpy: redirectSpy,
     useRouter: () => routerSpies,
     useLocalSearchParams: () => searchParams,
     useSegments: () => [] as string[],
     usePathname: () => "/",
     useFocusEffect: (cb: () => (() => void) | void) => cb(),
-    // headerLeft 等の Stack スクリーン options を上書きするために使う。
-    // テスト側では呼び出し回数の検証はせず no-op で十分。
-    useNavigation: () => ({ setOptions: jest.fn() }),
+    // headerLeft 等の Stack スクリーン options 上書きと、
+    // beforeRemove など画面離脱イベントの購読に使う。
+    useNavigation: () => navigationSpies,
     Link: ({ children }: { children: React.ReactNode }) => children,
     Redirect: ({ href }: { href: string }) => {
       redirectSpy(href);
       return null;
     },
     Stack: Object.assign(
-      ({ children }: { children?: React.ReactNode }) => children,
-      { Screen: ({ children }: { children?: React.ReactNode }) => children },
+      ({ children }: { children?: React.ReactNode }) => children ?? null,
+      { Screen: renderScreenOptions ? ScreenWithHeader : ScreenPassthrough },
     ),
     Tabs: Object.assign(
-      ({ children }: { children?: React.ReactNode }) => children,
-      { Screen: ({ children }: { children?: React.ReactNode }) => children },
+      ({ children }: { children?: React.ReactNode }) => children ?? null,
+      {
+        Screen: ({ children }: { children?: React.ReactNode }) =>
+          children ?? null,
+      },
     ),
     router: routerSpies,
   };

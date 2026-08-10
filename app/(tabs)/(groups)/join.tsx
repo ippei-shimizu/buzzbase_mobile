@@ -21,13 +21,16 @@ import { useEntitlement } from "@hooks/useEntitlement";
 import { useAcceptInviteLink } from "@hooks/useGroupMutations";
 import { useGroups } from "@hooks/useGroups";
 import { getInviteLinkInfo } from "@services/groupService";
+import { groupLimitErrorMessage, isGroupLimitError } from "@utils/axiosError";
+
+const GROUP_LIMIT_MESSAGE = `無料プランで参加できるグループは${GROUP_FREE_LIMIT}件までのため、参加できませんでした。`;
 
 export default function JoinGroupScreen() {
   const router = useRouter();
   const [code, setCode] = useState("");
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [inviteInfo, setInviteInfo] = useState<InviteLinkInfo | null>(null);
-  const [isPaywallOpen, setPaywallOpen] = useState(false);
+  const [paywallMessage, setPaywallMessage] = useState<string | null>(null);
   const { acceptInviteLink, isAccepting } = useAcceptInviteLink();
   const { groups, isLoading: isGroupsLoading } = useGroups();
   const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
@@ -56,14 +59,20 @@ export default function JoinGroupScreen() {
       !hasEntitlement("unlimited_groups") &&
       groups.length >= GROUP_FREE_LIMIT
     ) {
-      setPaywallOpen(true);
+      setPaywallMessage(GROUP_LIMIT_MESSAGE);
       return;
     }
 
     try {
       const result = await acceptInviteLink(code);
       router.replace(`/(groups)/${result.group_id}`);
-    } catch {
+    } catch (error) {
+      // サーバー側の上限チェックによる 403 は障害ではないため、
+      // 汎用エラーに潰さず Pro への導線を出す。
+      if (isGroupLimitError(error)) {
+        setPaywallMessage(groupLimitErrorMessage(error) ?? GROUP_LIMIT_MESSAGE);
+        return;
+      }
       Alert.alert("エラー", "グループへの参加に失敗しました");
     }
   };
@@ -163,10 +172,10 @@ export default function JoinGroupScreen() {
           </View>
         )}
         <PaywallModal
-          isOpen={isPaywallOpen}
-          onClose={() => setPaywallOpen(false)}
+          isOpen={paywallMessage !== null}
+          onClose={() => setPaywallMessage(null)}
           feature="unlimited_groups"
-          contextMessage={`無料プランで参加できるグループは${GROUP_FREE_LIMIT}件までのため、参加できませんでした。`}
+          contextMessage={paywallMessage ?? GROUP_LIMIT_MESSAGE}
         />
       </View>
     </KeyboardAwareScreen>
