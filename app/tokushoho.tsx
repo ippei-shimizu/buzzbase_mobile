@@ -28,8 +28,8 @@ export default function TokushohoScreen() {
         <Item title="メールアドレス">buzzbase.app@gmail.com</Item>
 
         <Item title="販売価格">
-          月額プラン ¥300（税込）／月、年額プラン
-          ¥2,980（税込）／年（月あたり¥248相当）。7日間の無料トライアルがあります。詳細は
+          月額プラン ¥480（税込）／月、年額プラン
+          ¥4,800（税込）／年（月あたり¥400相当）。7日間の無料トライアルがあります。詳細は
           <Text
             style={styles.link}
             onPress={() => router.push("/pro")}
