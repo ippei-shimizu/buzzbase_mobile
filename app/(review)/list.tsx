@@ -198,12 +198,6 @@ export default function ReviewListScreen() {
 const styles = StyleSheet.create({
   skeleton: { flex: 1, backgroundColor: "#2E2E2E", padding: 16, gap: 12 },
   container: { flex: 1, backgroundColor: "#2E2E2E" },
-  centered: {
-    flex: 1,
-    backgroundColor: "#2E2E2E",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   content: { padding: 16, paddingBottom: 40 },
   emptyText: { color: "#A1A1AA", fontSize: 13, lineHeight: 20 },
   dummyList: {

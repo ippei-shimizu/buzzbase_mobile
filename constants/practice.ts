@@ -1,6 +1,7 @@
 import type {
   PracticeCategory,
   PracticeLogSource,
+  PracticeType,
   PracticeUnit,
 } from "../types/practice";
 import type { Ionicons } from "@expo/vector-icons";
@@ -111,3 +112,12 @@ export const menuIconForLog = (
   if (source === "shadow_swing") return "baseball";
   return category ? CATEGORY_ICON[category] : CATEGORY_ICON.other;
 };
+
+/** 練習の種別（自主練習 / チーム練習）の表示ラベル。 */
+export const PRACTICE_TYPE_LABELS: ReadonlyArray<{
+  value: PracticeType;
+  label: string;
+}> = [
+  { value: "self_practice", label: "自主練習" },
+  { value: "team_practice", label: "チーム練習" },
+];

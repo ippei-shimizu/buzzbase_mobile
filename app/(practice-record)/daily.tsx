@@ -3,6 +3,7 @@ import type {
   PracticeMenu,
   PracticeSession,
   PracticeSessionItemInput,
+  PracticeType,
   PresetMenu,
 } from "../../types/practice";
 import type { ConditionDraft } from "@components/practice/ConditionForm";
@@ -29,7 +30,12 @@ import {
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
-import { CATEGORY_ICON, PRACTICE_CATEGORIES } from "@constants/practice";
+import { SegmentedControl } from "@components/ui/SegmentedControl";
+import {
+  CATEGORY_ICON,
+  PRACTICE_CATEGORIES,
+  PRACTICE_TYPE_LABELS,
+} from "@constants/practice";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
 import {
@@ -148,6 +154,9 @@ function DailyEditor({
     });
     return base;
   });
+  const [practiceType, setPracticeType] = useState<PracticeType>(
+    () => initialSession?.practice_type ?? "self_practice",
+  );
   const [condition, setCondition] = useState<ConditionDraft>(() =>
     toConditionDraft(initialSession),
   );
@@ -209,6 +218,7 @@ function DailyEditor({
       const session = await saveSession({
         logged_on: dateString,
         items,
+        practice_type: practiceType,
         condition:
           hasCondition && canSaveCondition ? toConditionInput(condition) : null,
         improvement_theme_ids: improvementThemeIds,
@@ -289,6 +299,19 @@ function DailyEditor({
 
   return (
     <View>
+      <Text style={styles.sectionTitle}>練習の種別</Text>
+      <View style={styles.practiceTypeSegment}>
+        <SegmentedControl
+          options={PRACTICE_TYPE_LABELS.map((option) => option.label)}
+          selectedIndex={PRACTICE_TYPE_LABELS.findIndex(
+            (option) => option.value === practiceType,
+          )}
+          onSelect={(index: number) =>
+            setPracticeType(PRACTICE_TYPE_LABELS[index].value)
+          }
+        />
+      </View>
+
       <Text style={styles.sectionTitle}>練習メニュー（複数選択可）</Text>
       <TouchableOpacity
         style={styles.addMenuButton}
@@ -462,6 +485,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#2E2E2E" },
   content: { padding: 16, paddingBottom: 48 },
   centered: { paddingVertical: 48, alignItems: "center" },
+  practiceTypeSegment: { marginBottom: 8 },
   label: {
     color: "#A1A1AA",
     fontSize: 13,
