@@ -14,6 +14,7 @@ import { PaywallModal } from "@components/pro/PaywallModal";
 import { SkeletonList, Skeleton } from "@components/ui/Skeleton";
 import { eventTypeMeta, scheduleTimeLabel } from "@constants/schedule";
 import { useEntitlement } from "@hooks/useEntitlement";
+import { useHorizontalSwipe } from "@hooks/useHorizontalSwipe";
 import { useCalendar } from "@hooks/usePlans";
 import { buildTimelineLayout, minutesFromMidnight } from "@utils/dayTimeline";
 import { formatJaFullDate } from "@utils/formatDate";
@@ -94,7 +95,15 @@ const isOutsideFreeWindow = (iso: string): boolean => {
  * 練習プラン画面（(menu-set)/list.tsx）のタブと、単独ルート（(schedule)/calendar.tsx）の
  * 両方から使う共通ビュー。
  */
-export function CalendarView() {
+interface CalendarViewProps {
+  /**
+   * 横スワイプで月/週/日を切り替えるか。
+   * 練習プランのタブに埋め込むときは外側のタブ送りと競合するため false にする。
+   */
+  swipeEnabled?: boolean;
+}
+
+export function CalendarView({ swipeEnabled = true }: CalendarViewProps) {
   const router = useRouter();
   const { hasEntitlement } = useEntitlement();
   const canViewFullHistory = hasEntitlement("schedule_calendar_full_history");
@@ -102,6 +111,16 @@ export function CalendarView() {
   const [cursor, setCursor] = useState<string>(todayIso());
   const [selected, setSelected] = useState<string>(todayIso());
   const [paywallOpen, setPaywallOpen] = useState(false);
+
+  // 横スワイプは月/週/日の切り替えに割り当てる（日付送りは前後ボタンが担う）。
+  const swipe = useHorizontalSwipe((direction) => {
+    const current = VIEW_MODES.findIndex((item) => item.value === mode);
+    const next =
+      direction === "left"
+        ? Math.min(current + 1, VIEW_MODES.length - 1)
+        : Math.max(current - 1, 0);
+    setMode(VIEW_MODES[next].value);
+  });
 
   const range = useMemo(() => {
     const date = fromIsoDate(cursor);
@@ -173,7 +192,7 @@ export function CalendarView() {
   const fabDate = mode === "month" ? selected : cursor;
 
   return (
-    <View style={styles.root}>
+    <View style={styles.root} {...(swipeEnabled ? swipe.panHandlers : {})}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
