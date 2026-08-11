@@ -45,5 +45,7 @@ module.exports = {
     "utils/**/*.{ts,tsx}",
     "!**/__tests__/**",
     "!**/*.d.ts",
+    // codegen が出力する SVG コンポーネント。ロジックを持たないため計測対象から外す。
+    "!components/icon/solar/**",
   ],
 };
