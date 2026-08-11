@@ -147,9 +147,8 @@ export function RecentPracticeSection() {
                             ? categoryByMenu.get(log.practice_menu_id)
                             : undefined,
                         )}
-                        size={15}
+                        size={16}
                         color="#A1A1AA"
-                        style={styles.logIcon}
                       />
                       <Text style={styles.name} numberOfLines={1}>
                         {log.menu_name}
@@ -223,7 +222,6 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 11, fontWeight: "700" },
   logRow: { paddingVertical: 3, marginLeft: 2 },
   logMain: { flexDirection: "row", alignItems: "center", gap: 8 },
-  logIcon: { width: 16, textAlign: "center" },
   name: { color: "#F4F4F4", fontSize: 14, flexShrink: 1 },
   value: { color: "#D4D4D8", fontSize: 13, fontWeight: "700", marginLeft: 2 },
   noteRow: {
