@@ -782,9 +782,9 @@ export default function StatsScreen() {
 
   const monthOptions = monthOptionsFromRecorded(months);
 
-  const currentPeriod =
-    activeTab === "batting" ? battingPeriod : pitchingPeriod;
-  const showTableFilters = currentPeriod !== "yearly";
+  // 両面が同時にマウントされるため、面ごとの期間で判定する。
+  const showTableFiltersFor = (key: ActiveTab) =>
+    (key === "batting" ? battingPeriod : pitchingPeriod) !== "yearly";
 
   const hasNoData =
     !hitDirections.data &&
@@ -1020,7 +1020,7 @@ export default function StatsScreen() {
               onChange={handleBattingPeriodChange}
             />
           </View>
-          {showTableFilters && (
+          {showTableFiltersFor(key) && (
             <View style={styles.tableFilterRow}>
               <TableFilterDropdown
                 label="年度"
@@ -1115,7 +1115,7 @@ export default function StatsScreen() {
               onChange={handlePitchingPeriodChange}
             />
           </View>
-          {showTableFilters && (
+          {showTableFiltersFor(key) && (
             <View style={styles.tableFilterRow}>
               <TableFilterDropdown
                 label="年度"
