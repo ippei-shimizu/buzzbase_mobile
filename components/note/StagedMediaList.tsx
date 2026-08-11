@@ -2,6 +2,7 @@ import type { StagedMediaAsset } from "../../types/mediaAttachment";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   StyleSheet,
   Text,
@@ -71,6 +72,8 @@ export function StagedMediaList({
         const previewUri = await generateVideoPreview(result.uri);
         onUpdateUri(asset.localId, result.uri, previewUri);
       }
+    } catch {
+      Alert.alert("トリミングに失敗しました");
     } finally {
       setTrimmingLocalId(null);
     }
