@@ -150,6 +150,16 @@ const convertBody = (body, iconName) => {
     },
   );
 
+  // replace は正規表現に一致しなかった箇所をそのまま通すため、想定外の構文
+  // （シングルクォート属性、xlink: 付き属性など）は変換されずに素通りする。
+  // 変換後に小文字始まりのタグが残っていれば取りこぼしとして落とす。
+  const untouched = jsx.match(/<\/?[a-z][^>]*>/);
+  if (untouched) {
+    throw new Error(
+      `${iconName}: 変換できない構文が残った "${untouched[0].slice(0, 60)}"`,
+    );
+  }
+
   return { jsx, elements };
 };
 
