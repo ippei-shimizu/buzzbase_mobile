@@ -106,6 +106,43 @@ describe("SubscriptionStatusCard", () => {
     expect(getByText("決済に問題があります")).toBeTruthy();
   });
 
+  it("status=billing_issue かつ platform=android は Google Play の案内を表示する", () => {
+    const { getByText } = render(
+      <SubscriptionStatusCard
+        subscription={{
+          ...baseSubscription,
+          status: "billing_issue",
+          plan_type: "monthly",
+          platform: "android",
+        }}
+      />,
+    );
+
+    expect(
+      getByText("Google Play の決済情報を更新してください。"),
+    ).toBeTruthy();
+  });
+
+  it("status=billing_issue かつ platform=web は Stripe のお支払いページ案内を表示する（App Store とは案内しない）", () => {
+    const { getByText, queryByText } = render(
+      <SubscriptionStatusCard
+        subscription={{
+          ...baseSubscription,
+          status: "billing_issue",
+          plan_type: "monthly",
+          platform: "web",
+        }}
+      />,
+    );
+
+    expect(
+      getByText(
+        "メールでお送りしたお支払いページからカード情報を更新してください。",
+      ),
+    ).toBeTruthy();
+    expect(queryByText(/App Store/)).toBeNull();
+  });
+
   it("status=expired は再加入を案内する", () => {
     const { getByText } = render(
       <SubscriptionStatusCard

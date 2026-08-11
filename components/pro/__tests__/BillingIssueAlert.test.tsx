@@ -77,4 +77,41 @@ describe("BillingIssueAlert", () => {
 
     expect(getRouterSpies().push).toHaveBeenCalledWith("/account/subscription");
   });
+
+  it("platform=android なら Google Play の案内を表示する", () => {
+    const { getByText } = render(
+      <BillingIssueAlert
+        subscription={{
+          ...baseSubscription,
+          status: "billing_issue",
+          platform: "android",
+        }}
+      />,
+    );
+
+    expect(
+      getByText(
+        "Pro 機能を継続するため Google Play の決済情報をご確認ください。",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("platform=web なら Stripe のお支払いページ案内を表示する（App Store とは案内しない）", () => {
+    const { getByText, queryByText } = render(
+      <BillingIssueAlert
+        subscription={{
+          ...baseSubscription,
+          status: "billing_issue",
+          platform: "web",
+        }}
+      />,
+    );
+
+    expect(
+      getByText(
+        "Pro 機能を継続するため、メールでお送りしたお支払いページからカード情報を更新してください。",
+      ),
+    ).toBeTruthy();
+    expect(queryByText(/App Store/)).toBeNull();
+  });
 });

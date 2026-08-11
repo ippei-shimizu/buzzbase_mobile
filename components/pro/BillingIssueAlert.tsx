@@ -1,9 +1,21 @@
-import type { ProSubscription } from "../../types/pro";
+import type { Platform, ProSubscription } from "../../types/pro";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 
 interface BillingIssueAlertProps {
   subscription: ProSubscription;
+}
+
+// 支払い方法を保持しているのは決済プロバイダ側なので、更新手続きの案内先は媒体で変わる。
+// platform 未確定（null）は加入直後の同期待ち等で起こりうるため、iOS向け案内にフォールバックする。
+function billingIssueDescription(platform: Platform | null): string {
+  if (platform === "android") {
+    return "Pro 機能を継続するため Google Play の決済情報をご確認ください。";
+  }
+  if (platform === "web") {
+    return "Pro 機能を継続するため、メールでお送りしたお支払いページからカード情報を更新してください。";
+  }
+  return "Pro 機能を継続するため App Store の決済情報をご確認ください。";
 }
 
 /**
@@ -15,9 +27,6 @@ export function BillingIssueAlert({ subscription }: BillingIssueAlertProps) {
 
   if (subscription.status !== "billing_issue") return null;
 
-  const storeLabel =
-    subscription.platform === "android" ? "Google Play" : "App Store";
-
   return (
     <TouchableOpacity
       style={styles.banner}
@@ -27,7 +36,7 @@ export function BillingIssueAlert({ subscription }: BillingIssueAlertProps) {
     >
       <Text style={styles.label}>決済情報の更新が必要です</Text>
       <Text style={styles.description}>
-        Pro 機能を継続するため {storeLabel} の決済情報をご確認ください。
+        {billingIssueDescription(subscription.platform)}
       </Text>
     </TouchableOpacity>
   );

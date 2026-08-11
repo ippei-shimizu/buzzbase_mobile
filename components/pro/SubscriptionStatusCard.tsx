@@ -1,5 +1,16 @@
-import type { ProSubscription } from "../../types/pro";
+import type { Platform, ProSubscription } from "../../types/pro";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+// 支払い方法を保持しているのは決済プロバイダ側なので、更新手続きの案内先は媒体で変わる。
+// platform 未確定（null）は加入直後の同期待ち等で起こりうるため、iOS向け案内にフォールバックする。
+function billingIssueDescription(platform: Platform | null): string {
+  if (platform === "android")
+    return "Google Play の決済情報を更新してください。";
+  if (platform === "web") {
+    return "メールでお送りしたお支払いページからカード情報を更新してください。";
+  }
+  return "App Store の決済情報を更新してください。";
+}
 
 interface SubscriptionStatusCardProps {
   subscription: ProSubscription;
@@ -26,8 +37,6 @@ const formatDate = (iso: string | null): string => {
 };
 
 const statusContent = (subscription: ProSubscription): StatusContent => {
-  const storeLabel =
-    subscription.platform === "android" ? "Google Play" : "App Store";
   switch (subscription.status) {
     case "trial":
       return {
@@ -50,7 +59,7 @@ const statusContent = (subscription: ProSubscription): StatusContent => {
     case "billing_issue":
       return {
         label: "決済に問題があります",
-        description: `${storeLabel} の決済情報を更新してください。`,
+        description: billingIssueDescription(subscription.platform),
         badgeColor: "#ef4444",
       };
     case "expired":
