@@ -129,10 +129,12 @@ function DailyEditor({
   const isEditing = initialSession != null;
 
   // 既存の記録済み量を優先しつつ、未選択のプリセットメニューを目標量つきで追加する。
+  // 予定のメニューにチェックを入れると量なしのログが先に作られるため、
+  // 量が空の既存ログは予定の目標量で埋める（実績は 0 でも上書きしない）。
   const [selected, setSelected] = useState<SelectedItems>(() => {
     const base = toSelectedItems(initialSession);
     presetMenus.forEach((preset) => {
-      if (preset.practice_menu_id in base) return;
+      if ((base[preset.practice_menu_id] ?? "") !== "") return;
       base[preset.practice_menu_id] = formatAmount(preset.target_value);
     });
     return base;
