@@ -582,6 +582,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     backgroundColor: "#3A3A3A",
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#52525B",
     paddingHorizontal: 12,
     paddingVertical: 12,
   },
@@ -589,6 +591,8 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: "#3A3A3A",
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#52525B",
     paddingHorizontal: 12,
     paddingVertical: 12,
     color: "#F4F4F4",
