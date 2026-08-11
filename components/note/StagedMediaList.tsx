@@ -115,6 +115,7 @@ export function StagedMediaList({
           ) : null}
           <TouchableOpacity
             style={styles.removeButton}
+            hitSlop={8}
             onPress={() => onRemove(asset.localId)}
           >
             <Icon name="close-circle" size={22} color="#F4F4F4" />

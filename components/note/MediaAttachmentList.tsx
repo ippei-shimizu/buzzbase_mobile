@@ -164,6 +164,7 @@ export function MediaAttachmentList({
           {editable ? (
             <TouchableOpacity
               style={styles.removeButton}
+              hitSlop={8}
               disabled={deletingId === attachment.id}
               onPress={() => handleDelete(attachment.id)}
             >
