@@ -3,7 +3,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -209,7 +208,7 @@ export function CalendarView() {
         </View>
 
         {isLoading ? (
-          <ActivityIndicator color="#d08000" style={styles.loading} />
+          <CalendarSkeleton />
         ) : mode === "month" ? (
           <MonthView
             cursor={cursor}

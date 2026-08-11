@@ -27,6 +27,8 @@ import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import {
   GOAL_METRIC_CATEGORIES,
   GOAL_METRICS,
+  MENU_METRIC_HINTS,
+  MENU_METRIC_KEYS,
   metricExample,
   metricsInCategory,
 } from "@constants/goal";
@@ -169,7 +171,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
   const isQualitative = kind === "qualitative";
   const isManual = kind === "manual";
   const isMenuMetric =
-    !isQualitative && !isManual && metricKey === "menu_practice_days";
+    !isQualitative && !isManual && MENU_METRIC_KEYS.includes(metricKey);
   // 自由指標は Pro 限定。既存の自由指標目標を編集中は鍵をかけない（タイプ自体変更不可のため）。
   const isLockedManual = !canManualMetric && !editing;
   // 期間タイプの Pro 制限。無料で season / tournament / custom を選ぶと保存不可。
@@ -586,7 +588,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
                   </View>
                 )}
                 <Text style={styles.hint}>
-                  期間内にこのメニューを実施した「日数」を数えます。
+                  {MENU_METRIC_HINTS[metricKey] ?? ""}
                 </Text>
               </>
             ) : (

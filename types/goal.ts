@@ -26,6 +26,8 @@ export interface Goal {
   comparison_type: GoalComparison;
   practice_menu_id: number | null;
   practice_menu_name: string | null;
+  /** メニュー回数の単位はメニューごとに変わるため、指標固定の単位では表せない。 */
+  practice_menu_unit_label: string | null;
   custom_metric_label: string | null;
   custom_unit: string | null;
   manual_current_value: number;

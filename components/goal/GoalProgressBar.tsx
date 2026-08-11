@@ -45,14 +45,21 @@ export function GoalProgressBar({
     );
   }
 
-  // 自由指標は指標名・単位をユーザー定義値で表示する。
+  // 自由指標はユーザー定義の単位、メニュー回数は対象メニューの単位を使う。
   const isManual = goal.kind === "manual";
-  const unit = isManual ? (goal.custom_unit ?? "") : "";
+  const isMenuAmount = goal.metric_key === "menu_practice_amount";
+  const unit = isManual
+    ? (goal.custom_unit ?? "")
+    : isMenuAmount
+      ? (goal.practice_menu_unit_label ?? "")
+      : "";
   const metricText = isManual
     ? (goal.custom_metric_label ?? "")
     : goal.metric_key === "menu_practice_days" && goal.practice_menu_name
       ? `${goal.practice_menu_name} 継続日数`
-      : metricLabel(goal.metric_key);
+      : isMenuAmount && goal.practice_menu_name
+        ? `${goal.practice_menu_name} 回数`
+        : metricLabel(goal.metric_key);
 
   const currentText = `${formatMetricValue(goal.metric_key, goal.current_value)}${unit}`;
   const targetText = `${formatMetricValue(goal.metric_key, goal.target_value ?? 0)}${unit}${
