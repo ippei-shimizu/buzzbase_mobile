@@ -648,7 +648,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headerTitle: { color: "#F4F4F4", fontSize: 17, fontWeight: "700" },
-  loading: { marginVertical: 40 },
   skeleton: { gap: 16, marginTop: 12 },
   weekHeader: { flexDirection: "row" },
   weekHeaderText: {

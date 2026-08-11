@@ -33,16 +33,40 @@ interface Props {
 }
 
 function VideoContent({ uri }: { uri: string }) {
+  const [isMuted, setIsMuted] = useState(false);
   const player = useVideoPlayer(uri, (instance) => {
     instance.play();
   });
+
+  // 端末のサイレントスイッチだけでは音の有無を変えられないため、明示的な切り替えを置く。
+  const toggleMute = () => {
+    const next = !isMuted;
+    player.muted = next;
+    setIsMuted(next);
+  };
+
   return (
-    <VideoView
-      style={styles.media}
-      player={player}
-      contentFit="contain"
-      nativeControls
-    />
+    <View style={styles.videoWrapper}>
+      <VideoView
+        style={styles.media}
+        player={player}
+        contentFit="contain"
+        nativeControls
+      />
+      <TouchableOpacity
+        style={styles.muteButton}
+        onPress={toggleMute}
+        accessibilityRole="button"
+        accessibilityLabel={isMuted ? "音を出す" : "消音する"}
+        hitSlop={10}
+      >
+        <Ionicons
+          name={isMuted ? "volume-mute" : "volume-high"}
+          size={20}
+          color="#F4F4F4"
+        />
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -131,6 +155,15 @@ export function MediaViewer({
 }
 
 const styles = StyleSheet.create({
+  videoWrapper: { width: "100%", position: "relative" },
+  muteButton: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    padding: 8,
+    borderRadius: 999,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
   overlay: { flex: 1, backgroundColor: "rgba(46,46,46,0.96)" },
   content: {
     flexGrow: 1,

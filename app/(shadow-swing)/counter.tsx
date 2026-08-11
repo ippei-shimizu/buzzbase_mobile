@@ -83,14 +83,23 @@ export default function ShadowSwingCounterScreen() {
   // マナーモードでも音・読み上げが鳴るようにする（どちらかが有効なら設定）。
   // Pro(shadow_swing_background)が実行中は、無音ループのバックグラウンド再生も
   // 許可するモードに切り替える。
+  // 画面を離れたら既定へ戻す。オーディオセッションはアプリ全体で共有されるため、
+  // 戻さないとノート動画の音声がサイレントスイッチに従わなくなる。
   useEffect(() => {
-    if (useSound || useVoice || canContinueInBackground) {
+    if (!useSound && !useVoice && !canContinueInBackground) return;
+
+    void setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: canContinueInBackground,
+      interruptionMode: "mixWithOthers",
+    });
+    return () => {
       void setAudioModeAsync({
-        playsInSilentMode: true,
-        shouldPlayInBackground: canContinueInBackground,
+        playsInSilentMode: false,
+        shouldPlayInBackground: false,
         interruptionMode: "mixWithOthers",
       });
-    }
+    };
   }, [useSound, useVoice, canContinueInBackground]);
 
   useEffect(() => {

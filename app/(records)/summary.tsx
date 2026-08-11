@@ -187,12 +187,6 @@ const styles = StyleSheet.create({
   skeleton: { flex: 1, backgroundColor: "#2E2E2E", padding: 16, gap: 12 },
   container: { flex: 1, backgroundColor: "#2E2E2E" },
   content: { padding: 16, paddingBottom: 40 },
-  centered: {
-    flex: 1,
-    backgroundColor: "#2E2E2E",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   lead: { color: "#A1A1AA", fontSize: 13, marginBottom: 12, fontWeight: "700" },
   empty: { color: "#A1A1AA", fontSize: 14, textAlign: "center", marginTop: 40 },
   card: {
