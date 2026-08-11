@@ -38,7 +38,12 @@ const REFRESH_QUERY_KEYS = [
   "periodicReviews",
 ];
 
-export function ActivityView() {
+interface ActivityViewProps {
+  /** 表示中の面か。裏の面から広告を出すと見えない広告が計上されるため。 */
+  isActive?: boolean;
+}
+
+export function ActivityView({ isActive = true }: ActivityViewProps) {
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { scrollRef, showBackToTop, handleScroll, scrollToTop } =
@@ -84,7 +89,7 @@ export function ActivityView() {
         <ImprovementToolsSection />
         <MonthlySummarySection />
         <RecentPracticeSection />
-        <InlineBannerAd placement="home" />
+        {isActive ? <InlineBannerAd placement="home" /> : null}
       </ScrollView>
       <BackToTopButton visible={showBackToTop} onPress={scrollToTop} />
     </View>

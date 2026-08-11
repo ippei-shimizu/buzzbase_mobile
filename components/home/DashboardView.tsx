@@ -18,13 +18,19 @@ import { useGameRecordStore } from "@stores/gameRecordStore";
  * ホーム > 「ダッシュボード」面。今月の成績サマリ・最近の試合・グループランキングを表示する。
  * 旧 `app/(tabs)/index.tsx` のダッシュボード描画をそのまま切り出したもの。
  */
-export function DashboardView() {
+interface DashboardViewProps {
+  /** 表示中の面か。裏の面から広告やモーダルを出さないようにする。 */
+  isActive?: boolean;
+}
+
+export function DashboardView({ isActive = true }: DashboardViewProps) {
   const router = useRouter();
   const { data, isLoading, isError, refetch, isRefreshing } = useDashboard();
   const { triggerPositiveEvent, modalProps } = useReviewPromptModal();
 
   useEffect(() => {
-    if (!data) return;
+    // 裏の面から出すと、ユーザーが見ていない面の出来事でモーダルが割り込むため。
+    if (!isActive || !data) return;
     const inTopThree = data.group_rankings.some((group) =>
       [...group.batting_rankings, ...group.pitching_rankings].some(
         (entry) =>
@@ -36,7 +42,7 @@ export function DashboardView() {
     if (inTopThree) {
       triggerPositiveEvent("dashboard-ranking-top3");
     }
-  }, [data, triggerPositiveEvent]);
+  }, [isActive, data, triggerPositiveEvent]);
 
   if (isLoading) {
     return (
@@ -63,6 +69,7 @@ export function DashboardView() {
         data={data}
         isRefreshing={isRefreshing}
         onRefresh={refetch}
+        showInlineAd={isActive}
         headerComponent={
           <TouchableOpacity
             style={styles.recordButton}

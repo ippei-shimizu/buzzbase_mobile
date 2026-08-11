@@ -24,6 +24,8 @@ interface DashboardContentProps {
   onRefresh: () => void;
   style?: ViewStyle;
   headerComponent?: React.ReactNode;
+  /** 広告を描くか。表示していない面から出すと見えない広告が計上されるため。 */
+  showInlineAd?: boolean;
 }
 
 export const DashboardContent = ({
@@ -32,6 +34,7 @@ export const DashboardContent = ({
   onRefresh,
   style,
   headerComponent,
+  showInlineAd = true,
 }: DashboardContentProps) => {
   const router = useRouter();
   const { profile, isLoading: isProfileLoading } = useProfile();
@@ -127,7 +130,7 @@ export const DashboardContent = ({
           onCreateGroup={handleCreateGroup}
           onJoinGroup={handleJoinGroup}
         />
-        <InlineBannerAd placement="home" />
+        {showInlineAd ? <InlineBannerAd placement="home" /> : null}
       </ScrollView>
       <BackToTopButton visible={showBackToTop} onPress={scrollToTop} />
     </View>
