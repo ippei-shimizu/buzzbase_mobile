@@ -51,6 +51,7 @@ const schedule = {
   days_of_week: "1",
   planned_on: null,
   scheduled_time: "06:00",
+  end_time: null,
   event_type: "self_practice",
   recurring: true,
   menu_set_id: null,

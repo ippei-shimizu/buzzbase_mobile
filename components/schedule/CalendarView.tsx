@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { SkeletonList, Skeleton } from "@components/ui/Skeleton";
-import { eventTypeMeta } from "@constants/schedule";
+import { eventTypeMeta, scheduleTimeLabel } from "@constants/schedule";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useCalendar } from "@hooks/usePlans";
 import { buildTimelineLayout, minutesFromMidnight } from "@utils/dayTimeline";
@@ -575,7 +575,7 @@ function DayView({
                   onPress={() => onEntry(entry)}
                 >
                   <Text style={styles.timelineBlockTime}>
-                    {entry.scheduled_time}
+                    {scheduleTimeLabel(entry.scheduled_time, entry.end_time)}
                   </Text>
                   <Text style={styles.timelineBlockTitle} numberOfLines={1}>
                     {entry.title ?? meta.label}

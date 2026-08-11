@@ -1,3 +1,6 @@
+// バックエンド Schedule::NOTE_MAX_LENGTH と一致させる。
+export const SCHEDULE_NOTE_MAX_LENGTH = 2000;
+
 import type { EventType } from "../types/schedule";
 
 export const WEEK_DAYS: { num: number; label: string }[] = [
@@ -32,3 +35,15 @@ export const EVENT_TYPES: {
 
 export const eventTypeMeta = (value: EventType) =>
   EVENT_TYPES.find((event) => event.value === value) ?? EVENT_TYPES[0];
+
+/**
+ * 時刻の表示文字列。終了時刻があれば「開始〜終了」で返す。
+ * 開始時刻が無い（終日）場合は null。
+ */
+export const scheduleTimeLabel = (
+  scheduledTime: string | null,
+  endTime: string | null,
+): string | null => {
+  if (!scheduledTime) return null;
+  return endTime ? `${scheduledTime}〜${endTime}` : scheduledTime;
+};

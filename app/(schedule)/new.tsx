@@ -15,7 +15,11 @@ import {
   Alert,
   Platform,
 } from "react-native";
-import { EVENT_TYPES, WEEK_DAYS } from "@constants/schedule";
+import {
+  EVENT_TYPES,
+  SCHEDULE_NOTE_MAX_LENGTH,
+  WEEK_DAYS,
+} from "@constants/schedule";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useMenuSets } from "@hooks/useMenuSets";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
@@ -89,6 +93,12 @@ export default function ScheduleFormScreen() {
     parseTime(editing?.scheduled_time ?? prefillTime),
   );
   const [showTimePicker, setShowTimePicker] = useState(false);
+  // 終了時刻は任意。未設定を表せるよう Date ではなく null を持てるようにする。
+  const [endTime, setEndTime] = useState<Date | null>(
+    editing?.end_time ? parseTime(editing.end_time) : null,
+  );
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [note, setNote] = useState(editing?.note ?? "");
   const [menuSource, setMenuSource] = useState<MenuSource>(
     editing?.menu_set_id ? "set" : "individual",
   );
@@ -140,11 +150,21 @@ export default function ScheduleFormScreen() {
     if (recurrence === "weekly" && days.length === 0) {
       return Alert.alert("曜日を選択してください");
     }
+    if (endTime && timeString(endTime) <= timeString(time)) {
+      return Alert.alert("終了時刻は開始時刻より後にしてください");
+    }
+    if (note.length > SCHEDULE_NOTE_MAX_LENGTH) {
+      return Alert.alert(
+        `メモは${SCHEDULE_NOTE_MAX_LENGTH}文字以内で入力してください`,
+      );
+    }
 
     const input: ScheduleInput = {
       title: title.trim() || null,
       event_type: eventType,
       scheduled_time: timeString(time),
+      end_time: endTime ? timeString(endTime) : null,
+      note: note.trim() || null,
       notification_enabled: notify,
       notification_message:
         canCustomize && message.trim() ? message.trim() : null,
@@ -297,6 +317,49 @@ export default function ScheduleFormScreen() {
           }}
         />
       ) : null}
+
+      <Text style={styles.label}>終了時刻（任意）</Text>
+      <TouchableOpacity
+        style={[styles.input, styles.timeInput]}
+        onPress={() => setShowEndTimePicker((prev) => !prev)}
+      >
+        <Text style={endTime ? styles.valueText : styles.placeholderText}>
+          {endTime ? timeString(endTime) : "未設定"}
+        </Text>
+        <View style={styles.timeActions}>
+          {endTime ? (
+            <TouchableOpacity onPress={() => setEndTime(null)} hitSlop={8}>
+              <Ionicons name="close-circle" size={18} color="#A1A1AA" />
+            </TouchableOpacity>
+          ) : null}
+          <Ionicons name="time-outline" size={18} color="#A1A1AA" />
+        </View>
+      </TouchableOpacity>
+      {showEndTimePicker ? (
+        <DateTimePicker
+          value={endTime ?? time}
+          mode="time"
+          themeVariant="dark"
+          accentColor="#d08000"
+          locale="ja-JP"
+          minuteInterval={5}
+          display={Platform.OS === "ios" ? "spinner" : "default"}
+          onChange={(_event, selected) => {
+            if (Platform.OS !== "ios") setShowEndTimePicker(false);
+            if (selected) setEndTime(selected);
+          }}
+        />
+      ) : null}
+
+      <Text style={styles.label}>メモ（任意）</Text>
+      <TextInput
+        style={[styles.input, styles.noteInput]}
+        value={note}
+        onChangeText={setNote}
+        placeholder="集合場所や持ち物など"
+        placeholderTextColor="#71717A"
+        multiline
+      />
 
       <Text style={styles.label}>メニュー（任意）</Text>
       <View style={styles.segment}>
@@ -472,6 +535,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   valueText: { color: "#F4F4F4", fontSize: 16, fontWeight: "700" },
+  placeholderText: { color: "#71717A", fontSize: 16 },
+  timeActions: { flexDirection: "row", alignItems: "center", gap: 12 },
+  noteInput: { minHeight: 88, textAlignVertical: "top", paddingTop: 12 },
   dateInput: {
     marginTop: 10,
     flexDirection: "row",
