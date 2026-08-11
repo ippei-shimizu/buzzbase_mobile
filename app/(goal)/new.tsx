@@ -9,7 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { isAxiosError } from "axios";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -27,6 +27,8 @@ import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import {
   GOAL_METRIC_CATEGORIES,
   GOAL_METRICS,
+  MENU_METRIC_HINTS,
+  MENU_METRIC_KEYS,
   metricExample,
   metricsInCategory,
 } from "@constants/goal";
@@ -113,6 +115,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
   const canCustomPeriod = isProLoading || hasEntitlement("custom_period_goals");
   const canManualMetric = isProLoading || hasEntitlement("manual_metric_goals");
   const isSaving = isCreating || isUpdating;
+  const isSavingRef = useRef(false);
 
   const [kind, setKind] = useState<GoalKind>(editing?.kind ?? "numeric");
   const [periodType, setPeriodType] = useState<GoalPeriodType>(
@@ -168,7 +171,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
   const isQualitative = kind === "qualitative";
   const isManual = kind === "manual";
   const isMenuMetric =
-    !isQualitative && !isManual && metricKey === "menu_practice_days";
+    !isQualitative && !isManual && MENU_METRIC_KEYS.includes(metricKey);
   // 自由指標は Pro 限定。既存の自由指標目標を編集中は鍵をかけない（タイプ自体変更不可のため）。
   const isLockedManual = !canManualMetric && !editing;
   // 期間タイプの Pro 制限。無料で season / tournament / custom を選ぶと保存不可。
@@ -180,6 +183,8 @@ function GoalForm({ editing }: { editing?: Goal }) {
       (periodType === "custom" && !canCustomPeriod));
 
   const handleSave = async () => {
+    // isPending は再レンダー後にしか true にならないため、同一フレームの連打を ref で弾く。
+    if (isSavingRef.current) return;
     if (isQualitative && !title.trim()) {
       return Alert.alert("目標を入力してください");
     }
@@ -266,6 +271,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
       ...(isQualitative ? {} : numericPart),
     };
 
+    isSavingRef.current = true;
     try {
       if (editing) {
         await updateGoal({ id: editing.id, input });
@@ -274,6 +280,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
       }
       router.back();
     } catch (error) {
+      isSavingRef.current = false;
       if (isAxiosError(error) && error.response?.status === 403) {
         Alert.alert("Pro プラン", "この目標は Pro プランで設定できます", [
           { text: "閉じる", style: "cancel" },
@@ -581,7 +588,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
                   </View>
                 )}
                 <Text style={styles.hint}>
-                  期間内にこのメニューを実施した「日数」を数えます。
+                  {MENU_METRIC_HINTS[metricKey] ?? ""}
                 </Text>
               </>
             ) : (
@@ -794,6 +801,8 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: "#3A3A3A",
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#52525B",
     paddingHorizontal: 12,
     paddingVertical: 12,
     color: "#F4F4F4",

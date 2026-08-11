@@ -13,10 +13,18 @@ import {
   GlobalMenuOverlay,
   useGlobalMenu,
 } from "@components/ui/GlobalMenu";
+import { SwipeableTabPages } from "@components/ui/SwipeableTabPages";
 import { UnderlineTabBar } from "@components/ui/UnderlineTabBar";
 import { useNotificationCount } from "@hooks/useNotifications";
 
-const SEGMENTS = ["練習・活動", "ダッシュボード"];
+type HomeTab = "activity" | "dashboard";
+
+const TABS: { key: HomeTab; label: string }[] = [
+  { key: "activity", label: "練習・活動" },
+  { key: "dashboard", label: "ダッシュボード" },
+];
+const TAB_KEYS = TABS.map((item) => item.key);
+const TAB_LABELS = TABS.map((item) => item.label);
 
 /**
  * ホームタブ。`[活動] ⇄ [ダッシュボード]` のセグメントで2面を切り替える。
@@ -27,7 +35,7 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   const { count } = useNotificationCount();
   const { menuVisible, menuOpacity, openMenu, closeMenu } = useGlobalMenu();
-  const [activeSegment, setActiveSegment] = useState(0);
+  const [tab, setTab] = useState<HomeTab>("activity");
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -47,11 +55,22 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container} edges={[]}>
       <UnderlineTabBar
-        options={SEGMENTS}
-        selectedIndex={activeSegment}
-        onSelect={setActiveSegment}
+        options={TAB_LABELS}
+        selectedIndex={TAB_KEYS.indexOf(tab)}
+        onSelect={(index) => setTab(TAB_KEYS[index])}
       />
-      {activeSegment === 0 ? <ActivityView /> : <DashboardView />}
+      <SwipeableTabPages
+        tabKeys={TAB_KEYS}
+        activeKey={tab}
+        onChange={setTab}
+        renderPage={(key) =>
+          key === "activity" ? (
+            <ActivityView isActive={tab === "activity"} />
+          ) : (
+            <DashboardView isActive={tab === "dashboard"} />
+          )
+        }
+      />
       <AppBannerAd />
       <GlobalMenuOverlay
         visible={menuVisible}

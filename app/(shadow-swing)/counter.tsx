@@ -57,6 +57,8 @@ export default function ShadowSwingCounterScreen() {
   const [running, setRunning] = useState(true);
   const [elapsed, setElapsed] = useState(0);
   const runningRef = useRef(running);
+  // 一度も変更していなければ戻す必要がない（他画面の設定を巻き込まないため）。
+  const audioModeChangedRef = useRef(false);
   const finishedRef = useRef(false);
   const countRef = useRef(0);
 
@@ -84,14 +86,31 @@ export default function ShadowSwingCounterScreen() {
   // Pro(shadow_swing_background)が実行中は、無音ループのバックグラウンド再生も
   // 許可するモードに切り替える。
   useEffect(() => {
-    if (useSound || useVoice || canContinueInBackground) {
+    if (!useSound && !useVoice && !canContinueInBackground) return;
+
+    audioModeChangedRef.current = true;
+    void setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: canContinueInBackground,
+      interruptionMode: "mixWithOthers",
+    });
+  }, [useSound, useVoice, canContinueInBackground]);
+
+  // 既定へ戻すのは画面を離れるときだけにする。オーディオセッションはアプリ全体で
+  // 共有されるため戻さないとノート動画がサイレントスイッチに従わなくなるが、
+  // 依存が変わるたびに戻すと Pro 判定の確定時などに設定が一瞬外れてしまう。
+  useEffect(
+    () => () => {
+      if (!audioModeChangedRef.current) return;
+
       void setAudioModeAsync({
-        playsInSilentMode: true,
-        shouldPlayInBackground: canContinueInBackground,
+        playsInSilentMode: false,
+        shouldPlayInBackground: false,
         interruptionMode: "mixWithOthers",
       });
-    }
-  }, [useSound, useVoice, canContinueInBackground]);
+    },
+    [],
+  );
 
   useEffect(() => {
     runningRef.current = running;

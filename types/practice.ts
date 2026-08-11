@@ -119,10 +119,14 @@ export interface PracticeLogInput {
 }
 
 /** 日次の練習セッション。1日（logged_on）の量ログとコンディションを束ねる。 */
+/** その日の練習が自主練習かチーム練習か。バックエンドの PRACTICE_TYPES と一致させる。 */
+export type PracticeType = "self_practice" | "team_practice";
+
 export interface PracticeSession {
   id: number;
   logged_on: string;
   memo: string | null;
+  practice_type: PracticeType;
   improvement_theme_ids: number[];
   practice_logs: PracticeLog[];
   condition: ConditionLog | null;
@@ -143,6 +147,7 @@ export type ConditionInput = Omit<ConditionLogInput, "logged_on">;
 export interface PracticeSessionInput {
   logged_on: string;
   memo?: string | null;
+  practice_type?: PracticeType;
   improvement_theme_ids?: number[];
   items: PracticeSessionItemInput[];
   condition?: ConditionInput | null;

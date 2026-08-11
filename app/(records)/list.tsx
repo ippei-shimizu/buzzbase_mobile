@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SwipeableTabPages } from "@components/ui/SwipeableTabPages";
 import { UnderlineTabBar } from "@components/ui/UnderlineTabBar";
 import { formatPracticeValue, menuIconForLog } from "@constants/practice";
 import { useNotes } from "@hooks/useNotes";
@@ -23,7 +24,14 @@ import { usePracticeSessions } from "@hooks/usePracticeSessions";
 import { useTags } from "@hooks/useTags";
 import { tagLabel } from "../../types/tag";
 
-const SEGMENTS = ["練習記録", "野球ノート"];
+type RecordTab = "practice" | "note";
+
+const TABS: { key: RecordTab; label: string }[] = [
+  { key: "practice", label: "練習記録" },
+  { key: "note", label: "野球ノート" },
+];
+const TAB_KEYS = TABS.map((item) => item.key);
+const TAB_LABELS = TABS.map((item) => item.label);
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
 const parseDate = (iso: string): Date => {
@@ -736,16 +744,25 @@ function NoteList() {
 
 export default function RecordsScreen() {
   const { tab } = useLocalSearchParams<{ tab?: string }>();
-  const [segment, setSegment] = React.useState(tab === "note" ? 1 : 0);
+  const [segment, setSegment] = React.useState<RecordTab>(
+    tab === "note" ? "note" : "practice",
+  );
 
   return (
     <View style={styles.container}>
       <UnderlineTabBar
-        options={SEGMENTS}
-        selectedIndex={segment}
-        onSelect={setSegment}
+        options={TAB_LABELS}
+        selectedIndex={TAB_KEYS.indexOf(segment)}
+        onSelect={(index) => setSegment(TAB_KEYS[index])}
       />
-      {segment === 0 ? <PracticeList /> : <NoteList />}
+      <SwipeableTabPages
+        tabKeys={TAB_KEYS}
+        activeKey={segment}
+        onChange={setSegment}
+        renderPage={(key) =>
+          key === "practice" ? <PracticeList /> : <NoteList />
+        }
+      />
     </View>
   );
 }

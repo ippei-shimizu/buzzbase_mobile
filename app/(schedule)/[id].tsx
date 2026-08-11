@@ -13,7 +13,11 @@ import {
   View,
 } from "react-native";
 import { PlanMenuRow } from "@components/schedule/PlanMenuRow";
-import { dayLabels, eventTypeMeta } from "@constants/schedule";
+import {
+  dayLabels,
+  eventTypeMeta,
+  scheduleTimeLabel,
+} from "@constants/schedule";
 import { useDayPlan, useToggleDayPlanMenu } from "@hooks/usePlans";
 import { useScheduleMutations, useSchedules } from "@hooks/useSchedules";
 import { useGameRecordStore } from "@stores/gameRecordStore";
@@ -114,6 +118,10 @@ export default function ScheduleDetailScreen() {
   }
 
   const meta = eventTypeMeta(schedule.event_type);
+  const timeLabel = scheduleTimeLabel(
+    schedule.scheduled_time,
+    schedule.end_time,
+  );
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -146,9 +154,7 @@ export default function ScheduleDetailScreen() {
       </View>
 
       <InfoRow icon="calendar-outline" label={whenLabel(schedule)} />
-      {schedule.scheduled_time ? (
-        <InfoRow icon="time-outline" label={schedule.scheduled_time} />
-      ) : null}
+      {timeLabel ? <InfoRow icon="time-outline" label={timeLabel} /> : null}
       <InfoRow
         icon={
           schedule.notification_enabled

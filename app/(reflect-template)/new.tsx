@@ -1,7 +1,7 @@
 import type { ReflectionTemplate } from "../../types/reflectionTemplate";
 import { Ionicons as Icon } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -49,6 +49,7 @@ function TemplateForm({ template }: { template?: ReflectionTemplate }) {
       : ["", "", ""],
   );
   const isSaving = isCreating || isUpdating;
+  const isSavingRef = useRef(false);
 
   const setQuestion = (index: number, value: string) =>
     setQuestions((prev) => prev.map((item, i) => (i === index ? value : item)));
@@ -57,6 +58,8 @@ function TemplateForm({ template }: { template?: ReflectionTemplate }) {
     setQuestions((prev) => prev.filter((_, i) => i !== index));
 
   const handleSubmit = async () => {
+    // isPending は再レンダー後にしか true にならないため、同一フレームの連打を ref で弾く。
+    if (isSavingRef.current) return;
     const trimmedTitle = title.trim();
     const trimmedQuestions = questions
       .map((question) => question.trim())
@@ -69,6 +72,7 @@ function TemplateForm({ template }: { template?: ReflectionTemplate }) {
       Alert.alert("問いを1つ以上入力してください");
       return;
     }
+    isSavingRef.current = true;
     try {
       if (template) {
         await updateTemplate({
@@ -83,6 +87,7 @@ function TemplateForm({ template }: { template?: ReflectionTemplate }) {
       }
       router.back();
     } catch {
+      isSavingRef.current = false;
       Alert.alert("保存に失敗しました");
     }
   };
@@ -159,6 +164,8 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: "#3A3A3A",
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#52525B",
     paddingHorizontal: 12,
     paddingVertical: 12,
     color: "#F4F4F4",

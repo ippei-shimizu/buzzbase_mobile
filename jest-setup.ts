@@ -154,6 +154,26 @@ jest.mock("@react-native-community/datetimepicker", () => {
 
 // expo-video: VideoPlayer/VideoView はネイティブの SharedObject を拡張するクラスで、
 // jest環境ではネイティブバインディングが存在せずimport時に例外になるため手動でモックする。
+// PagerView はネイティブビューのため、テストでは子をそのまま描画する View に置き換える。
+jest.mock("react-native-pager-view", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require("react");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require("react-native");
+
+  const PagerView = React.forwardRef(
+    (props: Record<string, unknown>, ref: React.Ref<unknown>) => {
+      React.useImperativeHandle(ref, () => ({
+        setPage: jest.fn(),
+        setPageWithoutAnimation: jest.fn(),
+      }));
+      return React.createElement(View, props);
+    },
+  );
+
+  return { __esModule: true, default: PagerView };
+});
+
 jest.mock("expo-video", () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require("react");

@@ -33,6 +33,7 @@ const baseSchedule = {
   title: null,
   days_of_week: null,
   scheduled_time: null,
+  end_time: null,
   recurring: false,
   menu_set_id: null,
   game_result_id: null,

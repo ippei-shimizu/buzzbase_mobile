@@ -4,7 +4,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -12,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SkeletonList } from "@components/ui/Skeleton";
 import {
   CATEGORY_ICON,
   formatTotalAmount,
@@ -119,8 +119,8 @@ export default function PracticeSummaryScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#d08000" />
+      <View style={styles.skeleton}>
+        <SkeletonList count={5} itemHeight={96} />
       </View>
     );
   }
@@ -184,14 +184,9 @@ export default function PracticeSummaryScreen() {
 }
 
 const styles = StyleSheet.create({
+  skeleton: { flex: 1, backgroundColor: "#2E2E2E", padding: 16, gap: 12 },
   container: { flex: 1, backgroundColor: "#2E2E2E" },
   content: { padding: 16, paddingBottom: 40 },
-  centered: {
-    flex: 1,
-    backgroundColor: "#2E2E2E",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   lead: { color: "#A1A1AA", fontSize: 13, marginBottom: 12, fontWeight: "700" },
   empty: { color: "#A1A1AA", fontSize: 14, textAlign: "center", marginTop: 40 },
   card: {

@@ -13,6 +13,7 @@ export interface Schedule {
   days_of_week: string | null; // "1,3,5"（月=1〜日=7）。単発の場合 null
   planned_on: string | null; // "2026-07-11"。繰り返しの場合 null
   scheduled_time: string | null; // "06:00"。終日予定は null
+  end_time: string | null; // "12:30"。開始時刻とセットでのみ設定でき、開始より後
   event_type: EventType;
   recurring: boolean; // days_of_week を持つ（繰り返し）か
   menu_set_id: number | null;
@@ -32,6 +33,10 @@ export interface ScheduleInput {
   days_of_week?: string | null;
   planned_on?: string | null;
   scheduled_time?: string | null;
+  // 終了時刻・メモをクリアするときは省略ではなく null を送る。
+  // バックエンドは assign_attributes のため、省略すると既存値が残る。
+  end_time?: string | null;
+  note?: string | null;
   event_type?: EventType;
   menu_set_id?: number | null;
   notification_enabled?: boolean;

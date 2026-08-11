@@ -58,6 +58,7 @@ import {
   GlobalMenuOverlay,
   useGlobalMenu,
 } from "@components/ui/GlobalMenu";
+import { SwipeableTabPages } from "@components/ui/SwipeableTabPages";
 import { useAvailableMonths } from "@hooks/useAvailableMonths";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useEntitlement } from "@hooks/useEntitlement";
@@ -89,6 +90,12 @@ import {
 import { monthOptionsFromRecorded } from "@utils/monthOptions";
 
 type ActiveTab = "batting" | "pitching";
+
+const TABS: { key: ActiveTab; label: string }[] = [
+  { key: "batting", label: "打撃" },
+  { key: "pitching", label: "投球" },
+];
+const TAB_KEYS = TABS.map((tab) => tab.key);
 
 const currentYear = new Date().getFullYear().toString();
 
@@ -485,6 +492,9 @@ const tableFilterStyles = StyleSheet.create({
 export default function StatsScreen() {
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState<ActiveTab>("batting");
+  // 面ごとに独立した ScrollView を持つため、トップに戻す対象も面ごとに保持する。
+  const battingScrollRef = useRef<ScrollView>(null);
+  const pitchingScrollRef = useRef<ScrollView>(null);
   const [filters, setFilters] = useState<StatsFiltersType>({});
   // フィルター変更時、変わったキーだけを計測してから state を更新する。
   const handleFiltersChange = useCallback(
@@ -659,7 +669,7 @@ export default function StatsScreen() {
   const [manualRefreshing, setManualRefreshing] = useState(false);
 
   // 画面右下の「トップに戻る」ボタン用。一定スクロールでフェードイン表示する。
-  const scrollViewRef = useRef<ScrollView>(null);
+
   const [showBackToTop, setShowBackToTop] = useState(false);
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -668,8 +678,10 @@ export default function StatsScreen() {
     [],
   );
   const scrollToTop = useCallback(() => {
-    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-  }, []);
+    const target =
+      activeTab === "batting" ? battingScrollRef : pitchingScrollRef;
+    target.current?.scrollTo({ y: 0, animated: true });
+  }, [activeTab]);
 
   const onRefresh = useCallback(async () => {
     setManualRefreshing(true);
@@ -770,9 +782,9 @@ export default function StatsScreen() {
 
   const monthOptions = monthOptionsFromRecorded(months);
 
-  const currentPeriod =
-    activeTab === "batting" ? battingPeriod : pitchingPeriod;
-  const showTableFilters = currentPeriod !== "yearly";
+  // 両面が同時にマウントされるため、面ごとの期間で判定する。
+  const showTableFiltersFor = (key: ActiveTab) =>
+    (key === "batting" ? battingPeriod : pitchingPeriod) !== "yearly";
 
   const hasNoData =
     !hitDirections.data &&
@@ -780,6 +792,400 @@ export default function StatsScreen() {
     !battingTable.data &&
     !pitchingTable.data &&
     !eraTrend.data;
+
+  const renderStatsPage = (key: ActiveTab) => (
+    <ScrollView
+      ref={key === "batting" ? battingScrollRef : pitchingScrollRef}
+      style={styles.container}
+      onScroll={handleScroll}
+      scrollEventThrottle={64}
+      refreshControl={
+        <RefreshControl
+          refreshing={manualRefreshing}
+          onRefresh={onRefresh}
+          tintColor="#d08000"
+        />
+      }
+    >
+      {key === "batting" ? (
+        <View style={styles.content}>
+          {/* 1. HeadlineStatsCard */}
+          {headlineStats.data && (
+            <FetchingOverlay isFetching={headlineStats.isFetching}>
+              <HeadlineStatsCard data={headlineStats.data} />
+            </FetchingOverlay>
+          )}
+          {/* 2. RunnersSituationCard */}
+          {runnersSituation.data && (
+            <FetchingOverlay isFetching={runnersSituation.isFetching}>
+              <RunnersSituationCard data={runnersSituation.data} />
+            </FetchingOverlay>
+          )}
+          {/* 3. AdditionalStatsCard（主要スタッツ以外の 16 項目） */}
+          {additionalStats.data && (
+            <FetchingOverlay isFetching={additionalStats.isFetching}>
+              <AdditionalStatsCard data={additionalStats.data} />
+            </FetchingOverlay>
+          )}
+          {/* 4. BattingTrendChart */}
+          {battingTrend.data && (
+            <FetchingOverlay isFetching={battingTrend.isFetching}>
+              <BattingTrendChart
+                points={battingTrend.data.points}
+                granularity={battingTrendGranularity}
+                onGranularityChange={(next) => {
+                  // シーズン粒度は Pro 限定。無料は Paywall を出して切替を止める。
+                  if (
+                    next === "season" &&
+                    !hasEntitlement("season_transition_graph")
+                  ) {
+                    setSeasonPaywallOpen(true);
+                    return;
+                  }
+                  trackBattingTrendGranularityChanged(next);
+                  setBattingTrendGranularity(next);
+                }}
+              />
+            </FetchingOverlay>
+          )}
+          {/* 5. SprayChart */}
+          {hitDirections.data && (
+            <FetchingOverlay
+              isFetching={hitDirections.isFetching || hitLocations.isFetching}
+            >
+              <SprayChart
+                directions={hitDirections.data.directions}
+                homeRuns={hitDirections.data.home_runs}
+                mode={sprayChartMode}
+                onModeChange={setSprayChartMode}
+                points={hitLocations.data?.points ?? []}
+              />
+            </FetchingOverlay>
+          )}
+          {/* 6. HitDirectionTable */}
+          {hasEntitlement("hit_direction_average") ? (
+            hitDirections.data && (
+              <FetchingOverlay isFetching={hitDirections.isFetching}>
+                <HitDirectionTable directions={hitDirections.data.directions} />
+              </FetchingOverlay>
+            )
+          ) : (
+            <ProUpsellOverlay
+              unlocked={false}
+              loading={isProLoading}
+              feature="hit_direction_average"
+              onPressCta={() => {
+                trackProFeatureTapped("hit_direction");
+                setComingSoonPaywallOpen(true);
+              }}
+              style={styles.proSectionSpacing}
+            >
+              <ProComingSoonHitDirectionField />
+            </ProUpsellOverlay>
+          )}
+          {/* 7. PlateAppearanceDonut（打席結果の内訳） */}
+          {paBreakdown.data && (
+            <FetchingOverlay isFetching={paBreakdown.isFetching}>
+              <PlateAppearanceDonut
+                breakdown={paBreakdown.data}
+                totalPlateAppearances={paBreakdown.data.reduce(
+                  (sum, c) => sum + c.count,
+                  0,
+                )}
+              />
+            </FetchingOverlay>
+          )}
+          {/* 8. ContactQualityCard（打球の質） */}
+          {contactQualities.data && (
+            <FetchingOverlay isFetching={contactQualities.isFetching}>
+              <ContactQualityCard
+                breakdown={contactQualities.data.breakdown}
+                total={contactQualities.data.total}
+              />
+            </FetchingOverlay>
+          )}
+          {/* 9. TimingCard（タイミング別の打席比率） */}
+          {timingBreakdown.data && (
+            <FetchingOverlay isFetching={timingBreakdown.isFetching}>
+              <TimingCard
+                breakdown={timingBreakdown.data.breakdown}
+                total={timingBreakdown.data.total}
+              />
+            </FetchingOverlay>
+          )}
+          {/* 10. CountSituationCards（カウント別の打率） */}
+          {/* pro/status 解決前は hasEntitlement が false 倒しになり、Pro ユーザーへ
+                  一瞬サンプル表示がフラッシュしてしまうため、判定確定まではProUpsellOverlay
+                  と同様に高さを確保した中立表示にし、判定確定後のレイアウトシフトを抑える。 */}
+          {isProLoading ? (
+            <ProSectionLoadingPlaceholder />
+          ) : hasEntitlement("count_situation_average") ? (
+            countSituations.data && (
+              <FetchingOverlay isFetching={countSituations.isFetching}>
+                <CountSituationCards data={countSituations.data} />
+              </FetchingOverlay>
+            )
+          ) : (
+            <View style={styles.proSectionSpacing}>
+              <ProUpsellCard
+                feature="count_situation_average"
+                onPressCta={() => {
+                  trackProFeatureTapped("count_situation");
+                  setComingSoonPaywallOpen(true);
+                }}
+              />
+              <SampleDataLabel />
+              <View pointerEvents="none" style={styles.comingSoonDummy}>
+                <CountSituationDummy />
+              </View>
+            </View>
+          )}
+          {/* 11. PitchTypeCard（球種別の打率） */}
+          {isProLoading ? (
+            <ProSectionLoadingPlaceholder />
+          ) : hasEntitlement("pitch_type_average") ? (
+            pitchTypes.data && (
+              <FetchingOverlay isFetching={pitchTypes.isFetching}>
+                <PitchTypeCard
+                  rows={pitchTypes.data.rows}
+                  totalTargetPa={pitchTypes.data.total_target_pa}
+                />
+              </FetchingOverlay>
+            )
+          ) : (
+            <View style={styles.proSectionSpacing}>
+              <ProUpsellCard
+                feature="pitch_type_average"
+                onPressCta={() => {
+                  trackProFeatureTapped("pitch_type");
+                  setComingSoonPaywallOpen(true);
+                }}
+              />
+              <SampleDataLabel />
+              {/* タップした時に詳細スタッツを展開するPro機能もサンプルで体験できるよう、
+                      ダミーの静的リストではなく実コンポーネントにサンプルデータを渡す。 */}
+              <View style={styles.comingSoonDummy}>
+                <PitchTypeCard
+                  rows={DUMMY_PITCH_TYPE_ROWS}
+                  totalTargetPa={DUMMY_PITCH_TYPE_TOTAL_PA}
+                />
+              </View>
+            </View>
+          )}
+          {/* 12. PitcherFaceoffList */}
+          {isProLoading ? (
+            <ProSectionLoadingPlaceholder />
+          ) : hasEntitlement("pitcher_faceoff_average") ? (
+            pitcherFaceoffs.data && (
+              <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
+                <PitcherFaceoffList
+                  rows={pitcherFaceoffs.data.rows}
+                  minPlateAppearances={
+                    pitcherFaceoffs.data.min_plate_appearances
+                  }
+                  totalTargetPa={pitcherFaceoffs.data.total_target_pa}
+                />
+              </FetchingOverlay>
+            )
+          ) : (
+            <View style={styles.proSectionSpacing}>
+              <ProUpsellCard
+                feature="pitcher_faceoff_average"
+                onPressCta={() => {
+                  trackProFeatureTapped("pitcher_faceoff");
+                  setComingSoonPaywallOpen(true);
+                }}
+              />
+              <SampleDataLabel />
+              <View style={styles.comingSoonDummy}>
+                <PitcherFaceoffList
+                  rows={DUMMY_PITCHER_FACEOFF_ROWS}
+                  minPlateAppearances={DUMMY_PITCHER_FACEOFF_MIN_PA}
+                  totalTargetPa={DUMMY_PITCHER_FACEOFF_TOTAL_PA}
+                />
+              </View>
+            </View>
+          )}
+          {/* 13. PitcherAttributeSummary */}
+          {pitcherAttributeSummary.data && (
+            <FetchingOverlay isFetching={pitcherAttributeSummary.isFetching}>
+              <PitcherAttributeSummary data={pitcherAttributeSummary.data} />
+            </FetchingOverlay>
+          )}
+          {/* 14. 打撃成績テーブル（最下部） */}
+          <View style={styles.tableHeader}>
+            <Text style={styles.tableHeaderLabel}>打撃成績</Text>
+            <PeriodToggle
+              value={battingPeriod}
+              onChange={handleBattingPeriodChange}
+            />
+          </View>
+          {showTableFiltersFor(key) && (
+            <View style={styles.tableFilterRow}>
+              <TableFilterDropdown
+                label="年度"
+                value={tableYear}
+                options={yearOptions}
+                onSelect={handleTableYearSelect}
+                isOpen={tableActiveFilter === `${key}-tableYear`}
+                onToggle={() => toggleTableFilter(`${key}-tableYear`)}
+              />
+              {monthOptions.length > 0 && (
+                <>
+                  <TableFilterDropdown
+                    label="開始"
+                    value={tableStartMonth}
+                    options={monthOptions}
+                    onSelect={handleTableStartMonthSelect}
+                    isOpen={tableActiveFilter === `${key}-tableStartMonth`}
+                    onToggle={() => toggleTableFilter(`${key}-tableStartMonth`)}
+                  />
+                  <TableFilterDropdown
+                    label="終了"
+                    value={tableEndMonth}
+                    options={monthOptions}
+                    onSelect={handleTableEndMonthSelect}
+                    isOpen={tableActiveFilter === `${key}-tableEndMonth`}
+                    onToggle={() => toggleTableFilter(`${key}-tableEndMonth`)}
+                  />
+                </>
+              )}
+              {seasonOptions.length > 0 && (
+                <TableFilterDropdown
+                  label="シーズン"
+                  value={tableSeasonId}
+                  options={seasonOptions}
+                  onSelect={setTableSeasonId}
+                  isOpen={tableActiveFilter === `${key}-tableSeason`}
+                  onToggle={() => toggleTableFilter(`${key}-tableSeason`)}
+                />
+              )}
+              {tournamentOptions.length > 0 && (
+                <TableFilterDropdown
+                  label="大会"
+                  value={tableTournamentId}
+                  options={tournamentOptions}
+                  onSelect={setTableTournamentId}
+                  isOpen={tableActiveFilter === `${key}-tableTournament`}
+                  onToggle={() => toggleTableFilter(`${key}-tableTournament`)}
+                />
+              )}
+              <FilterResetButton
+                visible={hasTableFilter}
+                onPress={resetTableFilters}
+              />
+            </View>
+          )}
+          {battingTable.data && (
+            <FetchingOverlay isFetching={battingTable.isFetching}>
+              <StatsTable
+                rows={battingTable.data}
+                columns={BATTING_COLUMNS}
+                labelKey="label"
+              />
+            </FetchingOverlay>
+          )}
+          <View style={styles.tableBottomSpacer} />
+        </View>
+      ) : (
+        <View style={styles.content}>
+          {eraTrend.data && eraTrend.data.points.length > 0 && (
+            <FetchingOverlay isFetching={eraTrend.isFetching}>
+              <EraTrendChart
+                points={eraTrend.data.points}
+                granularity={eraTrendGranularity}
+                onGranularityChange={(next) => {
+                  // シーズン粒度は Pro 限定。無料は Paywall を出して切替を止める。
+                  if (
+                    next === "season" &&
+                    !hasEntitlement("season_transition_graph")
+                  ) {
+                    setSeasonPaywallOpen(true);
+                    return;
+                  }
+                  setEraTrendGranularity(next);
+                }}
+              />
+            </FetchingOverlay>
+          )}
+          <View style={styles.tableHeader}>
+            <Text style={styles.tableHeaderLabel}>投球成績</Text>
+            <PeriodToggle
+              value={pitchingPeriod}
+              onChange={handlePitchingPeriodChange}
+            />
+          </View>
+          {showTableFiltersFor(key) && (
+            <View style={styles.tableFilterRow}>
+              <TableFilterDropdown
+                label="年度"
+                value={tableYear}
+                options={yearOptions}
+                onSelect={handleTableYearSelect}
+                isOpen={tableActiveFilter === `${key}-tableYear`}
+                onToggle={() => toggleTableFilter(`${key}-tableYear`)}
+              />
+              {monthOptions.length > 0 && (
+                <>
+                  <TableFilterDropdown
+                    label="開始"
+                    value={tableStartMonth}
+                    options={monthOptions}
+                    onSelect={handleTableStartMonthSelect}
+                    isOpen={tableActiveFilter === `${key}-tableStartMonth`}
+                    onToggle={() => toggleTableFilter(`${key}-tableStartMonth`)}
+                  />
+                  <TableFilterDropdown
+                    label="終了"
+                    value={tableEndMonth}
+                    options={monthOptions}
+                    onSelect={handleTableEndMonthSelect}
+                    isOpen={tableActiveFilter === `${key}-tableEndMonth`}
+                    onToggle={() => toggleTableFilter(`${key}-tableEndMonth`)}
+                  />
+                </>
+              )}
+              {seasonOptions.length > 0 && (
+                <TableFilterDropdown
+                  label="シーズン"
+                  value={tableSeasonId}
+                  options={seasonOptions}
+                  onSelect={setTableSeasonId}
+                  isOpen={tableActiveFilter === `${key}-tableSeason`}
+                  onToggle={() => toggleTableFilter(`${key}-tableSeason`)}
+                />
+              )}
+              {tournamentOptions.length > 0 && (
+                <TableFilterDropdown
+                  label="大会"
+                  value={tableTournamentId}
+                  options={tournamentOptions}
+                  onSelect={setTableTournamentId}
+                  isOpen={tableActiveFilter === `${key}-tableTournament`}
+                  onToggle={() => toggleTableFilter(`${key}-tableTournament`)}
+                />
+              )}
+              <FilterResetButton
+                visible={hasTableFilter}
+                onPress={resetTableFilters}
+              />
+            </View>
+          )}
+          {pitchingTable.data && (
+            <FetchingOverlay isFetching={pitchingTable.isFetching}>
+              <StatsTable
+                rows={pitchingTable.data}
+                columns={PITCHING_COLUMNS}
+                labelKey="label"
+              />
+            </FetchingOverlay>
+          )}
+          <View style={styles.tableBottomSpacer} />
+        </View>
+      )}
+      {key === activeTab ? <InlineBannerAd placement="stats" /> : null}
+    </ScrollView>
+  );
 
   if (hasNoData && isLoading) {
     return (
@@ -791,19 +1197,7 @@ export default function StatsScreen() {
 
   return (
     <>
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.container}
-        onScroll={handleScroll}
-        scrollEventThrottle={64}
-        refreshControl={
-          <RefreshControl
-            refreshing={manualRefreshing}
-            onRefresh={onRefresh}
-            tintColor="#d08000"
-          />
-        }
-      >
+      <View style={styles.fixedHeader}>
         {/* Tab Bar */}
         <View style={styles.tabBar}>
           <TouchableOpacity
@@ -857,391 +1251,14 @@ export default function StatsScreen() {
             }))}
           />
         </View>
+      </View>
 
-        {/* Batting Tab */}
-        {activeTab === "batting" && (
-          <View style={styles.content}>
-            {/* 1. HeadlineStatsCard */}
-            {headlineStats.data && (
-              <FetchingOverlay isFetching={headlineStats.isFetching}>
-                <HeadlineStatsCard data={headlineStats.data} />
-              </FetchingOverlay>
-            )}
-            {/* 2. RunnersSituationCard */}
-            {runnersSituation.data && (
-              <FetchingOverlay isFetching={runnersSituation.isFetching}>
-                <RunnersSituationCard data={runnersSituation.data} />
-              </FetchingOverlay>
-            )}
-            {/* 3. AdditionalStatsCard（主要スタッツ以外の 16 項目） */}
-            {additionalStats.data && (
-              <FetchingOverlay isFetching={additionalStats.isFetching}>
-                <AdditionalStatsCard data={additionalStats.data} />
-              </FetchingOverlay>
-            )}
-            {/* 4. BattingTrendChart */}
-            {battingTrend.data && (
-              <FetchingOverlay isFetching={battingTrend.isFetching}>
-                <BattingTrendChart
-                  points={battingTrend.data.points}
-                  granularity={battingTrendGranularity}
-                  onGranularityChange={(next) => {
-                    // シーズン粒度は Pro 限定。無料は Paywall を出して切替を止める。
-                    if (
-                      next === "season" &&
-                      !hasEntitlement("season_transition_graph")
-                    ) {
-                      setSeasonPaywallOpen(true);
-                      return;
-                    }
-                    trackBattingTrendGranularityChanged(next);
-                    setBattingTrendGranularity(next);
-                  }}
-                />
-              </FetchingOverlay>
-            )}
-            {/* 5. SprayChart */}
-            {hitDirections.data && (
-              <FetchingOverlay
-                isFetching={hitDirections.isFetching || hitLocations.isFetching}
-              >
-                <SprayChart
-                  directions={hitDirections.data.directions}
-                  homeRuns={hitDirections.data.home_runs}
-                  mode={sprayChartMode}
-                  onModeChange={setSprayChartMode}
-                  points={hitLocations.data?.points ?? []}
-                />
-              </FetchingOverlay>
-            )}
-            {/* 6. HitDirectionTable */}
-            {hasEntitlement("hit_direction_average") ? (
-              hitDirections.data && (
-                <FetchingOverlay isFetching={hitDirections.isFetching}>
-                  <HitDirectionTable
-                    directions={hitDirections.data.directions}
-                  />
-                </FetchingOverlay>
-              )
-            ) : (
-              <ProUpsellOverlay
-                unlocked={false}
-                loading={isProLoading}
-                feature="hit_direction_average"
-                onPressCta={() => {
-                  trackProFeatureTapped("hit_direction");
-                  setComingSoonPaywallOpen(true);
-                }}
-                style={styles.proSectionSpacing}
-              >
-                <ProComingSoonHitDirectionField />
-              </ProUpsellOverlay>
-            )}
-            {/* 7. PlateAppearanceDonut（打席結果の内訳） */}
-            {paBreakdown.data && (
-              <FetchingOverlay isFetching={paBreakdown.isFetching}>
-                <PlateAppearanceDonut
-                  breakdown={paBreakdown.data}
-                  totalPlateAppearances={paBreakdown.data.reduce(
-                    (sum, c) => sum + c.count,
-                    0,
-                  )}
-                />
-              </FetchingOverlay>
-            )}
-            {/* 8. ContactQualityCard（打球の質） */}
-            {contactQualities.data && (
-              <FetchingOverlay isFetching={contactQualities.isFetching}>
-                <ContactQualityCard
-                  breakdown={contactQualities.data.breakdown}
-                  total={contactQualities.data.total}
-                />
-              </FetchingOverlay>
-            )}
-            {/* 9. TimingCard（タイミング別の打席比率） */}
-            {timingBreakdown.data && (
-              <FetchingOverlay isFetching={timingBreakdown.isFetching}>
-                <TimingCard
-                  breakdown={timingBreakdown.data.breakdown}
-                  total={timingBreakdown.data.total}
-                />
-              </FetchingOverlay>
-            )}
-            {/* 10. CountSituationCards（カウント別の打率） */}
-            {/* pro/status 解決前は hasEntitlement が false 倒しになり、Pro ユーザーへ
-                一瞬サンプル表示がフラッシュしてしまうため、判定確定まではProUpsellOverlay
-                と同様に高さを確保した中立表示にし、判定確定後のレイアウトシフトを抑える。 */}
-            {isProLoading ? (
-              <ProSectionLoadingPlaceholder />
-            ) : hasEntitlement("count_situation_average") ? (
-              countSituations.data && (
-                <FetchingOverlay isFetching={countSituations.isFetching}>
-                  <CountSituationCards data={countSituations.data} />
-                </FetchingOverlay>
-              )
-            ) : (
-              <View style={styles.proSectionSpacing}>
-                <ProUpsellCard
-                  feature="count_situation_average"
-                  onPressCta={() => {
-                    trackProFeatureTapped("count_situation");
-                    setComingSoonPaywallOpen(true);
-                  }}
-                />
-                <SampleDataLabel />
-                <View pointerEvents="none" style={styles.comingSoonDummy}>
-                  <CountSituationDummy />
-                </View>
-              </View>
-            )}
-            {/* 11. PitchTypeCard（球種別の打率） */}
-            {isProLoading ? (
-              <ProSectionLoadingPlaceholder />
-            ) : hasEntitlement("pitch_type_average") ? (
-              pitchTypes.data && (
-                <FetchingOverlay isFetching={pitchTypes.isFetching}>
-                  <PitchTypeCard
-                    rows={pitchTypes.data.rows}
-                    totalTargetPa={pitchTypes.data.total_target_pa}
-                  />
-                </FetchingOverlay>
-              )
-            ) : (
-              <View style={styles.proSectionSpacing}>
-                <ProUpsellCard
-                  feature="pitch_type_average"
-                  onPressCta={() => {
-                    trackProFeatureTapped("pitch_type");
-                    setComingSoonPaywallOpen(true);
-                  }}
-                />
-                <SampleDataLabel />
-                {/* タップした時に詳細スタッツを展開するPro機能もサンプルで体験できるよう、
-                    ダミーの静的リストではなく実コンポーネントにサンプルデータを渡す。 */}
-                <View style={styles.comingSoonDummy}>
-                  <PitchTypeCard
-                    rows={DUMMY_PITCH_TYPE_ROWS}
-                    totalTargetPa={DUMMY_PITCH_TYPE_TOTAL_PA}
-                  />
-                </View>
-              </View>
-            )}
-            {/* 12. PitcherFaceoffList */}
-            {isProLoading ? (
-              <ProSectionLoadingPlaceholder />
-            ) : hasEntitlement("pitcher_faceoff_average") ? (
-              pitcherFaceoffs.data && (
-                <FetchingOverlay isFetching={pitcherFaceoffs.isFetching}>
-                  <PitcherFaceoffList
-                    rows={pitcherFaceoffs.data.rows}
-                    minPlateAppearances={
-                      pitcherFaceoffs.data.min_plate_appearances
-                    }
-                    totalTargetPa={pitcherFaceoffs.data.total_target_pa}
-                  />
-                </FetchingOverlay>
-              )
-            ) : (
-              <View style={styles.proSectionSpacing}>
-                <ProUpsellCard
-                  feature="pitcher_faceoff_average"
-                  onPressCta={() => {
-                    trackProFeatureTapped("pitcher_faceoff");
-                    setComingSoonPaywallOpen(true);
-                  }}
-                />
-                <SampleDataLabel />
-                <View style={styles.comingSoonDummy}>
-                  <PitcherFaceoffList
-                    rows={DUMMY_PITCHER_FACEOFF_ROWS}
-                    minPlateAppearances={DUMMY_PITCHER_FACEOFF_MIN_PA}
-                    totalTargetPa={DUMMY_PITCHER_FACEOFF_TOTAL_PA}
-                  />
-                </View>
-              </View>
-            )}
-            {/* 13. PitcherAttributeSummary */}
-            {pitcherAttributeSummary.data && (
-              <FetchingOverlay isFetching={pitcherAttributeSummary.isFetching}>
-                <PitcherAttributeSummary data={pitcherAttributeSummary.data} />
-              </FetchingOverlay>
-            )}
-            {/* 14. 打撃成績テーブル（最下部） */}
-            <View style={styles.tableHeader}>
-              <Text style={styles.tableHeaderLabel}>打撃成績</Text>
-              <PeriodToggle
-                value={battingPeriod}
-                onChange={handleBattingPeriodChange}
-              />
-            </View>
-            {showTableFilters && (
-              <View style={styles.tableFilterRow}>
-                <TableFilterDropdown
-                  label="年度"
-                  value={tableYear}
-                  options={yearOptions}
-                  onSelect={handleTableYearSelect}
-                  isOpen={tableActiveFilter === "tableYear"}
-                  onToggle={() => toggleTableFilter("tableYear")}
-                />
-                {monthOptions.length > 0 && (
-                  <>
-                    <TableFilterDropdown
-                      label="開始"
-                      value={tableStartMonth}
-                      options={monthOptions}
-                      onSelect={handleTableStartMonthSelect}
-                      isOpen={tableActiveFilter === "tableStartMonth"}
-                      onToggle={() => toggleTableFilter("tableStartMonth")}
-                    />
-                    <TableFilterDropdown
-                      label="終了"
-                      value={tableEndMonth}
-                      options={monthOptions}
-                      onSelect={handleTableEndMonthSelect}
-                      isOpen={tableActiveFilter === "tableEndMonth"}
-                      onToggle={() => toggleTableFilter("tableEndMonth")}
-                    />
-                  </>
-                )}
-                {seasonOptions.length > 0 && (
-                  <TableFilterDropdown
-                    label="シーズン"
-                    value={tableSeasonId}
-                    options={seasonOptions}
-                    onSelect={setTableSeasonId}
-                    isOpen={tableActiveFilter === "tableSeason"}
-                    onToggle={() => toggleTableFilter("tableSeason")}
-                  />
-                )}
-                {tournamentOptions.length > 0 && (
-                  <TableFilterDropdown
-                    label="大会"
-                    value={tableTournamentId}
-                    options={tournamentOptions}
-                    onSelect={setTableTournamentId}
-                    isOpen={tableActiveFilter === "tableTournament"}
-                    onToggle={() => toggleTableFilter("tableTournament")}
-                  />
-                )}
-                <FilterResetButton
-                  visible={hasTableFilter}
-                  onPress={resetTableFilters}
-                />
-              </View>
-            )}
-            {battingTable.data && (
-              <FetchingOverlay isFetching={battingTable.isFetching}>
-                <StatsTable
-                  rows={battingTable.data}
-                  columns={BATTING_COLUMNS}
-                  labelKey="label"
-                />
-              </FetchingOverlay>
-            )}
-            <View style={styles.tableBottomSpacer} />
-          </View>
-        )}
-
-        {/* Pitching Tab */}
-        {activeTab === "pitching" && (
-          <View style={styles.content}>
-            {eraTrend.data && eraTrend.data.points.length > 0 && (
-              <FetchingOverlay isFetching={eraTrend.isFetching}>
-                <EraTrendChart
-                  points={eraTrend.data.points}
-                  granularity={eraTrendGranularity}
-                  onGranularityChange={(next) => {
-                    // シーズン粒度は Pro 限定。無料は Paywall を出して切替を止める。
-                    if (
-                      next === "season" &&
-                      !hasEntitlement("season_transition_graph")
-                    ) {
-                      setSeasonPaywallOpen(true);
-                      return;
-                    }
-                    setEraTrendGranularity(next);
-                  }}
-                />
-              </FetchingOverlay>
-            )}
-            <View style={styles.tableHeader}>
-              <Text style={styles.tableHeaderLabel}>投球成績</Text>
-              <PeriodToggle
-                value={pitchingPeriod}
-                onChange={handlePitchingPeriodChange}
-              />
-            </View>
-            {showTableFilters && (
-              <View style={styles.tableFilterRow}>
-                <TableFilterDropdown
-                  label="年度"
-                  value={tableYear}
-                  options={yearOptions}
-                  onSelect={handleTableYearSelect}
-                  isOpen={tableActiveFilter === "tableYear"}
-                  onToggle={() => toggleTableFilter("tableYear")}
-                />
-                {monthOptions.length > 0 && (
-                  <>
-                    <TableFilterDropdown
-                      label="開始"
-                      value={tableStartMonth}
-                      options={monthOptions}
-                      onSelect={handleTableStartMonthSelect}
-                      isOpen={tableActiveFilter === "tableStartMonth"}
-                      onToggle={() => toggleTableFilter("tableStartMonth")}
-                    />
-                    <TableFilterDropdown
-                      label="終了"
-                      value={tableEndMonth}
-                      options={monthOptions}
-                      onSelect={handleTableEndMonthSelect}
-                      isOpen={tableActiveFilter === "tableEndMonth"}
-                      onToggle={() => toggleTableFilter("tableEndMonth")}
-                    />
-                  </>
-                )}
-                {seasonOptions.length > 0 && (
-                  <TableFilterDropdown
-                    label="シーズン"
-                    value={tableSeasonId}
-                    options={seasonOptions}
-                    onSelect={setTableSeasonId}
-                    isOpen={tableActiveFilter === "tableSeason"}
-                    onToggle={() => toggleTableFilter("tableSeason")}
-                  />
-                )}
-                {tournamentOptions.length > 0 && (
-                  <TableFilterDropdown
-                    label="大会"
-                    value={tableTournamentId}
-                    options={tournamentOptions}
-                    onSelect={setTableTournamentId}
-                    isOpen={tableActiveFilter === "tableTournament"}
-                    onToggle={() => toggleTableFilter("tableTournament")}
-                  />
-                )}
-                <FilterResetButton
-                  visible={hasTableFilter}
-                  onPress={resetTableFilters}
-                />
-              </View>
-            )}
-            {pitchingTable.data && (
-              <FetchingOverlay isFetching={pitchingTable.isFetching}>
-                <StatsTable
-                  rows={pitchingTable.data}
-                  columns={PITCHING_COLUMNS}
-                  labelKey="label"
-                />
-              </FetchingOverlay>
-            )}
-            <View style={styles.tableBottomSpacer} />
-          </View>
-        )}
-        <InlineBannerAd placement="stats" />
-      </ScrollView>
+      <SwipeableTabPages
+        tabKeys={TAB_KEYS}
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        renderPage={renderStatsPage}
+      />
 
       {showBackToTop && (
         <Pressable
@@ -1275,6 +1292,7 @@ export default function StatsScreen() {
 }
 
 const styles = StyleSheet.create({
+  fixedHeader: { backgroundColor: "#2E2E2E" },
   container: {
     flex: 1,
     backgroundColor: "#2E2E2E",

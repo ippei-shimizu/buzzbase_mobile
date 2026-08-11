@@ -40,6 +40,7 @@ const plan = {
   title: "自主練",
   event_type: "self_practice",
   scheduled_time: null,
+  end_time: null,
   recurring: false,
   menu_set_id: null,
   game_result_id: null,

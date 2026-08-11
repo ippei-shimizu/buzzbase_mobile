@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { PaywallModal } from "@components/pro/PaywallModal";
+import { SwipeableTabPages } from "@components/ui/SwipeableTabPages";
 import { themeCategoryLabel } from "@constants/improvementTheme";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useImprovementThemes } from "@hooks/useImprovementThemes";
@@ -24,6 +25,8 @@ const TABS: { key: ImprovementThemeStatus; label: string }[] = [
   { key: "achieved", label: "克服" },
   { key: "archived", label: "アーカイブ" },
 ];
+
+const TAB_KEYS = TABS.map((item) => item.key);
 
 const EMPTY_MESSAGE: Record<ImprovementThemeStatus, string> = {
   open: "いま取り組む課題を決めると、練習やノートがその課題に束ねられます。",
@@ -68,7 +71,35 @@ export default function ThemeListScreen() {
     );
   }
 
-  const visibleThemes = themesByStatus[tab];
+  const renderTabPage = (pageTab: ImprovementThemeStatus) => {
+    const themesInTab = themesByStatus[pageTab];
+    return (
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={refetch}
+            tintColor="#d08000"
+          />
+        }
+      >
+        {themesInTab.length === 0 ? (
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>{EMPTY_MESSAGE[pageTab]}</Text>
+          </View>
+        ) : (
+          themesInTab.map((theme) => (
+            <ThemeCard
+              key={theme.id}
+              theme={theme}
+              onPress={() => router.push(`/(theme)/${theme.id}`)}
+            />
+          ))
+        )}
+      </ScrollView>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -103,30 +134,12 @@ export default function ThemeListScreen() {
         </View>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={refetch}
-            tintColor="#d08000"
-          />
-        }
-      >
-        {visibleThemes.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>{EMPTY_MESSAGE[tab]}</Text>
-          </View>
-        ) : (
-          visibleThemes.map((theme) => (
-            <ThemeCard
-              key={theme.id}
-              theme={theme}
-              onPress={() => router.push(`/(theme)/${theme.id}`)}
-            />
-          ))
-        )}
-      </ScrollView>
+      <SwipeableTabPages
+        tabKeys={TAB_KEYS}
+        activeKey={tab}
+        onChange={setTab}
+        renderPage={renderTabPage}
+      />
 
       <PaywallModal
         isOpen={isPaywallOpen}

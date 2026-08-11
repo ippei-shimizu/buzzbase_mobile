@@ -15,6 +15,7 @@ import { MediaAttachmentList } from "@components/note/MediaAttachmentList";
 import { ConditionCard } from "@components/practice/ConditionCard";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
+import { Skeleton, SkeletonList } from "@components/ui/Skeleton";
 import { formatPracticeValue } from "@constants/practice";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useGameResult } from "@hooks/useGameResults";
@@ -48,7 +49,7 @@ function LinkedPractice({ sessionId }: { sessionId: number }) {
       <View style={styles.practiceHeader}>
         <View style={styles.practiceHeaderLeft}>
           <View style={styles.practiceHeaderIcon}>
-            <Ionicons name="fitness" size={20} color="#FFFFFF" />
+            <Ionicons name="clipboard-outline" size={20} color="#FFFFFF" />
           </View>
           <View>
             <Text style={styles.cardLabel}>紐付けた練習</Text>
@@ -142,6 +143,22 @@ function LinkedGame({ gameId }: { gameId: number }) {
   );
 }
 
+function NoteDetailSkeleton() {
+  return (
+    <View style={[styles.container, styles.content]}>
+      <Skeleton width={120} height={13} />
+      <Skeleton width="70%" height={22} style={styles.skeletonTitle} />
+      <View style={styles.tagRow}>
+        <Skeleton width={72} height={24} borderRadius={999} />
+        <Skeleton width={56} height={24} borderRadius={999} />
+      </View>
+      <View style={styles.skeletonCards}>
+        <SkeletonList count={2} itemHeight={110} gap={20} borderRadius={14} />
+      </View>
+    </View>
+  );
+}
+
 export default function NoteDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -168,11 +185,7 @@ export default function NoteDetailScreen() {
   };
 
   if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#d08000" />
-      </View>
-    );
+    return <NoteDetailSkeleton />;
   }
   if (!note) {
     return (
@@ -279,6 +292,8 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 },
+  skeletonTitle: { marginTop: 6 },
+  skeletonCards: { marginTop: 20 },
   tagChip: {
     backgroundColor: "#3A3A3A",
     borderRadius: 999,

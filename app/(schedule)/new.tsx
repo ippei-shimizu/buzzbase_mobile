@@ -3,7 +3,7 @@ import type { EventType, ScheduleInput } from "../../types/schedule";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,11 @@ import {
   Alert,
   Platform,
 } from "react-native";
-import { EVENT_TYPES, WEEK_DAYS } from "@constants/schedule";
+import {
+  EVENT_TYPES,
+  SCHEDULE_NOTE_MAX_LENGTH,
+  WEEK_DAYS,
+} from "@constants/schedule";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useMenuSets } from "@hooks/useMenuSets";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
@@ -65,6 +69,7 @@ export default function ScheduleFormScreen() {
   const { menuSets } = useMenuSets();
   const { hasEntitlement } = useEntitlement();
   const canCustomize = hasEntitlement("custom_notification_messages");
+  const isSavingRef = useRef(false);
 
   const [recurrence, setRecurrence] = useState<Recurrence>(
     singleOnly || editing?.planned_on || prefillDate ? "single" : "weekly",
@@ -88,6 +93,12 @@ export default function ScheduleFormScreen() {
     parseTime(editing?.scheduled_time ?? prefillTime),
   );
   const [showTimePicker, setShowTimePicker] = useState(false);
+  // 終了時刻は任意。未設定を表せるよう Date ではなく null を持てるようにする。
+  const [endTime, setEndTime] = useState<Date | null>(
+    editing?.end_time ? parseTime(editing.end_time) : null,
+  );
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [note, setNote] = useState(editing?.note ?? "");
   const [menuSource, setMenuSource] = useState<MenuSource>(
     editing?.menu_set_id ? "set" : "individual",
   );
@@ -130,6 +141,8 @@ export default function ScheduleFormScreen() {
   };
 
   const handleSave = async () => {
+    // isPending は再レンダー後にしか true にならないため、同一フレームの連打を ref で弾く。
+    if (isSavingRef.current) return;
     const usingSet = menuSource === "set" && menuSetId != null;
     if (!usingSet && !title.trim()) {
       return Alert.alert("タイトルを入力してください");
@@ -137,11 +150,21 @@ export default function ScheduleFormScreen() {
     if (recurrence === "weekly" && days.length === 0) {
       return Alert.alert("曜日を選択してください");
     }
+    if (endTime && timeString(endTime) <= timeString(time)) {
+      return Alert.alert("終了時刻は開始時刻より後にしてください");
+    }
+    if (note.length > SCHEDULE_NOTE_MAX_LENGTH) {
+      return Alert.alert(
+        `メモは${SCHEDULE_NOTE_MAX_LENGTH}文字以内で入力してください`,
+      );
+    }
 
     const input: ScheduleInput = {
       title: title.trim() || null,
       event_type: eventType,
       scheduled_time: timeString(time),
+      end_time: endTime ? timeString(endTime) : null,
+      note: note.trim() || null,
       notification_enabled: notify,
       notification_message:
         canCustomize && message.trim() ? message.trim() : null,
@@ -159,6 +182,7 @@ export default function ScheduleFormScreen() {
           })),
     };
 
+    isSavingRef.current = true;
     try {
       if (editingId) {
         await updateSchedule({ id: editingId, input });
@@ -167,6 +191,7 @@ export default function ScheduleFormScreen() {
       }
       router.back();
     } catch {
+      isSavingRef.current = false;
       Alert.alert("保存に失敗しました");
     }
   };
@@ -293,6 +318,49 @@ export default function ScheduleFormScreen() {
         />
       ) : null}
 
+      <Text style={styles.label}>終了時刻（任意）</Text>
+      <TouchableOpacity
+        style={[styles.input, styles.timeInput]}
+        onPress={() => setShowEndTimePicker((prev) => !prev)}
+      >
+        <Text style={endTime ? styles.valueText : styles.placeholderText}>
+          {endTime ? timeString(endTime) : "未設定"}
+        </Text>
+        <View style={styles.timeActions}>
+          {endTime ? (
+            <TouchableOpacity onPress={() => setEndTime(null)} hitSlop={8}>
+              <Ionicons name="close-circle" size={18} color="#A1A1AA" />
+            </TouchableOpacity>
+          ) : null}
+          <Ionicons name="time-outline" size={18} color="#A1A1AA" />
+        </View>
+      </TouchableOpacity>
+      {showEndTimePicker ? (
+        <DateTimePicker
+          value={endTime ?? time}
+          mode="time"
+          themeVariant="dark"
+          accentColor="#d08000"
+          locale="ja-JP"
+          minuteInterval={5}
+          display={Platform.OS === "ios" ? "spinner" : "default"}
+          onChange={(_event, selected) => {
+            if (Platform.OS !== "ios") setShowEndTimePicker(false);
+            if (selected) setEndTime(selected);
+          }}
+        />
+      ) : null}
+
+      <Text style={styles.label}>メモ（任意）</Text>
+      <TextInput
+        style={[styles.input, styles.noteInput]}
+        value={note}
+        onChangeText={setNote}
+        placeholder="集合場所や持ち物など"
+        placeholderTextColor="#71717A"
+        multiline
+      />
+
       <Text style={styles.label}>メニュー（任意）</Text>
       <View style={styles.segment}>
         <SegmentButton
@@ -308,7 +376,7 @@ export default function ScheduleFormScreen() {
       </View>
 
       {menuSource === "set" ? (
-        <View style={styles.menuWrap}>
+        <View style={styles.menuSetList}>
           {menuSets.length === 0 ? (
             <Text style={styles.hint}>
               メニューセットがありません。プラン管理から作成できます。
@@ -319,13 +387,27 @@ export default function ScheduleFormScreen() {
               return (
                 <TouchableOpacity
                   key={set.id}
-                  style={[styles.menuChip, active && styles.chipActive]}
+                  style={[
+                    styles.menuSetCard,
+                    active && styles.menuSetCardActive,
+                  ]}
                   onPress={() =>
                     setMenuSetId((prev) => (prev === set.id ? null : set.id))
                   }
                 >
-                  <Text style={[styles.menuText, active && styles.textActive]}>
+                  <Text
+                    style={[
+                      styles.menuSetName,
+                      active && styles.menuSetNameActive,
+                    ]}
+                  >
                     {set.name}
+                  </Text>
+                  {/* セット名だけでは中身が分からず、意図しないセットを選んでしまう。 */}
+                  <Text style={styles.menuSetItems} numberOfLines={2}>
+                    {set.items.length > 0
+                      ? set.items.map((item) => item.name).join(" / ")
+                      : "メニュー未設定"}
                   </Text>
                 </TouchableOpacity>
               );
@@ -447,6 +529,19 @@ function SegmentButton({
 }
 
 const styles = StyleSheet.create({
+  menuSetList: { gap: 8, marginTop: 12, marginBottom: 8 },
+  menuSetCard: {
+    borderWidth: 1,
+    borderColor: "#4A4A4A",
+    backgroundColor: "#3A3A3A",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  menuSetCardActive: { borderColor: "#d08000" },
+  menuSetName: { color: "#F4F4F4", fontSize: 15, fontWeight: "700" },
+  menuSetNameActive: { color: "#d08000" },
+  menuSetItems: { color: "#A1A1AA", fontSize: 12, marginTop: 4 },
   container: { flex: 1, backgroundColor: "#2E2E2E" },
   content: { padding: 16, paddingBottom: 48 },
   label: {
@@ -459,12 +554,17 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: "#3A3A3A",
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#52525B",
     paddingHorizontal: 12,
     paddingVertical: 12,
     color: "#F4F4F4",
     fontSize: 15,
   },
   valueText: { color: "#F4F4F4", fontSize: 16, fontWeight: "700" },
+  placeholderText: { color: "#71717A", fontSize: 16 },
+  timeActions: { flexDirection: "row", alignItems: "center", gap: 12 },
+  noteInput: { minHeight: 88, textAlignVertical: "top", paddingTop: 12 },
   dateInput: {
     marginTop: 10,
     flexDirection: "row",

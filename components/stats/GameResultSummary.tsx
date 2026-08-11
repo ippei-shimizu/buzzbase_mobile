@@ -11,15 +11,20 @@ interface GameResultSummaryProps {
   summary: GameSummary;
 }
 
-export const GameResultSummary = ({ summary }: GameResultSummaryProps) => (
-  <View style={styles.container}>
-    <WinLossCards summary={summary.win_loss} />
-    <ScoringStats scoring={summary.scoring} />
-    <RecentForm games={summary.recent_form} />
-    <MonthlyGameChart games={summary.monthly_games} />
-    <OpponentRecordList records={summary.opponent_records} />
-  </View>
+// 一覧タブと同時にマウントされるため、一覧側の検索入力のたびに
+// このツリーまで再描画されないよう memo 化する。
+export const GameResultSummary = React.memo(
+  ({ summary }: GameResultSummaryProps) => (
+    <View style={styles.container}>
+      <WinLossCards summary={summary.win_loss} />
+      <ScoringStats scoring={summary.scoring} />
+      <RecentForm games={summary.recent_form} />
+      <MonthlyGameChart games={summary.monthly_games} />
+      <OpponentRecordList records={summary.opponent_records} />
+    </View>
+  ),
 );
+GameResultSummary.displayName = "GameResultSummary";
 
 const styles = StyleSheet.create({
   container: { gap: 0 },

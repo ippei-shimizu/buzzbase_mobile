@@ -32,6 +32,7 @@ import {
   GlobalMenuOverlay,
   useGlobalMenu,
 } from "@components/ui/GlobalMenu";
+import { SwipeableTabPages } from "@components/ui/SwipeableTabPages";
 import { useAvailableMonths } from "@hooks/useAvailableMonths";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useFilteredGameResults } from "@hooks/useGameResults";
@@ -43,6 +44,12 @@ import { monthOptionsFromRecorded } from "@utils/monthOptions";
 import { useGameRecordStore } from "../../../stores/gameRecordStore";
 
 type ScreenTab = "summary" | "list";
+
+const SCREEN_TABS: { key: ScreenTab; label: string }[] = [
+  { key: "summary", label: "サマリー" },
+  { key: "list", label: "一覧" },
+];
+const SCREEN_TAB_KEYS = SCREEN_TABS.map((tab) => tab.key);
 
 /**
  * FlatList の各行セルを ListHeader より低い zIndex で描画するための
@@ -245,14 +252,20 @@ export default function GameResultsScreen() {
   const [screenTab, setScreenTab] = useState<ScreenTab>(
     params.tab === "list" ? "list" : "summary",
   );
+  // パラメータ由来の切替はページャを作り直して目的の面から始める。マウント済みの
+  // ページャに送らせると、サマリーから一覧へスライドが走ってしまうため。
+  const [pagerGeneration, setPagerGeneration] = useState(0);
 
   // タブ常駐画面のため、反映後は手動切替が上書きされないようパラメータをクリアする。
   useEffect(() => {
-    if (params.tab === "list" || params.tab === "summary") {
-      setScreenTab(params.tab);
-      router.setParams({ tab: "" });
-    }
-  }, [params.tab, router]);
+    if (params.tab !== "list" && params.tab !== "summary") return;
+
+    const nextTab = params.tab;
+    router.setParams({ tab: "" });
+    if (nextTab === screenTab) return;
+    setScreenTab(nextTab);
+    setPagerGeneration((generation) => generation + 1);
+  }, [params.tab, screenTab, router]);
 
   // Summary tab filters (independent)
   const [summaryYear, setSummaryYear] = useState<string | undefined>(undefined);
@@ -665,52 +678,9 @@ export default function GameResultsScreen() {
     ...availableYears.map((y) => ({ key: y, label: y })),
   ];
 
-  return (
-    <View style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
-      <Stack.Screen
-        options={{
-          headerRight: () => <GlobalMenuButton onPress={openMenu} />,
-        }}
-      />
-
-      {/* Screen Tab Bar */}
-      <View style={styles.screenTabBar}>
-        <TouchableOpacity
-          style={[
-            styles.screenTab,
-            screenTab === "summary" && styles.screenTabActive,
-          ]}
-          onPress={() => setScreenTab("summary")}
-        >
-          <Text
-            style={[
-              styles.screenTabText,
-              screenTab === "summary" && styles.screenTabTextActive,
-            ]}
-          >
-            サマリー
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.screenTab,
-            screenTab === "list" && styles.screenTabActive,
-          ]}
-          onPress={() => setScreenTab("list")}
-        >
-          <Text
-            style={[
-              styles.screenTabText,
-              screenTab === "list" && styles.screenTabTextActive,
-            ]}
-          >
-            一覧
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Summary Tab */}
-      {screenTab === "summary" && (
+  const renderScreenTabPage = (key: ScreenTab) => {
+    if (key === "summary") {
+      return (
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={styles.content}
@@ -859,74 +829,119 @@ export default function GameResultsScreen() {
               <GameResultSummary summary={gameSummary.data} />
             </View>
           ) : null}
-          <InlineBannerAd placement="game_results" />
+          {key === screenTab ? (
+            <InlineBannerAd placement="game_results" />
+          ) : null}
         </ScrollView>
-      )}
-
-      {/* List Tab */}
-      {screenTab === "list" && (
-        <View
-          style={[
-            styles.listBody,
-            isFetching && !isLoading && styles.listBodyFetching,
+      );
+    }
+    return (
+      <View
+        style={[
+          styles.listBody,
+          isFetching && !isLoading && styles.listBodyFetching,
+        ]}
+      >
+        <FlatList
+          ref={scrollRef}
+          style={{ flex: 1 }}
+          contentContainerStyle={[
+            {
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 32,
+              flexGrow: 1,
+            },
+            keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
           ]}
-        >
-          <FlatList
-            ref={scrollRef}
-            style={{ flex: 1 }}
-            contentContainerStyle={[
-              {
-                paddingHorizontal: 16,
-                paddingTop: 16,
-                paddingBottom: 32,
-                flexGrow: 1,
-              },
-              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
-            ]}
-            data={gameResults}
-            keyExtractor={(item) => String(item.game_result_id)}
-            renderItem={({ item }) => (
-              <View style={styles.cardContainer}>
-                <GameResultListItem game={item} onPress={handlePressItem} />
-              </View>
-            )}
-            // 各行セルを ListHeader より低い zIndex で描画し、ListHeader 内の
-            // 絶対配置されたフィルタードロップダウンが行カードの裏に隠れる
-            // 問題を回避する。`index` の昇順にさらに低く設定することで、
-            // 上の行ほど手前、下の行ほど奥の順序で stacking context を維持する。
-            CellRendererComponent={CellRendererWithLowZIndex}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={refetch}
-                tintColor="#d08000"
-              />
-            }
-            ListHeaderComponent={
-              <View style={styles.listHeader}>{listFilterHeader}</View>
-            }
-            ListEmptyComponent={
-              <Text style={styles.emptyText}>試合結果がありません</Text>
-            }
-            ListFooterComponent={
-              <>
-                {pagination ? (
-                  <GamePagination
-                    currentPage={pagination.current_page}
-                    totalPages={pagination.total_pages}
-                    totalCount={pagination.total_count}
-                    perPage={pagination.per_page}
-                    onPageChange={handlePageChange}
-                  />
-                ) : null}
+          data={gameResults}
+          keyExtractor={(item) => String(item.game_result_id)}
+          renderItem={({ item }) => (
+            <View style={styles.cardContainer}>
+              <GameResultListItem game={item} onPress={handlePressItem} />
+            </View>
+          )}
+          // 各行セルを ListHeader より低い zIndex で描画し、ListHeader 内の
+          // 絶対配置されたフィルタードロップダウンが行カードの裏に隠れる
+          // 問題を回避する。`index` の昇順にさらに低く設定することで、
+          // 上の行ほど手前、下の行ほど奥の順序で stacking context を維持する。
+          CellRendererComponent={CellRendererWithLowZIndex}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={refetch}
+              tintColor="#d08000"
+            />
+          }
+          ListHeaderComponent={
+            <View style={styles.listHeader}>{listFilterHeader}</View>
+          }
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>試合結果がありません</Text>
+          }
+          ListFooterComponent={
+            <>
+              {pagination ? (
+                <GamePagination
+                  currentPage={pagination.current_page}
+                  totalPages={pagination.total_pages}
+                  totalCount={pagination.total_count}
+                  perPage={pagination.per_page}
+                  onPageChange={handlePageChange}
+                />
+              ) : null}
+              {key === screenTab ? (
                 <InlineBannerAd placement="game_results" />
-              </>
-            }
-          />
-        </View>
-      )}
+              ) : null}
+            </>
+          }
+        />
+      </View>
+    );
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
+      <Stack.Screen
+        options={{
+          headerRight: () => <GlobalMenuButton onPress={openMenu} />,
+        }}
+      />
+
+      {/* Screen Tab Bar */}
+      <View style={styles.screenTabBar}>
+        {SCREEN_TABS.map((tab) => {
+          const isActive = tab.key === screenTab;
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.screenTab, isActive && styles.screenTabActive]}
+              onPress={() => setScreenTab(tab.key)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isActive }}
+            >
+              <Text
+                style={[
+                  styles.screenTabText,
+                  isActive && styles.screenTabTextActive,
+                ]}
+              >
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <SwipeableTabPages
+        key={pagerGeneration}
+        tabKeys={SCREEN_TAB_KEYS}
+        activeKey={screenTab}
+        onChange={setScreenTab}
+        renderPage={renderScreenTabPage}
+      />
 
       <AppBannerAd />
       <GlobalMenuOverlay
