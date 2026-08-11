@@ -19,7 +19,6 @@
     "icons:check": "node scripts/icons/generate-solar-icons.mjs --check"
   },
   "dependencies": {
-    "@expo/vector-icons": "^15.1.1",
     "@react-native-community/datetimepicker": "8.6.0",
     "@react-native-google-signin/google-signin": "^16.1.2",
     "@sentry/react-native": "8.9.2",
