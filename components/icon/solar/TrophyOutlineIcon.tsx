@@ -1,7 +1,7 @@
 // このファイルは scripts/icons/generate-solar-icons.mjs が生成する。直接編集しない。
 // 出典: Solar Icons (cup-star-linear) by 480 Design / CC BY 4.0
-import React from "react";
 import type { StyleProp, ViewStyle } from "react-native";
+import React from "react";
 import Svg, { G, Path } from "react-native-svg";
 
 interface IconProps {

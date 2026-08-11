@@ -1,12 +1,12 @@
 import type { UserProfile, FollowStatus } from "../../types/profile";
 import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { BallIcon } from "@components/icon/BallIcon";
+import { CrownIcon } from "@components/icon/CrownIcon";
+import { GloveIcon } from "@components/icon/GloveIcon";
 import { Icon } from "@components/icon/Icon";
+import { LockIcon } from "@components/icon/LockIcon";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
-import { BallIcon } from "@components/ui/icons/BallIcon";
-import { CrownIcon } from "@components/ui/icons/CrownIcon";
-import { GloveIcon } from "@components/ui/icons/GloveIcon";
-import { LockIcon } from "@components/ui/icons/LockIcon";
 import { API_BASE_URL } from "@constants/api";
 import { FollowButton } from "./FollowButton";
 import { FollowCounts } from "./FollowCounts";
@@ -73,9 +73,7 @@ export const ProfileHeader = ({
             <Text style={styles.name} numberOfLines={1}>
               {profile.name ?? "未設定"}
             </Text>
-            {profile.is_private && (
-              <LockIcon width={14} height={14} fill="#A1A1AA" />
-            )}
+            {profile.is_private && <LockIcon size={14} color="#A1A1AA" />}
           </View>
           {profile.user_id && (
             <Text style={styles.userId}>@{profile.user_id}</Text>
@@ -91,7 +89,7 @@ export const ProfileHeader = ({
       {/* ポジション */}
       {hasPositions && (
         <View style={styles.infoRow}>
-          <GloveIcon width={13} height={16} fill="#A1A1AA" />
+          <GloveIcon size={16} color="#A1A1AA" />
           <Text style={styles.infoText}>
             {positions.map((p) => p.name).join(" / ")}
           </Text>
@@ -101,7 +99,7 @@ export const ProfileHeader = ({
       {/* チーム */}
       {hasTeam && (
         <View style={styles.infoRow}>
-          <BallIcon width={14} height={15} fill="#A1A1AA" />
+          <BallIcon size={15} color="#A1A1AA" />
           <Text style={styles.infoText}>
             {teamName}
             {categoryName ? `（${categoryName}）` : ""}
@@ -113,7 +111,7 @@ export const ProfileHeader = ({
       {/* 受賞歴 */}
       {hasAwards && (
         <View style={styles.infoRow}>
-          <CrownIcon width={16} height={16} fill="#d08000" />
+          <CrownIcon size={16} color="#d08000" />
           <Text style={styles.awardText}>
             {awards.map((a) => a.title).join("  ")}
           </Text>

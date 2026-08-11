@@ -164,8 +164,8 @@ const buildComponentSource = (iconName, solarName) => {
 
   return `// このファイルは scripts/icons/generate-solar-icons.mjs が生成する。直接編集しない。
 // 出典: Solar Icons (${solarName}) by 480 Design / CC BY 4.0
-import React from "react";
 import type { StyleProp, ViewStyle } from "react-native";
+import React from "react";
 import Svg, { ${namedImports} } from "react-native-svg";
 
 interface IconProps {
@@ -204,7 +204,12 @@ const buildRegistrySource = (entries) => {
   const uniqueImports = [
     ...new Map(entries.map((entry) => [entry.componentName, entry])).values(),
   ];
+  // eslint の import/order に合わせ、親ディレクトリ参照を先に、それぞれパス順で並べる。
   const imports = uniqueImports
+    .sort((a, b) => {
+      const depth = (entry) => (entry.importPath.startsWith("../") ? 0 : 1);
+      return depth(a) - depth(b) || a.importPath.localeCompare(b.importPath);
+    })
     .map(
       ({ componentName, importPath }) =>
         `import { ${componentName} } from "${importPath}";`,
@@ -219,9 +224,9 @@ const buildRegistrySource = (entries) => {
     .join("\n");
 
   return `// このファイルは scripts/icons/generate-solar-icons.mjs が生成する。直接編集しない。
+import type { IconName } from "../../../types/icon";
 import type React from "react";
 import type { StyleProp, ViewStyle } from "react-native";
-import type { IconName } from "../../../types/icon";
 ${imports}
 
 type IconComponent = (props: {
