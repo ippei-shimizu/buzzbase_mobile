@@ -48,7 +48,7 @@ function LinkedPractice({ sessionId }: { sessionId: number }) {
       <View style={styles.practiceHeader}>
         <View style={styles.practiceHeaderLeft}>
           <View style={styles.practiceHeaderIcon}>
-            <Ionicons name="fitness" size={20} color="#FFFFFF" />
+            <Ionicons name="clipboard-outline" size={20} color="#FFFFFF" />
           </View>
           <View>
             <Text style={styles.cardLabel}>紐付けた練習</Text>
