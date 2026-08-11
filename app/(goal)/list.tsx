@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { GoalProgressBar } from "@components/goal/GoalProgressBar";
 import { PaywallModal } from "@components/pro/PaywallModal";
+import { SwipeableTabPages } from "@components/ui/SwipeableTabPages";
 import {
   GOAL_PERIOD_LABELS,
   GOAL_PERIOD_ORDER,
@@ -29,6 +30,8 @@ const TABS: { key: GoalTab; label: string }[] = [
   { key: "achieved", label: "達成" },
   { key: "unachieved", label: "未達" },
 ];
+
+const TAB_KEYS = TABS.map((item) => item.key);
 
 const EMPTY_MESSAGE: Record<GoalTab, string> = {
   in_progress: "進行中の目標はありません",
@@ -95,47 +98,15 @@ export default function GoalListScreen() {
     );
   }
 
-  const visibleGoals = goalsByTab[tab];
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-          <Ionicons name="add" size={18} color="#FFFFFF" />
-          <Text style={styles.addButtonText}>新しい目標を追加</Text>
-        </TouchableOpacity>
-
-        <View style={styles.tabBar}>
-          {TABS.map((item) => {
-            const active = item.key === tab;
-            return (
-              <TouchableOpacity
-                key={item.key}
-                style={[styles.tab, active && styles.tabActive]}
-                onPress={() => setTab(item.key)}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: active }}
-              >
-                <Text style={[styles.tabText, active && styles.tabTextActive]}>
-                  {item.label}
-                </Text>
-                <Text
-                  style={[styles.tabCount, active && styles.tabCountActive]}
-                >
-                  {goalsByTab[item.key].length}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
-
+  const renderTabPage = (pageTab: GoalTab) => {
+    const goalsInTab = goalsByTab[pageTab];
+    return (
       <ScrollView contentContainerStyle={styles.content}>
-        {visibleGoals.length === 0 ? (
-          <Text style={styles.empty}>{EMPTY_MESSAGE[tab]}</Text>
+        {goalsInTab.length === 0 ? (
+          <Text style={styles.empty}>{EMPTY_MESSAGE[pageTab]}</Text>
         ) : (
           GOAL_PERIOD_ORDER.map((periodType) => {
-            const inType = visibleGoals.filter(
+            const inType = goalsInTab.filter(
               (goal) => goal.period_type === periodType,
             );
             if (inType.length === 0) return null;
@@ -188,6 +159,48 @@ export default function GoalListScreen() {
           })
         )}
       </ScrollView>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
+          <Ionicons name="add" size={18} color="#FFFFFF" />
+          <Text style={styles.addButtonText}>新しい目標を追加</Text>
+        </TouchableOpacity>
+
+        <View style={styles.tabBar}>
+          {TABS.map((item) => {
+            const active = item.key === tab;
+            return (
+              <TouchableOpacity
+                key={item.key}
+                style={[styles.tab, active && styles.tabActive]}
+                onPress={() => setTab(item.key)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+              >
+                <Text style={[styles.tabText, active && styles.tabTextActive]}>
+                  {item.label}
+                </Text>
+                <Text
+                  style={[styles.tabCount, active && styles.tabCountActive]}
+                >
+                  {goalsByTab[item.key].length}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      <SwipeableTabPages
+        tabKeys={TAB_KEYS}
+        activeKey={tab}
+        onChange={setTab}
+        renderPage={renderTabPage}
+      />
       <PaywallModal
         isOpen={isPaywallOpen}
         onClose={() => setPaywallOpen(false)}
