@@ -94,18 +94,6 @@ describe("GameResultDetail", () => {
     expect(getByText("3番  中堅手")).toBeTruthy();
   });
 
-  it("onEdit を押すと onEdit が呼ばれる", () => {
-    const onEdit = jest.fn();
-    const game = buildGameResult();
-    const { getByText } = renderWithProviders(
-      <GameResultDetail game={game} onEdit={onEdit} />,
-    );
-
-    fireEvent.press(getByText("編集"));
-
-    expect(onEdit).toHaveBeenCalledTimes(1);
-  });
-
   it("onShare を押すと onShare が呼ばれる", () => {
     const onShare = jest.fn();
     const game = buildGameResult();
@@ -118,12 +106,11 @@ describe("GameResultDetail", () => {
     expect(onShare).toHaveBeenCalledTimes(1);
   });
 
-  it("onEdit / onShare 未指定のとき編集・共有ボタンは表示されない", () => {
+  it("onShare 未指定のとき共有ボタンは表示されない", () => {
     const game = buildGameResult();
     const { queryByText } = renderWithProviders(
       <GameResultDetail game={game} />,
     );
-    expect(queryByText("編集")).toBeNull();
     expect(queryByText("共有")).toBeNull();
   });
 

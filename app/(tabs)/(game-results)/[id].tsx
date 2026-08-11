@@ -94,11 +94,7 @@ export default function GameResultDetailScreen() {
           ),
         }}
       />
-      <GameResultDetail
-        game={game}
-        onEdit={isOwner ? handleEdit : undefined}
-        onShare={handleShare}
-      />
+      <GameResultDetail game={game} onShare={handleShare} />
       <PreReviewPrompt {...modalProps} />
     </>
   );
