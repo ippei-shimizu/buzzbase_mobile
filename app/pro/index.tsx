@@ -4,6 +4,7 @@ import { Redirect, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -34,14 +35,14 @@ import {
 } from "@services/revenueCatService";
 import { useSnackbarStore } from "@stores/snackbarStore";
 
-const NOTICES = [
-  "アプリを削除しても支払い情報は残ります。",
-  "契約期間は開始日から月額（月額プラン）または1年（年額プラン）ごとに自動更新されます。",
-  "解約は App Store のサブスクリプション設定から行います。",
-] as const;
-
 export default function ProScreen() {
   const router = useRouter();
+  const storeLabel = Platform.OS === "android" ? "Google Play" : "App Store";
+  const notices = [
+    "アプリを削除しても支払い情報は残ります。",
+    "契約期間は開始日から月額（月額プラン）または1年（年額プラン）ごとに自動更新されます。",
+    `解約は ${storeLabel} のサブスクリプション設定から行います。`,
+  ] as const;
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((s) => s.show);
   const { enabled: proFeatures, isLoading: flagLoading } =
@@ -366,7 +367,7 @@ export default function ProScreen() {
 
         <Text style={styles.sectionTitle}>注意事項</Text>
         <View style={styles.noticeList}>
-          {NOTICES.map((notice) => (
+          {notices.map((notice) => (
             <Text key={notice} style={styles.noticeText}>
               ・{notice}
             </Text>

@@ -26,6 +26,8 @@ const formatDate = (iso: string | null): string => {
 };
 
 const statusContent = (subscription: ProSubscription): StatusContent => {
+  const storeLabel =
+    subscription.platform === "android" ? "Google Play" : "App Store";
   switch (subscription.status) {
     case "trial":
       return {
@@ -48,7 +50,7 @@ const statusContent = (subscription: ProSubscription): StatusContent => {
     case "billing_issue":
       return {
         label: "決済に問題があります",
-        description: "App Store の決済情報を更新してください。",
+        description: `${storeLabel} の決済情報を更新してください。`,
         badgeColor: "#ef4444",
       };
     case "expired":

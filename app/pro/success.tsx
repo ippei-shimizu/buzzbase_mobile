@@ -1,10 +1,17 @@
 import { useRouter } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@components/icon/Icon";
 
 export default function ProSuccessScreen() {
   const router = useRouter();
+  const storeLabel = Platform.OS === "android" ? "Google Play" : "App Store";
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
@@ -12,7 +19,7 @@ export default function ProSuccessScreen() {
         <Icon name="checkmark-circle" size={72} color="#10b981" />
         <Text style={styles.title}>Pro 加入手続きを受け付けました</Text>
         <Text style={styles.description}>
-          App Store の決済確定後、自動的に Pro
+          {storeLabel} の決済確定後、自動的に Pro
           機能がご利用いただけるようになります。反映には数秒〜数十秒かかる場合があります。
         </Text>
 

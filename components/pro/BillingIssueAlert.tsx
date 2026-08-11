@@ -15,6 +15,9 @@ export function BillingIssueAlert({ subscription }: BillingIssueAlertProps) {
 
   if (subscription.status !== "billing_issue") return null;
 
+  const storeLabel =
+    subscription.platform === "android" ? "Google Play" : "App Store";
+
   return (
     <TouchableOpacity
       style={styles.banner}
@@ -24,7 +27,7 @@ export function BillingIssueAlert({ subscription }: BillingIssueAlertProps) {
     >
       <Text style={styles.label}>決済情報の更新が必要です</Text>
       <Text style={styles.description}>
-        Pro 機能を継続するため App Store の決済情報をご確認ください。
+        Pro 機能を継続するため {storeLabel} の決済情報をご確認ください。
       </Text>
     </TouchableOpacity>
   );
