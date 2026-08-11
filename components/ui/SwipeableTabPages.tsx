@@ -69,11 +69,23 @@ export function SwipeableTabPages<T extends string>({
         onChange(tabKeys[index]);
       }}
     >
-      {tabKeys.map((key, index) => (
-        <View key={key} style={styles.page}>
-          {visited.includes(index) ? renderPage(key) : null}
-        </View>
-      ))}
+      {tabKeys.map((key, index) => {
+        const isActivePage = index === activeIndex;
+        return (
+          <View
+            key={key}
+            style={styles.page}
+            // 画面外の面まで読み上げ対象にすると、タブ間で重複するラベルが
+            // 面の数だけ聞こえてしまうため、表示中の面だけを対象にする。
+            accessibilityElementsHidden={!isActivePage}
+            importantForAccessibility={
+              isActivePage ? "auto" : "no-hide-descendants"
+            }
+          >
+            {visited.includes(index) ? renderPage(key) : null}
+          </View>
+        );
+      })}
     </PagerView>
   );
 }
