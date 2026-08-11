@@ -10,11 +10,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import PagerView from "react-native-pager-view";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { SkeletonList, Skeleton } from "@components/ui/Skeleton";
 import { eventTypeMeta, scheduleTimeLabel } from "@constants/schedule";
 import { useEntitlement } from "@hooks/useEntitlement";
-import { useHorizontalSwipe } from "@hooks/useHorizontalSwipe";
 import { useCalendar } from "@hooks/usePlans";
 import { buildTimelineLayout, minutesFromMidnight } from "@utils/dayTimeline";
 import { formatJaFullDate } from "@utils/formatDate";
@@ -111,16 +111,28 @@ export function CalendarView({ swipeEnabled = true }: CalendarViewProps) {
   const [cursor, setCursor] = useState<string>(todayIso());
   const [selected, setSelected] = useState<string>(todayIso());
   const [paywallOpen, setPaywallOpen] = useState(false);
+  // PagerView は全ページを同時にマウントするため、開いた面だけ中身を描く。
+  // 「日」表示の24時間タイムラインは重く、初期表示から積むと体感が落ちる。
+  const [visited, setVisited] = useState<number[]>([0]);
+  const pagerRef = useRef<PagerView>(null);
 
-  // 横スワイプは月/週/日の切り替えに割り当てる（日付送りは前後ボタンが担う）。
-  const swipe = useHorizontalSwipe((direction) => {
+  const showPage = (index: number) => {
+    // 離れた面へ飛ぶときはアニメーションで通過する面も見えるため、間の面も描く。
     const current = VIEW_MODES.findIndex((item) => item.value === mode);
-    const next =
-      direction === "left"
-        ? Math.min(current + 1, VIEW_MODES.length - 1)
-        : Math.max(current - 1, 0);
-    setMode(VIEW_MODES[next].value);
-  });
+    const from = Math.min(current, index);
+    const to = Math.max(current, index);
+    setVisited((prev) => {
+      const next = new Set(prev);
+      for (let page = from; page <= to; page += 1) next.add(page);
+      return next.size === prev.length ? prev : [...next];
+    });
+    setMode(VIEW_MODES[index].value);
+  };
+
+  const selectMode = (index: number) => {
+    showPage(index);
+    pagerRef.current?.setPage(index);
+  };
 
   const range = useMemo(() => {
     const date = fromIsoDate(cursor);
@@ -191,14 +203,44 @@ export function CalendarView({ swipeEnabled = true }: CalendarViewProps) {
 
   const fabDate = mode === "month" ? selected : cursor;
 
+  const renderPage = (value: ViewMode) => {
+    if (isLoading) return <CalendarSkeleton />;
+    if (value === "month") {
+      return (
+        <MonthView
+          cursor={cursor}
+          selected={selected}
+          byDate={byDate}
+          onSelect={setSelected}
+          onEntry={goEntry}
+        />
+      );
+    }
+    if (value === "week") {
+      return (
+        <WeekView
+          cursor={cursor}
+          byDate={byDate}
+          onEntry={goEntry}
+          onAdd={goAdd}
+        />
+      );
+    }
+    return (
+      <DayView
+        cursor={cursor}
+        byDate={byDate}
+        onEntry={goEntry}
+        onAddAt={goAddAt}
+      />
+    );
+  };
+
   return (
-    <View style={styles.root} {...(swipeEnabled ? swipe.panHandlers : {})}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-      >
+    <View style={styles.root}>
+      <View style={styles.fixedHeader}>
         <View style={styles.segment}>
-          {VIEW_MODES.map((item) => {
+          {VIEW_MODES.map((item, index) => {
             const active = mode === item.value;
             return (
               <TouchableOpacity
@@ -207,7 +249,7 @@ export function CalendarView({ swipeEnabled = true }: CalendarViewProps) {
                   styles.segmentButton,
                   active && styles.segmentButtonActive,
                 ]}
-                onPress={() => setMode(item.value)}
+                onPress={() => selectMode(index)}
               >
                 <Text style={[styles.segmentText, active && styles.textActive]}>
                   {item.label}
@@ -226,33 +268,21 @@ export function CalendarView({ swipeEnabled = true }: CalendarViewProps) {
             <Ionicons name="chevron-forward" size={22} color="#F4F4F4" />
           </TouchableOpacity>
         </View>
+      </View>
 
-        {isLoading ? (
-          <CalendarSkeleton />
-        ) : mode === "month" ? (
-          <MonthView
-            cursor={cursor}
-            selected={selected}
-            byDate={byDate}
-            onSelect={setSelected}
-            onEntry={goEntry}
-          />
-        ) : mode === "week" ? (
-          <WeekView
-            cursor={cursor}
-            byDate={byDate}
-            onEntry={goEntry}
-            onAdd={goAdd}
-          />
-        ) : (
-          <DayView
-            cursor={cursor}
-            byDate={byDate}
-            onEntry={goEntry}
-            onAddAt={goAddAt}
-          />
-        )}
-      </ScrollView>
+      <PagerView
+        ref={pagerRef}
+        style={styles.pager}
+        initialPage={0}
+        scrollEnabled={swipeEnabled}
+        onPageSelected={(event) => showPage(event.nativeEvent.position)}
+      >
+        {VIEW_MODES.map((item, index) => (
+          <ScrollView key={item.value} contentContainerStyle={styles.content}>
+            {visited.includes(index) ? renderPage(item.value) : null}
+          </ScrollView>
+        ))}
+      </PagerView>
 
       <TouchableOpacity
         style={styles.fab}
@@ -641,6 +671,8 @@ function CalendarSkeleton() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#2E2E2E" },
   container: { flex: 1, backgroundColor: "#2E2E2E" },
+  fixedHeader: { paddingHorizontal: 16, paddingTop: 16 },
+  pager: { flex: 1 },
   // 「日」表示のタイムラインが画面の残り高さいっぱいに伸びるよう flexGrow を効かせる。
   content: { padding: 16, paddingBottom: 96, flexGrow: 1 },
   segment: {

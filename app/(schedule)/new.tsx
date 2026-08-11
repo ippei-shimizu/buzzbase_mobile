@@ -529,7 +529,7 @@ function SegmentButton({
 }
 
 const styles = StyleSheet.create({
-  menuSetList: { gap: 8, marginBottom: 8 },
+  menuSetList: { gap: 8, marginTop: 12, marginBottom: 8 },
   menuSetCard: {
     borderWidth: 1,
     borderColor: "#4A4A4A",
