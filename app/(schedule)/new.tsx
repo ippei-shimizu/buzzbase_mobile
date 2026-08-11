@@ -3,7 +3,7 @@ import type { EventType, ScheduleInput } from "../../types/schedule";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -65,6 +65,7 @@ export default function ScheduleFormScreen() {
   const { menuSets } = useMenuSets();
   const { hasEntitlement } = useEntitlement();
   const canCustomize = hasEntitlement("custom_notification_messages");
+  const isSavingRef = useRef(false);
 
   const [recurrence, setRecurrence] = useState<Recurrence>(
     singleOnly || editing?.planned_on || prefillDate ? "single" : "weekly",
@@ -130,6 +131,8 @@ export default function ScheduleFormScreen() {
   };
 
   const handleSave = async () => {
+    // isPending は再レンダー後にしか true にならないため、同一フレームの連打を ref で弾く。
+    if (isSavingRef.current) return;
     const usingSet = menuSource === "set" && menuSetId != null;
     if (!usingSet && !title.trim()) {
       return Alert.alert("タイトルを入力してください");
@@ -159,6 +162,7 @@ export default function ScheduleFormScreen() {
           })),
     };
 
+    isSavingRef.current = true;
     try {
       if (editingId) {
         await updateSchedule({ id: editingId, input });
@@ -167,6 +171,7 @@ export default function ScheduleFormScreen() {
       }
       router.back();
     } catch {
+      isSavingRef.current = false;
       Alert.alert("保存に失敗しました");
     }
   };

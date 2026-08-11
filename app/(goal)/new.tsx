@@ -9,7 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { isAxiosError } from "axios";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -113,6 +113,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
   const canCustomPeriod = isProLoading || hasEntitlement("custom_period_goals");
   const canManualMetric = isProLoading || hasEntitlement("manual_metric_goals");
   const isSaving = isCreating || isUpdating;
+  const isSavingRef = useRef(false);
 
   const [kind, setKind] = useState<GoalKind>(editing?.kind ?? "numeric");
   const [periodType, setPeriodType] = useState<GoalPeriodType>(
@@ -180,6 +181,8 @@ function GoalForm({ editing }: { editing?: Goal }) {
       (periodType === "custom" && !canCustomPeriod));
 
   const handleSave = async () => {
+    // isPending は再レンダー後にしか true にならないため、同一フレームの連打を ref で弾く。
+    if (isSavingRef.current) return;
     if (isQualitative && !title.trim()) {
       return Alert.alert("目標を入力してください");
     }
@@ -266,6 +269,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
       ...(isQualitative ? {} : numericPart),
     };
 
+    isSavingRef.current = true;
     try {
       if (editing) {
         await updateGoal({ id: editing.id, input });
@@ -274,6 +278,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
       }
       router.back();
     } catch (error) {
+      isSavingRef.current = false;
       if (isAxiosError(error) && error.response?.status === 403) {
         Alert.alert("Pro プラン", "この目標は Pro プランで設定できます", [
           { text: "閉じる", style: "cancel" },
