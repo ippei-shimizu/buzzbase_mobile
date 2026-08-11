@@ -376,7 +376,7 @@ export default function ScheduleFormScreen() {
       </View>
 
       {menuSource === "set" ? (
-        <View style={styles.menuWrap}>
+        <View style={styles.menuSetList}>
           {menuSets.length === 0 ? (
             <Text style={styles.hint}>
               メニューセットがありません。プラン管理から作成できます。
@@ -387,13 +387,27 @@ export default function ScheduleFormScreen() {
               return (
                 <TouchableOpacity
                   key={set.id}
-                  style={[styles.menuChip, active && styles.chipActive]}
+                  style={[
+                    styles.menuSetCard,
+                    active && styles.menuSetCardActive,
+                  ]}
                   onPress={() =>
                     setMenuSetId((prev) => (prev === set.id ? null : set.id))
                   }
                 >
-                  <Text style={[styles.menuText, active && styles.textActive]}>
+                  <Text
+                    style={[
+                      styles.menuSetName,
+                      active && styles.menuSetNameActive,
+                    ]}
+                  >
                     {set.name}
+                  </Text>
+                  {/* セット名だけでは中身が分からず、意図しないセットを選んでしまう。 */}
+                  <Text style={styles.menuSetItems} numberOfLines={2}>
+                    {set.items.length > 0
+                      ? set.items.map((item) => item.name).join(" / ")
+                      : "メニュー未設定"}
                   </Text>
                 </TouchableOpacity>
               );
@@ -515,6 +529,19 @@ function SegmentButton({
 }
 
 const styles = StyleSheet.create({
+  menuSetList: { gap: 8, marginBottom: 8 },
+  menuSetCard: {
+    borderWidth: 1,
+    borderColor: "#4A4A4A",
+    backgroundColor: "#3A3A3A",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  menuSetCardActive: { borderColor: "#d08000" },
+  menuSetName: { color: "#F4F4F4", fontSize: 15, fontWeight: "700" },
+  menuSetNameActive: { color: "#d08000" },
+  menuSetItems: { color: "#A1A1AA", fontSize: 12, marginTop: 4 },
   container: { flex: 1, backgroundColor: "#2E2E2E" },
   content: { padding: 16, paddingBottom: 48 },
   label: {
