@@ -3,7 +3,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
@@ -15,6 +14,7 @@ import { InsightCard } from "@components/insight/InsightCard";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellCard } from "@components/pro/ProUpsellCard";
 import { SampleDataLabel } from "@components/pro/SampleDataLabel";
+import { SkeletonList } from "@components/ui/Skeleton";
 import {
   useCorrelationInsights,
   useInsightCombinationMutations,
@@ -88,10 +88,11 @@ export default function InsightScreen() {
     ]);
   };
 
-  if (isProLoading) {
+  // Pro 判定とデータ取得を1つの待ち状態にまとめる。別々に出すと二度点滅して見える。
+  if (isProLoading || (isPro && isLoading)) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#d08000" />
+      <View style={styles.skeleton}>
+        <SkeletonList count={4} itemHeight={88} />
       </View>
     );
   }
@@ -138,33 +139,28 @@ export default function InsightScreen() {
         <Ionicons name="add" size={18} color="#FFFFFF" />
         <Text style={styles.createButtonText}>組み合わせを作る</Text>
       </TouchableOpacity>
-      {isLoading ? (
-        <ActivityIndicator size="large" color="#d08000" style={styles.loader} />
-      ) : (
+      {customs.length > 0 ? (
         <>
-          {customs.length > 0 ? (
-            <>
-              <Text style={styles.sectionHeading}>自作</Text>
-              {customs.map((insight) => (
-                <InsightCard
-                  key={insight.key}
-                  insight={insight}
-                  onDelete={() => confirmDelete(insight)}
-                />
-              ))}
-            </>
-          ) : null}
-          <Text style={styles.sectionHeading}>おすすめ</Text>
-          {presets.map((insight) => (
-            <InsightCard key={insight.key} insight={insight} />
+          <Text style={styles.sectionHeading}>自作</Text>
+          {customs.map((insight) => (
+            <InsightCard
+              key={insight.key}
+              insight={insight}
+              onDelete={() => confirmDelete(insight)}
+            />
           ))}
         </>
-      )}
+      ) : null}
+      <Text style={styles.sectionHeading}>おすすめ</Text>
+      {presets.map((insight) => (
+        <InsightCard key={insight.key} insight={insight} />
+      ))}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  skeleton: { flex: 1, backgroundColor: "#2E2E2E", padding: 16, gap: 12 },
   container: { flex: 1, backgroundColor: "#2E2E2E" },
   centered: {
     flex: 1,

@@ -1,17 +1,11 @@
 import type { PeriodicReview } from "../../types/periodicReview";
 import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { FlatList, ScrollView, StyleSheet, Text, View } from "react-native";
 import { PeriodicReviewCard } from "@components/periodic-review/PeriodicReviewCard";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellCard } from "@components/pro/ProUpsellCard";
 import { SampleDataLabel } from "@components/pro/SampleDataLabel";
+import { SkeletonList } from "@components/ui/Skeleton";
 import { useEntitlement } from "@hooks/useEntitlement";
 import {
   usePeriodicReviewMutations,
@@ -152,11 +146,11 @@ export default function ReviewListScreen() {
   }, [reviews, markReadMany, canViewReviews]);
 
   // pro/status 解決前は canViewReviews が false 倒しになり、Pro ユーザーへ一瞬
-  // サンプル表示がフラッシュしてしまうため、判定確定までスピナーを出す。
-  if (isProLoading) {
+  // サンプル表示がフラッシュしてしまう。データ取得も同じ待ち状態にまとめ、二度点滅させない。
+  if (isProLoading || (canViewReviews && isLoading)) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#d08000" />
+      <View style={styles.skeleton}>
+        <SkeletonList count={3} itemHeight={140} />
       </View>
     );
   }
@@ -185,14 +179,6 @@ export default function ReviewListScreen() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#d08000" />
-      </View>
-    );
-  }
-
   return (
     <FlatList
       style={styles.container}
@@ -210,6 +196,7 @@ export default function ReviewListScreen() {
 }
 
 const styles = StyleSheet.create({
+  skeleton: { flex: 1, backgroundColor: "#2E2E2E", padding: 16, gap: 12 },
   container: { flex: 1, backgroundColor: "#2E2E2E" },
   centered: {
     flex: 1,

@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { PaywallModal } from "@components/pro/PaywallModal";
+import { SkeletonList, Skeleton } from "@components/ui/Skeleton";
 import { eventTypeMeta } from "@constants/schedule";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useCalendar } from "@hooks/usePlans";
@@ -608,6 +609,16 @@ function DetailRow({
   );
 }
 
+/** 月グリッドとその下の予定一覧を、実表示と同じ高さで置く。 */
+function CalendarSkeleton() {
+  return (
+    <View style={styles.skeleton}>
+      <Skeleton height={240} borderRadius={10} />
+      <SkeletonList count={3} itemHeight={56} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#2E2E2E" },
   container: { flex: 1, backgroundColor: "#2E2E2E" },
@@ -638,6 +649,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: { color: "#F4F4F4", fontSize: 17, fontWeight: "700" },
   loading: { marginVertical: 40 },
+  skeleton: { gap: 16, marginTop: 12 },
   weekHeader: { flexDirection: "row" },
   weekHeaderText: {
     flex: 1,

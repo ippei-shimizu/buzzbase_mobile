@@ -5,14 +5,7 @@ import type {
 } from "../../types/practice";
 import { useLocalSearchParams } from "expo-router";
 import React, { useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, {
   Path,
   Circle,
@@ -27,6 +20,7 @@ import Svg, {
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellCard } from "@components/pro/ProUpsellCard";
 import { SampleDataLabel } from "@components/pro/SampleDataLabel";
+import { Skeleton, SkeletonList } from "@components/ui/Skeleton";
 import { UnderlineTabBar } from "@components/ui/UnderlineTabBar";
 import { formatTotalAmount, formatVolume } from "@constants/practice";
 import { useEntitlement } from "@hooks/useEntitlement";
@@ -490,8 +484,9 @@ export default function MenuTrendScreen() {
 
   if (isProLoading || (isPro && isTrendLoading)) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#d08000" />
+      <View style={styles.skeleton}>
+        <Skeleton height={220} borderRadius={10} />
+        <SkeletonList count={4} itemHeight={64} />
       </View>
     );
   }
@@ -601,6 +596,7 @@ export default function MenuTrendScreen() {
 }
 
 const styles = StyleSheet.create({
+  skeleton: { flex: 1, backgroundColor: "#2E2E2E", padding: 16, gap: 16 },
   container: { flex: 1, backgroundColor: "#2E2E2E" },
   content: { padding: 16, paddingBottom: 40 },
   centered: {
