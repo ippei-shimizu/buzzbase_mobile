@@ -1,5 +1,5 @@
+import type { IconName } from "../../types/icon";
 import type { ConditionLog } from "../../types/practice";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   StyleSheet,
@@ -8,8 +8,9 @@ import {
   type StyleProp,
   type ViewStyle,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
-const LEVEL_META: { icon: keyof typeof Ionicons.glyphMap; color: string }[] = [
+const LEVEL_META: { icon: IconName; color: string }[] = [
   { icon: "remove", color: "#71717A" },
   { icon: "sad", color: "#ef4444" },
   { icon: "sad-outline", color: "#f59e0b" },
@@ -32,7 +33,7 @@ function ConditionFace({
   return (
     <View style={styles.faceTile}>
       <Text style={styles.faceTitle}>{title}</Text>
-      <Ionicons name={meta.icon} size={30} color={meta.color} />
+      <Icon name={meta.icon} size={30} color={meta.color} />
       <Text style={styles.faceLabel}>{labels[level] ?? "-"}</Text>
     </View>
   );
@@ -50,7 +51,7 @@ export function ConditionCard({
   /** 呼び出し元が独自に見出しを描画する場合は false にして内部見出しの二重表示を防ぐ。 */
   showTitle?: boolean;
 }) {
-  const chips: { icon: keyof typeof Ionicons.glyphMap; text: string }[] = [];
+  const chips: { icon: IconName; text: string }[] = [];
   if (condition.sleep_hours != null) {
     chips.push({ icon: "moon", text: `睡眠 ${condition.sleep_hours}h` });
   }
@@ -86,7 +87,7 @@ export function ConditionCard({
         <View style={styles.chipRow}>
           {chips.map((chip) => (
             <View key={chip.text} style={styles.condChip}>
-              <Ionicons name={chip.icon} size={13} color="#A1A1AA" />
+              <Icon name={chip.icon} size={13} color="#A1A1AA" />
               <Text style={styles.condChipText}>{chip.text}</Text>
             </View>
           ))}
@@ -96,7 +97,7 @@ export function ConditionCard({
         <View style={styles.chipRow}>
           {injuries.map((part) => (
             <View key={part} style={styles.injuryChip}>
-              <Ionicons name="medkit" size={13} color="#fca5a5" />
+              <Icon name="medkit" size={13} color="#fca5a5" />
               <Text style={styles.injuryChipText}>{part}</Text>
             </View>
           ))}

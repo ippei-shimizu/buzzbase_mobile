@@ -1,5 +1,4 @@
 import type { ProFeature } from "../../types/pro";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   StyleSheet,
@@ -8,6 +7,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { ProUpsellCard } from "./ProUpsellCard";
 
 interface ProUpsellOverlayProps {
@@ -91,7 +91,7 @@ export function ProUpsellOverlay({
       {showBadge ? (
         <View style={styles.cardContainer}>
           <View style={styles.badge}>
-            <Ionicons name="lock-closed" size={11} color="#F4F4F4" />
+            <Icon name="lock-closed" size={11} color="#F4F4F4" />
             <Text style={styles.badgeText}>Pro限定</Text>
           </View>
         </View>

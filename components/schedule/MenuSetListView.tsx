@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -9,6 +8,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { MENU_SET_FREE_LIMIT } from "@constants/menuSet";
 import { useEntitlement } from "@hooks/useEntitlement";
@@ -67,13 +67,13 @@ export function MenuSetListView() {
                   <Text style={styles.cardEmpty}>メニュー未設定</Text>
                 )}
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#71717A" />
+              <Icon name="chevron-forward" size={18} color="#71717A" />
             </TouchableOpacity>
           ))
         )}
 
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-          <Ionicons name="add" size={18} color="#FFFFFF" />
+          <Icon name="add" size={18} color="#FFFFFF" />
           <Text style={styles.addButtonText}>新しい練習プランセットを作る</Text>
         </TouchableOpacity>
       </ScrollView>

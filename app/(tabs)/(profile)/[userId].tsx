@@ -1,6 +1,5 @@
 import type { GameResult } from "../../../types/gameResult";
 import type { StatsFilters } from "../../../types/profile";
-import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
@@ -15,6 +14,7 @@ import {
 } from "react-native";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
+import { Icon } from "@components/icon/Icon";
 import { FollowRequestBanner } from "@components/profile/FollowRequestBanner";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
@@ -295,7 +295,7 @@ export default function UserProfileScreen() {
 
       {isPrivateAndNotFollowing ? (
         <View style={styles.privateContainer}>
-          <Ionicons name="lock-closed" size={32} color="#71717A" />
+          <Icon name="lock-closed" size={32} color="#71717A" />
           <Text style={styles.privateText}>このアカウントは非公開です</Text>
           <Text style={styles.privateSubText}>
             フォローが承認されると成績や試合結果を閲覧できます
@@ -547,7 +547,7 @@ export default function UserProfileScreen() {
                   }}
                 >
                   <View style={styles.searchBox}>
-                    <Ionicons name="search" size={16} color="#71717A" />
+                    <Icon name="search" size={16} color="#71717A" />
                     <TextInput
                       style={styles.searchInput}
                       placeholder="対戦相手を検索"
@@ -566,7 +566,7 @@ export default function UserProfileScreen() {
                     <Text style={pillButtonStyle.buttonText}>
                       日付（{gameSortDesc ? "新しい順" : "古い順"}）
                     </Text>
-                    <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+                    <Icon name="chevron-down" size={14} color="#A1A1AA" />
                   </TouchableOpacity>
                 </View>
 

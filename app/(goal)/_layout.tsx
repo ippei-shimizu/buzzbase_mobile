@@ -1,6 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import { TouchableOpacity } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 export default function GoalLayout() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function GoalLayout() {
             }
             style={{ padding: 8 }}
           >
-            <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
+            <Icon name="chevron-back" size={24} color="#F4F4F4" />
           </TouchableOpacity>
         ),
       }}
@@ -36,7 +36,7 @@ export default function GoalLayout() {
               style={{ padding: 8 }}
               accessibilityLabel="達成バッジ一覧"
             >
-              <Ionicons name="ribbon-outline" size={22} color="#F4F4F4" />
+              <Icon name="ribbon-outline" size={22} color="#F4F4F4" />
             </TouchableOpacity>
           ),
         }}

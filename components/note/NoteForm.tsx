@@ -4,7 +4,6 @@ import type {
 } from "../../types/mediaAttachment";
 import type { NoteInput } from "../../types/note";
 import type { ReflectionTemplate } from "../../types/reflectionTemplate";
-import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useEffect, useState } from "react";
 import {
@@ -18,6 +17,7 @@ import {
   Alert,
   Platform,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { ThemePickerField } from "@components/improvement-theme/ThemePickerField";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
@@ -271,7 +271,7 @@ export function NoteForm({
               <Text style={styles.dateText}>
                 {formatJaFullDate(toDateString(date))}
               </Text>
-              <Ionicons name="calendar-outline" size={18} color="#A1A1AA" />
+              <Icon name="calendar-outline" size={18} color="#A1A1AA" />
             </TouchableOpacity>
             {showNoteDate ? (
               <DateTimePicker
@@ -390,7 +390,7 @@ export function NoteForm({
           style={styles.linkButton}
           onPress={() => togglePicker("practice")}
         >
-          <Ionicons name="barbell-outline" size={18} color="#d08000" />
+          <Icon name="barbell-outline" size={18} color="#d08000" />
           <Text style={styles.linkButtonText}>
             {practiceLabel ??
               (practiceSessionId != null
@@ -399,10 +399,10 @@ export function NoteForm({
           </Text>
           {practiceSessionId != null ? (
             <TouchableOpacity onPress={() => setPracticeSessionId(null)}>
-              <Ionicons name="close-circle" size={18} color="#A1A1AA" />
+              <Icon name="close-circle" size={18} color="#A1A1AA" />
             </TouchableOpacity>
           ) : (
-            <Ionicons
+            <Icon
               name={openPicker === "practice" ? "chevron-up" : "chevron-down"}
               size={18}
               color="#A1A1AA"
@@ -415,7 +415,7 @@ export function NoteForm({
               style={styles.filterRow}
               onPress={() => setShowPracticeFilter((prev) => !prev)}
             >
-              <Ionicons name="calendar-outline" size={16} color="#A1A1AA" />
+              <Icon name="calendar-outline" size={16} color="#A1A1AA" />
               <Text style={styles.filterText}>
                 {practiceFilter
                   ? `${formatJaFullDate(toDateString(practiceFilter))} で絞り込み中`
@@ -423,7 +423,7 @@ export function NoteForm({
               </Text>
               {practiceFilter ? (
                 <TouchableOpacity onPress={() => setPracticeFilter(null)}>
-                  <Ionicons name="close-circle" size={16} color="#A1A1AA" />
+                  <Icon name="close-circle" size={16} color="#A1A1AA" />
                 </TouchableOpacity>
               ) : null}
             </TouchableOpacity>
@@ -475,12 +475,12 @@ export function NoteForm({
 
         {gameResultIds.map((gameResultId) => (
           <View key={gameResultId} style={styles.linkButton}>
-            <Ionicons name="baseball-outline" size={18} color="#d08000" />
+            <Icon name="baseball-outline" size={18} color="#d08000" />
             <Text style={styles.linkButtonText} numberOfLines={1}>
               {gameLabelFor(gameResultId) ?? "試合に紐付け済み"}
             </Text>
             <TouchableOpacity onPress={() => handleRemoveGame(gameResultId)}>
-              <Ionicons name="close-circle" size={18} color="#A1A1AA" />
+              <Icon name="close-circle" size={18} color="#A1A1AA" />
             </TouchableOpacity>
           </View>
         ))}
@@ -488,13 +488,13 @@ export function NoteForm({
           style={styles.linkButton}
           onPress={handleOpenGamePicker}
         >
-          <Ionicons name="baseball-outline" size={18} color="#d08000" />
+          <Icon name="baseball-outline" size={18} color="#d08000" />
           <Text style={styles.linkButtonText}>
             {gameResultIds.length > 0
               ? "試合をもう1件追加"
               : "試合記録に紐付け"}
           </Text>
-          <Ionicons
+          <Icon
             name={openPicker === "game" ? "chevron-up" : "chevron-down"}
             size={18}
             color="#A1A1AA"
@@ -503,7 +503,7 @@ export function NoteForm({
         {openPicker === "game" ? (
           <View style={styles.picker}>
             <View style={styles.searchBox}>
-              <Ionicons name="search" size={16} color="#71717A" />
+              <Icon name="search" size={16} color="#71717A" />
               <TextInput
                 style={styles.searchInput}
                 placeholder="対戦相手で検索"

@@ -1,5 +1,4 @@
 import type { CorrelationInsight } from "../../types/insight";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -10,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { InsightCard } from "@components/insight/InsightCard";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellCard } from "@components/pro/ProUpsellCard";
@@ -136,7 +136,7 @@ export default function InsightScreen() {
         style={styles.createButton}
         onPress={() => router.push("/(insight)/create")}
       >
-        <Ionicons name="add" size={18} color="#FFFFFF" />
+        <Icon name="add" size={18} color="#FFFFFF" />
         <Text style={styles.createButtonText}>組み合わせを作る</Text>
       </TouchableOpacity>
       {customs.length > 0 ? (

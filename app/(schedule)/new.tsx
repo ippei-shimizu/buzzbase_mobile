@@ -1,6 +1,5 @@
 import type { PracticeMenu } from "../../types/practice";
 import type { EventType, ScheduleInput } from "../../types/schedule";
-import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
@@ -15,6 +14,7 @@ import {
   Alert,
   Platform,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import {
   EVENT_TYPES,
   SCHEDULE_NOTE_MAX_LENGTH,
@@ -242,7 +242,7 @@ export default function ScheduleFormScreen() {
             <Text style={styles.valueText}>
               {formatJaFullDate(toIsoDate(date))}
             </Text>
-            <Ionicons name="calendar-outline" size={18} color="#A1A1AA" />
+            <Icon name="calendar-outline" size={18} color="#A1A1AA" />
           </TouchableOpacity>
           {showDatePicker ? (
             <DateTimePicker
@@ -299,7 +299,7 @@ export default function ScheduleFormScreen() {
         onPress={() => setShowTimePicker((prev) => !prev)}
       >
         <Text style={styles.valueText}>{timeString(time)}</Text>
-        <Ionicons name="time-outline" size={18} color="#A1A1AA" />
+        <Icon name="time-outline" size={18} color="#A1A1AA" />
       </TouchableOpacity>
       {showTimePicker ? (
         <DateTimePicker
@@ -329,10 +329,10 @@ export default function ScheduleFormScreen() {
         <View style={styles.timeActions}>
           {endTime ? (
             <TouchableOpacity onPress={() => setEndTime(null)} hitSlop={8}>
-              <Ionicons name="close-circle" size={18} color="#A1A1AA" />
+              <Icon name="close-circle" size={18} color="#A1A1AA" />
             </TouchableOpacity>
           ) : null}
-          <Ionicons name="time-outline" size={18} color="#A1A1AA" />
+          <Icon name="time-outline" size={18} color="#A1A1AA" />
         </View>
       </TouchableOpacity>
       {showEndTimePicker ? (
@@ -431,7 +431,7 @@ export default function ScheduleFormScreen() {
                   onPress={() => toggleMenu(menu)}
                   disabled={isLocked}
                 >
-                  <Ionicons
+                  <Icon
                     name={isSelected ? "checkbox" : "square-outline"}
                     size={22}
                     color={
@@ -447,7 +447,7 @@ export default function ScheduleFormScreen() {
                     {menu.name}
                   </Text>
                   {isLocked ? (
-                    <Ionicons name="lock-closed" size={14} color="#71717A" />
+                    <Icon name="lock-closed" size={14} color="#71717A" />
                   ) : null}
                 </TouchableOpacity>
                 {isSelected ? (

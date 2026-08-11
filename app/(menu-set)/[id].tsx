@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -10,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { useMenuSetMutations, useMenuSets } from "@hooks/useMenuSets";
 
 export default function MenuSetDetailScreen() {
@@ -64,10 +64,10 @@ export default function MenuSetDetailScreen() {
           headerRight: () => (
             <View style={styles.headerActions}>
               <TouchableOpacity onPress={goEdit}>
-                <Ionicons name="create-outline" size={22} color="#F4F4F4" />
+                <Icon name="create-outline" size={22} color="#F4F4F4" />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleDelete}>
-                <Ionicons name="trash-outline" size={22} color="#F31260" />
+                <Icon name="trash-outline" size={22} color="#F31260" />
               </TouchableOpacity>
             </View>
           ),
@@ -83,7 +83,7 @@ export default function MenuSetDetailScreen() {
         ) : (
           menuSet.items.map((item) => (
             <View key={item.practice_menu_id} style={styles.menuRow}>
-              <Ionicons name="ellipse" size={6} color="#d08000" />
+              <Icon name="ellipse" size={6} color="#d08000" />
               <Text style={styles.menuText}>
                 {item.name}
                 {item.target_value != null

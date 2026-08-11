@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useState, useMemo } from "react";
 import {
   View,
@@ -11,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 interface PickerItem {
   label: string;
@@ -78,10 +78,10 @@ export function SearchablePicker({
         <View style={styles.triggerActions}>
           {value ? (
             <TouchableOpacity onPress={handleClear} hitSlop={8}>
-              <Ionicons name="close-circle" size={18} color="#71717A" />
+              <Icon name="close-circle" size={18} color="#71717A" />
             </TouchableOpacity>
           ) : null}
-          <Ionicons name="chevron-down" size={18} color="#A1A1AA" />
+          <Icon name="chevron-down" size={18} color="#A1A1AA" />
         </View>
       </TouchableOpacity>
 

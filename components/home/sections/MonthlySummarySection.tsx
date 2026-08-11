@@ -1,8 +1,8 @@
 import type { MenuSummary } from "../../../types/practice";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { formatTotalAmount, formatVolume } from "@constants/practice";
 import { usePracticeSummaries } from "@hooks/usePracticeSummaries";
 import { SectionCard } from "./SectionCard";
@@ -50,7 +50,7 @@ export function MonthlySummarySection() {
         onPress={() => router.push("/(records)/summary")}
       >
         <Text style={styles.moreText}>メニュー別の積み上げを見る</Text>
-        <Ionicons name="chevron-forward" size={16} color="#d08000" />
+        <Icon name="chevron-forward" size={16} color="#d08000" />
       </TouchableOpacity>
     </SectionCard>
   );

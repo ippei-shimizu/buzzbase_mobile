@@ -27,6 +27,20 @@ module.exports = [
       "import/no-duplicates": "error",
       "import/newline-after-import": "warn",
       "no-console": ["warn", { allow: ["warn", "error"] }],
+      // @expo/vector-icons は expo の推移依存として node_modules に残るため、
+      // package.json から外しても import は解決してしまう。ここで止める。
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@expo/vector-icons",
+              message: "アイコンは @components/icon/Icon の Icon を使う。",
+            },
+          ],
+          patterns: ["@expo/vector-icons/*"],
+        },
+      ],
     },
   },
 

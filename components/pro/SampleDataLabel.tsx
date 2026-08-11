@@ -1,5 +1,5 @@
-import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 /**
  * ダミーデータの上に表示する「サンプルデータ」見出し。
@@ -8,7 +8,7 @@ import { StyleSheet, Text, View } from "react-native";
 export function SampleDataLabel() {
   return (
     <View style={styles.row}>
-      <Ionicons name="eye-outline" size={13} color="#A1A1AA" />
+      <Icon name="eye-outline" size={13} color="#A1A1AA" />
       <Text style={styles.text}>
         サンプルデータ（実際の記録ではありません）
       </Text>

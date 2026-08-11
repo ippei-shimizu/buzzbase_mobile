@@ -207,6 +207,13 @@ function RootLayoutInner() {
           }}
         />
         <Stack.Screen
+          name="licenses"
+          options={{
+            title: "ライセンス表記",
+            headerBackTitle: "戻る",
+          }}
+        />
+        <Stack.Screen
           name="pro"
           options={{
             headerShown: false,

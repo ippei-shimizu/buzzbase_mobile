@@ -1,5 +1,4 @@
 import type { ReflectionTemplate } from "../../types/reflectionTemplate";
-import { Ionicons as Icon } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import {
@@ -12,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import {
   useReflectionTemplateMutations,

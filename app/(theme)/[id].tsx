@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
@@ -9,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { themeCategoryLabel } from "@constants/improvementTheme";
 import {
   useImprovementThemeMutations,
@@ -92,10 +92,10 @@ export default function ThemeDetailScreen() {
                   })
                 }
               >
-                <Ionicons name="create-outline" size={22} color="#F4F4F4" />
+                <Icon name="create-outline" size={22} color="#F4F4F4" />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleDelete}>
-                <Ionicons name="trash-outline" size={22} color="#F31260" />
+                <Icon name="trash-outline" size={22} color="#F31260" />
               </TouchableOpacity>
             </View>
           ),
@@ -126,7 +126,7 @@ export default function ThemeDetailScreen() {
             style={styles.linkedRow}
             onPress={() => router.push(`/(practice-record)/${session.id}`)}
           >
-            <Ionicons name="barbell-outline" size={16} color="#d08000" />
+            <Icon name="barbell-outline" size={16} color="#d08000" />
             <Text style={styles.linkedRowText} numberOfLines={1}>
               {formatJaFullDate(session.logged_on)}
               {session.practice_logs?.length
@@ -135,7 +135,7 @@ export default function ThemeDetailScreen() {
                     .join("、")}`
                 : ""}
             </Text>
-            <Ionicons name="chevron-forward" size={16} color="#71717A" />
+            <Icon name="chevron-forward" size={16} color="#71717A" />
           </TouchableOpacity>
         ))
       )}
@@ -150,11 +150,11 @@ export default function ThemeDetailScreen() {
             style={styles.linkedRow}
             onPress={() => router.push(`/(note)/${note.id}`)}
           >
-            <Ionicons name="document-text-outline" size={16} color="#d08000" />
+            <Icon name="document-text-outline" size={16} color="#d08000" />
             <Text style={styles.linkedRowText} numberOfLines={1}>
               {formatJaFullDate(note.date)} ・ {note.title || "無題のノート"}
             </Text>
-            <Ionicons name="chevron-forward" size={16} color="#71717A" />
+            <Icon name="chevron-forward" size={16} color="#71717A" />
           </TouchableOpacity>
         ))
       )}

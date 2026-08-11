@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import React from "react";
 import {
@@ -11,6 +10,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Icon } from "@components/icon/Icon";
 import { useDeleteBaseballNote } from "@hooks/useBaseballNoteMutations";
 import { useBaseballNote } from "@hooks/useBaseballNotes";
 import { formatJaFullDate } from "@utils/formatDate";
@@ -74,10 +74,10 @@ export default function NoteDetailScreen() {
                   })
                 }
               >
-                <Ionicons name="create-outline" size={22} color="#F4F4F4" />
+                <Icon name="create-outline" size={22} color="#F4F4F4" />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleDelete} disabled={isDeleting}>
-                <Ionicons name="trash-outline" size={22} color="#EF4444" />
+                <Icon name="trash-outline" size={22} color="#EF4444" />
               </TouchableOpacity>
             </View>
           ),

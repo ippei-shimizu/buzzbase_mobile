@@ -1,5 +1,4 @@
 import type { StagedMediaAsset } from "../../types/mediaAttachment";
-import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -9,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useVideoTrim } from "@hooks/useVideoTrim";
 import {
@@ -90,7 +90,7 @@ export function StagedMediaList({
               />
             ) : (
               <View style={[styles.thumbnail, styles.videoPlaceholder]}>
-                <Ionicons name="videocam" size={36} color="#A1A1AA" />
+                <Icon name="videocam" size={36} color="#A1A1AA" />
               </View>
             )}
             <View style={styles.memoLabel}>
@@ -110,14 +110,15 @@ export function StagedMediaList({
               disabled={isTrimming}
               onPress={() => handleTrim(asset)}
             >
-              <Ionicons name="cut-outline" size={16} color="#F4F4F4" />
+              <Icon name="cut-outline" size={16} color="#F4F4F4" />
             </TouchableOpacity>
           ) : null}
           <TouchableOpacity
             style={styles.removeButton}
+            hitSlop={8}
             onPress={() => onRemove(asset.localId)}
           >
-            <Ionicons name="close-circle" size={22} color="#F4F4F4" />
+            <Icon name="close-circle" size={22} color="#F4F4F4" />
           </TouchableOpacity>
         </View>
       ))}

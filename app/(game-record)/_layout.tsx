@@ -1,9 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { Stack, useNavigation, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
 import { TouchableOpacity, Alert } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { deleteGameResult } from "@services/gameResultService";
 import { isAxios404 } from "@utils/axiosError";
 import { invalidateGameResultRelated } from "@utils/queryInvalidation";
@@ -112,7 +112,7 @@ export default function GameRecordLayout() {
           title: "試合情報",
           headerLeft: () => (
             <TouchableOpacity onPress={handleClose} style={{ padding: 8 }}>
-              <Ionicons name="close" size={24} color="#F4F4F4" />
+              <Icon name="close" size={24} color="#F4F4F4" />
             </TouchableOpacity>
           ),
         }}

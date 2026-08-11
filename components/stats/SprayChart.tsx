@@ -3,7 +3,6 @@ import type {
   HitLocationPoint,
   HomeRunDirection,
 } from "../../types/stats";
-import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   View,
@@ -23,6 +22,7 @@ import Svg, {
   ClipPath,
   G,
 } from "react-native-svg";
+import { Icon } from "@components/icon/Icon";
 import {
   DIRECTION_LABEL_POSITIONS,
   GROUND_CANVAS_HEIGHT,
@@ -245,7 +245,7 @@ export const SprayChart = ({
           style={styles.filterButton}
         >
           <Text style={styles.filterButtonText}>絞り込み: {filterLabel}</Text>
-          <Ionicons
+          <Icon
             name={isFilterOpen ? "chevron-up" : "chevron-down"}
             size={14}
             color="#A1A1AA"

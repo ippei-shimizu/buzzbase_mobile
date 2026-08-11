@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   View,
@@ -7,6 +6,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { useGoalBadges } from "@hooks/useGoals";
 import { formatJaFullDate } from "@utils/formatDate";
 
@@ -25,7 +25,7 @@ export default function GoalBadgesScreen() {
   if (badges.length === 0) {
     return (
       <View style={styles.center}>
-        <Ionicons name="ribbon-outline" size={40} color="#71717A" />
+        <Icon name="ribbon-outline" size={40} color="#71717A" />
         <Text style={styles.emptyText}>まだ達成バッジはありません</Text>
         <Text style={styles.emptySubText}>
           目標を達成すると、ここにバッジが並びます
@@ -39,7 +39,7 @@ export default function GoalBadgesScreen() {
       {badges.map((badge) => (
         <View key={badge.id} style={styles.card}>
           <View style={styles.iconWrap}>
-            <Ionicons name="ribbon" size={28} color="#FFD43B" />
+            <Icon name="ribbon" size={28} color="#FFD43B" />
           </View>
           <View style={styles.textWrap}>
             <Text style={styles.badgeName}>{badge.badge_name}</Text>

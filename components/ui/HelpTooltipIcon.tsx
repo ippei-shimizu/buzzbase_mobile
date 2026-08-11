@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   Modal,
@@ -8,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 interface Props {
   /** ツールチップのタイトル（モーダル上部に primary 色で表示） */
@@ -44,7 +44,7 @@ export function HelpTooltipIcon({
         onPress={() => setVisible(true)}
         hitSlop={8}
       >
-        <Ionicons name="help-circle-outline" size={size} color={iconColor} />
+        <Icon name="help-circle-outline" size={size} color={iconColor} />
       </TouchableOpacity>
       <Modal
         visible={visible}

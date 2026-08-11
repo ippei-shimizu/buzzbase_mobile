@@ -1,11 +1,11 @@
 import type { GameResult } from "../../../types/gameResult";
-import { Ionicons } from "@expo/vector-icons";
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import React from "react";
 import { TouchableOpacity, StyleSheet, Alert, View } from "react-native";
 import { GameResultDetail } from "@components/game-results/GameResultDetail";
+import { Icon } from "@components/icon/Icon";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { useProfile } from "@hooks/useProfile";
 import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
@@ -90,7 +90,7 @@ export default function ProfileGameDetailScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="試合結果を編集"
                 >
-                  <Ionicons name="create-outline" size={22} color="#F4F4F4" />
+                  <Icon name="create-outline" size={22} color="#F4F4F4" />
                 </TouchableOpacity>
               )}
               {isOwner && (
@@ -100,7 +100,7 @@ export default function ProfileGameDetailScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="試合結果を削除"
                 >
-                  <Ionicons name="trash-outline" size={22} color="#F31260" />
+                  <Icon name="trash-outline" size={22} color="#F31260" />
                 </TouchableOpacity>
               )}
               <TouchableOpacity
@@ -109,17 +109,13 @@ export default function ProfileGameDetailScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="試合結果を共有"
               >
-                <Ionicons name="share-outline" size={22} color="#F4F4F4" />
+                <Icon name="share-outline" size={22} color="#F4F4F4" />
               </TouchableOpacity>
             </View>
           ),
         }}
       />
-      <GameResultDetail
-        game={game}
-        onEdit={isOwner ? handleEdit : undefined}
-        onShare={handleShare}
-      />
+      <GameResultDetail game={game} onShare={handleShare} />
       <PreReviewPrompt {...modalProps} />
     </>
   );

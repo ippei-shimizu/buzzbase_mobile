@@ -1,5 +1,4 @@
 import type { MediaType } from "../../types/mediaAttachment";
-import { Ionicons } from "@expo/vector-icons";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { useEffect, useState } from "react";
 import {
@@ -14,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { ZoomableImage } from "@components/ui/ZoomableImage";
 
 export interface MediaViewerContent {
@@ -60,7 +60,7 @@ function VideoContent({ uri }: { uri: string }) {
         accessibilityLabel={isMuted ? "音を出す" : "消音する"}
         hitSlop={10}
       >
-        <Ionicons
+        <Icon
           name={isMuted ? "volume-mute" : "volume-high"}
           size={20}
           color="#F4F4F4"
@@ -98,7 +98,7 @@ export function MediaViewer({
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Ionicons name="close" size={28} color="#F4F4F4" />
+          <Icon name="close" size={28} color="#F4F4F4" />
         </TouchableOpacity>
         <ScrollView
           contentContainerStyle={styles.content}

@@ -1,5 +1,4 @@
 import type { GameResult } from "../../types/gameResult";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   ActivityIndicator,
@@ -10,13 +9,13 @@ import {
   View,
 } from "react-native";
 import { PlateAppearanceCard } from "@components/game-record/plate-appearance/PlateAppearanceCard";
+import { Icon } from "@components/icon/Icon";
 import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
 import { usePlateAppearancesByGame } from "@hooks/usePlateAppearances";
 import { formatMatchTypeLabel } from "@utils/matchType";
 
 interface GameResultDetailProps {
   game: GameResult;
-  onEdit?: () => void;
   onShare?: () => void;
   /** false のとき自前の ScrollView で囲まず内容のみ描画する（他画面に埋め込む用）。 */
   scroll?: boolean;
@@ -72,7 +71,6 @@ function StatRow({
 
 export const GameResultDetail = ({
   game,
-  onEdit,
   onShare,
   scroll = true,
 }: GameResultDetailProps) => {
@@ -263,21 +261,13 @@ export const GameResultDetail = ({
         </View>
       )}
 
-      {/* 編集・共有ボタン */}
-      {(onEdit || onShare) && (
+      {/* 共有ボタン（編集はヘッダーの鉛筆アイコンから行うため、ここには置かない） */}
+      {onShare && (
         <View style={styles.actionsRow}>
-          {onEdit && (
-            <TouchableOpacity style={styles.editButton} onPress={onEdit}>
-              <Ionicons name="create-outline" size={18} color="#FFFFFF" />
-              <Text style={styles.editButtonText}>編集</Text>
-            </TouchableOpacity>
-          )}
-          {onShare && (
-            <TouchableOpacity style={styles.shareButton} onPress={onShare}>
-              <Ionicons name="share-outline" size={18} color="#d08000" />
-              <Text style={styles.shareButtonText}>共有</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity style={styles.shareButton} onPress={onShare}>
+            <Icon name="share-outline" size={18} color="#d08000" />
+            <Text style={styles.shareButtonText}>共有</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -455,21 +445,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     marginTop: 16,
-  },
-  editButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#d08000",
-    borderRadius: 8,
-    paddingVertical: 12,
-  },
-  editButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
   },
   shareButton: {
     flex: 1,

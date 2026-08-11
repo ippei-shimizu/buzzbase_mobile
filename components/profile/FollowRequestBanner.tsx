@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import * as Sentry from "@sentry/react-native";
 import React, { useState } from "react";
 import {
@@ -8,6 +7,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import {
   useAcceptFollowRequest,
   useRejectFollowRequest,
@@ -54,7 +54,7 @@ export function FollowRequestBanner({
   if (handled) {
     return (
       <View style={[styles.container, styles.handledContainer]}>
-        <Ionicons name="checkmark-circle" size={18} color="#A1A1AA" />
+        <Icon name="checkmark-circle" size={18} color="#A1A1AA" />
         <Text style={styles.handledText}>
           {actorName}さんのフォローリクエストを
           {handledType === "accepted" ? "承認しました" : "拒否しました"}
@@ -66,7 +66,7 @@ export function FollowRequestBanner({
   return (
     <View style={styles.container}>
       <View style={styles.textRow}>
-        <Ionicons name="person-add" size={18} color="#d08000" />
+        <Icon name="person-add" size={18} color="#d08000" />
         <Text style={styles.text}>フォローリクエストが届いています</Text>
       </View>
       <View style={styles.buttonRow}>

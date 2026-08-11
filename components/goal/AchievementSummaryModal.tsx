@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -9,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { useAchievementSummarySeen } from "@hooks/useAchievementSummarySeen";
 import { useGoalBadges, useGoalHistory } from "@hooks/useGoals";
 import {
@@ -88,7 +88,7 @@ export function AchievementSummaryModal() {
           onPress={(e) => e.stopPropagation()}
           accessibilityViewIsModal
         >
-          <Ionicons name="trophy" size={40} color="#FFD43B" />
+          <Icon name="trophy" size={40} color="#FFD43B" />
           <Text style={styles.title}>{formatMonthKeyJa(period)}の振り返り</Text>
           <Text style={styles.summary}>
             期限を迎えた目標 {finalizedInPeriod.length}件中{" "}

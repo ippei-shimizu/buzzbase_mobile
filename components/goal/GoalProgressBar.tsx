@@ -1,7 +1,7 @@
 import type { Goal } from "../../types/goal";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { formatMetricValue, metricLabel } from "../../constants/goal";
 
 export function GoalProgressBar({
@@ -20,7 +20,7 @@ export function GoalProgressBar({
       <View style={containerStyle}>
         <View style={styles.header}>
           <View style={styles.titleRow}>
-            <Ionicons name="flag" size={14} color="#d08000" />
+            <Icon name="flag" size={14} color="#d08000" />
             <Text style={styles.title} numberOfLines={2}>
               {goal.title}
             </Text>
@@ -73,7 +73,7 @@ export function GoalProgressBar({
     <View style={containerStyle}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <Ionicons name="flag" size={14} color="#d08000" />
+          <Icon name="flag" size={14} color="#d08000" />
           <Text style={styles.title} numberOfLines={1}>
             {goal.title}
           </Text>
@@ -94,7 +94,7 @@ export function GoalProgressBar({
               <Text style={styles.valueLabel}>現在</Text>
               <Text style={styles.currentValue}>{currentText}</Text>
             </View>
-            <Ionicons name="arrow-forward" size={14} color="#71717A" />
+            <Icon name="arrow-forward" size={14} color="#71717A" />
             <View style={styles.valueBlock}>
               <Text style={styles.valueLabel}>目標</Text>
               <Text style={styles.targetValue}>{targetText}</Text>

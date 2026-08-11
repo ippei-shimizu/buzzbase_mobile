@@ -1,5 +1,4 @@
 import type { Season } from "../../types/season";
-import { Ionicons } from "@expo/vector-icons";
 import { Stack } from "expo-router";
 import React from "react";
 import {
@@ -13,6 +12,7 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import {
   useCreateSeason,
   useUpdateSeason,
@@ -107,13 +107,13 @@ export default function SeasonsScreen() {
           style={styles.actionButton}
           onPress={() => handleEdit(item)}
         >
-          <Ionicons name="pencil-outline" size={18} color="#A1A1AA" />
+          <Icon name="pencil-outline" size={18} color="#A1A1AA" />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => handleDelete(item)}
         >
-          <Ionicons name="trash-outline" size={18} color="#F31260" />
+          <Icon name="trash-outline" size={18} color="#F31260" />
         </TouchableOpacity>
       </View>
     </View>
@@ -123,7 +123,7 @@ export default function SeasonsScreen() {
     if (isLoading) return null;
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="calendar-outline" size={48} color="#52525B" />
+        <Icon name="calendar-outline" size={48} color="#52525B" />
         <Text style={styles.emptyText}>シーズンがありません</Text>
         <Text style={styles.emptySubtext}>
           右上の「+」ボタンからシーズンを作成できます
@@ -141,7 +141,7 @@ export default function SeasonsScreen() {
               {isCreating ? (
                 <ActivityIndicator size="small" color="#d08000" />
               ) : (
-                <Ionicons name="add" size={26} color="#d08000" />
+                <Icon name="add" size={26} color="#d08000" />
               )}
             </TouchableOpacity>
           ),

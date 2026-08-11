@@ -1,5 +1,5 @@
+import type { IconName } from "../../types/icon";
 import type { MenuSummary } from "../../types/practice";
-import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { SkeletonList } from "@components/ui/Skeleton";
 import {
   CATEGORY_ICON,
@@ -44,7 +45,7 @@ function SummaryCard({
   onPress,
 }: {
   summary: MenuSummary;
-  iconName: keyof typeof Ionicons.glyphMap;
+  iconName: IconName;
   onPress?: () => void;
 }) {
   const weightReps = isWeightReps(summary);
@@ -61,11 +62,11 @@ function SummaryCard({
     <Wrapper style={styles.card} onPress={onPress}>
       <View style={styles.cardHead}>
         <View style={styles.cardHeadLeft}>
-          <Ionicons name={iconName} size={18} color="#d08000" />
+          <Icon name={iconName} size={18} color="#d08000" />
           <Text style={styles.menuName}>{summary.menu_name}</Text>
         </View>
         {onPress ? (
-          <Ionicons name="chevron-forward" size={16} color="#A1A1AA" />
+          <Icon name="chevron-forward" size={16} color="#A1A1AA" />
         ) : null}
       </View>
       <View style={styles.tileRow}>

@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { isAxiosError } from "axios";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -11,6 +10,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { useAuth } from "@hooks/useAuth";
 import { deleteAccount } from "@services/profileService";
 
@@ -67,7 +67,7 @@ export default function AccountDeletionScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.warningCard}>
-          <Ionicons name="warning-outline" size={48} color="#EF4444" />
+          <Icon name="warning-outline" size={48} color="#EF4444" />
           <Text style={styles.warningTitle}>アカウントを削除しますか？</Text>
           <Text style={styles.warningText}>
             アカウントを削除すると、以下のデータがすべて完全に削除され、復元できなくなります。
@@ -85,7 +85,7 @@ export default function AccountDeletionScreen() {
             "その他すべての関連データ",
           ].map((item) => (
             <View key={item} style={styles.listItem}>
-              <Ionicons name="close-circle" size={18} color="#EF4444" />
+              <Icon name="close-circle" size={18} color="#EF4444" />
               <Text style={styles.listItemText}>{item}</Text>
             </View>
           ))}

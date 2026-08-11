@@ -1,5 +1,4 @@
 import type { EraTrendGranularity, EraTrendPoint } from "../../types/stats";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import Svg, {
@@ -11,6 +10,7 @@ import Svg, {
   LinearGradient,
   Stop,
 } from "react-native-svg";
+import { Icon } from "@components/icon/Icon";
 
 interface EraTrendChartProps {
   points: EraTrendPoint[];
@@ -199,7 +199,7 @@ export const EraTrendChart = ({
 
       {bestPoint ? (
         <View style={styles.bestRow}>
-          <Ionicons name="star" size={12} color="#FFD43B" />
+          <Icon name="star" size={12} color="#FFD43B" />
           <Text style={styles.bestText}>
             自己ベスト防御率 {bestPoint.era.toFixed(2)}（{bestPoint.label}）
           </Text>

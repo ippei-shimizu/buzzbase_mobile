@@ -2,7 +2,6 @@ import type {
   BattingTrendGranularity,
   BattingTrendPoint,
 } from "../../types/stats";
-import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   View,
@@ -19,6 +18,7 @@ import Svg, {
   Rect,
   Text as SvgText,
 } from "react-native-svg";
+import { Icon } from "@components/icon/Icon";
 
 interface BattingTrendChartProps {
   points: BattingTrendPoint[];
@@ -200,7 +200,7 @@ export const BattingTrendChart = ({
           style={styles.filterButton}
         >
           <Text style={styles.filterButtonText}>絞り込み: {filterLabel}</Text>
-          <Ionicons
+          <Icon
             name={isFilterOpen ? "chevron-up" : "chevron-down"}
             size={14}
             color="#A1A1AA"
@@ -448,7 +448,7 @@ export const BattingTrendChart = ({
       {(granularity === "season" || granularity === "year") &&
       points.length > 1 ? (
         <View style={styles.bestRow}>
-          <Ionicons name="star" size={12} color="#FFD43B" />
+          <Icon name="star" size={12} color="#FFD43B" />
           <Text style={styles.bestText}>
             自己ベスト OPS{" "}
             {formatRate(

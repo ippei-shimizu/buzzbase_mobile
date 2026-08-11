@@ -118,6 +118,12 @@ export default function SettingsScreen() {
           description: "販売事業者・支払方法・解約について",
           onPress: () => router.push("/tokushoho"),
         },
+        {
+          icon: "book-outline",
+          title: "ライセンス表記",
+          description: "利用しているオープンソースソフトウェアについて",
+          onPress: () => router.push("/licenses"),
+        },
       ],
     },
   ];

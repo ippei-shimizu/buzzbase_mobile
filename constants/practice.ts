@@ -4,9 +4,7 @@ import type {
   PracticeType,
   PracticeUnit,
 } from "../types/practice";
-import type { Ionicons } from "@expo/vector-icons";
-
-type IoniconName = keyof typeof Ionicons.glyphMap;
+import type { IconName } from "../types/icon";
 
 // back/app/models/concerns/plan_limits.rb の PRACTICE_MENU_FREE_LIMIT と一致させる。
 export const PRACTICE_MENU_FREE_LIMIT = 3;
@@ -90,7 +88,7 @@ export const categoryLabel = (category: PracticeCategory): string =>
   PRACTICE_CATEGORIES.find((c) => c.key === category)?.label ?? category;
 
 /** カテゴリごとの練習アイコン。一覧・詳細でメニューの種類を見分けやすくする。 */
-export const CATEGORY_ICON: Record<PracticeCategory, IoniconName> = {
+export const CATEGORY_ICON: Record<PracticeCategory, IconName> = {
   batting: "baseball-outline",
   pitching: "hand-right-outline",
   defense: "shield-half-outline",
@@ -108,7 +106,7 @@ export const CATEGORY_ICON: Record<PracticeCategory, IoniconName> = {
 export const menuIconForLog = (
   source: PracticeLogSource,
   category: PracticeCategory | undefined,
-): IoniconName => {
+): IconName => {
   if (source === "shadow_swing") return "baseball";
   return category ? CATEGORY_ICON[category] : CATEGORY_ICON.other;
 };

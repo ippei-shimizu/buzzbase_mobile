@@ -1,6 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { usePeriodicReviews } from "@hooks/usePeriodicReviews";
 
 /**
@@ -21,7 +21,7 @@ export function PeriodicReviewBanner() {
         accessibilityRole="button"
         accessibilityLabel="振り返りレポートの再取得"
       >
-        <Ionicons name="alert-circle-outline" size={18} color="#A1A1AA" />
+        <Icon name="alert-circle-outline" size={18} color="#A1A1AA" />
         <View style={styles.textWrap}>
           <Text style={styles.errorTitle}>
             振り返りレポートを取得できませんでした
@@ -39,12 +39,12 @@ export function PeriodicReviewBanner() {
       style={styles.banner}
       onPress={() => router.push("/(review)/list")}
     >
-      <Ionicons name="sparkles" size={18} color="#F4F4F4" />
+      <Icon name="sparkles" size={18} color="#F4F4F4" />
       <View style={styles.textWrap}>
         <Text style={styles.title}>振り返りレポートが届いています</Text>
         <Text style={styles.sub}>未読 {unread.length} 件・タップで確認</Text>
       </View>
-      <Ionicons name="chevron-forward" size={18} color="#F4F4F4" />
+      <Icon name="chevron-forward" size={18} color="#F4F4F4" />
     </TouchableOpacity>
   );
 }

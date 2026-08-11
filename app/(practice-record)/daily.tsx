@@ -7,7 +7,6 @@ import type {
   PresetMenu,
 } from "../../types/practice";
 import type { ConditionDraft } from "@components/practice/ConditionForm";
-import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
@@ -22,6 +21,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { ThemePickerField } from "@components/improvement-theme/ThemePickerField";
 import {
   ConditionForm,
@@ -250,7 +250,7 @@ function DailyEditor({
           style={styles.menuRow}
           onPress={() => toggleMenu(menu)}
         >
-          <Ionicons
+          <Icon
             name={isSelected ? "checkbox" : "square-outline"}
             size={22}
             color={isSelected ? "#d08000" : "#71717A"}
@@ -317,7 +317,7 @@ function DailyEditor({
         style={styles.addMenuButton}
         onPress={() => router.push("/(practice-menu)/form")}
       >
-        <Ionicons name="add" size={18} color="#d08000" />
+        <Icon name="add" size={18} color="#d08000" />
         <Text style={styles.addMenuButtonText}>新しいメニューを追加</Text>
       </TouchableOpacity>
 
@@ -329,7 +329,7 @@ function DailyEditor({
         return (
           <View key={category.key} style={styles.group}>
             <View style={styles.groupTitleRow}>
-              <Ionicons
+              <Icon
                 name={CATEGORY_ICON[category.key]}
                 size={15}
                 color="#d08000"
@@ -432,7 +432,7 @@ export default function DailyRecordScreen() {
           onPress={() => setShowPicker((prev) => !prev)}
         >
           <Text style={styles.dateText}>{formatJaFullDate(dateString)}</Text>
-          <Ionicons name="calendar-outline" size={18} color="#A1A1AA" />
+          <Icon name="calendar-outline" size={18} color="#A1A1AA" />
         </TouchableOpacity>
         {showPicker ? (
           <DateTimePicker
@@ -463,7 +463,7 @@ export default function DailyRecordScreen() {
               style={styles.primaryButton}
               onPress={() => router.push("/(practice-menu)/form")}
             >
-              <Ionicons name="add" size={18} color="#FFFFFF" />
+              <Icon name="add" size={18} color="#FFFFFF" />
               <Text style={styles.primaryButtonText}>最初のメニューを作る</Text>
             </TouchableOpacity>
           </View>

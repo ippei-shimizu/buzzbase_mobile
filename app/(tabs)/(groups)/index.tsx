@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -13,6 +12,7 @@ import {
 import { AppBannerAd } from "@components/ads/AppBannerAd";
 import { InlineBannerAd } from "@components/ads/InlineBannerAd";
 import { GroupListCard } from "@components/groups/GroupListCard";
+import { Icon } from "@components/icon/Icon";
 import {
   GlobalMenuButton,
   GlobalMenuOverlay,
@@ -65,16 +65,16 @@ export default function GroupsTabScreen() {
       </Text>
       <TouchableOpacity style={styles.createButton} onPress={handleCreate}>
         <Text style={styles.createButtonText}>グループ作成</Text>
-        <Ionicons name="add-circle" size={18} color="#FFFFFF" />
+        <Icon name="add-circle" size={18} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
   );
 
   const joinBanner = (
     <TouchableOpacity style={styles.joinButton} onPress={handleJoin}>
-      <Ionicons name="ticket-outline" size={18} color="#d08000" />
+      <Icon name="ticket-outline" size={18} color="#d08000" />
       <Text style={styles.joinButtonText}>招待コードでグループに参加</Text>
-      <Ionicons name="chevron-forward" size={16} color="#71717A" />
+      <Icon name="chevron-forward" size={16} color="#71717A" />
     </TouchableOpacity>
   );
 
@@ -89,7 +89,7 @@ export default function GroupsTabScreen() {
         accessibilityRole="button"
         accessibilityLabel="ヒントを閉じる"
       >
-        <Ionicons name="close" size={16} color="#A1A1AA" />
+        <Icon name="close" size={16} color="#A1A1AA" />
       </TouchableOpacity>
     </View>
   ) : null;
