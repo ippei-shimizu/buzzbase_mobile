@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -13,6 +12,7 @@ import {
 } from "react-native";
 import { GroupDetailStats } from "@components/groups/GroupDetailStats";
 import { GroupDefaultIcon } from "@components/icon/GroupDefaultIcon";
+import { Icon } from "@components/icon/Icon";
 import { useGroupDetail } from "@hooks/useGroups";
 
 export default function GroupDetailScreen() {
@@ -66,7 +66,7 @@ export default function GroupDetailScreen() {
             <TouchableOpacity
               onPress={() => router.push(`/(groups)/members?id=${group.id}`)}
             >
-              <Ionicons name="menu-outline" size={24} color="#F4F4F4" />
+              <Icon name="menu-outline" size={24} color="#F4F4F4" />
             </TouchableOpacity>
           ),
         }}

@@ -1,5 +1,4 @@
 import type { GameResult } from "../../../types/gameResult";
-import { Ionicons } from "@expo/vector-icons";
 import {
   useRouter,
   Stack,
@@ -25,6 +24,7 @@ import { AppBannerAd } from "@components/ads/AppBannerAd";
 import { InlineBannerAd } from "@components/ads/InlineBannerAd";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
+import { Icon } from "@components/icon/Icon";
 import { FilterResetButton } from "@components/stats/FilterResetButton";
 import { GameResultSummary } from "@components/stats/GameResultSummary";
 import {
@@ -111,7 +111,7 @@ function FilterDropdown({
         >
           {label}: {selectedLabel}
         </Text>
-        <Ionicons
+        <Icon
           name="chevron-down"
           size={14}
           color={isFiltered ? "#d08000" : "#A1A1AA"}
@@ -511,9 +511,9 @@ export default function GameResultsScreen() {
         accessibilityRole="button"
         accessibilityLabel="シーズンを管理"
       >
-        <Ionicons name="calendar-outline" size={15} color="#d08000" />
+        <Icon name="calendar-outline" size={15} color="#d08000" />
         <Text style={styles.manageLinkText}>シーズンを管理</Text>
-        <Ionicons name="chevron-forward" size={14} color="#71717A" />
+        <Icon name="chevron-forward" size={14} color="#71717A" />
       </TouchableOpacity>
       {/* 試合記録ボタン */}
       <TouchableOpacity
@@ -525,7 +525,7 @@ export default function GameResultsScreen() {
           router.push("/(game-record)/step1-game-info");
         }}
       >
-        <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
+        <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
         <Text style={styles.recordButtonText}>試合結果を記録する</Text>
       </TouchableOpacity>
       {/* フィルター */}
@@ -645,7 +645,7 @@ export default function GameResultsScreen() {
         }}
       >
         <View style={styles.searchBox}>
-          <Ionicons name="search" size={16} color="#71717A" />
+          <Icon name="search" size={16} color="#71717A" />
           <TextInput
             style={styles.searchInput}
             placeholder="対戦相手を検索"
@@ -668,7 +668,7 @@ export default function GameResultsScreen() {
           <Text style={filterStyles.buttonText}>
             日付（{sortDesc ? "新しい順" : "古い順"}）
           </Text>
-          <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+          <Icon name="chevron-down" size={14} color="#A1A1AA" />
         </TouchableOpacity>
       </View>
     </View>
@@ -698,9 +698,9 @@ export default function GameResultsScreen() {
             accessibilityRole="button"
             accessibilityLabel="シーズンを管理"
           >
-            <Ionicons name="calendar-outline" size={15} color="#d08000" />
+            <Icon name="calendar-outline" size={15} color="#d08000" />
             <Text style={styles.manageLinkText}>シーズンを管理</Text>
-            <Ionicons name="chevron-forward" size={14} color="#71717A" />
+            <Icon name="chevron-forward" size={14} color="#71717A" />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.recordButton}
@@ -711,7 +711,7 @@ export default function GameResultsScreen() {
               router.push("/(game-record)/step1-game-info");
             }}
           >
-            <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
             <Text style={styles.recordButtonText}>試合結果を記録する</Text>
           </TouchableOpacity>
           <View

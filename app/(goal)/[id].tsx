@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
@@ -10,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { GoalProgressBar } from "@components/goal/GoalProgressBar";
+import { Icon } from "@components/icon/Icon";
 import { GOAL_PERIOD_LABELS } from "@constants/goal";
 import { useGoalHistory, useGoalMutations, useGoals } from "@hooks/useGoals";
 
@@ -85,11 +85,11 @@ export default function GoalDetailScreen() {
                     })
                   }
                 >
-                  <Ionicons name="create-outline" size={22} color="#F4F4F4" />
+                  <Icon name="create-outline" size={22} color="#F4F4F4" />
                 </TouchableOpacity>
               )}
               <TouchableOpacity onPress={handleDelete}>
-                <Ionicons name="trash-outline" size={22} color="#F31260" />
+                <Icon name="trash-outline" size={22} color="#F31260" />
               </TouchableOpacity>
             </View>
           ),

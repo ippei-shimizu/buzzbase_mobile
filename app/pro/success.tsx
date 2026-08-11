@@ -1,7 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Icon } from "@components/icon/Icon";
 
 export default function ProSuccessScreen() {
   const router = useRouter();
@@ -9,7 +9,7 @@ export default function ProSuccessScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       <View style={styles.content}>
-        <Ionicons name="checkmark-circle" size={72} color="#10b981" />
+        <Icon name="checkmark-circle" size={72} color="#10b981" />
         <Text style={styles.title}>Pro 加入手続きを受け付けました</Text>
         <Text style={styles.description}>
           App Store の決済確定後、自動的に Pro

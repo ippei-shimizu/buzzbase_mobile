@@ -1,6 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import { TouchableOpacity } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 export default function ScheduleLayout() {
   const router = useRouter();
@@ -24,7 +24,7 @@ export default function ScheduleLayout() {
               onPress={() => router.back()}
               style={{ padding: 8 }}
             >
-              <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
+              <Icon name="chevron-back" size={24} color="#F4F4F4" />
             </TouchableOpacity>
           ),
         }}
@@ -38,7 +38,7 @@ export default function ScheduleLayout() {
               onPress={() => router.back()}
               style={{ padding: 8 }}
             >
-              <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
+              <Icon name="chevron-back" size={24} color="#F4F4F4" />
             </TouchableOpacity>
           ),
         }}
@@ -52,7 +52,7 @@ export default function ScheduleLayout() {
               onPress={() => router.back()}
               style={{ padding: 8 }}
             >
-              <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
+              <Icon name="chevron-back" size={24} color="#F4F4F4" />
             </TouchableOpacity>
           ),
         }}
@@ -66,7 +66,7 @@ export default function ScheduleLayout() {
               onPress={() => router.back()}
               style={{ padding: 8 }}
             >
-              <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
+              <Icon name="chevron-back" size={24} color="#F4F4F4" />
             </TouchableOpacity>
           ),
         }}

@@ -2,7 +2,6 @@ import type {
   ImprovementTheme,
   ImprovementThemeStatus,
 } from "../../types/improvementTheme";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
@@ -14,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { SwipeableTabPages } from "@components/ui/SwipeableTabPages";
 import { themeCategoryLabel } from "@constants/improvementTheme";
@@ -105,7 +105,7 @@ export default function ThemeListScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-          <Ionicons name="add" size={18} color="#FFFFFF" />
+          <Icon name="add" size={18} color="#FFFFFF" />
           <Text style={styles.addButtonText}>新しい課題に取り組む</Text>
         </TouchableOpacity>
 
@@ -174,26 +174,26 @@ function ThemeCard({
         </View>
         {achieved ? (
           <View style={styles.badge}>
-            <Ionicons name="trophy" size={12} color="#F4F4F4" />
+            <Icon name="trophy" size={12} color="#F4F4F4" />
             <Text style={styles.badgeText}>克服</Text>
           </View>
         ) : (
-          <Ionicons name="chevron-forward" size={18} color="#71717A" />
+          <Icon name="chevron-forward" size={18} color="#71717A" />
         )}
       </View>
       <View style={styles.statRow}>
         <View style={styles.statChip}>
-          <Ionicons name="flame-outline" size={13} color="#d08000" />
+          <Icon name="flame-outline" size={13} color="#d08000" />
           <Text style={styles.statText}>取組 {theme.active_days}日</Text>
         </View>
         <View style={styles.statChip}>
-          <Ionicons name="barbell-outline" size={13} color="#d08000" />
+          <Icon name="barbell-outline" size={13} color="#d08000" />
           <Text style={styles.statText}>
             練習 {theme.practice_logs_count}件
           </Text>
         </View>
         <View style={styles.statChip}>
-          <Ionicons name="document-text-outline" size={13} color="#d08000" />
+          <Icon name="document-text-outline" size={13} color="#d08000" />
           <Text style={styles.statText}>ノート {theme.notes_count}件</Text>
         </View>
       </View>

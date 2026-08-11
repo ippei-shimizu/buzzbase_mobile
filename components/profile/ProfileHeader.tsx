@@ -1,7 +1,7 @@
 import type { UserProfile, FollowStatus } from "../../types/profile";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
 import { BallIcon } from "@components/ui/icons/BallIcon";
 import { CrownIcon } from "@components/ui/icons/CrownIcon";
@@ -137,7 +137,7 @@ export const ProfileHeader = ({
             <Text style={styles.editButtonText}>プロフィール編集</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.shareButton} onPress={onSharePress}>
-            <Ionicons name="share-outline" size={16} color="#F4F4F4" />
+            <Icon name="share-outline" size={16} color="#F4F4F4" />
             <Text style={styles.shareButtonText}>シェアする</Text>
           </TouchableOpacity>
         </View>

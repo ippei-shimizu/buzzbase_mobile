@@ -1,7 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 /**
  * ホーム最上部の主記録導線。「練習を記録」「野球ノートを記録」を並べて常に最上段に置く。
@@ -17,14 +17,14 @@ export function RecordButtonsSection() {
           style={styles.button}
           onPress={() => router.push("/(practice-record)/daily")}
         >
-          <Ionicons name="barbell-outline" size={22} color="#FFFFFF" />
+          <Icon name="barbell-outline" size={22} color="#FFFFFF" />
           <Text style={styles.text}>練習を記録</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.button}
           onPress={() => router.push("/(note)/new")}
         >
-          <Ionicons name="create-outline" size={22} color="#FFFFFF" />
+          <Icon name="create-outline" size={22} color="#FFFFFF" />
           <Text style={styles.text}>野球ノートを記録</Text>
         </TouchableOpacity>
       </View>
@@ -32,9 +32,9 @@ export function RecordButtonsSection() {
         style={styles.listLink}
         onPress={() => router.push("/(records)/list")}
       >
-        <Ionicons name="list-outline" size={16} color="#d08000" />
+        <Icon name="list-outline" size={16} color="#d08000" />
         <Text style={styles.listLinkText}>練習記録・野球ノートの一覧</Text>
-        <Ionicons name="chevron-forward" size={16} color="#d08000" />
+        <Icon name="chevron-forward" size={16} color="#d08000" />
       </TouchableOpacity>
     </View>
   );

@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { Redirect, useRouter } from "expo-router";
@@ -16,6 +15,7 @@ import {
   type PurchasesOffering,
 } from "react-native-purchases";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Icon } from "@components/icon/Icon";
 import {
   DEFAULT_COPY,
   FEATURE_COMPARISONS,
@@ -235,7 +235,7 @@ export default function ProScreen() {
         accessibilityLabel="閉じる"
         hitSlop={8}
       >
-        <Ionicons name="close" size={22} color="#F4F4F4" />
+        <Icon name="close" size={22} color="#F4F4F4" />
       </TouchableOpacity>
 
       <ScrollView
@@ -262,7 +262,7 @@ export default function ProScreen() {
           {FEATURE_GROUPS.map((group) => (
             <View key={group.title} style={styles.group}>
               <View style={styles.groupHeader}>
-                <Ionicons name={group.icon} size={16} color="#d08000" />
+                <Icon name={group.icon} size={16} color="#d08000" />
                 <Text style={styles.groupHeaderTitle}>{group.title}</Text>
               </View>
               <View style={styles.table}>

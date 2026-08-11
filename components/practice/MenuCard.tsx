@@ -1,7 +1,7 @@
 import type { PracticeMenu } from "../../types/practice";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 interface Props {
   menu: PracticeMenu;
@@ -23,7 +23,7 @@ export function MenuCard({ menu, onPress }: Props) {
           <Text style={styles.value}>{valueLabel}</Text>
         </Text>
       </View>
-      <Ionicons name="chevron-forward" size={18} color="#A1A1AA" />
+      <Icon name="chevron-forward" size={18} color="#A1A1AA" />
     </TouchableOpacity>
   );
 }

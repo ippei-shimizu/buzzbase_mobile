@@ -1,5 +1,5 @@
+import type { IconName } from "../../types/icon";
 import type { Feature, ProFeature } from "../../types/pro";
-import { Ionicons } from "@expo/vector-icons";
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -19,6 +19,7 @@ import {
   type PACKAGE_TYPE,
   type PurchasesOffering,
 } from "react-native-purchases";
+import { Icon } from "@components/icon/Icon";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { useProStatus } from "@hooks/useProStatus";
 import { syncProStatus } from "@services/proService";
@@ -243,7 +244,7 @@ export const FEATURE_COMPARISONS: Record<ProFeature, FeatureComparison> = {
 
 interface FeatureGroup {
   title: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: IconName;
   keys: ProFeature[];
 }
 
@@ -498,16 +499,12 @@ export function PaywallModal({
               accessibilityLabel="閉じる"
               hitSlop={8}
             >
-              <Ionicons name="close" size={22} color="#F4F4F4" />
+              <Icon name="close" size={22} color="#F4F4F4" />
             </TouchableOpacity>
             <View style={styles.scrollContent}>
               {contextMessage ? (
                 <View style={styles.contextBanner}>
-                  <Ionicons
-                    name="information-circle"
-                    size={16}
-                    color="#D4D4D4"
-                  />
+                  <Icon name="information-circle" size={16} color="#D4D4D4" />
                   <Text style={styles.contextBannerText}>{contextMessage}</Text>
                 </View>
               ) : null}
@@ -655,7 +652,7 @@ export function PaywallModal({
             accessibilityLabel="閉じる"
             hitSlop={8}
           >
-            <Ionicons name="close" size={22} color="#F4F4F4" />
+            <Icon name="close" size={22} color="#F4F4F4" />
           </TouchableOpacity>
 
           <ScrollView
@@ -671,7 +668,7 @@ export function PaywallModal({
 
             {contextMessage ? (
               <View style={styles.contextBanner}>
-                <Ionicons name="information-circle" size={16} color="#D4D4D4" />
+                <Icon name="information-circle" size={16} color="#D4D4D4" />
                 <Text style={styles.contextBannerText}>{contextMessage}</Text>
               </View>
             ) : null}
@@ -691,7 +688,7 @@ export function PaywallModal({
               {visibleGroups.map((group) => (
                 <View key={group.title} style={styles.group}>
                   <View style={styles.groupHeader}>
-                    <Ionicons name={group.icon} size={16} color="#d08000" />
+                    <Icon name={group.icon} size={16} color="#d08000" />
                     <Text style={styles.groupHeaderTitle}>{group.title}</Text>
                   </View>
                   <View style={styles.table}>

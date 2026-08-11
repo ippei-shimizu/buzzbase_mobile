@@ -1,10 +1,11 @@
-import { Ionicons } from "@expo/vector-icons";
+import type { IconName } from "../../../types/icon";
 import { useRouter, type Href } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { SectionCard } from "./SectionCard";
 
 type Tool = {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: IconName;
   label: string;
   description: string;
   href: Href;
@@ -55,12 +56,12 @@ export function ImprovementToolsSection() {
           ]}
           onPress={() => router.push(tool.href)}
         >
-          <Ionicons name={tool.icon} size={20} color="#d08000" />
+          <Icon name={tool.icon} size={20} color="#d08000" />
           <View style={styles.textWrap}>
             <Text style={styles.label}>{tool.label}</Text>
             <Text style={styles.description}>{tool.description}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color="#A1A1AA" />
+          <Icon name="chevron-forward" size={18} color="#A1A1AA" />
         </TouchableOpacity>
       ))}
     </SectionCard>

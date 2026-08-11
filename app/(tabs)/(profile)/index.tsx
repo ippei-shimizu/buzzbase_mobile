@@ -1,6 +1,5 @@
 import type { GameResult } from "../../../types/gameResult";
 import type { StatsFilters } from "../../../types/profile";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack } from "expo-router";
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
@@ -20,6 +19,7 @@ import { AppBannerAd } from "@components/ads/AppBannerAd";
 import { InlineBannerAd } from "@components/ads/InlineBannerAd";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
+import { Icon } from "@components/icon/Icon";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
@@ -263,7 +263,7 @@ export default function ProfileScreen() {
   const headerRightContent = () => (
     <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
       <TouchableOpacity onPress={() => router.push("/(profile)/search")}>
-        <Ionicons name="search-outline" size={22} color="#F4F4F4" />
+        <Icon name="search-outline" size={22} color="#F4F4F4" />
       </TouchableOpacity>
       <GlobalMenuButton onPress={openMenu} />
     </View>
@@ -603,7 +603,7 @@ export default function ProfileScreen() {
             }}
           >
             <View style={styles.searchBox}>
-              <Ionicons name="search" size={16} color="#71717A" />
+              <Icon name="search" size={16} color="#71717A" />
               <TextInput
                 style={styles.searchInput}
                 placeholder="対戦相手を検索"
@@ -622,7 +622,7 @@ export default function ProfileScreen() {
               <Text style={pillButtonStyle.buttonText}>
                 日付（{gameSortDesc ? "新しい順" : "古い順"}）
               </Text>
-              <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+              <Icon name="chevron-down" size={14} color="#A1A1AA" />
             </TouchableOpacity>
           </View>
 

@@ -3,7 +3,6 @@ import type {
   MediaType,
   StagedMediaAsset,
 } from "../../types/mediaAttachment";
-import { Ionicons } from "@expo/vector-icons";
 import { isAxiosError } from "axios";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
@@ -15,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useMediaAttachmentUpload } from "@hooks/useMediaAttachmentUpload";
@@ -213,7 +213,7 @@ export function MediaPicker({ baseballNoteId, onStage, onUploaded }: Props) {
           onPress={() => handlePick("camera")}
           disabled={isBusy}
         >
-          <Ionicons name="camera-outline" size={20} color="#d08000" />
+          <Icon name="camera-outline" size={20} color="#d08000" />
           <Text style={styles.buttonText}>撮影</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -221,7 +221,7 @@ export function MediaPicker({ baseballNoteId, onStage, onUploaded }: Props) {
           onPress={() => handlePick("library")}
           disabled={isBusy}
         >
-          <Ionicons name="images-outline" size={20} color="#d08000" />
+          <Icon name="images-outline" size={20} color="#d08000" />
           <Text style={styles.buttonText}>ライブラリ</Text>
         </TouchableOpacity>
       </View>

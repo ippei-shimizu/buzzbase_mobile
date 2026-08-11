@@ -1,6 +1,6 @@
+import type { IconName } from "../../types/icon";
 import type { PresetMenu } from "../../types/practice";
 import type { Schedule } from "../../types/schedule";
-import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { PlanMenuRow } from "@components/schedule/PlanMenuRow";
 import {
   dayLabels,
@@ -130,10 +131,10 @@ export default function ScheduleDetailScreen() {
           headerRight: () => (
             <View style={styles.headerActions}>
               <TouchableOpacity onPress={goEdit}>
-                <Ionicons name="create-outline" size={22} color="#F4F4F4" />
+                <Icon name="create-outline" size={22} color="#F4F4F4" />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleDelete}>
-                <Ionicons name="trash-outline" size={22} color="#F31260" />
+                <Icon name="trash-outline" size={22} color="#F31260" />
               </TouchableOpacity>
             </View>
           ),
@@ -199,7 +200,7 @@ export default function ScheduleDetailScreen() {
           <Text style={styles.sectionTitle}>メニュー</Text>
           {schedule.menus.map((menu) => (
             <View key={menu.practice_menu_id} style={styles.menuRow}>
-              <Ionicons name="ellipse" size={6} color="#d08000" />
+              <Icon name="ellipse" size={6} color="#d08000" />
               <Text style={styles.menuText}>
                 {menu.name}
                 {menu.target_value != null
@@ -220,7 +221,7 @@ export default function ScheduleDetailScreen() {
 
       {schedule.event_type === "game" ? (
         <TouchableOpacity style={styles.recordButton} onPress={goRecordGame}>
-          <Ionicons name="baseball-outline" size={16} color="#FFFFFF" />
+          <Icon name="baseball-outline" size={16} color="#FFFFFF" />
           <Text style={styles.recordButtonText}>試合記録をつける</Text>
         </TouchableOpacity>
       ) : (
@@ -228,7 +229,7 @@ export default function ScheduleDetailScreen() {
           style={styles.recordButton}
           onPress={goRecordPractice}
         >
-          <Ionicons name="create-outline" size={16} color="#FFFFFF" />
+          <Icon name="create-outline" size={16} color="#FFFFFF" />
           <Text style={styles.recordButtonText}>練習記録をつける</Text>
         </TouchableOpacity>
       )}
@@ -236,16 +237,10 @@ export default function ScheduleDetailScreen() {
   );
 }
 
-function InfoRow({
-  icon,
-  label,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-}) {
+function InfoRow({ icon, label }: { icon: IconName; label: string }) {
   return (
     <View style={styles.infoRow}>
-      <Ionicons name={icon} size={18} color="#A1A1AA" />
+      <Icon name={icon} size={18} color="#A1A1AA" />
       <Text style={styles.infoText}>{label}</Text>
     </View>
   );

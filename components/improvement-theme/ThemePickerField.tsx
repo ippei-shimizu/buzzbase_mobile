@@ -1,6 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useImprovementThemes } from "@hooks/useImprovementThemes";
@@ -51,24 +51,24 @@ export function ThemePickerField({ selectedThemeIds, onChange }: Props) {
         const theme = themes.find((item) => item.id === themeId);
         return (
           <View key={themeId} style={styles.linkButton}>
-            <Ionicons name="flag-outline" size={18} color="#d08000" />
+            <Icon name="flag-outline" size={18} color="#d08000" />
             <Text style={styles.linkButtonText} numberOfLines={1}>
               {theme ? theme.title : "課題に紐付け済み"}
             </Text>
             <TouchableOpacity onPress={() => handleRemove(themeId)}>
-              <Ionicons name="close-circle" size={18} color="#A1A1AA" />
+              <Icon name="close-circle" size={18} color="#A1A1AA" />
             </TouchableOpacity>
           </View>
         );
       })}
       <TouchableOpacity style={styles.linkButton} onPress={handleOpenPicker}>
-        <Ionicons name="flag-outline" size={18} color="#d08000" />
+        <Icon name="flag-outline" size={18} color="#d08000" />
         <Text style={styles.linkButtonText}>
           {selectedThemeIds.length > 0
             ? "課題をもう1件追加"
             : "取り組む課題に紐付け"}
         </Text>
-        <Ionicons
+        <Icon
           name={isOpen ? "chevron-up" : "chevron-down"}
           size={18}
           color="#A1A1AA"

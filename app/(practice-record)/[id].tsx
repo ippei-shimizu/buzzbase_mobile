@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -10,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { ConditionCard } from "@components/practice/ConditionCard";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
@@ -54,12 +54,12 @@ function LinkedNotes({ sessionId }: { sessionId: number }) {
           >
             <View style={styles.noteCardHeader}>
               <View style={styles.noteIcon}>
-                <Ionicons name="document-text" size={16} color="#d08000" />
+                <Icon name="document-text" size={16} color="#d08000" />
               </View>
               <Text style={styles.noteTitle} numberOfLines={1}>
                 {note.title || "無題のノート"}
               </Text>
-              <Ionicons name="chevron-forward" size={18} color="#A1A1AA" />
+              <Icon name="chevron-forward" size={18} color="#A1A1AA" />
             </View>
             {body ? (
               <Text style={styles.noteBody} numberOfLines={3}>
@@ -134,10 +134,10 @@ export default function PracticeSessionDetailScreen() {
                   })
                 }
               >
-                <Ionicons name="create-outline" size={22} color="#F4F4F4" />
+                <Icon name="create-outline" size={22} color="#F4F4F4" />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleDelete} disabled={isDeleting}>
-                <Ionicons name="trash-outline" size={22} color="#F31260" />
+                <Icon name="trash-outline" size={22} color="#F31260" />
               </TouchableOpacity>
             </View>
           ),
@@ -166,7 +166,7 @@ export default function PracticeSessionDetailScreen() {
             {logs.map((log) => (
               <View key={log.id} style={styles.menuRow}>
                 <View style={styles.menuIcon}>
-                  <Ionicons
+                  <Icon
                     name={menuIconForLog(
                       log.source,
                       log.practice_menu_id != null

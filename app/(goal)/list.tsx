@@ -1,5 +1,4 @@
 import type { Goal } from "../../types/goal";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
@@ -12,6 +11,7 @@ import {
   Alert,
 } from "react-native";
 import { GoalProgressBar } from "@components/goal/GoalProgressBar";
+import { Icon } from "@components/icon/Icon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { SwipeableTabPages } from "@components/ui/SwipeableTabPages";
 import {
@@ -141,7 +141,7 @@ export default function GoalListScreen() {
                           goal.is_achieved ? "達成を取り消す" : "達成にする"
                         }
                       >
-                        <Ionicons
+                        <Icon
                           name={
                             goal.is_achieved
                               ? "checkmark-circle"
@@ -166,7 +166,7 @@ export default function GoalListScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-          <Ionicons name="add" size={18} color="#FFFFFF" />
+          <Icon name="add" size={18} color="#FFFFFF" />
           <Text style={styles.addButtonText}>新しい目標を追加</Text>
         </TouchableOpacity>
 

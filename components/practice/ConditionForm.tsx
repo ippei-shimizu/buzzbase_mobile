@@ -1,5 +1,5 @@
+import type { IconName } from "../../types/icon";
 import type { Injury } from "../../types/practice";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   View,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { CONDITION_MOODS } from "../../constants/practice";
 import { InjuryInput } from "./InjuryInput";
 
@@ -37,10 +38,10 @@ interface Props {
   disabled?: boolean;
 }
 
-// emoji は RN で表示されない端末があるため Ionicons を使う。色は悪い→良いで赤→緑。
+// emoji は RN で表示されない端末があるためアイコンを使う。色は悪い→良いで赤→緑。
 const LEVELS: {
   value: number;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: IconName;
   color: string;
 }[] = [
   { value: 1, icon: "sad", color: "#ef4444" },
@@ -71,7 +72,7 @@ function LevelSelector({
             style={[styles.levelButton, active && styles.levelButtonActive]}
             onPress={() => onChange(level.value)}
           >
-            <Ionicons name={level.icon} size={26} color={level.color} />
+            <Icon name={level.icon} size={26} color={level.color} />
             <Text
               style={[styles.levelLabel, active && styles.levelLabelActive]}
             >

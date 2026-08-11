@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
@@ -12,6 +11,7 @@ import {
   type NativeScrollEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Icon } from "@components/icon/Icon";
 import { OnboardingSlide } from "@components/onboarding/OnboardingSlide";
 import { PageIndicator } from "@components/onboarding/PageIndicator";
 import { Button } from "@components/ui/Button";
@@ -60,7 +60,7 @@ export default function OnboardingWelcome() {
             accessibilityRole="button"
             accessibilityLabel="前のステップに戻る"
           >
-            <Ionicons name="chevron-back" size={26} color="#F4F4F4" />
+            <Icon name="chevron-back" size={26} color="#F4F4F4" />
           </TouchableOpacity>
         ) : (
           <View />

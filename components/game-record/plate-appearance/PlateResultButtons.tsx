@@ -1,6 +1,6 @@
 import type { SwingType } from "../../../types/plateAppearance";
-import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import {
   DIRECTION_ONLY_RESULT_OPTIONS,
   HIT_TYPE_OPTIONS,
@@ -225,12 +225,12 @@ function ResultButton({
       ]}
     >
       <View style={styles.labelRow} pointerEvents="none">
-        {isSelected && <Ionicons name="checkmark" size={18} color="#FFFFFF" />}
+        {isSelected && <Icon name="checkmark" size={18} color="#FFFFFF" />}
         <Text style={[styles.buttonLabel, { color: labelColor }]}>{label}</Text>
       </View>
       {hasChevron && (
         <View style={styles.chevron} pointerEvents="none">
-          <Ionicons
+          <Icon
             name="chevron-forward"
             size={18}
             color={isSelected ? "#FFFFFF" : color}

@@ -1,6 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 interface Props {
   current: number;
@@ -11,7 +11,7 @@ interface Props {
 export function StreakBadge({ current, longest }: Props) {
   return (
     <View style={styles.row}>
-      <Ionicons name="flame" size={20} color="#d08000" />
+      <Icon name="flame" size={20} color="#d08000" />
       <Text style={styles.current}>連続 {current}日</Text>
       <Text style={styles.longest}>最長 {longest}日</Text>
     </View>

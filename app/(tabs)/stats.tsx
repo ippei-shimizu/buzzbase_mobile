@@ -7,7 +7,6 @@ import type {
   StatsPeriod,
 } from "../../types/stats";
 import type { SprayChartMode } from "@components/stats/SprayChart";
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
@@ -25,6 +24,7 @@ import {
 } from "react-native";
 import { AppBannerAd } from "@components/ads/AppBannerAd";
 import { InlineBannerAd } from "@components/ads/InlineBannerAd";
+import { Icon } from "@components/icon/Icon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellCard } from "@components/pro/ProUpsellCard";
 import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
@@ -350,7 +350,7 @@ function TableFilterDropdown({
         >
           {label}: {selectedLabel}
         </Text>
-        <Ionicons
+        <Icon
           name="chevron-down"
           size={14}
           color={isFiltered ? "#d08000" : "#A1A1AA"}
@@ -1267,7 +1267,7 @@ export default function StatsScreen() {
           accessibilityRole="button"
           accessibilityLabel="画面のトップに戻る"
         >
-          <Ionicons name="chevron-up" size={20} color="#F4F4F4" />
+          <Icon name="chevron-up" size={20} color="#F4F4F4" />
         </Pressable>
       )}
 

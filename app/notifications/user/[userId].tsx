@@ -1,6 +1,5 @@
 import type { GameResult } from "../../../types/gameResult";
 import type { StatsFilters } from "../../../types/profile";
-import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState, useCallback } from "react";
 import {
@@ -14,6 +13,7 @@ import {
 } from "react-native";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
+import { Icon } from "@components/icon/Icon";
 import { FollowRequestBanner } from "@components/profile/FollowRequestBanner";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
@@ -190,7 +190,7 @@ export default function NotificationUserProfileScreen() {
 
       {isPrivateAndNotFollowing ? (
         <View style={styles.privateContainer}>
-          <Ionicons name="lock-closed" size={32} color="#71717A" />
+          <Icon name="lock-closed" size={32} color="#71717A" />
           <Text style={styles.privateText}>このアカウントは非公開です</Text>
           <Text style={styles.privateSubText}>
             フォローが承認されると成績や試合結果を閲覧できます

@@ -1,6 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 interface FilterResetButtonProps {
   visible: boolean;
@@ -25,7 +25,7 @@ export const FilterResetButton = ({
       accessibilityRole="button"
       accessibilityLabel="フィルターをクリア"
     >
-      <Ionicons name="refresh" size={14} color="#A1A1AA" />
+      <Icon name="refresh" size={14} color="#A1A1AA" />
       <Text style={styles.label}>クリア</Text>
     </TouchableOpacity>
   );

@@ -1,5 +1,4 @@
 import type { Schedule } from "../../types/schedule";
-import { Ionicons } from "@expo/vector-icons";
 import { isAxiosError } from "axios";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
@@ -11,6 +10,7 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { eventTypeMeta } from "@constants/schedule";
 import { useEntitlement } from "@hooks/useEntitlement";
@@ -85,14 +85,14 @@ export function WeeklyPlanView() {
           onPress={() => setWeekStart((prev) => addDays(prev, -7))}
           hitSlop={10}
         >
-          <Ionicons name="chevron-back" size={22} color="#F4F4F4" />
+          <Icon name="chevron-back" size={22} color="#F4F4F4" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>今週のプラン {rangeLabel}</Text>
         <TouchableOpacity
           onPress={() => setWeekStart((prev) => addDays(prev, 7))}
           hitSlop={10}
         >
-          <Ionicons name="chevron-forward" size={22} color="#F4F4F4" />
+          <Icon name="chevron-forward" size={22} color="#F4F4F4" />
         </TouchableOpacity>
       </View>
 
@@ -131,7 +131,7 @@ export function WeeklyPlanView() {
                   router.push(`/(schedule)/new?date=${iso}&singleOnly=1`)
                 }
               >
-                <Ionicons name="add" size={16} color="#d08000" />
+                <Icon name="add" size={16} color="#d08000" />
               </TouchableOpacity>
             </View>
           </View>
@@ -143,10 +143,10 @@ export function WeeklyPlanView() {
         onPress={handleCopyToNextWeek}
         disabled={isCopying}
       >
-        <Ionicons name="copy-outline" size={16} color="#F4F4F4" />
+        <Icon name="copy-outline" size={16} color="#F4F4F4" />
         <Text style={styles.copyText}>来週にコピー</Text>
         {!isProLoading && !hasEntitlement("schedule_copy_next_week") ? (
-          <Ionicons name="lock-closed" size={14} color="#A1A1AA" />
+          <Icon name="lock-closed" size={14} color="#A1A1AA" />
         ) : null}
       </TouchableOpacity>
       <Text style={styles.note}>

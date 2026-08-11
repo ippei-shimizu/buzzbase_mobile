@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -10,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import {
   CATEGORY_ICON,
@@ -86,7 +86,7 @@ export default function PracticeMenuListScreen() {
             return (
               <View key={category.key} style={styles.group}>
                 <View style={styles.groupTitleRow}>
-                  <Ionicons
+                  <Icon
                     name={CATEGORY_ICON[category.key]}
                     size={15}
                     color="#d08000"
@@ -102,16 +102,12 @@ export default function PracticeMenuListScreen() {
                     onPress={() => handleEdit(menu.id)}
                   >
                     <Text style={styles.cardTitle}>{menu.name}</Text>
-                    <Ionicons name="pencil" size={16} color="#A1A1AA" />
+                    <Icon name="pencil" size={16} color="#A1A1AA" />
                     <TouchableOpacity
                       onPress={() => handleDelete(menu.id, menu.name)}
                       hitSlop={8}
                     >
-                      <Ionicons
-                        name="trash-outline"
-                        size={18}
-                        color="#A1A1AA"
-                      />
+                      <Icon name="trash-outline" size={18} color="#A1A1AA" />
                     </TouchableOpacity>
                   </TouchableOpacity>
                 ))}
@@ -121,7 +117,7 @@ export default function PracticeMenuListScreen() {
         )}
 
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-          <Ionicons name="add" size={20} color="#F4F4F4" />
+          <Icon name="add" size={20} color="#F4F4F4" />
           <Text style={styles.addButtonText}>メニューを作る</Text>
         </TouchableOpacity>
       </ScrollView>

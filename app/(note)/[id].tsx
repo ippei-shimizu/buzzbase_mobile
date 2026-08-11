@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -11,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { GameResultDetail } from "@components/game-results/GameResultDetail";
+import { Icon } from "@components/icon/Icon";
 import { MediaAttachmentList } from "@components/note/MediaAttachmentList";
 import { ConditionCard } from "@components/practice/ConditionCard";
 import { PaywallModal } from "@components/pro/PaywallModal";
@@ -49,7 +49,7 @@ function LinkedPractice({ sessionId }: { sessionId: number }) {
       <View style={styles.practiceHeader}>
         <View style={styles.practiceHeaderLeft}>
           <View style={styles.practiceHeaderIcon}>
-            <Ionicons name="clipboard-outline" size={20} color="#FFFFFF" />
+            <Icon name="clipboard-outline" size={20} color="#FFFFFF" />
           </View>
           <View>
             <Text style={styles.cardLabel}>紐付けた練習</Text>
@@ -67,7 +67,7 @@ function LinkedPractice({ sessionId }: { sessionId: number }) {
             })
           }
         >
-          <Ionicons name="create-outline" size={14} color="#d08000" />
+          <Icon name="create-outline" size={14} color="#d08000" />
           <Text style={styles.cardLink}>編集</Text>
         </TouchableOpacity>
       </View>
@@ -81,7 +81,7 @@ function LinkedPractice({ sessionId }: { sessionId: number }) {
             {logs.map((log) => (
               <View key={log.id} style={styles.menuRow}>
                 <View style={styles.menuIcon}>
-                  <Ionicons
+                  <Icon
                     name={
                       log.source === "shadow_swing" ? "baseball" : "barbell"
                     }
@@ -215,10 +215,10 @@ export default function NoteDetailScreen() {
                   })
                 }
               >
-                <Ionicons name="create-outline" size={22} color="#F4F4F4" />
+                <Icon name="create-outline" size={22} color="#F4F4F4" />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleDelete} disabled={isDeleting}>
-                <Ionicons name="trash-outline" size={22} color="#F31260" />
+                <Icon name="trash-outline" size={22} color="#F31260" />
               </TouchableOpacity>
             </View>
           ),

@@ -1,5 +1,5 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 interface Props {
   visible: boolean;
@@ -16,7 +16,7 @@ export function BackToTopButton({ visible, onPress }: Props) {
       accessibilityRole="button"
       accessibilityLabel="画面のトップに戻る"
     >
-      <Ionicons name="chevron-up" size={20} color="#F4F4F4" />
+      <Icon name="chevron-up" size={20} color="#F4F4F4" />
     </Pressable>
   );
 }

@@ -1,5 +1,4 @@
 import type { Injury } from "../../types/practice";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   View,
@@ -9,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { INJURY_PARTS } from "../../constants/practice";
 
 interface Props {
@@ -64,13 +64,13 @@ export function InjuryInput({ injuries, onChange }: Props) {
               placeholderTextColor="#71717A"
             />
             <TouchableOpacity onPress={() => remove(index)}>
-              <Ionicons name="close-circle" size={20} color="#71717A" />
+              <Icon name="close-circle" size={20} color="#71717A" />
             </TouchableOpacity>
           </View>
         </View>
       ))}
       <TouchableOpacity style={styles.addButton} onPress={add}>
-        <Ionicons name="add" size={16} color="#d08000" />
+        <Icon name="add" size={16} color="#d08000" />
         <Text style={styles.addText}>部位を追加</Text>
       </TouchableOpacity>
     </View>

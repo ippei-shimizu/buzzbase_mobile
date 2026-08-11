@@ -1,5 +1,4 @@
 import type { GameResult } from "../../types/gameResult";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   ActivityIndicator,
@@ -10,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { PlateAppearanceCard } from "@components/game-record/plate-appearance/PlateAppearanceCard";
+import { Icon } from "@components/icon/Icon";
 import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
 import { usePlateAppearancesByGame } from "@hooks/usePlateAppearances";
 import { formatMatchTypeLabel } from "@utils/matchType";
@@ -268,13 +268,13 @@ export const GameResultDetail = ({
         <View style={styles.actionsRow}>
           {onEdit && (
             <TouchableOpacity style={styles.editButton} onPress={onEdit}>
-              <Ionicons name="create-outline" size={18} color="#FFFFFF" />
+              <Icon name="create-outline" size={18} color="#FFFFFF" />
               <Text style={styles.editButtonText}>編集</Text>
             </TouchableOpacity>
           )}
           {onShare && (
             <TouchableOpacity style={styles.shareButton} onPress={onShare}>
-              <Ionicons name="share-outline" size={18} color="#d08000" />
+              <Icon name="share-outline" size={18} color="#d08000" />
               <Text style={styles.shareButtonText}>共有</Text>
             </TouchableOpacity>
           )}

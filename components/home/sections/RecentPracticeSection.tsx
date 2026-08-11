@@ -1,8 +1,8 @@
 import type { ConditionLog, PracticeSession } from "../../../types/practice";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { formatPracticeValue, menuIconForLog } from "@constants/practice";
 import { useNotes } from "@hooks/useNotes";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
@@ -126,13 +126,13 @@ export function RecentPracticeSection() {
                 </View>
                 {badge ? (
                   <View style={styles.badge}>
-                    <Ionicons name={badge.icon} size={13} color={badge.color} />
+                    <Icon name={badge.icon} size={13} color={badge.color} />
                     <Text style={[styles.badgeText, { color: badge.color }]}>
                       {badge.text}
                     </Text>
                   </View>
                 ) : null}
-                <Ionicons name="chevron-forward" size={16} color="#71717A" />
+                <Icon name="chevron-forward" size={16} color="#71717A" />
               </View>
 
               {session.practice_logs.map((log) => {
@@ -140,7 +140,7 @@ export function RecentPracticeSection() {
                 return (
                   <View key={log.id} style={styles.logRow}>
                     <View style={styles.logMain}>
-                      <Ionicons
+                      <Icon
                         name={menuIconForLog(
                           log.source,
                           log.practice_menu_id != null
@@ -158,7 +158,7 @@ export function RecentPracticeSection() {
                     </View>
                     {noteByLog.get(log.id) ? (
                       <View style={styles.noteRow}>
-                        <Ionicons name="pencil" size={11} color="#71717A" />
+                        <Icon name="pencil" size={11} color="#71717A" />
                         <Text style={styles.note} numberOfLines={2}>
                           {noteByLog.get(log.id)}
                         </Text>
@@ -185,7 +185,7 @@ export function RecentPracticeSection() {
           onPress={() => router.push("/(records)/list")}
         >
           <Text style={styles.viewAllText}>すべての記録を見る</Text>
-          <Ionicons name="chevron-forward" size={14} color="#d08000" />
+          <Icon name="chevron-forward" size={14} color="#d08000" />
         </TouchableOpacity>
       ) : null}
     </SectionCard>

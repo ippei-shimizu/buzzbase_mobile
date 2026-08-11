@@ -1,6 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { useImprovementThemes } from "@hooks/useImprovementThemes";
 import { SectionError } from "./SectionCard";
 
@@ -20,7 +20,7 @@ export function CurrentThemeSection() {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Ionicons name="flag" size={16} color="#d08000" />
+        <Icon name="flag" size={16} color="#d08000" />
         <Text style={styles.headerText}>取り組んでいる課題</Text>
       </View>
 
@@ -39,7 +39,7 @@ export function CurrentThemeSection() {
             accessibilityRole="button"
             onPress={() => router.push("/(theme)/list")}
           >
-            <Ionicons name="add" size={14} color="#d08000" />
+            <Icon name="add" size={14} color="#d08000" />
             <Text style={styles.manageText}>課題を設定する</Text>
           </TouchableOpacity>
         </>
@@ -59,23 +59,19 @@ export function CurrentThemeSection() {
                 </Text>
                 <View style={styles.statRow}>
                   <View style={styles.statChip}>
-                    <Ionicons name="flame-outline" size={12} color="#d08000" />
+                    <Icon name="flame-outline" size={12} color="#d08000" />
                     <Text style={styles.statText}>
                       取組 {theme.active_days}日
                     </Text>
                   </View>
                   <View style={styles.statChip}>
-                    <Ionicons
-                      name="barbell-outline"
-                      size={12}
-                      color="#d08000"
-                    />
+                    <Icon name="barbell-outline" size={12} color="#d08000" />
                     <Text style={styles.statText}>
                       練習 {theme.practice_logs_count}
                     </Text>
                   </View>
                   <View style={styles.statChip}>
-                    <Ionicons
+                    <Icon
                       name="document-text-outline"
                       size={12}
                       color="#d08000"
@@ -86,7 +82,7 @@ export function CurrentThemeSection() {
                   </View>
                 </View>
               </View>
-              <Ionicons name="chevron-forward" size={16} color="#71717A" />
+              <Icon name="chevron-forward" size={16} color="#71717A" />
             </TouchableOpacity>
           ))}
           <TouchableOpacity
@@ -95,7 +91,7 @@ export function CurrentThemeSection() {
             accessibilityRole="button"
             onPress={() => router.push("/(theme)/list")}
           >
-            <Ionicons name="add" size={14} color="#d08000" />
+            <Icon name="add" size={14} color="#d08000" />
             <Text style={styles.manageText}>課題を追加・管理</Text>
           </TouchableOpacity>
         </>

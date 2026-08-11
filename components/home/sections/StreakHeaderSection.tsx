@@ -1,8 +1,8 @@
-import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Heatmap } from "@components/grass/Heatmap";
 import { StreakBadge } from "@components/grass/StreakBadge";
+import { Icon } from "@components/icon/Icon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellCard } from "@components/pro/ProUpsellCard";
 import { useActivityHeatmap, useStreak } from "@hooks/useActivity";
@@ -71,7 +71,7 @@ export function StreakHeaderSection() {
       <StreakBadge current={currentStreak} longest={longestStreak} />
 
       <View style={styles.nudge}>
-        <Ionicons name="flame" size={16} color="#d08000" />
+        <Icon name="flame" size={16} color="#d08000" />
         <Text style={styles.nudgeText}>{nudge}</Text>
       </View>
       {heatmap ? (
@@ -89,7 +89,7 @@ export function StreakHeaderSection() {
 
       {nextActiveDay != null ? (
         <View style={styles.milestone}>
-          <Ionicons name="trophy-outline" size={13} color="#A1A1AA" />
+          <Icon name="trophy-outline" size={13} color="#A1A1AA" />
           <Text style={styles.milestoneText}>
             通算{nextActiveDay}日まであと{nextActiveDay - totalActiveDays}日
           </Text>
@@ -97,7 +97,7 @@ export function StreakHeaderSection() {
       ) : null}
       {nextSwing != null && swingTotal > 0 ? (
         <View style={styles.milestone}>
-          <Ionicons name="baseball-outline" size={13} color="#A1A1AA" />
+          <Icon name="baseball-outline" size={13} color="#A1A1AA" />
           <Text style={styles.milestoneText}>
             素振り累計{nextSwing.toLocaleString()}本まであと
             {(nextSwing - swingTotal).toLocaleString()}本

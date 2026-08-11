@@ -1,7 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { SectionCard } from "./SectionCard";
 
 /**
@@ -20,7 +20,7 @@ export function PracticeToolsSection() {
         style={styles.swingButton}
         onPress={() => router.push("/(shadow-swing)/setup")}
       >
-        <Ionicons name="timer-outline" size={20} color="#FFFFFF" />
+        <Icon name="timer-outline" size={20} color="#FFFFFF" />
         <Text style={styles.swingText}>素振りカウントタイマー</Text>
       </TouchableOpacity>
     </SectionCard>

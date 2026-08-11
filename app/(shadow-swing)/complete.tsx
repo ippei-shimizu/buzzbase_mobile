@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useAudioPlayer } from "expo-audio";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect } from "react";
@@ -14,6 +13,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
+import { Icon } from "@components/icon/Icon";
 import { useShadowSwingStats } from "@hooks/useShadowSwing";
 
 export default function ShadowSwingCompleteScreen() {
@@ -43,7 +43,7 @@ export default function ShadowSwingCompleteScreen() {
   return (
     <View style={styles.container}>
       <Animated.View style={iconStyle}>
-        <Ionicons
+        <Icon
           name={isSaved ? "checkmark-circle" : "alert-circle"}
           size={56}
           color={isSaved ? "#17C964" : "#F5A524"}

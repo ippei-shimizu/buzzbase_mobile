@@ -1,5 +1,4 @@
 import type { MediaAttachment } from "../../types/mediaAttachment";
-import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -11,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useMediaAttachmentMutations } from "@hooks/useMediaAttachmentMutations";
 import { useMediaAttachmentUpload } from "@hooks/useMediaAttachmentUpload";
@@ -141,7 +141,7 @@ export function MediaAttachmentList({
             {attachment.media_type === "video" &&
             attachment.status === "ready" ? (
               <View style={styles.playBadge}>
-                <Ionicons name="play" size={16} color="#F4F4F4" />
+                <Icon name="play" size={16} color="#F4F4F4" />
               </View>
             ) : null}
             {trimmingId === attachment.id ? (
@@ -158,7 +158,7 @@ export function MediaAttachmentList({
               disabled={isTrimming}
               onPress={() => handleRetrim(attachment)}
             >
-              <Ionicons name="cut-outline" size={16} color="#F4F4F4" />
+              <Icon name="cut-outline" size={16} color="#F4F4F4" />
             </TouchableOpacity>
           ) : null}
           {editable ? (
@@ -167,7 +167,7 @@ export function MediaAttachmentList({
               disabled={deletingId === attachment.id}
               onPress={() => handleDelete(attachment.id)}
             >
-              <Ionicons name="close-circle" size={22} color="#F4F4F4" />
+              <Icon name="close-circle" size={22} color="#F4F4F4" />
             </TouchableOpacity>
           ) : null}
         </View>

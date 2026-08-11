@@ -18,6 +18,7 @@ import { CalculatorOutlineIcon } from "./CalculatorOutlineIcon";
 import { CalendarOutlineIcon } from "./CalendarOutlineIcon";
 import { CameraOutlineIcon } from "./CameraOutlineIcon";
 import { CardOutlineIcon } from "./CardOutlineIcon";
+import { ChatbubbleOutlineIcon } from "./ChatbubbleOutlineIcon";
 import { CheckboxIcon } from "./CheckboxIcon";
 import { CheckmarkIcon } from "../CheckmarkIcon";
 import { CheckmarkCircleIcon } from "./CheckmarkCircleIcon";
@@ -56,6 +57,8 @@ import { MedkitIcon } from "./MedkitIcon";
 import { MegaphoneIcon } from "./MegaphoneIcon";
 import { MenuOutlineIcon } from "./MenuOutlineIcon";
 import { MoonIcon } from "./MoonIcon";
+import { NotificationsOffOutlineIcon } from "./NotificationsOffOutlineIcon";
+import { NotificationsOutlineIcon } from "./NotificationsOutlineIcon";
 import { PencilIcon } from "./PencilIcon";
 import { PencilOutlineIcon } from "./PencilOutlineIcon";
 import { PeopleIcon } from "./PeopleIcon";
@@ -122,6 +125,7 @@ export const SOLAR_ICONS: Record<IconName, IconComponent> = {
   "calendar-outline": CalendarOutlineIcon,
   "camera-outline": CameraOutlineIcon,
   "card-outline": CardOutlineIcon,
+  "chatbubble-outline": ChatbubbleOutlineIcon,
   checkbox: CheckboxIcon,
   checkmark: CheckmarkIcon,
   "checkmark-circle": CheckmarkCircleIcon,
@@ -160,6 +164,8 @@ export const SOLAR_ICONS: Record<IconName, IconComponent> = {
   megaphone: MegaphoneIcon,
   "menu-outline": MenuOutlineIcon,
   moon: MoonIcon,
+  "notifications-off-outline": NotificationsOffOutlineIcon,
+  "notifications-outline": NotificationsOutlineIcon,
   pencil: PencilIcon,
   "pencil-outline": PencilOutlineIcon,
   people: PeopleIcon,

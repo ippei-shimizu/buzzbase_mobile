@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import {
@@ -9,6 +8,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { DashboardContent } from "@components/dashboard/DashboardContent";
+import { Icon } from "@components/icon/Icon";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { useDashboard } from "@hooks/useDashboard";
 import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
@@ -80,7 +80,7 @@ export function DashboardView({ isActive = true }: DashboardViewProps) {
               router.push("/(game-record)/step1-game-info");
             }}
           >
-            <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
             <Text style={styles.recordButtonText}>試合結果を記録する</Text>
           </TouchableOpacity>
         }

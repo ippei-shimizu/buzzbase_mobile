@@ -1,6 +1,5 @@
 import type { FollowingUser } from "../../../types/group";
 import type { SearchUser } from "../../../types/user";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -14,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { UserRow } from "@components/profile/UserRow";
 import { useUserSearch } from "@hooks/useUserSearch";
 
@@ -51,7 +51,7 @@ export default function UserSearchScreen() {
     if (query.length === 0) {
       return (
         <View style={styles.centerContainer}>
-          <Ionicons name="search" size={48} color="#424242" />
+          <Icon name="search" size={48} color="#424242" />
           <Text style={styles.emptyText}>
             ユーザー名またはIDで検索してください
           </Text>
@@ -73,7 +73,7 @@ export default function UserSearchScreen() {
       keyboardVerticalOffset={Platform.OS === "ios" ? 96 : 0}
     >
       <View style={styles.searchBarContainer}>
-        <Ionicons
+        <Icon
           name="search"
           size={18}
           color="#A1A1AA"
@@ -95,7 +95,7 @@ export default function UserSearchScreen() {
             onPress={() => setQuery("")}
             style={styles.clearButton}
           >
-            <Ionicons name="close-circle" size={18} color="#A1A1AA" />
+            <Icon name="close-circle" size={18} color="#A1A1AA" />
           </TouchableOpacity>
         )}
       </View>

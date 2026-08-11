@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -10,6 +9,7 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import { useEntitlement } from "@hooks/useEntitlement";
@@ -131,7 +131,7 @@ export default function ShadowSwingSetupScreen() {
                   {value.toFixed(1)}秒
                 </Text>
                 {locked ? (
-                  <Ionicons
+                  <Icon
                     name="lock-closed"
                     size={10}
                     color="#71717A"
@@ -237,7 +237,7 @@ export default function ShadowSwingSetupScreen() {
                   {item.label}
                 </Text>
                 {locked ? (
-                  <Ionicons
+                  <Icon
                     name="lock-closed"
                     size={10}
                     color="#71717A"

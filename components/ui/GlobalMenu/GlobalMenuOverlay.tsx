@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -12,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { CalendarIcon } from "@components/icon/CalendarIcon";
+import { Icon } from "@components/icon/Icon";
 import { NoteIcon } from "@components/icon/NoteIcon";
 
 interface Props {
@@ -69,7 +69,7 @@ export const GlobalMenuOverlay = ({ visible, opacity, onClose }: Props) => {
             }
             accessibilityRole="menuitem"
           >
-            <Ionicons name="barbell-outline" size={20} color="#F4F4F4" />
+            <Icon name="barbell-outline" size={20} color="#F4F4F4" />
             <Text style={styles.itemText}>練習記録</Text>
           </TouchableOpacity>
           <View style={styles.divider} />
@@ -98,7 +98,7 @@ export const GlobalMenuOverlay = ({ visible, opacity, onClose }: Props) => {
             onPress={() => handleSelect(() => router.push("/settings"))}
             accessibilityRole="menuitem"
           >
-            <Ionicons name="settings-outline" size={20} color="#F4F4F4" />
+            <Icon name="settings-outline" size={20} color="#F4F4F4" />
             <Text style={styles.itemText}>設定</Text>
           </TouchableOpacity>
         </Animated.View>

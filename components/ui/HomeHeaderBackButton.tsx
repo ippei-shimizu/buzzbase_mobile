@@ -1,6 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { TouchableOpacity } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 /**
  * ヘッダー左の「ホームへ戻る」ボタン。
@@ -20,7 +20,7 @@ export function HomeHeaderBackButton() {
       accessibilityRole="button"
       accessibilityLabel="ホームに戻る"
     >
-      <Ionicons name="chevron-back" size={24} color="#F4F4F4" />
+      <Icon name="chevron-back" size={24} color="#F4F4F4" />
     </TouchableOpacity>
   );
 }

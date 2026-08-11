@@ -1,5 +1,4 @@
 import type { CalendarEntry } from "../../types/plan";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -11,6 +10,7 @@ import {
   View,
 } from "react-native";
 import PagerView from "react-native-pager-view";
+import { Icon } from "@components/icon/Icon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { SkeletonList, Skeleton } from "@components/ui/Skeleton";
 import { eventTypeMeta, scheduleTimeLabel } from "@constants/schedule";
@@ -261,11 +261,11 @@ export function CalendarView({ swipeEnabled = true }: CalendarViewProps) {
 
         <View style={styles.header}>
           <TouchableOpacity onPress={() => shift(-1)} hitSlop={10}>
-            <Ionicons name="chevron-back" size={22} color="#F4F4F4" />
+            <Icon name="chevron-back" size={22} color="#F4F4F4" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{headerTitle}</Text>
           <TouchableOpacity onPress={() => shift(1)} hitSlop={10}>
-            <Ionicons name="chevron-forward" size={22} color="#F4F4F4" />
+            <Icon name="chevron-forward" size={22} color="#F4F4F4" />
           </TouchableOpacity>
         </View>
       </View>
@@ -289,7 +289,7 @@ export function CalendarView({ swipeEnabled = true }: CalendarViewProps) {
         activeOpacity={0.85}
         onPress={() => router.push(`/(schedule)/new?date=${fabDate}`)}
       >
-        <Ionicons name="add" size={30} color="#FFFFFF" />
+        <Icon name="add" size={30} color="#FFFFFF" />
       </TouchableOpacity>
 
       <PaywallModal
@@ -653,7 +653,7 @@ function DetailRow({
       <Text style={styles.detailTitle} numberOfLines={1}>
         {entry.title ?? meta.label}
       </Text>
-      <Ionicons name="chevron-forward" size={16} color="#71717A" />
+      <Icon name="chevron-forward" size={16} color="#71717A" />
     </TouchableOpacity>
   );
 }

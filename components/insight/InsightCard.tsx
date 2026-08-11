@@ -1,11 +1,9 @@
+import type { IconName } from "../../types/icon";
 import type { CorrelationInsight } from "../../types/insight";
-import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
-const DIRECTION_ICON: Record<
-  CorrelationInsight["direction"],
-  keyof typeof Ionicons.glyphMap
-> = {
+const DIRECTION_ICON: Record<CorrelationInsight["direction"], IconName> = {
   positive: "trending-up",
   negative: "trending-down",
   unknown: "help-circle-outline",
@@ -26,7 +24,7 @@ export function InsightCard({
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Ionicons
+        <Icon
           name={DIRECTION_ICON[insight.direction]}
           size={18}
           color={accent}
@@ -34,7 +32,7 @@ export function InsightCard({
         <Text style={styles.title}>{insight.title}</Text>
         {onDelete ? (
           <TouchableOpacity onPress={onDelete} hitSlop={8}>
-            <Ionicons name="trash-outline" size={16} color="#A1A1AA" />
+            <Icon name="trash-outline" size={16} color="#A1A1AA" />
           </TouchableOpacity>
         ) : null}
       </View>

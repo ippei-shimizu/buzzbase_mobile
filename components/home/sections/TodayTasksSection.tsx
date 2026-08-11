@@ -1,6 +1,5 @@
 import type { Plan, PlanMenu } from "../../../types/plan";
 import type { PresetMenu } from "../../../types/practice";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo } from "react";
 import {
@@ -10,6 +9,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { PlanMenuRow } from "@components/schedule/PlanMenuRow";
 import { eventTypeMeta } from "@constants/schedule";
 import { useDayPlan, useToggleDayPlanMenu } from "@hooks/usePlans";
@@ -76,7 +76,7 @@ export function TodayTasksSection() {
             })
           }
         >
-          <Ionicons name="create-outline" size={16} color="#FFFFFF" />
+          <Icon name="create-outline" size={16} color="#FFFFFF" />
           <Text style={styles.recordButtonText}>今日の練習を記録する</Text>
         </TouchableOpacity>
       ) : null}
@@ -85,7 +85,7 @@ export function TodayTasksSection() {
         style={styles.addRow}
         onPress={() => router.push(`/(schedule)/new?date=${today}`)}
       >
-        <Ionicons name="add" size={16} color="#d08000" />
+        <Icon name="add" size={16} color="#d08000" />
         <Text style={styles.addText}>今日やることを登録</Text>
       </TouchableOpacity>
 
@@ -94,14 +94,14 @@ export function TodayTasksSection() {
           style={styles.footerLink}
           onPress={() => router.push("/(schedule)/calendar")}
         >
-          <Ionicons name="calendar-outline" size={18} color="#d08000" />
+          <Icon name="calendar-outline" size={18} color="#d08000" />
           <Text style={styles.footerText}>カレンダー</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.footerLink}
           onPress={() => router.push("/(menu-set)/list")}
         >
-          <Ionicons name="list-outline" size={18} color="#d08000" />
+          <Icon name="list-outline" size={18} color="#d08000" />
           <Text style={styles.footerText}>プランを管理</Text>
         </TouchableOpacity>
       </View>
@@ -144,7 +144,7 @@ function PlanBlock({
             {plan.title ?? "予定"}
           </Text>
           {plan.done ? (
-            <Ionicons name="checkmark-circle" size={16} color="#4a8e32" />
+            <Icon name="checkmark-circle" size={16} color="#4a8e32" />
           ) : null}
         </View>
       </View>

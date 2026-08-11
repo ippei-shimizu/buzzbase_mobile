@@ -1,7 +1,7 @@
 import type { PlanMenu } from "../../types/plan";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 /**
  * 予定内の練習メニュー1行。タップで done（当日の練習ログ有無）をトグルする。
@@ -30,7 +30,7 @@ export function PlanMenuRow({
       accessibilityRole="checkbox"
       accessibilityState={{ checked: menu.done, disabled: isToggling }}
     >
-      <Ionicons
+      <Icon
         name={menu.done ? "checkmark-circle" : "ellipse-outline"}
         size={18}
         color={menu.done ? "#4a8e32" : "#71717A"}

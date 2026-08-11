@@ -1,8 +1,8 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { GoalProgressBar } from "@components/goal/GoalProgressBar";
+import { Icon } from "@components/icon/Icon";
 import { GOAL_PERIOD_LABELS, GOAL_PERIOD_ORDER } from "@constants/goal";
 import { useGoals } from "@hooks/useGoals";
 import { SectionCard, SectionError, SectionPlaceholder } from "./SectionCard";
@@ -53,7 +53,7 @@ export function TodayGoalSection() {
         style={styles.editRow}
         onPress={() => router.push("/(goal)/list")}
       >
-        <Ionicons name="flag-outline" size={14} color="#d08000" />
+        <Icon name="flag-outline" size={14} color="#d08000" />
         <Text style={styles.editText}>目標を管理</Text>
       </TouchableOpacity>
     </SectionCard>

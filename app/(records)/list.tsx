@@ -1,7 +1,7 @@
+import type { IconName } from "../../types/icon";
 import type { NoteV2 } from "../../types/note";
 import type { PracticeCategory, PracticeSession } from "../../types/practice";
 import type { Tag } from "../../types/tag";
-import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { SwipeableTabPages } from "@components/ui/SwipeableTabPages";
 import { UnderlineTabBar } from "@components/ui/UnderlineTabBar";
 import { formatPracticeValue, menuIconForLog } from "@constants/practice";
@@ -120,7 +121,7 @@ function MonthPaginator({
         accessibilityLabel="前の月"
         hitSlop={8}
       >
-        <Ionicons
+        <Icon
           name="chevron-back"
           size={22}
           color={atOldest ? "#52525B" : "#d08000"}
@@ -137,7 +138,7 @@ function MonthPaginator({
         accessibilityLabel="次の月"
         hitSlop={8}
       >
-        <Ionicons
+        <Icon
           name="chevron-forward"
           size={22}
           color={atNewest ? "#52525B" : "#d08000"}
@@ -148,7 +149,7 @@ function MonthPaginator({
 }
 
 const LEVEL_FACE: ({
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: IconName;
   color: string;
 } | null)[] = [
   null,
@@ -241,7 +242,7 @@ function RecordSearchBar({
   return (
     <View style={styles.searchWrap}>
       <View style={styles.searchBox}>
-        <Ionicons name="search" size={16} color="#A1A1AA" />
+        <Icon name="search" size={16} color="#A1A1AA" />
         <TextInput
           style={styles.searchInput}
           value={query}
@@ -252,7 +253,7 @@ function RecordSearchBar({
         />
         {query ? (
           <TouchableOpacity onPress={() => onQueryChange("")}>
-            <Ionicons name="close-circle" size={16} color="#71717A" />
+            <Icon name="close-circle" size={16} color="#71717A" />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -262,7 +263,7 @@ function RecordSearchBar({
           style={styles.dateChip}
           onPress={() => setPicker((prev) => (prev === "from" ? null : "from"))}
         >
-          <Ionicons name="calendar-outline" size={14} color="#d08000" />
+          <Icon name="calendar-outline" size={14} color="#d08000" />
           <Text style={styles.dateChipText}>
             {fromDate ? dateChipLabel(fromDate) : "開始日"}
           </Text>
@@ -272,7 +273,7 @@ function RecordSearchBar({
           style={styles.dateChip}
           onPress={() => setPicker((prev) => (prev === "to" ? null : "to"))}
         >
-          <Ionicons name="calendar-outline" size={14} color="#d08000" />
+          <Icon name="calendar-outline" size={14} color="#d08000" />
           <Text style={styles.dateChipText}>
             {toDate ? dateChipLabel(toDate) : "終了日"}
           </Text>
@@ -286,7 +287,7 @@ function RecordSearchBar({
               setPicker(null);
             }}
           >
-            <Ionicons name="close" size={14} color="#A1A1AA" />
+            <Icon name="close" size={14} color="#A1A1AA" />
             <Text style={styles.dateClearText}>クリア</Text>
           </TouchableOpacity>
         ) : null}
@@ -363,7 +364,7 @@ function NewRecordButton({
 }) {
   return (
     <TouchableOpacity style={styles.newButton} onPress={onPress}>
-      <Ionicons name="add" size={18} color="#FFFFFF" />
+      <Icon name="add" size={18} color="#FFFFFF" />
       <Text style={styles.newButtonText}>{label}</Text>
     </TouchableOpacity>
   );
@@ -409,7 +410,7 @@ function PracticeRow({
                   : undefined;
               return (
                 <View key={log.id} style={styles.menuChip}>
-                  <Ionicons
+                  <Icon
                     name={menuIconForLog(log.source, category)}
                     size={13}
                     color="#d08000"
@@ -424,15 +425,11 @@ function PracticeRow({
         {face || hasNote ? (
           <View style={styles.tlMeta}>
             {face ? (
-              <Ionicons name={face.icon} size={18} color={face.color} />
+              <Icon name={face.icon} size={18} color={face.color} />
             ) : null}
             {hasNote ? (
               <View style={styles.noteTag}>
-                <Ionicons
-                  name="document-text-outline"
-                  size={13}
-                  color="#d08000"
-                />
+                <Icon name="document-text-outline" size={13} color="#d08000" />
                 <Text style={styles.noteTagText}>ノート</Text>
               </View>
             ) : null}
@@ -506,9 +503,9 @@ function PracticeList() {
         accessibilityRole="button"
         accessibilityLabel="練習メニューを管理"
       >
-        <Ionicons name="list-outline" size={15} color="#d08000" />
+        <Icon name="list-outline" size={15} color="#d08000" />
         <Text style={styles.manageLinkText}>練習メニューを管理</Text>
-        <Ionicons name="chevron-forward" size={14} color="#71717A" />
+        <Icon name="chevron-forward" size={14} color="#71717A" />
       </TouchableOpacity>
       <NewRecordButton
         label="練習を記録"
@@ -518,9 +515,9 @@ function PracticeList() {
         style={styles.summaryLink}
         onPress={() => router.push("/(records)/summary")}
       >
-        <Ionicons name="stats-chart" size={16} color="#d08000" />
+        <Icon name="stats-chart" size={16} color="#d08000" />
         <Text style={styles.summaryLinkText}>メニュー別の積み上げを見る</Text>
-        <Ionicons name="chevron-forward" size={16} color="#d08000" />
+        <Icon name="chevron-forward" size={16} color="#d08000" />
       </TouchableOpacity>
       <RecordSearchBar
         query={query}
@@ -583,13 +580,13 @@ function NoteLinkChip({ note }: { note: NoteV2 }) {
     <View style={styles.linkChipRow}>
       {hasPractice ? (
         <View style={[styles.linkChip, styles.practiceChip]}>
-          <Ionicons name="barbell-outline" size={12} color="#d08000" />
+          <Icon name="barbell-outline" size={12} color="#d08000" />
           <Text style={styles.practiceChipText}>練習に紐付け</Text>
         </View>
       ) : null}
       {hasGame ? (
         <View style={[styles.linkChip, styles.gameChip]}>
-          <Ionicons name="baseball-outline" size={12} color="#93c5fd" />
+          <Icon name="baseball-outline" size={12} color="#93c5fd" />
           <Text style={styles.gameChipText}>試合に紐付け</Text>
         </View>
       ) : null}
@@ -680,9 +677,9 @@ function NoteList() {
         accessibilityRole="button"
         accessibilityLabel="振り返りテンプレを管理"
       >
-        <Ionicons name="document-text-outline" size={15} color="#d08000" />
+        <Icon name="document-text-outline" size={15} color="#d08000" />
         <Text style={styles.manageLinkText}>振り返りテンプレを管理</Text>
-        <Ionicons name="chevron-forward" size={14} color="#71717A" />
+        <Icon name="chevron-forward" size={14} color="#71717A" />
       </TouchableOpacity>
       <NewRecordButton
         label="野球ノートを記録"

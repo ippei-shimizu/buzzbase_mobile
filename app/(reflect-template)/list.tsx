@@ -1,5 +1,4 @@
 import type { ReflectionTemplate } from "../../types/reflectionTemplate";
-import { Ionicons } from "@expo/vector-icons";
 import { isAxiosError } from "axios";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -12,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { useEntitlement } from "@hooks/useEntitlement";
 import {
@@ -96,7 +96,7 @@ export default function ReflectTemplateListScreen() {
             >
               <View style={styles.cardHeader}>
                 <Text style={styles.cardTitle}>{template.title}</Text>
-                <Ionicons name="pencil" size={16} color="#A1A1AA" />
+                <Icon name="pencil" size={16} color="#A1A1AA" />
               </View>
               <Text style={styles.cardQuestions}>
                 {template.questions.join("・")}
@@ -123,12 +123,12 @@ export default function ReflectTemplateListScreen() {
             >
               <View style={styles.cardHeader}>
                 <Text style={styles.cardTitle}>{template.title}</Text>
-                <Ionicons name="pencil" size={16} color="#A1A1AA" />
+                <Icon name="pencil" size={16} color="#A1A1AA" />
                 <TouchableOpacity
                   onPress={() => handleDelete(template)}
                   hitSlop={8}
                 >
-                  <Ionicons name="trash-outline" size={18} color="#A1A1AA" />
+                  <Icon name="trash-outline" size={18} color="#A1A1AA" />
                 </TouchableOpacity>
               </View>
               <Text style={styles.cardQuestions}>
@@ -139,7 +139,7 @@ export default function ReflectTemplateListScreen() {
         )}
 
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-          <Ionicons name="add" size={20} color="#F4F4F4" />
+          <Icon name="add" size={20} color="#F4F4F4" />
           <Text style={styles.addButtonText}>テンプレを作る</Text>
         </TouchableOpacity>
       </ScrollView>

@@ -1,6 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import { TouchableOpacity } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 export default function ProfileLayout() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function ProfileLayout() {
       accessibilityRole="button"
       accessibilityLabel="戻る"
     >
-      <Ionicons name="chevron-back" size={28} color="#F4F4F4" />
+      <Icon name="chevron-back" size={28} color="#F4F4F4" />
     </TouchableOpacity>
   );
 

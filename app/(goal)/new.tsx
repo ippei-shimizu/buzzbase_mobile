@@ -5,7 +5,6 @@ import type {
   GoalPeriodType,
 } from "../../types/goal";
 import type { ProFeature } from "../../types/pro";
-import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { isAxiosError } from "axios";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -21,6 +20,7 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellCard } from "@components/pro/ProUpsellCard";
 import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
@@ -350,7 +350,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
                 }
               >
                 {isLockedItem ? (
-                  <Ionicons name="lock-closed" size={11} color="#A1A1AA" />
+                  <Icon name="lock-closed" size={11} color="#A1A1AA" />
                 ) : null}
                 <Text style={[styles.segText, active && styles.segTextActive]}>
                   {item.label}
@@ -453,7 +453,7 @@ function GoalForm({ editing }: { editing?: Goal }) {
                 style={styles.emptyLink}
                 onPress={() => router.push("/(season)/list")}
               >
-                <Ionicons name="add-circle-outline" size={16} color="#d08000" />
+                <Icon name="add-circle-outline" size={16} color="#d08000" />
                 <Text style={styles.emptyLinkText}>
                   シーズンがありません。シーズンを登録する
                 </Text>

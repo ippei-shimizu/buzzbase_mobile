@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack } from "expo-router";
 import React from "react";
 import {
@@ -11,6 +10,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { NoteListCard } from "@components/baseball-notes/NoteListCard";
+import { Icon } from "@components/icon/Icon";
 import { useBaseballNotes } from "@hooks/useBaseballNotes";
 
 export default function NotesIndexScreen() {
@@ -36,11 +36,7 @@ export default function NotesIndexScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="振り返りテンプレを管理"
               >
-                <Ionicons
-                  name="document-text-outline"
-                  size={16}
-                  color="#F4F4F4"
-                />
+                <Icon name="document-text-outline" size={16} color="#F4F4F4" />
                 <Text style={styles.templateButtonText}>テンプレ</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -48,7 +44,7 @@ export default function NotesIndexScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="ノートを作成"
               >
-                <Ionicons name="add" size={24} color="#F4F4F4" />
+                <Icon name="add" size={24} color="#F4F4F4" />
               </TouchableOpacity>
             </View>
           ),

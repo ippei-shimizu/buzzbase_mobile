@@ -1,6 +1,5 @@
 import type { MenuSetInput } from "../../types/menuSet";
 import type { PracticeMenu } from "../../types/practice";
-import { Ionicons } from "@expo/vector-icons";
 import { isAxiosError } from "axios";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -13,6 +12,7 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import { useMenuSets, useMenuSetMutations } from "@hooks/useMenuSets";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
@@ -137,7 +137,7 @@ export default function MenuSetEditScreen() {
                     style={styles.menuItemRow}
                     onPress={() => toggleMenu(menu)}
                   >
-                    <Ionicons
+                    <Icon
                       name={isSelected ? "checkbox" : "square-outline"}
                       size={22}
                       color={isSelected ? "#d08000" : "#71717A"}

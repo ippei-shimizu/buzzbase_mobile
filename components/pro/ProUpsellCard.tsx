@@ -1,5 +1,4 @@
 import type { ProFeature } from "../../types/pro";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   StyleSheet,
@@ -9,6 +8,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { PRO_PAYWALL_COPY } from "./PaywallModal";
 
 interface ProUpsellCardProps {
@@ -52,7 +52,7 @@ export function ProUpsellCard({
   return (
     <View style={[styles.card, translucent && styles.cardTranslucent, style]}>
       <View style={styles.titleRow}>
-        <Ionicons name="lock-closed" size={16} color="#d08000" />
+        <Icon name="lock-closed" size={16} color="#d08000" />
         <Text style={styles.title}>{resolvedTitle}</Text>
       </View>
       {resolvedBenefits.length > 0 ? (
@@ -68,7 +68,7 @@ export function ProUpsellCard({
         accessibilityRole="button"
         accessibilityLabel={ctaLabel}
       >
-        <Ionicons name="lock-closed" size={16} color="#FFFFFF" />
+        <Icon name="lock-closed" size={16} color="#FFFFFF" />
         <Text style={styles.buttonText}>{ctaLabel}</Text>
       </TouchableOpacity>
     </View>
