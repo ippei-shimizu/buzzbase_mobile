@@ -481,17 +481,17 @@ export function PaywallModal({
       <Modal
         visible={isOpen}
         transparent
-        animationType="slide"
+        animationType="fade"
         statusBarTranslucent
         onRequestClose={onClose}
       >
-        <View style={styles.overlay}>
+        <View style={styles.noticeOverlay}>
           <Pressable
             style={StyleSheet.absoluteFill}
             onPress={onClose}
             accessibilityLabel="閉じる"
           />
-          <View style={styles.sheet} accessibilityViewIsModal>
+          <View style={styles.noticeCard} accessibilityViewIsModal>
             <TouchableOpacity
               onPress={onClose}
               style={styles.closeButton}
@@ -501,17 +501,19 @@ export function PaywallModal({
             >
               <Icon name="close" size={22} color="#F4F4F4" />
             </TouchableOpacity>
-            <View style={styles.scrollContent}>
-              {contextMessage ? (
-                <View style={styles.contextBanner}>
-                  <Icon name="information-circle" size={16} color="#D4D4D4" />
-                  <Text style={styles.contextBannerText}>{contextMessage}</Text>
-                </View>
-              ) : null}
-              <Text style={styles.highlightDescription}>
-                Proプランは近日公開予定です。もうしばらくお待ちください。
-              </Text>
+            <View style={styles.noticeIconCircle}>
+              <Icon name="sparkles" size={32} color="#d08000" />
             </View>
+            <Text style={styles.noticeTitle}>Proプランは近日公開予定です</Text>
+            <Text style={styles.noticeText}>
+              もうしばらくお待ちください。公開までは無料プランの範囲でご利用いただけます。
+            </Text>
+            {contextMessage ? (
+              <View style={[styles.contextBanner, styles.noticeContextBanner]}>
+                <Icon name="information-circle" size={16} color="#D4D4D4" />
+                <Text style={styles.contextBannerText}>{contextMessage}</Text>
+              </View>
+            ) : null}
           </View>
         </View>
       </Modal>
@@ -880,6 +882,55 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.55)",
     justifyContent: "flex-end",
+  },
+  // Pro 未公開時の告知は本文が数行しかなく、購入導線用のボトムシートに載せると
+  // 画面下端に貼りついて読み飛ばされるため、中央のダイアログとして出す。
+  noticeOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.55)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  noticeCard: {
+    width: "100%",
+    backgroundColor: "#2E2E2E",
+    borderRadius: 20,
+    paddingTop: 40,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  noticeIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#3A3A3A",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  noticeTitle: {
+    color: "#F4F4F4",
+    fontSize: 18,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  noticeText: {
+    color: "#D4D4D4",
+    fontSize: 14,
+    lineHeight: 22,
+    textAlign: "center",
+  },
+  noticeContextBanner: {
+    marginTop: 20,
+    marginBottom: 0,
   },
   sheet: {
     maxHeight: "88%",
