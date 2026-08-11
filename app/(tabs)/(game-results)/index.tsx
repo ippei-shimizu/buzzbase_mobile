@@ -829,7 +829,9 @@ export default function GameResultsScreen() {
               <GameResultSummary summary={gameSummary.data} />
             </View>
           ) : null}
-          <InlineBannerAd placement="game_results" />
+          {key === screenTab ? (
+            <InlineBannerAd placement="game_results" />
+          ) : null}
         </ScrollView>
       );
     }
@@ -890,7 +892,9 @@ export default function GameResultsScreen() {
                   onPageChange={handlePageChange}
                 />
               ) : null}
-              <InlineBannerAd placement="game_results" />
+              {key === screenTab ? (
+                <InlineBannerAd placement="game_results" />
+              ) : null}
             </>
           }
         />
