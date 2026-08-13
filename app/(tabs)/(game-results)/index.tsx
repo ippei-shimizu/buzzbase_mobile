@@ -1,5 +1,4 @@
 import type { GameResult } from "../../../types/gameResult";
-import { Ionicons } from "@expo/vector-icons";
 import {
   useRouter,
   Stack,
@@ -21,8 +20,11 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
+import { AppBannerAd } from "@components/ads/AppBannerAd";
+import { InlineBannerAd } from "@components/ads/InlineBannerAd";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
+import { Icon } from "@components/icon/Icon";
 import { FilterResetButton } from "@components/stats/FilterResetButton";
 import { GameResultSummary } from "@components/stats/GameResultSummary";
 import {
@@ -30,6 +32,7 @@ import {
   GlobalMenuOverlay,
   useGlobalMenu,
 } from "@components/ui/GlobalMenu";
+import { SwipeableTabPages } from "@components/ui/SwipeableTabPages";
 import { useAvailableMonths } from "@hooks/useAvailableMonths";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useFilteredGameResults } from "@hooks/useGameResults";
@@ -41,6 +44,12 @@ import { monthOptionsFromRecorded } from "@utils/monthOptions";
 import { useGameRecordStore } from "../../../stores/gameRecordStore";
 
 type ScreenTab = "summary" | "list";
+
+const SCREEN_TABS: { key: ScreenTab; label: string }[] = [
+  { key: "summary", label: "サマリー" },
+  { key: "list", label: "一覧" },
+];
+const SCREEN_TAB_KEYS = SCREEN_TABS.map((tab) => tab.key);
 
 /**
  * FlatList の各行セルを ListHeader より低い zIndex で描画するための
@@ -102,7 +111,7 @@ function FilterDropdown({
         >
           {label}: {selectedLabel}
         </Text>
-        <Ionicons
+        <Icon
           name="chevron-down"
           size={14}
           color={isFiltered ? "#d08000" : "#A1A1AA"}
@@ -243,14 +252,20 @@ export default function GameResultsScreen() {
   const [screenTab, setScreenTab] = useState<ScreenTab>(
     params.tab === "list" ? "list" : "summary",
   );
+  // パラメータ由来の切替はページャを作り直して目的の面から始める。マウント済みの
+  // ページャに送らせると、サマリーから一覧へスライドが走ってしまうため。
+  const [pagerGeneration, setPagerGeneration] = useState(0);
 
   // タブ常駐画面のため、反映後は手動切替が上書きされないようパラメータをクリアする。
   useEffect(() => {
-    if (params.tab === "list" || params.tab === "summary") {
-      setScreenTab(params.tab);
-      router.setParams({ tab: "" });
-    }
-  }, [params.tab, router]);
+    if (params.tab !== "list" && params.tab !== "summary") return;
+
+    const nextTab = params.tab;
+    router.setParams({ tab: "" });
+    if (nextTab === screenTab) return;
+    setScreenTab(nextTab);
+    setPagerGeneration((generation) => generation + 1);
+  }, [params.tab, screenTab, router]);
 
   // Summary tab filters (independent)
   const [summaryYear, setSummaryYear] = useState<string | undefined>(undefined);
@@ -490,6 +505,16 @@ export default function GameResultsScreen() {
 
   const listFilterHeader = (
     <View style={styles.filterSection}>
+      <TouchableOpacity
+        style={styles.manageLink}
+        onPress={() => router.push("/(season)/list")}
+        accessibilityRole="button"
+        accessibilityLabel="シーズンを管理"
+      >
+        <Icon name="calendar-outline" size={15} color="#d08000" />
+        <Text style={styles.manageLinkText}>シーズンを管理</Text>
+        <Icon name="chevron-forward" size={14} color="#71717A" />
+      </TouchableOpacity>
       {/* 試合記録ボタン */}
       <TouchableOpacity
         style={styles.recordButton}
@@ -500,7 +525,7 @@ export default function GameResultsScreen() {
           router.push("/(game-record)/step1-game-info");
         }}
       >
-        <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
+        <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
         <Text style={styles.recordButtonText}>試合結果を記録する</Text>
       </TouchableOpacity>
       {/* フィルター */}
@@ -620,7 +645,7 @@ export default function GameResultsScreen() {
         }}
       >
         <View style={styles.searchBox}>
-          <Ionicons name="search" size={16} color="#71717A" />
+          <Icon name="search" size={16} color="#71717A" />
           <TextInput
             style={styles.searchInput}
             placeholder="対戦相手を検索"
@@ -643,7 +668,7 @@ export default function GameResultsScreen() {
           <Text style={filterStyles.buttonText}>
             日付（{sortDesc ? "新しい順" : "古い順"}）
           </Text>
-          <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+          <Icon name="chevron-down" size={14} color="#A1A1AA" />
         </TouchableOpacity>
       </View>
     </View>
@@ -653,52 +678,9 @@ export default function GameResultsScreen() {
     ...availableYears.map((y) => ({ key: y, label: y })),
   ];
 
-  return (
-    <View style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
-      <Stack.Screen
-        options={{
-          headerRight: () => <GlobalMenuButton onPress={openMenu} />,
-        }}
-      />
-
-      {/* Screen Tab Bar */}
-      <View style={styles.screenTabBar}>
-        <TouchableOpacity
-          style={[
-            styles.screenTab,
-            screenTab === "summary" && styles.screenTabActive,
-          ]}
-          onPress={() => setScreenTab("summary")}
-        >
-          <Text
-            style={[
-              styles.screenTabText,
-              screenTab === "summary" && styles.screenTabTextActive,
-            ]}
-          >
-            サマリー
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.screenTab,
-            screenTab === "list" && styles.screenTabActive,
-          ]}
-          onPress={() => setScreenTab("list")}
-        >
-          <Text
-            style={[
-              styles.screenTabText,
-              screenTab === "list" && styles.screenTabTextActive,
-            ]}
-          >
-            一覧
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Summary Tab */}
-      {screenTab === "summary" && (
+  const renderScreenTabPage = (key: ScreenTab) => {
+    if (key === "summary") {
+      return (
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={styles.content}
@@ -711,6 +693,16 @@ export default function GameResultsScreen() {
           }
         >
           <TouchableOpacity
+            style={styles.manageLink}
+            onPress={() => router.push("/(season)/list")}
+            accessibilityRole="button"
+            accessibilityLabel="シーズンを管理"
+          >
+            <Icon name="calendar-outline" size={15} color="#d08000" />
+            <Text style={styles.manageLinkText}>シーズンを管理</Text>
+            <Icon name="chevron-forward" size={14} color="#71717A" />
+          </TouchableOpacity>
+          <TouchableOpacity
             style={styles.recordButton}
             onPress={() => {
               // 直前の編集モードフラグが残っていると Step1 が編集モードのまま起動するため、
@@ -719,7 +711,7 @@ export default function GameResultsScreen() {
               router.push("/(game-record)/step1-game-info");
             }}
           >
-            <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
             <Text style={styles.recordButtonText}>試合結果を記録する</Text>
           </TouchableOpacity>
           <View
@@ -837,58 +829,61 @@ export default function GameResultsScreen() {
               <GameResultSummary summary={gameSummary.data} />
             </View>
           ) : null}
+          {key === screenTab ? (
+            <InlineBannerAd placement="game_results" />
+          ) : null}
         </ScrollView>
-      )}
-
-      {/* List Tab */}
-      {screenTab === "list" && (
-        <View
-          style={[
-            styles.listBody,
-            isFetching && !isLoading && styles.listBodyFetching,
+      );
+    }
+    return (
+      <View
+        style={[
+          styles.listBody,
+          isFetching && !isLoading && styles.listBodyFetching,
+        ]}
+      >
+        <FlatList
+          ref={scrollRef}
+          style={{ flex: 1 }}
+          contentContainerStyle={[
+            {
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 32,
+              flexGrow: 1,
+            },
+            keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
           ]}
-        >
-          <FlatList
-            ref={scrollRef}
-            style={{ flex: 1 }}
-            contentContainerStyle={[
-              {
-                paddingHorizontal: 16,
-                paddingTop: 16,
-                paddingBottom: 32,
-                flexGrow: 1,
-              },
-              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 16 },
-            ]}
-            data={gameResults}
-            keyExtractor={(item) => String(item.game_result_id)}
-            renderItem={({ item }) => (
-              <View style={styles.cardContainer}>
-                <GameResultListItem game={item} onPress={handlePressItem} />
-              </View>
-            )}
-            // 各行セルを ListHeader より低い zIndex で描画し、ListHeader 内の
-            // 絶対配置されたフィルタードロップダウンが行カードの裏に隠れる
-            // 問題を回避する。`index` の昇順にさらに低く設定することで、
-            // 上の行ほど手前、下の行ほど奥の順序で stacking context を維持する。
-            CellRendererComponent={CellRendererWithLowZIndex}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={refetch}
-                tintColor="#d08000"
-              />
-            }
-            ListHeaderComponent={
-              <View style={styles.listHeader}>{listFilterHeader}</View>
-            }
-            ListEmptyComponent={
-              <Text style={styles.emptyText}>試合結果がありません</Text>
-            }
-            ListFooterComponent={
-              pagination ? (
+          data={gameResults}
+          keyExtractor={(item) => String(item.game_result_id)}
+          renderItem={({ item }) => (
+            <View style={styles.cardContainer}>
+              <GameResultListItem game={item} onPress={handlePressItem} />
+            </View>
+          )}
+          // 各行セルを ListHeader より低い zIndex で描画し、ListHeader 内の
+          // 絶対配置されたフィルタードロップダウンが行カードの裏に隠れる
+          // 問題を回避する。`index` の昇順にさらに低く設定することで、
+          // 上の行ほど手前、下の行ほど奥の順序で stacking context を維持する。
+          CellRendererComponent={CellRendererWithLowZIndex}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={refetch}
+              tintColor="#d08000"
+            />
+          }
+          ListHeaderComponent={
+            <View style={styles.listHeader}>{listFilterHeader}</View>
+          }
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>試合結果がありません</Text>
+          }
+          ListFooterComponent={
+            <>
+              {pagination ? (
                 <GamePagination
                   currentPage={pagination.current_page}
                   totalPages={pagination.total_pages}
@@ -896,12 +891,59 @@ export default function GameResultsScreen() {
                   perPage={pagination.per_page}
                   onPageChange={handlePageChange}
                 />
-              ) : null
-            }
-          />
-        </View>
-      )}
+              ) : null}
+              {key === screenTab ? (
+                <InlineBannerAd placement="game_results" />
+              ) : null}
+            </>
+          }
+        />
+      </View>
+    );
+  };
 
+  return (
+    <View style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
+      <Stack.Screen
+        options={{
+          headerRight: () => <GlobalMenuButton onPress={openMenu} />,
+        }}
+      />
+
+      {/* Screen Tab Bar */}
+      <View style={styles.screenTabBar}>
+        {SCREEN_TABS.map((tab) => {
+          const isActive = tab.key === screenTab;
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.screenTab, isActive && styles.screenTabActive]}
+              onPress={() => setScreenTab(tab.key)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isActive }}
+            >
+              <Text
+                style={[
+                  styles.screenTabText,
+                  isActive && styles.screenTabTextActive,
+                ]}
+              >
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <SwipeableTabPages
+        key={pagerGeneration}
+        tabKeys={SCREEN_TAB_KEYS}
+        activeKey={screenTab}
+        onChange={setScreenTab}
+        renderPage={renderScreenTabPage}
+      />
+
+      <AppBannerAd />
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}
@@ -965,6 +1007,18 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
+  },
+  manageLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-end",
+    marginBottom: 10,
+  },
+  manageLinkText: {
+    color: "#d08000",
+    fontSize: 13,
+    fontWeight: "600",
   },
   filterSection: {
     marginBottom: 12,

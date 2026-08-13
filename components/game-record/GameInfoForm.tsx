@@ -6,7 +6,6 @@ import type {
 } from "../../types/gameRecord";
 import type { Season } from "../../types/season";
 import type { Stadium } from "../../types/stadium";
-import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -24,6 +23,7 @@ import {
   Modal,
 } from "react-native";
 import { PatternSelector } from "@components/game-record/PatternSelector";
+import { Icon } from "@components/icon/Icon";
 import { Button } from "@components/ui/Button";
 import { SelectPicker } from "@components/ui/SelectPicker";
 import {
@@ -318,7 +318,7 @@ export function GameInfoForm({
             <Text style={styles.inputText}>
               {displayDateString(date) || "YYYY/MM/DD"}
             </Text>
-            <Ionicons name="calendar-outline" size={18} color="#A1A1AA" />
+            <Icon name="calendar-outline" size={18} color="#A1A1AA" />
           </TouchableOpacity>
         </FormRow>
         {/* iOS はモーダル内でカレンダーUI、Android は OS 標準ダイアログ */}
@@ -462,7 +462,7 @@ export function GameInfoForm({
               placeholder="球場名を入力"
               placeholderTextColor="#71717A"
             />
-            <Ionicons name="chevron-down" size={16} color="#A1A1AA" />
+            <Icon name="chevron-down" size={16} color="#A1A1AA" />
           </View>
         </FormRow>
         {showStadiumSuggestions && filteredStadiums.length > 0 && (
@@ -511,7 +511,7 @@ export function GameInfoForm({
               placeholder="大会名を入力"
               placeholderTextColor="#71717A"
             />
-            <Ionicons name="chevron-down" size={16} color="#A1A1AA" />
+            <Icon name="chevron-down" size={16} color="#A1A1AA" />
           </View>
         </FormRow>
         {showTournamentSuggestions && filteredTournaments.length > 0 && (
@@ -568,7 +568,7 @@ export function GameInfoForm({
               placeholder="シーズン名を入力"
               placeholderTextColor="#71717A"
             />
-            <Ionicons name="chevron-down" size={16} color="#A1A1AA" />
+            <Icon name="chevron-down" size={16} color="#A1A1AA" />
           </View>
         </FormRow>
         {showSeasonSuggestions && filteredSeasons.length > 0 && (
@@ -624,7 +624,7 @@ export function GameInfoForm({
               placeholder="チーム名を入力"
               placeholderTextColor="#71717A"
             />
-            <Ionicons name="chevron-down" size={16} color="#A1A1AA" />
+            <Icon name="chevron-down" size={16} color="#A1A1AA" />
           </View>
         </FormRow>
         {renderTeamSuggestions(
@@ -661,7 +661,7 @@ export function GameInfoForm({
               placeholder="相手のチーム名を入力"
               placeholderTextColor="#71717A"
             />
-            <Ionicons name="chevron-down" size={16} color="#A1A1AA" />
+            <Icon name="chevron-down" size={16} color="#A1A1AA" />
           </View>
         </FormRow>
         {renderTeamSuggestions(
@@ -816,7 +816,7 @@ function ScoreStepper({
         onPress={() => onChange(Math.max(0, (value ?? 0) - 1))}
         hitSlop={6}
       >
-        <Ionicons
+        <Icon
           name="remove-circle"
           size={26}
           color={decrementDisabled ? "#52525B" : "#d08000"}
@@ -845,7 +845,7 @@ function ScoreStepper({
         onPress={() => onChange((value ?? 0) + 1)}
         hitSlop={6}
       >
-        <Ionicons name="add-circle" size={26} color="#d08000" />
+        <Icon name="add-circle" size={26} color="#d08000" />
       </TouchableOpacity>
     </View>
   );

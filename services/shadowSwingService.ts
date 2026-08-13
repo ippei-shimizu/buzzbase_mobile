@@ -1,0 +1,40 @@
+import type { MenuTrend } from "../types/practice";
+import type {
+  ShadowSwingSession,
+  ShadowSwingSessionInput,
+  ShadowSwingStats,
+} from "../types/shadowSwing";
+import { API_BASE_URL } from "@constants/api";
+import axiosInstance from "@utils/axiosInstance";
+
+const URL = `${API_BASE_URL}/api/v2/shadow_swing_sessions`;
+
+export const startShadowSwingSession = async (
+  input: ShadowSwingSessionInput,
+): Promise<ShadowSwingSession> => {
+  const res = await axiosInstance.post<ShadowSwingSession>(URL, {
+    shadow_swing_session: input,
+  });
+  return res.data;
+};
+
+export const completeShadowSwingSession = async (
+  id: number,
+  swingCount: number,
+): Promise<ShadowSwingSession> => {
+  const res = await axiosInstance.post<ShadowSwingSession>(
+    `${URL}/${id}/complete`,
+    { shadow_swing_session: { swing_count: swingCount } },
+  );
+  return res.data;
+};
+
+export const getShadowSwingStats = async (): Promise<ShadowSwingStats> => {
+  const res = await axiosInstance.get<ShadowSwingStats>(`${URL}/stats`);
+  return res.data;
+};
+
+export const getShadowSwingTrend = async (): Promise<MenuTrend> => {
+  const res = await axiosInstance.get<MenuTrend>(`${URL}/trend`);
+  return res.data;
+};

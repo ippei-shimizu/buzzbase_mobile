@@ -27,7 +27,7 @@ module.exports = {
   // MSW v2 とその依存（rettime / outvariant / @bundled-es-modules / strict-event-emitter / @mswjs/* / @open-draft/* / until-async / headers-polyfill / tough-cookie / set-cookie-parser）は
   // ESM (.mjs) で配布されているため、jest-expo の既定 transformIgnorePatterns に追加して transform 対象に含める。
   transformIgnorePatterns: [
-    "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|msw|@mswjs|@bundled-es-modules|@open-draft|rettime|outvariant|strict-event-emitter|until-async|headers-polyfill|cookie|set-cookie-parser|tough-cookie|tldts|tldts-core|path-to-regexp|statuses))",
+    "/node_modules/(?!(.pnpm|react-native|react-native-pager-view|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|msw|@mswjs|@bundled-es-modules|@open-draft|rettime|outvariant|strict-event-emitter|until-async|headers-polyfill|cookie|set-cookie-parser|tough-cookie|tldts|tldts-core|path-to-regexp|statuses))",
     "/node_modules/react-native-reanimated/plugin/",
   ],
   // jest-expo の既定 transform は `\.[jt]sx?$` のみを対象にしているため、
@@ -45,5 +45,7 @@ module.exports = {
     "utils/**/*.{ts,tsx}",
     "!**/__tests__/**",
     "!**/*.d.ts",
+    // codegen が出力する SVG コンポーネント。ロジックを持たないため計測対象から外す。
+    "!components/icon/solar/**",
   ],
 };

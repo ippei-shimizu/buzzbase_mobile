@@ -1,19 +1,39 @@
 import { Redirect, Tabs } from "expo-router";
+import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { BillingIssueAlert } from "@components/pro/BillingIssueAlert";
+import { TrialExpiringBanner } from "@components/pro/TrialExpiringBanner";
 import { BOTTOM_TAB_ITEMS } from "@components/ui/bottomTabItems";
 import { useAuth } from "@hooks/useAuth";
+import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { useGroups } from "@hooks/useGroups";
 import { useGroupTabBadge } from "@hooks/useGroupTabBadge";
 import { useOnboarding } from "@hooks/useOnboarding";
+import { useProStatus } from "@hooks/useProStatus";
+import { trackAppLaunchForAds } from "@services/interstitialAdService";
+import { requestTrackingPermissionOnce } from "@services/trackingTransparencyService";
+import { shouldResetTabStack } from "@utils/tabStackReset";
 
 export default function TabLayout() {
   const { isLoggedIn, isLoading } = useAuth();
+  const { enabled: proFeatures } = useFeatureFlag("pro_features");
+  // pro_features=false の環境では Banner/Alert を一切表示しないため、/pro/status も叩かない。
+  const { proStatus } = useProStatus({ enabled: proFeatures });
   const { isCompleted: isOnboardingCompleted } = useOnboarding();
   const { groups, isFetched: isGroupsFetched } = useGroups({
     enabled: isLoggedIn === true,
   });
   const { seen: isGroupBadgeSeen, markSeen: markGroupBadgeSeen } =
     useGroupTabBadge();
+
+  // タブ画面(オンボーディング・ログイン済み)に到達した時点でのみ実行する。
+  // ATTは「オンボーディング後」、既存ユーザーは「本アップデート後の初回起動時」に
+  // 出したいが、いずれもこのタイミングに一致する。
+  useEffect(() => {
+    if (isLoggedIn !== true) return;
+    void trackAppLaunchForAds();
+    void requestTrackingPermissionOnce();
+  }, [isLoggedIn]);
 
   // 取得確定後に未参加（グループ0件）かつ未閲覧のときだけグループタブに赤ポチを出す。
   // isGroupsFetched でフェッチ開始前の一瞬の誤点灯を防ぐ。
@@ -52,60 +72,73 @@ export default function TabLayout() {
   }
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: "#d08000",
-        tabBarInactiveTintColor: "#A1A1AA",
-        tabBarHideOnKeyboard: true,
-        tabBarStyle: {
-          backgroundColor: "#2E2E2E",
-          borderTopColor: "#424242",
-        },
-        headerStyle: { backgroundColor: "#2E2E2E" },
-        headerTintColor: "#F4F4F4",
-      }}
-    >
-      {BOTTOM_TAB_ITEMS.map((tab) => {
-        const Icon = tab.Icon;
-        const isGroupRoute = tab.name === "(groups)";
-        // カッコ付きグループ route 配下に積まれたスタックは、再タップで先頭(index)へ戻す。
-        const needsStackReset = tab.name === "(game-results)" || isGroupRoute;
-        return (
-          <Tabs.Screen
-            key={tab.name}
-            name={tab.name}
-            options={{
-              title: tab.label,
-              // カッコ付きグループ route はネスト Stack 側で独自ヘッダを持つため親タブのヘッダは隠す
-              headerShown: !tab.name.startsWith("("),
-              tabBarIcon: ({ color, size }) => (
-                <Icon
-                  size={size}
-                  color={color}
-                  showBadge={isGroupRoute ? showGroupBadge : undefined}
-                />
-              ),
-            }}
-            listeners={
-              needsStackReset
-                ? ({ navigation }) => ({
-                    tabPress: (e) => {
-                      if (isGroupRoute) markGroupBadgeSeen();
-                      const state = navigation.getState();
-                      const route = state.routes.find(
-                        (r: { name: string }) => r.name === tab.name,
-                      );
-                      if (route?.state && route.state.index > 0) {
+    <View style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
+      {proFeatures ? (
+        <>
+          <BillingIssueAlert subscription={proStatus.subscription} />
+          <TrialExpiringBanner subscription={proStatus.subscription} />
+        </>
+      ) : null}
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: "#d08000",
+          tabBarInactiveTintColor: "#A1A1AA",
+          tabBarHideOnKeyboard: true,
+          tabBarStyle: {
+            backgroundColor: "#2E2E2E",
+            borderTopColor: "#424242",
+          },
+          headerStyle: { backgroundColor: "#2E2E2E" },
+          headerTintColor: "#F4F4F4",
+        }}
+      >
+        {BOTTOM_TAB_ITEMS.map((tab) => {
+          const Icon = tab.Icon;
+          const isGroupRoute = tab.name === "(groups)";
+          // カッコ付きグループ route 配下に積まれたスタックは、再タップで先頭(index)へ戻す。
+          // ルートStack（設定画面・Paywall の規約リンク等）から直接 push された画面は
+          // そのタブのスタックに index を挟まず先頭に載るため、index を持たない場合も
+          // リセット対象に含める（含めないとタブを押しても何も起きず戻れなくなる）。
+          const needsStackReset =
+            tab.name === "(game-results)" ||
+            tab.name === "(profile)" ||
+            isGroupRoute;
+          return (
+            <Tabs.Screen
+              key={tab.name}
+              name={tab.name}
+              options={{
+                title: tab.label,
+                // カッコ付きグループ route はネスト Stack 側で独自ヘッダを持つため親タブのヘッダは隠す
+                headerShown: !tab.name.startsWith("("),
+                tabBarIcon: ({ color, size }) => (
+                  <Icon
+                    size={size}
+                    color={color}
+                    showBadge={isGroupRoute ? showGroupBadge : undefined}
+                  />
+                ),
+              }}
+              listeners={
+                needsStackReset
+                  ? ({ navigation }) => ({
+                      tabPress: (e) => {
+                        if (isGroupRoute) markGroupBadgeSeen();
+                        const state = navigation.getState();
+                        const route = state.routes.find(
+                          (r: { name: string }) => r.name === tab.name,
+                        );
+                        if (!shouldResetTabStack(route?.state)) return;
                         e.preventDefault();
                         navigation.navigate(tab.name, { screen: "index" });
-                      }
-                    },
-                  })
-                : undefined
-            }
-          />
-        );
-      })}
-    </Tabs>
+                      },
+                    })
+                  : undefined
+              }
+            />
+          );
+        })}
+      </Tabs>
+    </View>
   );
 }

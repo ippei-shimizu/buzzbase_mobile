@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/react-native";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
+import { loginRevenueCat } from "@services/revenueCatService";
 import { trackSignUpCompleted, trackUserLoggedIn } from "@utils/analytics";
 import axiosInstance from "@utils/axiosInstance";
 import { posthog } from "@utils/posthog";
@@ -39,6 +40,12 @@ export const googleSignIn = async () => {
   const userId = apiResponse.data?.data?.id;
   if (userId) {
     Sentry.setUser({ id: String(userId) });
+    // RevenueCat の alias 付け失敗で Google サインインを失敗扱いにしない。
+    loginRevenueCat(String(userId)).catch((error: unknown) => {
+      Sentry.captureException(error, {
+        tags: { source: "revenue_cat_login" },
+      });
+    });
     posthog?.identify(String(userId));
     if (apiResponse.data?.requires_username) {
       trackSignUpCompleted("google");

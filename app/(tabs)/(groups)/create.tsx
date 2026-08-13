@@ -13,20 +13,29 @@ import {
 } from "react-native";
 import { GroupForm } from "@components/groups/GroupForm";
 import { SelectableUserRow } from "@components/groups/SelectableUserRow";
+import { PaywallModal } from "@components/pro/PaywallModal";
+import { GROUP_FREE_LIMIT } from "@constants/group";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { useCreateGroup, useInviteMembers } from "@hooks/useGroupMutations";
-import { useFollowingUsers } from "@hooks/useGroups";
+import { useFollowingUsers, useGroups } from "@hooks/useGroups";
 import { useProfile } from "@hooks/useProfile";
+import { groupLimitErrorMessage, isGroupLimitError } from "@utils/axiosError";
+
+const GROUP_LIMIT_MESSAGE = `無料プランで参加できるグループは${GROUP_FREE_LIMIT}件までのため、作成できませんでした。`;
 
 export default function GroupCreateScreen() {
   const router = useRouter();
   const { profile } = useProfile();
   const { users, isLoading: isLoadingUsers } = useFollowingUsers(profile?.id);
+  const { groups, isLoading: isGroupsLoading } = useGroups();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
   const { createGroup, isCreating } = useCreateGroup();
   const { inviteMembers, isInviting } = useInviteMembers();
 
   const [name, setName] = useState("");
   const [iconUri, setIconUri] = useState<string | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [paywallMessage, setPaywallMessage] = useState<string | null>(null);
 
   const isSaving = isCreating || isInviting;
   const canSave = name.trim().length > 0 && !isSaving;
@@ -53,6 +62,18 @@ export default function GroupCreateScreen() {
   };
 
   const handleSave = async () => {
+    // pro/status と所属グループの取得完了後にのみ上限判定する。
+    // 判定確定前は誤ってPaywallを出さず、サーバー側の上限チェックに委ねる。
+    if (
+      !isProLoading &&
+      !isGroupsLoading &&
+      !hasEntitlement("unlimited_groups") &&
+      groups.length >= GROUP_FREE_LIMIT
+    ) {
+      setPaywallMessage(GROUP_LIMIT_MESSAGE);
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("group[name]", name);
@@ -86,6 +107,12 @@ export default function GroupCreateScreen() {
 
       router.replace(`/(groups)/share-invite?id=${group.id}`);
     } catch (error) {
+      // サーバー側の上限チェックによる 403 は障害ではないため、
+      // 汎用エラーに潰さず Pro への導線を出す。
+      if (isGroupLimitError(error)) {
+        setPaywallMessage(groupLimitErrorMessage(error) ?? GROUP_LIMIT_MESSAGE);
+        return;
+      }
       Sentry.captureException(error, {
         tags: { source: "group-create", action: "create" },
       });
@@ -147,6 +174,12 @@ export default function GroupCreateScreen() {
           )}
         </View>
       </ScrollView>
+      <PaywallModal
+        isOpen={paywallMessage !== null}
+        onClose={() => setPaywallMessage(null)}
+        feature="unlimited_groups"
+        contextMessage={paywallMessage ?? GROUP_LIMIT_MESSAGE}
+      />
     </>
   );
 }

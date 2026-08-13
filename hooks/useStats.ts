@@ -1,5 +1,9 @@
 import type { StatsFilters } from "../types/profile";
-import type { BattingTrendGranularity, StatsPeriod } from "../types/stats";
+import type {
+  BattingTrendGranularity,
+  EraTrendGranularity,
+  StatsPeriod,
+} from "../types/stats";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   getAdditionalStats,
@@ -110,11 +114,27 @@ export const useEraTrend = (
   enabled = true,
   startMonth?: string,
   endMonth?: string,
+  granularity: EraTrendGranularity = "month",
 ) =>
   useQuery({
-    queryKey: ["eraTrend", year, seasonId, tournamentId, startMonth, endMonth],
+    queryKey: [
+      "eraTrend",
+      year,
+      seasonId,
+      tournamentId,
+      startMonth,
+      endMonth,
+      granularity,
+    ],
     queryFn: () =>
-      getEraTrend(year, seasonId, tournamentId, startMonth, endMonth),
+      getEraTrend(
+        year,
+        seasonId,
+        tournamentId,
+        startMonth,
+        endMonth,
+        granularity,
+      ),
     enabled,
     staleTime: 0,
     placeholderData: keepPreviousData,

@@ -135,9 +135,18 @@ export interface OpponentRecord {
   total: number;
 }
 
+/** ERA推移グラフの粒度。month: 月単独。season: シーズン単独(シーズン跨ぎ比較、Pro限定)。 */
+export type EraTrendGranularity = "month" | "season";
+
 export interface EraTrendPoint {
-  month: number;
+  key: string;
+  label: string;
   era: number;
+}
+
+export interface EraTrendData {
+  granularity: EraTrendGranularity;
+  points: EraTrendPoint[];
 }
 
 export interface Scoring {
@@ -296,6 +305,7 @@ export type BattingTrendGranularity =
   | "game"
   | "month"
   | "year"
+  | "season"
   | "recent_games";
 
 /**

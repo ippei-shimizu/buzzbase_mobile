@@ -20,10 +20,56 @@
       "infoPlist": {
         "NSCameraUsageDescription": "プロフィール画像の撮影に使用します",
         "NSPhotoLibraryUsageDescription": "プロフィール画像の選択に使用します",
+        "NSUserTrackingUsageDescription": "あなたに最適な広告を表示するためにトラッキングの許可をお願いします。広告は無料機能の継続提供に役立てられます。",
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "ja",
         "UIDesignRequiresCompatibility": true,
         "LSApplicationQueriesSchemes": ["twitter"]
+      },
+      "privacyManifests": {
+        "NSPrivacyTracking": true,
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeEmailAddress",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeUserID",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypePurchaseHistory",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeCrashData",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeDeviceID",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": true,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeThirdPartyAdvertising"
+            ]
+          }
+        ]
       }
     },
     "android": {
@@ -81,7 +127,18 @@
           }
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "expo-audio",
+      "expo-video",
+      "./plugins/withVideoTrimHttps.js",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "iosAppId": "ca-app-pub-2173577862865148~9541878905",
+          "delayAppMeasurementInit": true
+        }
+      ],
+      "expo-tracking-transparency"
     ],
     "extra": {
       "eas": {

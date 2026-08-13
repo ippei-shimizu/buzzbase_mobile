@@ -16,10 +16,29 @@ import type {
 import * as Sentry from "@sentry/react-native";
 import axios from "axios";
 import { API_V1_URL } from "@constants/api";
+import { loginRevenueCat, logoutRevenueCat } from "@services/revenueCatService";
 import { trackSignUpCompleted, trackUserLoggedIn } from "@utils/analytics";
 import { clearAllAuthTokens } from "@utils/authTokenStorage";
 import axiosInstance from "@utils/axiosInstance";
 import { posthog } from "@utils/posthog";
+
+// RevenueCat の alias 付け失敗で認証フローが落ちないよう、fire-and-forget で呼ぶ。
+// SDK / ネットワーク失敗時は Sentry に飛ばし、状態は次回起動時の validateToken で再同期する。
+const syncRevenueCatLogin = (userId: string): void => {
+  loginRevenueCat(userId).catch((error: unknown) => {
+    Sentry.captureException(error, {
+      tags: { source: "revenue_cat_login" },
+    });
+  });
+};
+
+const syncRevenueCatLogout = (): void => {
+  logoutRevenueCat().catch((error: unknown) => {
+    Sentry.captureException(error, {
+      tags: { source: "revenue_cat_logout" },
+    });
+  });
+};
 
 /** メールアドレスとパスワードでログイン */
 export const signIn = async (data: SignInData): Promise<AuthResponse> => {
@@ -30,6 +49,7 @@ export const signIn = async (data: SignInData): Promise<AuthResponse> => {
   const body = response.data as AuthResponse;
   if (body.data?.id) {
     Sentry.setUser({ id: String(body.data.id) });
+    syncRevenueCatLogin(String(body.data.id));
     posthog?.identify(String(body.data.id));
     trackUserLoggedIn("email");
   }
@@ -41,6 +61,7 @@ export const signOut = async (): Promise<void> => {
   await axiosInstance.delete("/auth/sign_out");
   await clearAllAuthTokens();
   Sentry.setUser(null);
+  syncRevenueCatLogout();
   posthog?.reset();
 };
 
@@ -50,6 +71,7 @@ export const validateToken = async (): Promise<AuthResponse> => {
   const body = response.data as AuthResponse;
   if (body.data?.id) {
     Sentry.setUser({ id: String(body.data.id) });
+    syncRevenueCatLogin(String(body.data.id));
     posthog?.identify(String(body.data.id));
   }
   return body;

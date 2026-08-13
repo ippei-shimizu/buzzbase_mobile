@@ -7,11 +7,21 @@ import { Stack, useRouter, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { PostHogProvider } from "posthog-react-native";
 import { useCallback, useEffect } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
+import { ScheduleReminderSync } from "@components/schedule/ScheduleReminderSync";
 import { Snackbar } from "@components/ui/Snackbar";
+import {
+  REVENUECAT_API_KEY_ANDROID,
+  REVENUECAT_API_KEY_IOS,
+} from "@constants/revenueCat";
 import { usePushNotifications } from "@hooks/usePushNotifications";
 import { useStoreReview } from "@hooks/useStoreReview";
 import { configureGoogleSignIn } from "@services/googleAuthService";
+import {
+  addCustomerInfoUpdateListener,
+  configureRevenueCat,
+} from "@services/revenueCatService";
+import { useAuthStore } from "@stores/authStore";
 import { posthog } from "@utils/posthog";
 import { queryClient } from "@utils/queryClient";
 
@@ -28,7 +38,17 @@ Sentry.init({
   sendDefaultPii: false,
 });
 
+// アプリ起動時とディープリンク時のアンカー（初期ルート）をホーム（タブ）に固定する。
+// これが無いと、開発時のナビゲーション状態復元などでホーム以外の画面が最初に開くことがある。
+export const unstable_settings = {
+  initialRouteName: "(tabs)",
+};
+
 configureGoogleSignIn();
+
+const revenueCatApiKey =
+  Platform.OS === "ios" ? REVENUECAT_API_KEY_IOS : REVENUECAT_API_KEY_ANDROID;
+if (revenueCatApiKey) configureRevenueCat(revenueCatApiKey);
 
 /**
  * Expo Router の現在パスを PostHog の $screen イベントとして送信する。
@@ -49,6 +69,7 @@ function RootLayoutInner() {
   usePushNotifications();
   const router = useRouter();
   const { initInstallDate, initPositiveEventCount } = useStoreReview();
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
   const handleDeepLink = useCallback(
     (url: string) => {
@@ -113,10 +134,20 @@ function RootLayoutInner() {
     initPositiveEventCount();
   }, [initInstallDate, initPositiveEventCount]);
 
+  // RevenueCat 側の顧客情報更新（更新・解約・返金・別端末購入など）を検知して
+  // Pro 状態のキャッシュを無効化し、アプリ内購入フローを経由しない変化を反映する。
+  useEffect(() => {
+    const unsubscribe = addCustomerInfoUpdateListener(() => {
+      void queryClient.invalidateQueries({ queryKey: ["pro", "status"] });
+    });
+    return unsubscribe;
+  }, []);
+
   return (
     <>
       <StatusBar style="light" />
       <ScreenTracker />
+      {isLoggedIn ? <ScheduleReminderSync /> : null}
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: "#2E2E2E" },
@@ -128,6 +159,25 @@ function RootLayoutInner() {
         <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(game-record)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(practice-record)"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="(shadow-swing)" options={{ headerShown: false }} />
+        <Stack.Screen name="(schedule)" options={{ headerShown: false }} />
+        <Stack.Screen name="(menu-set)" options={{ headerShown: false }} />
+        <Stack.Screen name="(practice-menu)" options={{ headerShown: false }} />
+        <Stack.Screen name="(goal)" options={{ headerShown: false }} />
+        <Stack.Screen name="(note)" options={{ headerShown: false }} />
+        <Stack.Screen name="(records)" options={{ headerShown: false }} />
+        <Stack.Screen name="(theme)" options={{ headerShown: false }} />
+        <Stack.Screen name="(insight)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(reflect-template)"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="(review)" options={{ headerShown: false }} />
+        <Stack.Screen name="(season)" options={{ headerShown: false }} />
         <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen
           name="game-result-detail"
@@ -140,6 +190,40 @@ function RootLayoutInner() {
         <Stack.Screen
           name="settings"
           options={{ title: "設定", headerBackTitle: "戻る" }}
+        />
+        <Stack.Screen
+          name="privacy-policy"
+          options={{ title: "プライバシーポリシー", headerBackTitle: "戻る" }}
+        />
+        <Stack.Screen
+          name="terms-of-service"
+          options={{ title: "利用規約", headerBackTitle: "戻る" }}
+        />
+        <Stack.Screen
+          name="tokushoho"
+          options={{
+            title: "特定商取引法に基づく表記",
+            headerBackTitle: "戻る",
+          }}
+        />
+        <Stack.Screen
+          name="licenses"
+          options={{
+            title: "ライセンス表記",
+            headerBackTitle: "戻る",
+          }}
+        />
+        <Stack.Screen
+          name="pro"
+          options={{
+            headerShown: false,
+            presentation: "fullScreenModal",
+            animation: "slide_from_bottom",
+          }}
+        />
+        <Stack.Screen
+          name="account/subscription/index"
+          options={{ title: "サブスクリプション管理", headerBackTitle: "戻る" }}
         />
       </Stack>
       <Snackbar />

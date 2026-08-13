@@ -1,0 +1,45 @@
+export type EventType = "self_practice" | "practice" | "game" | "other";
+
+export interface ScheduleMenu {
+  practice_menu_id: number;
+  name: string | null;
+  unit_label: string | null;
+  target_value: number | null;
+}
+
+export interface Schedule {
+  id: number;
+  title: string | null;
+  days_of_week: string | null; // "1,3,5"（月=1〜日=7）。単発の場合 null
+  planned_on: string | null; // "2026-07-11"。繰り返しの場合 null
+  scheduled_time: string | null; // "06:00"。終日予定は null
+  end_time: string | null; // "12:30"。開始時刻とセットでのみ設定でき、開始より後
+  event_type: EventType;
+  recurring: boolean; // days_of_week を持つ（繰り返し）か
+  menu_set_id: number | null;
+  game_result_id: number | null;
+  note: string | null;
+  notification_enabled: boolean;
+  active: boolean;
+  notification_message: string | null;
+  menus: ScheduleMenu[];
+  // この予定に対して練習ログが記録済みの practice_menu_id 一覧。編集画面ではこれらの
+  // メニューを変更不可にし、済判定が壊れる編集を防ぐ。
+  logged_practice_menu_ids: number[];
+}
+
+export interface ScheduleInput {
+  title?: string | null;
+  days_of_week?: string | null;
+  planned_on?: string | null;
+  scheduled_time?: string | null;
+  // 終了時刻・メモをクリアするときは省略ではなく null を送る。
+  // バックエンドは assign_attributes のため、省略すると既存値が残る。
+  end_time?: string | null;
+  note?: string | null;
+  event_type?: EventType;
+  menu_set_id?: number | null;
+  notification_enabled?: boolean;
+  notification_message?: string | null;
+  menus?: { practice_menu_id: number; target_value?: number | null }[];
+}

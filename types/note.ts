@@ -1,0 +1,71 @@
+import type { MediaAttachment } from "./mediaAttachment";
+import type { ReflectionAnswer } from "./reflectionTemplate";
+import type { Tag } from "./tag";
+
+export interface NoteV2 {
+  id: number;
+  title: string | null;
+  date: string;
+  memo: string | null;
+  memo_preview: string;
+  game_result_ids: number[];
+  practice_log_id: number | null;
+  practice_session_id: number | null;
+  improvement_theme_ids: number[];
+  reflection_template_id: number | null;
+  reflection_answers: ReflectionAnswer[];
+  tags: Tag[];
+  media_attachments: MediaAttachment[];
+}
+
+export interface NoteInput {
+  // 空文字での保存は「タイトルを消す」操作。undefined だと JSON からキーごと落ちて
+  // サーバーが旧値を保持するため、クリアは null で明示的に送る。
+  title?: string | null;
+  date: string;
+  memo: string; // Slate 形式の JSON 文字列
+  game_result_ids?: number[];
+  practice_log_id?: number | null;
+  practice_session_id?: number | null;
+  improvement_theme_ids?: number[];
+  reflection_template_id?: number | null;
+  reflection_answers?: ReflectionAnswer[];
+  tag_ids?: number[];
+}
+
+/** プレーンテキストを Slate 互換の JSON 文字列にする（v1 ノートと表示互換）。 */
+export const buildMemoJson = (text: string): string =>
+  JSON.stringify([{ type: "paragraph", children: [{ text }] }]);
+
+/** Slate JSON / プレーンテキストからテキストを取り出す。 */
+export const extractMemoText = (memo: string | null): string => {
+  if (!memo) return "";
+  try {
+    const data = JSON.parse(memo) as { children: { text: string }[] }[];
+    return data.map((p) => p.children.map((c) => c.text).join("")).join("\n");
+  } catch {
+    return memo;
+  }
+};
+
+/**
+ * テンプレ回答からメモ本文を合成する。見出しを【】で囲み、本文を改行下・
+ * 回答間を空行で区切る。メモ未入力時の一覧プレビュー本文として使う。
+ */
+export const buildReflectionMemoText = (answers: ReflectionAnswer[]): string =>
+  answers.map((item) => `【${item.question}】\n${item.answer}`).join("\n\n");
+
+/**
+ * メモ本文がテンプレ回答から自動合成されたもの（新旧フォーマット）かを判定する。
+ * 編集時に合成メモを自由メモ欄へ流し込まないための判別に使う。
+ */
+export const isReflectionMemo = (
+  memoText: string,
+  answers: ReflectionAnswer[],
+): boolean => {
+  if (answers.length === 0) return false;
+  const legacy = answers
+    .map((item) => `${item.question}: ${item.answer}`)
+    .join("\n");
+  return memoText === buildReflectionMemoText(answers) || memoText === legacy;
+};

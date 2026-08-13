@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { API_BASE_URL, API_V1_URL } from "@constants/api";
+import { DEFAULT_PRO_STATUS } from "../../types/pro";
 
 /**
  * MSW の既定ハンドラ集。
@@ -14,8 +15,27 @@ export const defaultHandlers = [
   http.get(`${API_V1_URL}/teams`, () => HttpResponse.json([])),
   http.get(`${API_V1_URL}/positions`, () => HttpResponse.json([])),
   http.get(`${API_V1_URL}/tournaments`, () => HttpResponse.json([])),
+  // 上達ループ機能のフックが各画面のマウント時に走らせる GET。個別テストで
+  // 必要なら server.use(...) で上書きする。既定は空を返してノイズを抑える。
+  http.get(`${API_BASE_URL}/api/v2/improvement_themes`, () =>
+    HttpResponse.json([]),
+  ),
+  http.get(`${API_BASE_URL}/api/v2/reflection_templates`, () =>
+    HttpResponse.json([]),
+  ),
+  http.get(`${API_BASE_URL}/api/v2/periodic_reviews`, () =>
+    HttpResponse.json([]),
+  ),
+  http.get(`${API_BASE_URL}/api/v2/baseball_notes`, () =>
+    HttpResponse.json([]),
+  ),
   http.get(`${API_V1_URL}/match_results/available_months`, () =>
     HttpResponse.json([]),
+  ),
+  // useProStatus がペイウォール系コンポーネントのマウント時に走らせる。
+  // 既定は無料・トライアル未使用（DEFAULT_PRO_STATUS）を返す。
+  http.get(`${API_V1_URL}/pro/status`, () =>
+    HttpResponse.json(DEFAULT_PRO_STATUS),
   ),
 ];
 

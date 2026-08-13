@@ -1,9 +1,7 @@
 import type { GameResult } from "../../types/gameResult";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,13 +9,16 @@ import {
   View,
 } from "react-native";
 import { PlateAppearanceCard } from "@components/game-record/plate-appearance/PlateAppearanceCard";
+import { Icon } from "@components/icon/Icon";
 import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
 import { usePlateAppearancesByGame } from "@hooks/usePlateAppearances";
 import { formatMatchTypeLabel } from "@utils/matchType";
 
 interface GameResultDetailProps {
   game: GameResult;
-  onDelete?: () => void;
+  onShare?: () => void;
+  /** false のとき自前の ScrollView で囲まず内容のみ描画する（他画面に埋め込む用）。 */
+  scroll?: boolean;
 }
 
 const formatDate = (dateStr: string): string => {
@@ -68,7 +69,11 @@ function StatRow({
   );
 }
 
-export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
+export const GameResultDetail = ({
+  game,
+  onShare,
+  scroll = true,
+}: GameResultDetailProps) => {
   const { match_result, batting_average, pitching_result } = game;
   const isWin = match_result.my_team_score > match_result.opponent_team_score;
   const isLoss = match_result.my_team_score < match_result.opponent_team_score;
@@ -82,19 +87,8 @@ export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
     (a, b) => a.batter_box_number - b.batter_box_number,
   );
 
-  const handleDelete = () => {
-    Alert.alert("試合結果の削除", "この試合結果を削除しますか？", [
-      { text: "キャンセル", style: "cancel" },
-      {
-        text: "削除",
-        style: "destructive",
-        onPress: onDelete,
-      },
-    ]);
-  };
-
-  return (
-    <ScrollView style={styles.container}>
+  const content = (
+    <>
       <View style={styles.card}>
         {/* ヘッダー */}
         <View style={styles.header}>
@@ -267,17 +261,22 @@ export const GameResultDetail = ({ game, onDelete }: GameResultDetailProps) => {
         </View>
       )}
 
-      {/* 削除ボタン */}
-      {onDelete && (
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={18} color="#EF4444" />
-          <Text style={styles.deleteButtonText}>この試合結果を削除</Text>
-        </TouchableOpacity>
+      {/* 共有ボタン（編集はヘッダーの鉛筆アイコンから行うため、ここには置かない） */}
+      {onShare && (
+        <View style={styles.actionsRow}>
+          <TouchableOpacity style={styles.shareButton} onPress={onShare}>
+            <Icon name="share-outline" size={18} color="#d08000" />
+            <Text style={styles.shareButtonText}>共有</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       <View style={styles.bottomSpacer} />
-    </ScrollView>
+    </>
   );
+
+  if (!scroll) return <View style={styles.embedded}>{content}</View>;
+  return <ScrollView style={styles.container}>{content}</ScrollView>;
 };
 
 const styles = StyleSheet.create({
@@ -285,6 +284,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  embedded: {},
   card: {
     backgroundColor: "#27272a",
     borderRadius: 12,
@@ -441,19 +441,24 @@ const styles = StyleSheet.create({
     color: "#EF4444",
     fontSize: 13,
   },
-  deleteButton: {
+  actionsRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 16,
+  },
+  shareButton: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     borderWidth: 1,
-    borderColor: "#EF4444",
+    borderColor: "#d08000",
     borderRadius: 8,
     paddingVertical: 12,
-    marginTop: 16,
   },
-  deleteButtonText: {
-    color: "#EF4444",
+  shareButtonText: {
+    color: "#d08000",
     fontSize: 14,
     fontWeight: "600",
   },

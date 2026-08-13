@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   View,
@@ -7,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 interface AwardItem {
   id?: number;
@@ -46,13 +46,13 @@ export const AwardSection = ({
             style={styles.removeButton}
             onPress={() => onRemoveAward(index)}
           >
-            <Ionicons name="close-circle" size={22} color="#71717A" />
+            <Icon name="close-circle" size={22} color="#71717A" />
           </TouchableOpacity>
         </View>
       ))}
 
       <TouchableOpacity style={styles.addButton} onPress={onAddAward}>
-        <Ionicons name="add-circle" size={28} color="#d08000" />
+        <Icon name="add-circle" size={28} color="#d08000" />
       </TouchableOpacity>
     </View>
   );

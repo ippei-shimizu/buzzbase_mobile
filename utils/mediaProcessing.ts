@@ -1,0 +1,138 @@
+import { File } from "expo-file-system";
+import { createVideoPlayer } from "expo-video";
+import * as VideoThumbnails from "expo-video-thumbnails";
+import { Image } from "react-native";
+import {
+  Image as ImageCompressor,
+  Video as VideoCompressor,
+} from "react-native-compressor";
+
+const VIDEO_META_TIMEOUT_MS = 10_000;
+// Proの最大長さ(180秒)の動画でも通常は十分収まる想定の、ネイティブ側ハング対策の安全網。
+const VIDEO_COMPRESSION_TIMEOUT_MS = 3 * 60_000;
+const IMAGE_COMPRESSION_TIMEOUT_MS = 30_000;
+const IMAGE_MAX_DIMENSION = 1080;
+const IMAGE_COMPRESSION_QUALITY = 0.7;
+
+/**
+ * ネイティブ圧縮処理が想定外に長時間かかった場合に備え、一定時間で諦めてエラーにする。
+ * 呼び出し元（useMediaAttachmentUpload）の既存エラーハンドリングでアラート表示につながる。
+ */
+const withTimeout = <T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  message: string,
+): Promise<T> =>
+  new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
+    promise.then(
+      (value) => {
+        clearTimeout(timeout);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      },
+    );
+  });
+
+export interface VideoCompressionOptions {
+  /** 出力動画の長辺の最大px（react-native-compressor の maxSize と同義）。 */
+  maxSize: number;
+  /** 目標ビットレート(bps)。未指定なら解像度から自動算出させる。 */
+  bitrate?: number;
+}
+
+/**
+ * 動画をクライアント側で圧縮する（サーバーffmpegは使わない）。R2の保存コストを抑えるため、
+ * 長辺をプランごとの解像度上限（maxSize）まで縮小する。圧縮後のファイルURIを返す。
+ *
+ * 自動算出のビットレートは解像度を上げても比例して上がらず、素振りフォームのような
+ * 動きの速い被写体でブロックノイズが出るため、bitrate を明示できるようにしている。
+ */
+export const compressVideo = async (
+  uri: string,
+  { maxSize, bitrate }: VideoCompressionOptions,
+): Promise<string> =>
+  withTimeout(
+    VideoCompressor.compress(uri, {
+      compressionMethod: "manual",
+      maxSize,
+      ...(bitrate === undefined ? {} : { bitrate }),
+    }),
+    VIDEO_COMPRESSION_TIMEOUT_MS,
+    "動画の圧縮がタイムアウトしました",
+  );
+
+/**
+ * 画像をクライアント側で圧縮する。サイズ上限のチェック用ではなく、R2の保存コストを
+ * 抑えるため上限未満でも常に長辺1080px・品質0.7を目安に縮小する。
+ */
+export const compressImage = async (uri: string): Promise<string> =>
+  withTimeout(
+    ImageCompressor.compress(uri, {
+      compressionMethod: "manual",
+      maxWidth: IMAGE_MAX_DIMENSION,
+      maxHeight: IMAGE_MAX_DIMENSION,
+      quality: IMAGE_COMPRESSION_QUALITY,
+    }),
+    IMAGE_COMPRESSION_TIMEOUT_MS,
+    "画像の圧縮がタイムアウトしました",
+  );
+
+/** 動画のファーストフレームからサムネイル画像を生成する。 */
+export const generateVideoThumbnail = async (uri: string): Promise<string> => {
+  const { uri: thumbnailUri } = await VideoThumbnails.getThumbnailAsync(uri, {
+    time: 0,
+  });
+  return thumbnailUri;
+};
+
+export const getFileSizeBytes = (uri: string): number => new File(uri).size;
+
+export interface VideoMeta {
+  durationSeconds: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * 動画の長さ・解像度を取得する。expo-videoはプレイヤーがソースを読み込み終えるまで
+ * メタ情報を持たないため、sourceLoadイベントを1回だけ待って取得する。
+ */
+export const getVideoMeta = (uri: string): Promise<VideoMeta> =>
+  new Promise((resolve, reject) => {
+    const player = createVideoPlayer(uri);
+    const timeout = setTimeout(() => {
+      subscription.remove();
+      player.release();
+      reject(new Error("動画情報の取得がタイムアウトしました"));
+    }, VIDEO_META_TIMEOUT_MS);
+
+    const subscription = player.addListener("sourceLoad", (payload) => {
+      clearTimeout(timeout);
+      subscription.remove();
+      const track = payload.availableVideoTracks[0];
+      player.release();
+      resolve({
+        durationSeconds: Math.round(payload.duration),
+        width: track?.size.width ?? 0,
+        height: track?.size.height ?? 0,
+      });
+    });
+  });
+
+export interface ImageMeta {
+  width: number;
+  height: number;
+}
+
+export const getImageMeta = (uri: string): Promise<ImageMeta> =>
+  new Promise((resolve, reject) => {
+    Image.getSize(
+      uri,
+      (width, height) => resolve({ width, height }),
+      (error) => reject(error),
+    );
+  });

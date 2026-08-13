@@ -1,5 +1,4 @@
 import type { Pitcher } from "../../../../types/pitcher";
-import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -12,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { THROW_HAND_FULL_LABELS } from "@constants/throwHand";
 import { useTeams } from "@hooks/useMasterData";
 import { usePitchers } from "@hooks/usePitchers";
@@ -125,7 +125,7 @@ export function PitcherSelector({ value, onChange, description }: Props) {
             onPress={() => onChange(null)}
             hitSlop={6}
           >
-            <Ionicons name="close-circle" size={22} color="#A1A1AA" />
+            <Icon name="close-circle" size={22} color="#A1A1AA" />
           </TouchableOpacity>
         )}
       </View>
@@ -191,11 +191,7 @@ export function PitcherSelector({ value, onChange, description }: Props) {
                       onPress={() => openEditForm(pitcher)}
                       hitSlop={6}
                     >
-                      <Ionicons
-                        name="create-outline"
-                        size={20}
-                        color="#d08000"
-                      />
+                      <Icon name="create-outline" size={20} color="#d08000" />
                     </TouchableOpacity>
                   </View>
                 ))
@@ -216,7 +212,7 @@ export function PitcherSelector({ value, onChange, description }: Props) {
                 style={styles.addButton}
                 onPress={openCreateForm}
               >
-                <Ionicons name="add" size={16} color="#F4F4F4" />
+                <Icon name="add" size={16} color="#F4F4F4" />
                 <Text style={styles.addLabel}>新規追加</Text>
               </TouchableOpacity>
             </View>
