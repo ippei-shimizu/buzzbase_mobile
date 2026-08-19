@@ -28,6 +28,13 @@
       },
       "privacyManifests": {
         "NSPrivacyTracking": true,
+        "NSPrivacyTrackingDomains": [
+          "doubleclick.net",
+          "googlesyndication.com",
+          "googleadservices.com",
+          "googleads.g.doubleclick.net",
+          "admob.com"
+        ],
         "NSPrivacyCollectedDataTypes": [
           {
             "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeEmailAddress",
@@ -131,6 +138,7 @@
       "expo-audio",
       "expo-video",
       "./plugins/withVideoTrimHttps.js",
+      "./plugins/withGoogleMobileAdsSdkVersion.js",
       [
         "react-native-google-mobile-ads",
         {
