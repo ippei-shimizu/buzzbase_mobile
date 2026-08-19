@@ -43,6 +43,8 @@ export default function ResetPasswordScreen() {
       setCompleted(true);
       setTimeout(() => router.replace("/(auth)/sign-in"), 2000);
     } catch (error) {
+      // back は PUT /auth/password をスロットル対象にしていないため現状は到達しないが、
+      // 対象化された際の取りこぼしを防ぐために置いている。
       if (isRateLimitError(error)) {
         setErrors([rateLimitErrorMessage(error)]);
         return;
