@@ -136,4 +136,38 @@ describe("sign-up", () => {
     const routerSpies = getRouterSpies();
     expect(routerSpies.push).not.toHaveBeenCalled();
   });
+
+  it("レート制限（429）時は back が返した文言を表示する", async () => {
+    server.use(
+      http.post(apiUrl("/auth"), () =>
+        HttpResponse.json(
+          {
+            error: "rate_limit_exceeded",
+            message: "試行回数が上限に達しました",
+          },
+          { status: 429 },
+        ),
+      ),
+    );
+
+    const { getByPlaceholderText, getByText, findByText } = renderSignUp();
+
+    fireEvent.changeText(
+      getByPlaceholderText("email@example.com"),
+      "limited@example.com",
+    );
+    fireEvent.changeText(
+      getByPlaceholderText("6文字以上の半角英数字"),
+      "password123",
+    );
+    fireEvent.changeText(
+      getByPlaceholderText("パスワードを再入力"),
+      "password123",
+    );
+    fireEvent.press(getByText("アカウント登録"));
+
+    await findByText("試行回数が上限に達しました");
+    const routerSpies = getRouterSpies();
+    expect(routerSpies.push).not.toHaveBeenCalled();
+  });
 });
