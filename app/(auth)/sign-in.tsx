@@ -7,6 +7,7 @@ import { SignInForm } from "@components/auth/SignInForm";
 import { useAuth } from "@hooks/useAuth";
 import { useFormValidation } from "@hooks/useFormValidation";
 import { getCurrentUserProfile } from "@services/profileService";
+import { isRateLimitError, rateLimitErrorMessage } from "@utils/axiosError";
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -27,6 +28,11 @@ export default function SignInScreen() {
     validatePassword(password);
 
   const handleLoginError = (error: unknown) => {
+    if (isRateLimitError(error)) {
+      setErrors([rateLimitErrorMessage(error)]);
+      return;
+    }
+
     if (error instanceof AxiosError) {
       const status = error.response?.status;
       const message = error.response?.data?.errors?.join(" ") || "";
@@ -95,7 +101,9 @@ export default function SignInScreen() {
         router.replace("/(tabs)");
       }
     } catch (error) {
-      if (error instanceof AxiosError) {
+      if (isRateLimitError(error)) {
+        setErrors([rateLimitErrorMessage(error)]);
+      } else if (error instanceof AxiosError) {
         setErrors(["Googleログインに失敗しました。もう一度お試しください"]);
       } else {
         setErrors(["Googleログインに失敗しました"]);
@@ -117,7 +125,9 @@ export default function SignInScreen() {
         router.replace("/(tabs)");
       }
     } catch (error) {
-      if (error instanceof AxiosError) {
+      if (isRateLimitError(error)) {
+        setErrors([rateLimitErrorMessage(error)]);
+      } else if (error instanceof AxiosError) {
         setErrors(["Appleログインに失敗しました。もう一度お試しください"]);
       } else {
         setErrors(["Appleログインに失敗しました"]);
