@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { SignUpForm } from "@components/auth/SignUpForm";
 import { useAuth } from "@hooks/useAuth";
 import { useFormValidation } from "@hooks/useFormValidation";
+import { isRateLimitError, rateLimitErrorMessage } from "@utils/axiosError";
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -38,7 +39,9 @@ export default function SignUpScreen() {
         params: { email },
       });
     } catch (error) {
-      if (error instanceof AxiosError) {
+      if (isRateLimitError(error)) {
+        setErrors([rateLimitErrorMessage(error)]);
+      } else if (error instanceof AxiosError) {
         const status = error.response?.status;
         const messages: string[] =
           error.response?.data?.errors?.full_messages || [];
@@ -74,7 +77,9 @@ export default function SignUpScreen() {
         router.replace("/(tabs)");
       }
     } catch (error) {
-      if (error instanceof AxiosError) {
+      if (isRateLimitError(error)) {
+        setErrors([rateLimitErrorMessage(error)]);
+      } else if (error instanceof AxiosError) {
         setErrors(["Googleログインに失敗しました。もう一度お試しください"]);
       } else {
         setErrors(["Googleログインに失敗しました"]);
@@ -96,7 +101,9 @@ export default function SignUpScreen() {
         router.replace("/(tabs)");
       }
     } catch (error) {
-      if (error instanceof AxiosError) {
+      if (isRateLimitError(error)) {
+        setErrors([rateLimitErrorMessage(error)]);
+      } else if (error instanceof AxiosError) {
         setErrors(["Appleログインに失敗しました。もう一度お試しください"]);
       } else {
         setErrors(["Appleログインに失敗しました"]);

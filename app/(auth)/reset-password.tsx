@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ResetPasswordView } from "@components/auth/ResetPasswordView";
 import { useAuth } from "@hooks/useAuth";
 import { useFormValidation } from "@hooks/useFormValidation";
+import { isRateLimitError, rateLimitErrorMessage } from "@utils/axiosError";
 
 export default function ResetPasswordScreen() {
   const { accessToken, client, uid } = useLocalSearchParams<{
@@ -42,6 +43,10 @@ export default function ResetPasswordScreen() {
       setCompleted(true);
       setTimeout(() => router.replace("/(auth)/sign-in"), 2000);
     } catch (error) {
+      if (isRateLimitError(error)) {
+        setErrors([rateLimitErrorMessage(error)]);
+        return;
+      }
       // PUT /auth/password のバリデーションエラーは devise_token_auth の
       // resource_errors ヘルパーにより { フィールド名: [...], full_messages: [...] }
       // というハッシュ形式で返るため、full_messages を優先的に取り出す

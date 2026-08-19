@@ -75,3 +75,35 @@ export const serverErrorMessage = (error: unknown): string | undefined => {
   if (data?.errors?.length) return data.errors.join("\n");
   return data?.error;
 };
+
+export const RATE_LIMIT_FALLBACK_MESSAGE =
+  "試行回数が上限に達しました。しばらく時間をおいてからお試しください";
+
+/**
+ * back の rack-attack によるレート制限（429）かどうかを判定する。
+ *
+ * 他の429と取り違えないよう、status だけでなく安定コード（`rate_limit_exceeded`）まで見る。
+ *
+ * @param error - try/catchで受けた error 値（unknown）
+ * @returns AxiosErrorかつレート制限による429の場合のみ true
+ */
+export const isRateLimitError = (error: unknown): boolean => {
+  if (!axios.isAxiosError(error) || error.response?.status !== 429)
+    return false;
+
+  const data = error.response.data as { error?: string } | undefined;
+  return data?.error === "rate_limit_exceeded";
+};
+
+/**
+ * レート制限エラーの表示文言を返す。文言は back に一元化しているため message を優先する。
+ *
+ * @param error - try/catchで受けた error 値（unknown）
+ * @returns 表示用メッセージ
+ */
+export const rateLimitErrorMessage = (error: unknown): string => {
+  if (!axios.isAxiosError(error)) return RATE_LIMIT_FALLBACK_MESSAGE;
+
+  const data = error.response?.data as { message?: string } | undefined;
+  return data?.message || RATE_LIMIT_FALLBACK_MESSAGE;
+};
