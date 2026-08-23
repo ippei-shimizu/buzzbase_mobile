@@ -6,8 +6,11 @@ import { CrownIcon } from "@components/icon/CrownIcon";
 import { GloveIcon } from "@components/icon/GloveIcon";
 import { Icon } from "@components/icon/Icon";
 import { LockIcon } from "@components/icon/LockIcon";
+import { RecordIcon } from "@components/icon/RecordIcon";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
 import { API_BASE_URL } from "@constants/api";
+import { BATTING_SIDE_LABELS } from "@constants/handedness";
+import { THROW_HAND_FULL_LABELS } from "@constants/throwHand";
 import { FollowButton } from "./FollowButton";
 import { FollowCounts } from "./FollowCounts";
 
@@ -51,6 +54,12 @@ export const ProfileHeader = ({
   const hasPositions = positions && positions.length > 0;
   const hasTeam = !!teamName;
   const hasAwards = awards && awards.length > 0;
+  const handednessText = [
+    profile.throw_hand ? THROW_HAND_FULL_LABELS[profile.throw_hand] : null,
+    profile.batting_side ? BATTING_SIDE_LABELS[profile.batting_side] : null,
+  ]
+    .filter(Boolean)
+    .join(" / ");
 
   return (
     <View style={styles.container}>
@@ -93,6 +102,14 @@ export const ProfileHeader = ({
           <Text style={styles.infoText}>
             {positions.map((p) => p.name).join(" / ")}
           </Text>
+        </View>
+      )}
+
+      {/* 利き腕・打席（両方 null なら行ごと非表示） */}
+      {handednessText !== "" && (
+        <View style={styles.infoRow}>
+          <RecordIcon size={16} color="#A1A1AA" />
+          <Text style={styles.infoText}>{handednessText}</Text>
         </View>
       )}
 
