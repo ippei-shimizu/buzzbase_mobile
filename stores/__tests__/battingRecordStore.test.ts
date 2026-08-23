@@ -33,6 +33,7 @@ const buildPlateAppearance = (
   first_pitch_swing: true,
   runners_state: "first",
   inning: 5,
+  pitch_course: 13,
   self_analysis_memo: "高めの球を強振",
   opponent_memo: "初球はストレート",
   is_new_format: true,
@@ -67,6 +68,7 @@ describe("useBattingRecordStore - 詳細項目", () => {
     expect(state.contactQualityId).toBe(1);
     expect(state.timingId).toBe(2);
     expect(state.pitchTypeId).toBe(3);
+    expect(state.pitchCourse).toBe(13);
     expect(state.selfAnalysisMemo).toBe("高めの球を強振");
   });
 
@@ -134,6 +136,7 @@ describe("useBattingRecordStore - 詳細項目", () => {
     expect(pa).toHaveProperty("contact_quality_id", null);
     expect(pa).toHaveProperty("timing_id", null);
     expect(pa).toHaveProperty("pitch_type_id", null);
+    expect(pa).toHaveProperty("pitch_course", null);
     expect(pa).toHaveProperty("self_analysis_memo", null);
   });
 
@@ -145,6 +148,7 @@ describe("useBattingRecordStore - 詳細項目", () => {
     store.setFirstPitchSwing(true);
     store.setDetailCount("finalBalls", 2);
     store.setMasterSelection("contactQualityId", 5);
+    store.setPitchCourse(13);
     store.setMemo("selfAnalysisMemo", "差し込まれた");
 
     const payload = useBattingRecordStore.getState().toCreatePayload(100);
@@ -153,6 +157,7 @@ describe("useBattingRecordStore - 詳細項目", () => {
       first_pitch_swing: true,
       final_balls: 2,
       contact_quality_id: 5,
+      pitch_course: 13,
       self_analysis_memo: "差し込まれた",
     });
   });

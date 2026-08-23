@@ -68,6 +68,8 @@ export interface PlateAppearanceV2 {
   first_pitch_swing: boolean | null;
   runners_state: RunnersState | null;
   inning: number | null;
+  // 投球コース（捕手目線 5x5、1〜25）。詳細は constants/pitchCourse.ts。
+  pitch_course: number | null;
   self_analysis_memo: string | null;
   opponent_memo: string | null;
   is_new_format: boolean;
@@ -108,6 +110,7 @@ export interface PlateAppearanceV2Input {
   contact_quality_id?: number | null;
   timing_id?: number | null;
   pitch_type_id?: number | null;
+  pitch_course?: number | null;
   self_analysis_memo?: string | null;
   pitcher_id?: number | null;
   appearance_situation_id?: number | null;

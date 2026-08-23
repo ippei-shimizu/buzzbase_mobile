@@ -57,6 +57,7 @@ interface BattingRecordState {
   contactQualityId: number | null;
   timingId: number | null;
   pitchTypeId: number | null;
+  pitchCourse: number | null;
   selfAnalysisMemo: string | null;
   pitcherId: number | null;
   appearanceSituationId: number | null;
@@ -79,6 +80,7 @@ interface BattingRecordState {
   setRunnersState: (value: RunnersState | null) => void;
   setInning: (value: number | null) => void;
   setMasterSelection: (key: MasterSelectionKey, id: number | null) => void;
+  setPitchCourse: (value: number | null) => void;
   setMemo: (key: MemoKey, text: string) => void;
   setPitcherSelection: (key: PitcherSelectionKey, id: number | null) => void;
   toCreatePayload: (gameResultId: number) => PlateAppearanceV2Payload;
@@ -108,6 +110,7 @@ const initialState = {
   contactQualityId: null as number | null,
   timingId: null as number | null,
   pitchTypeId: null as number | null,
+  pitchCourse: null as number | null,
   selfAnalysisMemo: null as string | null,
   pitcherId: null as number | null,
   appearanceSituationId: null as number | null,
@@ -185,6 +188,7 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       contactQualityId: pa.contact_quality?.id ?? null,
       timingId: pa.timing?.id ?? null,
       pitchTypeId: pa.pitch_type?.id ?? null,
+      pitchCourse: pa.pitch_course ?? null,
       selfAnalysisMemo: pa.self_analysis_memo,
       pitcherId: pa.pitcher?.id ?? null,
       appearanceSituationId: pa.appearance_situation?.id ?? null,
@@ -245,6 +249,8 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
     set({ [key]: id } as Pick<BattingRecordState, MasterSelectionKey>);
   },
 
+  setPitchCourse: (value) => set({ pitchCourse: value }),
+
   setMemo: (key, text) => {
     // 空文字を null に正規化することで、API 送信時に "" と null の表現ぶれを防ぐ。
     const normalized = text.length === 0 ? null : text;
@@ -288,6 +294,7 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       contact_quality_id: state.contactQualityId,
       timing_id: state.timingId,
       pitch_type_id: state.pitchTypeId,
+      pitch_course: state.pitchCourse,
       self_analysis_memo: state.selfAnalysisMemo,
       pitcher_id: state.pitcherId,
       appearance_situation_id: state.appearanceSituationId,
