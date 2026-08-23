@@ -190,6 +190,11 @@ export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     title: "球種別の打率",
     description: "ストレートや変化球など、球種ごとの得意・苦手が分析できます。",
   },
+  pitch_course_average: {
+    title: "コース別の打率",
+    description:
+      "5×5のコース別ヒートマップで得意・苦手なコースがわかります。球種別のクロス集計にも対応。",
+  },
   pitcher_faceoff_average: {
     title: "対戦投手別",
     description: "対戦した投手ごとの打撃成績を一覧で確認できます。",
@@ -239,6 +244,7 @@ export const FEATURE_COMPARISONS: Record<ProFeature, FeatureComparison> = {
   hit_direction_average: { free: "✕", pro: "○" },
   count_situation_average: { free: "✕", pro: "○" },
   pitch_type_average: { free: "✕", pro: "○" },
+  pitch_course_average: { free: "✕", pro: "○" },
   pitcher_faceoff_average: { free: "✕", pro: "○" },
 };
 
@@ -305,6 +311,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
       "hit_direction_average",
       "count_situation_average",
       "pitch_type_average",
+      "pitch_course_average",
       "pitcher_faceoff_average",
     ],
   },
