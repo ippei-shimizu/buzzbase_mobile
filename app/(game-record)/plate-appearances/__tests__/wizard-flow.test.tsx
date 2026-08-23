@@ -57,6 +57,7 @@ const buildCreatedResponse = (
   first_pitch_swing: null,
   runners_state: null,
   inning: null,
+  pitch_course: null,
   self_analysis_memo: null,
   opponent_memo: null,
   is_new_format: true,
@@ -220,8 +221,9 @@ describe("打席ステップ式ウィザードのフロー", () => {
     fireEvent.press(view.getByLabelText("詳細を入力する"));
 
     // Step3 のチップが描画されるのを待つ（マスタ取得完了の合図）。
-    const runnerChip = await view.findByLabelText("ランナー状況 一塁");
-    fireEvent.press(runnerChip);
+    // ランナー状況はダイヤモンド UI（各塁のタップでトグル）。
+    const firstBase = await view.findByLabelText("一塁");
+    fireEvent.press(firstBase);
     fireEvent.press(view.getByLabelText("打球の質 真芯"));
     fireEvent.changeText(view.getByLabelText("自己分析メモ"), "差し込まれた");
 

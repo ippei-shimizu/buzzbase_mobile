@@ -95,7 +95,8 @@ function PulseCircle({
 
 interface Props {
   hitLocation: Point | null;
-  onTap: (args: { x: number; y: number; directionId: number | null }) => void;
+  /** 未指定なら表示専用（打席詳細画面での読み取り専用プロット）。 */
+  onTap?: (args: { x: number; y: number; directionId: number | null }) => void;
 }
 
 // 球場形状（HOME / 塁 / 外野フェンス / ファウルライン端点）は SprayChart と
@@ -150,6 +151,7 @@ const estimateChipWidth = (label: string): number =>
  */
 export function GroundTapField({ hitLocation, onTap }: Props) {
   const handlePress = (event: GestureResponderEvent) => {
+    if (!onTap) return;
     const xNorm = clampNormalized(
       event.nativeEvent.locationX / GROUND_CANVAS_WIDTH,
     );
@@ -173,9 +175,10 @@ export function GroundTapField({ hitLocation, onTap }: Props) {
   return (
     <View style={styles.container}>
       <Pressable
-        accessibilityRole="button"
+        accessibilityRole={onTap ? "button" : "image"}
         accessibilityLabel="グラウンド"
-        accessibilityHint="タップして打球方向を選択"
+        accessibilityHint={onTap ? "タップして打球方向を選択" : undefined}
+        disabled={!onTap}
         onPress={handlePress}
         style={styles.tapArea}
       >
