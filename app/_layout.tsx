@@ -184,6 +184,10 @@ function RootLayoutInner() {
           options={{ title: "試合詳細", headerBackTitle: "戻る" }}
         />
         <Stack.Screen
+          name="plate-appearance-detail"
+          options={{ title: "打席詳細", headerBackTitle: "戻る" }}
+        />
+        <Stack.Screen
           name="group-detail"
           options={{ headerBackTitle: "戻る" }}
         />

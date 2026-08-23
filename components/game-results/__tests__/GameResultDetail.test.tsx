@@ -36,6 +36,7 @@ const buildPlateAppearance = (
   first_pitch_swing: null,
   runners_state: null,
   inning: null,
+  pitch_course: null,
   self_analysis_memo: null,
   opponent_memo: null,
   is_new_format: true,
@@ -140,7 +141,7 @@ describe("GameResultDetail", () => {
     ]);
   });
 
-  it("試合詳細の打席カードは読み取り専用（タップしてもルーター遷移しない、accessibilityRole=button が無い）", async () => {
+  it("試合詳細の打席カードをタップすると打席詳細画面へ遷移する", async () => {
     const game = buildGameResult({ game_result_id: 501 });
     stubByGame(501, [
       buildPlateAppearance({
@@ -156,14 +157,15 @@ describe("GameResultDetail", () => {
     };
     __routerSpies.push.mockReset();
 
-    const { findByLabelText, queryByRole } = renderWithProviders(
+    const { findByLabelText } = renderWithProviders(
       <GameResultDetail game={game} />,
     );
     const card = await findByLabelText("第1打席 中安");
     fireEvent.press(card);
-    fireEvent(card, "longPress");
 
-    expect(__routerSpies.push).not.toHaveBeenCalled();
-    expect(queryByRole("button", { name: "第1打席 中安" })).toBeNull();
+    expect(__routerSpies.push).toHaveBeenCalledWith({
+      pathname: "/plate-appearance-detail",
+      params: { id: "9", gameResultId: "100" },
+    });
   });
 });

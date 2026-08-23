@@ -1,8 +1,13 @@
-import type { PlateAppearanceV2Payload } from "../types/plateAppearance";
+import type {
+  PlateAppearanceListResponse,
+  PlateAppearanceV2,
+  PlateAppearanceV2Payload,
+} from "../types/plateAppearance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createPlateAppearanceV2,
   deletePlateAppearanceV2,
+  getPlateAppearanceV2,
   getPlateAppearancesByGame,
   updatePlateAppearanceV2,
 } from "@services/plateAppearanceV2Service";
@@ -22,6 +27,42 @@ export const usePlateAppearancesByGame = (gameResultId: number | null) => {
 
   return {
     plateAppearances: data?.plate_appearances ?? [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefreshing: isRefetching,
+  };
+};
+
+/**
+ * 打席 1 件を取得する（打席詳細画面用）。
+ *
+ * @param id 対象 plate_appearance.id（null のときは fetch を発火させない）
+ * @param gameResultId 既知なら list キャッシュ ["plateAppearancesV2", gameResultId]
+ *   から initialData を引いて即描画する（不明時は undefined でよい）
+ */
+export const usePlateAppearance = (
+  id: number | null,
+  gameResultId?: number,
+) => {
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
+    queryKey: ["plateAppearanceV2", id],
+    queryFn: () => getPlateAppearanceV2(id as number),
+    enabled: id !== null,
+    initialData: () => {
+      if (id === null || gameResultId === undefined) return undefined;
+      const list = queryClient.getQueryData<PlateAppearanceListResponse>([
+        "plateAppearancesV2",
+        gameResultId,
+      ]);
+      return list?.plate_appearances.find((pa) => pa.id === id);
+    },
+  });
+
+  return {
+    plateAppearance: data as PlateAppearanceV2 | undefined,
     isLoading,
     isError,
     error,
@@ -71,6 +112,10 @@ export const useUpdatePlateAppearance = () => {
       queryClient.invalidateQueries({
         queryKey: ["plateAppearancesV2", updated.game_result_id],
       });
+      // 漏れると編集後に打席詳細画面が古いまま残る。
+      queryClient.invalidateQueries({
+        queryKey: ["plateAppearanceV2", updated.id],
+      });
       invalidateGameResultRelated(queryClient);
     },
   });
@@ -94,6 +139,9 @@ export const useDeletePlateAppearance = () => {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["plateAppearancesV2", variables.gameResultId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["plateAppearanceV2", variables.id],
       });
       invalidateGameResultRelated(queryClient);
     },
