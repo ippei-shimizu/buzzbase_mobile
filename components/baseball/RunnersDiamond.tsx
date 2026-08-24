@@ -99,7 +99,10 @@ export function RunnersDiamond({ value, onChange }: Props) {
         accessibilityRole="image"
         accessibilityLabel={`ランナー状況: ${caption}`}
       >
-        <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        <View
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
           {diamond}
           <Text style={styles.caption}>{caption}</Text>
         </View>

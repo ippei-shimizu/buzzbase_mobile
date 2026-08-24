@@ -66,7 +66,10 @@ export function BSOBoard({ balls, strikes, outs, onChange }: Props) {
                     onPress={() => {
                       // 点灯済みの最後のドット再タップ → 1 段下げる（0 になったら null）。
                       if (value === dotIndex) {
-                        onChange?.(row.key, dotIndex === 1 ? null : dotIndex - 1);
+                        onChange?.(
+                          row.key,
+                          dotIndex === 1 ? null : dotIndex - 1,
+                        );
                       } else {
                         onChange?.(row.key, dotIndex);
                       }

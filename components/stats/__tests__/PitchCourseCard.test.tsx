@@ -45,8 +45,18 @@ const buildData = (
   const totalPa = zones.reduce((sum, z) => sum + z.plate_appearances, 0);
   return {
     zones,
-    strike_zone: { plate_appearances: 0, at_bats: 0, hits: 0, batting_average: 0 },
-    ball_zone: { plate_appearances: 0, at_bats: 0, hits: 0, batting_average: 0 },
+    strike_zone: {
+      plate_appearances: 0,
+      at_bats: 0,
+      hits: 0,
+      batting_average: 0,
+    },
+    ball_zone: {
+      plate_appearances: 0,
+      at_bats: 0,
+      hits: 0,
+      batting_average: 0,
+    },
     total_target_pa: totalPa,
     min_at_bats: 3,
     ...overrides,

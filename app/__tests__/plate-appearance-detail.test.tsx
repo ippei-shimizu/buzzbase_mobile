@@ -119,9 +119,7 @@ describe("PlateAppearanceDetailScreen", () => {
     expect(getByText("ヒット種別")).toBeTruthy();
     expect(getByText("単打")).toBeTruthy();
     // BSO ボード・ダイヤモンドは表示専用
-    expect(
-      getByLabelText("カウント ボール3 ストライク2 アウト1"),
-    ).toBeTruthy();
+    expect(getByLabelText("カウント ボール3 ストライク2 アウト1")).toBeTruthy();
     expect(getByLabelText("ランナー状況: 一・二塁")).toBeTruthy();
     expect(getByText("真ん中（ストライク）")).toBeTruthy();
     // 打点 0 は未記録ではなく 0 のまま表示する

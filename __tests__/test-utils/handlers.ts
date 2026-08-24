@@ -39,8 +39,9 @@ export const defaultHandlers = [
   ),
   // 打席詳細画面の単体取得。既定は 404（テスト側で server.use により実データを返す）。
   // `:id` パターンは by_game より後に評価されるよう、by_game も明示しておく。
-  http.get(`${API_BASE_URL}/api/v2/plate_appearances/by_game/:gameResultId`, () =>
-    HttpResponse.json({ plate_appearances: [] }),
+  http.get(
+    `${API_BASE_URL}/api/v2/plate_appearances/by_game/:gameResultId`,
+    () => HttpResponse.json({ plate_appearances: [] }),
   ),
   http.get(`${API_BASE_URL}/api/v2/plate_appearances/:id`, () =>
     HttpResponse.json({ error: "not found" }, { status: 404 }),

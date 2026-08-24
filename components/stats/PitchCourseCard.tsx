@@ -237,7 +237,10 @@ export function PitchCourseCard({ data, crossFilters }: Props) {
                   onPress={() => setSelectedPitchTypeId(row.id)}
                 >
                   <Text
-                    style={[styles.chipText, selected && styles.chipTextSelected]}
+                    style={[
+                      styles.chipText,
+                      selected && styles.chipTextSelected,
+                    ]}
                   >
                     {row.label}
                     {row.plate_appearances > 0
