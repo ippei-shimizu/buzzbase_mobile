@@ -35,6 +35,11 @@ describe("requestTrackingPermissionOnce", () => {
     appState.currentState = "active";
   });
 
+  // fake timers を使うケースが途中で失敗しても後続ファイルへ漏らさない。
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it("未回答のときは許可ダイアログを表示する", async () => {
     getPermissions.mockResolvedValue({ status: "undetermined" });
 
@@ -78,6 +83,5 @@ describe("requestTrackingPermissionOnce", () => {
     await pending;
 
     expect(requestPermissions).toHaveBeenCalledTimes(1);
-    jest.useRealTimers();
   });
 });
