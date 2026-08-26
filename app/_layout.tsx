@@ -21,6 +21,7 @@ import {
   addCustomerInfoUpdateListener,
   configureRevenueCat,
 } from "@services/revenueCatService";
+import { requestTrackingPermissionOnce } from "@services/trackingTransparencyService";
 import { useAuthStore } from "@stores/authStore";
 import { posthog } from "@utils/posthog";
 import { queryClient } from "@utils/queryClient";
@@ -133,6 +134,12 @@ function RootLayoutInner() {
     initInstallDate();
     initPositiveEventCount();
   }, [initInstallDate, initPositiveEventCount]);
+
+  // ATT はログイン前も含めた起動直後に要求する。トラッキングされうるデータを
+  // 集める前に許可を求める必要があり、未ログインのまま離脱するユーザーにも出すため。
+  useEffect(() => {
+    void requestTrackingPermissionOnce();
+  }, []);
 
   // RevenueCat 側の顧客情報更新（更新・解約・返金・別端末購入など）を検知して
   // Pro 状態のキャッシュを無効化し、アプリ内購入フローを経由しない変化を反映する。
