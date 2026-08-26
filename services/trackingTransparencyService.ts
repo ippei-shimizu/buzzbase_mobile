@@ -1,19 +1,39 @@
-import * as SecureStore from "expo-secure-store";
 import * as TrackingTransparency from "expo-tracking-transparency";
-import { Platform } from "react-native";
-
-const REQUESTED_KEY = "att_permission_requested";
+import { AppState, type AppStateStatus, Platform } from "react-native";
 
 /**
- * ATT(App Tracking Transparency)ダイアログを1インストールにつき1回だけ表示する。
- * iOSはOS側の制約で確認ダイアログを複数回出せないため、リクエスト実行済みかどうかを
- * 端末に記録し、許可/拒否いずれの結果でも再表示はしない。Androidには存在しない概念のため何もしない。
+ * アプリが active になるまで待つ。ATT ダイアログは active 状態でしか表示されず、
+ * 未 active のまま要求すると OS に黙って無視されるため。
+ */
+const waitUntilActive = (): Promise<void> =>
+  new Promise((resolve) => {
+    if (AppState.currentState === "active") {
+      resolve();
+      return;
+    }
+    const subscription = AppState.addEventListener(
+      "change",
+      (nextState: AppStateStatus) => {
+        if (nextState !== "active") return;
+        subscription.remove();
+        resolve();
+      },
+    );
+  });
+
+/**
+ * ATT(App Tracking Transparency)の許可ダイアログを表示する。
+ * 「1インストールにつき1回」は OS 側が保証しているため、アプリ側で表示済みフラグは持たない。
+ * SecureStore(Keychain)はアプリ削除後も値が残り、再インストールしても二度と表示できなくなる。
+ * Android には存在しない概念のため何もしない。
  */
 export const requestTrackingPermissionOnce = async (): Promise<void> => {
   if (Platform.OS !== "ios") return;
-  const alreadyRequested = await SecureStore.getItemAsync(REQUESTED_KEY);
-  if (alreadyRequested) return;
+  if (!TrackingTransparency.isAvailable()) return;
 
-  await SecureStore.setItemAsync(REQUESTED_KEY, "1");
+  const { status } = await TrackingTransparency.getTrackingPermissionsAsync();
+  if (status !== "undetermined") return;
+
+  await waitUntilActive();
   await TrackingTransparency.requestTrackingPermissionsAsync();
 };

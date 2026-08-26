@@ -11,7 +11,6 @@ import { useGroupTabBadge } from "@hooks/useGroupTabBadge";
 import { useOnboarding } from "@hooks/useOnboarding";
 import { useProStatus } from "@hooks/useProStatus";
 import { trackAppLaunchForAds } from "@services/interstitialAdService";
-import { requestTrackingPermissionOnce } from "@services/trackingTransparencyService";
 import { shouldResetTabStack } from "@utils/tabStackReset";
 
 export default function TabLayout() {
@@ -26,13 +25,10 @@ export default function TabLayout() {
   const { seen: isGroupBadgeSeen, markSeen: markGroupBadgeSeen } =
     useGroupTabBadge();
 
-  // タブ画面(オンボーディング・ログイン済み)に到達した時点でのみ実行する。
-  // ATTは「オンボーディング後」、既存ユーザーは「本アップデート後の初回起動時」に
-  // 出したいが、いずれもこのタイミングに一致する。
+  // 広告の猶予期間判定に使う起動回数は、タブ画面(ログイン済み)到達時にだけ数える。
   useEffect(() => {
     if (isLoggedIn !== true) return;
     void trackAppLaunchForAds();
-    void requestTrackingPermissionOnce();
   }, [isLoggedIn]);
 
   // 取得確定後に未参加（グループ0件）かつ未閲覧のときだけグループタブに赤ポチを出す。
