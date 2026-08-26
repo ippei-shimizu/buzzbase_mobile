@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -29,6 +30,10 @@ import {
   restorePurchases,
 } from "@services/revenueCatService";
 import { useSnackbarStore } from "@stores/snackbarStore";
+
+// 解約導線の案内で実行中プラットフォームのストア名だけを出す。
+// 他ストア名を混在させると App Store の審査ガイドライン 2.3.10 に抵触する。
+const STORE_LABEL = Platform.OS === "android" ? "Google Play" : "App Store";
 
 export interface PaywallCopy {
   title: string;
@@ -794,8 +799,7 @@ export function PaywallModal({
             </TouchableOpacity>
 
             <Text style={styles.disclaimer}>
-              契約期間は開始日から月額・年額などプランの周期ごとに自動更新されます。解約は
-              App Store / Google Play のサブスクリプション設定から行えます。
+              {`契約期間は開始日から月額・年額などプランの周期ごとに自動更新されます。解約は ${STORE_LABEL} のサブスクリプション設定から行えます。`}
             </Text>
 
             <View style={styles.legalLinksRow}>

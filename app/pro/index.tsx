@@ -375,8 +375,7 @@ export default function ProScreen() {
         </View>
 
         <Text style={styles.disclaimer}>
-          契約期間は開始日から月額・年額などプランの周期ごとに自動更新されます。解約は
-          App Store / Google Play のサブスクリプション設定から行えます。
+          {`契約期間は開始日から月額・年額などプランの周期ごとに自動更新されます。解約は ${storeLabel} のサブスクリプション設定から行えます。`}
         </Text>
       </ScrollView>
 
