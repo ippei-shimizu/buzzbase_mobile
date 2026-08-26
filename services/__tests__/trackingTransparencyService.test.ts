@@ -5,7 +5,11 @@
  * ダイアログを二度と出せなくなるため、この不変条件を壊さないよう固定する。
  */
 import * as TrackingTransparency from "expo-tracking-transparency";
-import { requestTrackingPermissionOnce } from "../trackingTransparencyService";
+import { AppState } from "react-native";
+import {
+  ACTIVE_WAIT_TIMEOUT_MS,
+  requestTrackingPermissionOnce,
+} from "../trackingTransparencyService";
 
 jest.mock("expo-tracking-transparency", () => ({
   isAvailable: jest.fn(() => true),
@@ -19,11 +23,16 @@ const getPermissions =
 const requestPermissions =
   TrackingTransparency.requestTrackingPermissionsAsync as jest.Mock;
 
+// react-native の Jest モックは currentState を jest.fn() として持つため、
+// テストごとに文字列へ差し替えてアプリの起動状態を再現する。
+const appState = AppState as unknown as { currentState: string };
+
 describe("requestTrackingPermissionOnce", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     isAvailable.mockReturnValue(true);
     requestPermissions.mockResolvedValue({ status: "granted" });
+    appState.currentState = "active";
   });
 
   it("未回答のときは許可ダイアログを表示する", async () => {
@@ -57,5 +66,18 @@ describe("requestTrackingPermissionOnce", () => {
 
     expect(getPermissions).not.toHaveBeenCalled();
     expect(requestPermissions).not.toHaveBeenCalled();
+  });
+
+  it("active にならないまま待ち続けず、一定時間後にリクエストする", async () => {
+    jest.useFakeTimers();
+    appState.currentState = "background";
+    getPermissions.mockResolvedValue({ status: "undetermined" });
+
+    const pending = requestTrackingPermissionOnce();
+    await jest.advanceTimersByTimeAsync(ACTIVE_WAIT_TIMEOUT_MS);
+    await pending;
+
+    expect(requestPermissions).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
   });
 });
