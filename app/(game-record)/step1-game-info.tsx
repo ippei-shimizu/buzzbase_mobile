@@ -1,6 +1,5 @@
 import type { RecordPattern } from "../../types/gameRecord";
 import type { GameInfoFieldErrors } from "@components/game-record/GameInfoForm";
-import { AxiosError } from "axios";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -18,6 +17,7 @@ import { useMySeasons } from "@hooks/useSeasons";
 import { useCreateStadium, useStadiumSearch } from "@hooks/useStadiums";
 import { getMatchResultFormDefaults } from "@services/matchResultService";
 import { trackGameRecordStepViewed } from "@utils/analytics";
+import { serverErrorMessage } from "@utils/axiosError";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 import { useSnackbarStore } from "../../stores/snackbarStore";
 
@@ -164,12 +164,16 @@ export default function Step1GameInfoScreen() {
       store.setField("recordPattern", pattern);
     }
 
-    // 球場名が入っているのに stadium_id 未解決なら、submit 前に新規球場を作って ID を確定させる。
-    if (store.stadiumName.trim() && store.stadiumId === null) {
+    // 球場名が入っているのに stadium_id 未解決なら、submit 前に ID を確定させる。
+    // 候補から選ばず打ち切った場合に備え、まず同名の既存球場を探してから新規作成に回す。
+    const trimmedStadiumName = store.stadiumName.trim();
+    if (trimmedStadiumName && store.stadiumId === null) {
+      const existingStadium = stadiums.find(
+        (stadium) => stadium.name === trimmedStadiumName,
+      );
       try {
-        const stadium = await createStadium({
-          name: store.stadiumName.trim(),
-        });
+        const stadium =
+          existingStadium ?? (await createStadium({ name: trimmedStadiumName }));
         store.setField("stadiumId", stadium.id);
       } catch {
         // 新規作成に失敗しても遷移はブロックしない。stadium_id 未解決のまま送信する。
@@ -200,10 +204,7 @@ export default function Step1GameInfoScreen() {
         router.push(next);
       },
       onError: (error) => {
-        const serverMessage =
-          error instanceof AxiosError
-            ? error.response?.data?.errors?.join("\n")
-            : undefined;
+        const serverMessage = serverErrorMessage(error);
         useSnackbarStore.getState().show({
           type: "error",
           message:
@@ -262,6 +263,7 @@ export default function Step1GameInfoScreen() {
         tournamentId={store.tournamentId}
         tournaments={tournamentsQuery.data ?? []}
         seasonName={store.seasonName}
+        seasonId={store.seasonId}
         stadiums={stadiums}
         seasons={seasons}
         teams={teamsQuery.data ?? []}
