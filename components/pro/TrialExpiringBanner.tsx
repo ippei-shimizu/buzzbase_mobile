@@ -11,6 +11,18 @@ const TRIAL_WARN_DAYS = 3;
 const BANNER_PADDING_VERTICAL = 10;
 
 /**
+ * 予告バナーを表示すべきか。バナーの有無でセーフエリアの扱いを変える
+ * (tabs)/_layout からも参照するため、判定をコンポーネントの外に出している。
+ */
+export function shouldShowTrialExpiringBanner(
+  subscription: ProSubscription,
+): boolean {
+  if (!subscription.in_trial) return false;
+  const days = subscription.days_remaining;
+  return days !== null && days <= TRIAL_WARN_DAYS;
+}
+
+/**
  * トライアル終了 3 日以内のときだけ表示する予告バナー。
  * 自動課金開始の認識合わせと、解約導線への入口を担う。
  */
@@ -22,9 +34,8 @@ export function TrialExpiringBanner({
   // 重ならないよう、このバナー自身で上部インセットを確保する。
   const insets = useSafeAreaInsets();
 
-  if (!subscription.in_trial) return null;
+  if (!shouldShowTrialExpiringBanner(subscription)) return null;
   const days = subscription.days_remaining;
-  if (days === null || days > TRIAL_WARN_DAYS) return null;
 
   return (
     <TouchableOpacity

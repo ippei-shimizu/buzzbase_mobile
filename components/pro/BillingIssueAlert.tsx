@@ -22,6 +22,16 @@ function billingIssueDescription(platform: Platform | null): string {
 }
 
 /**
+ * 決済問題バナーを表示すべきか。バナーの有無でセーフエリアの扱いを変える
+ * (tabs)/_layout からも参照するため、判定をコンポーネントの外に出している。
+ */
+export function shouldShowBillingIssueAlert(
+  subscription: ProSubscription,
+): boolean {
+  return subscription.status === "billing_issue";
+}
+
+/**
  * billing_issue 状態のときだけ表示する警告バナー。
  * タップで /account/subscription に遷移し、ユーザーに次のアクションを案内する。
  */
@@ -31,7 +41,7 @@ export function BillingIssueAlert({ subscription }: BillingIssueAlertProps) {
   // 重ならないよう、このバナー自身で上部インセットを確保する。
   const insets = useSafeAreaInsets();
 
-  if (subscription.status !== "billing_issue") return null;
+  if (!shouldShowBillingIssueAlert(subscription)) return null;
 
   return (
     <TouchableOpacity
