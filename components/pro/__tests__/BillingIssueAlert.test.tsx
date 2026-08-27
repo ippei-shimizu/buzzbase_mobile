@@ -1,5 +1,6 @@
 import type { ProSubscription } from "../../../types/pro";
 import { fireEvent, render } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import { BillingIssueAlert } from "../BillingIssueAlert";
 
 jest.mock("expo-router", () => {
@@ -9,6 +10,11 @@ jest.mock("expo-router", () => {
   } = require("../../../__tests__/test-utils/mockExpoRouter");
   return buildExpoRouterMock();
 });
+
+// 上部インセットの加算を検証するため、jest-setup.ts の top: 0 固定モックを上書きする。
+jest.mock("react-native-safe-area-context", () => ({
+  useSafeAreaInsets: () => ({ top: 47, right: 0, bottom: 34, left: 0 }),
+}));
 
 interface RouterSpies {
   push: jest.Mock;
@@ -113,5 +119,19 @@ describe("BillingIssueAlert", () => {
       ),
     ).toBeTruthy();
     expect(queryByText(/App Store/)).toBeNull();
+  });
+
+  it("バナーの上部パディングにセーフエリアの上部インセットを加算する", () => {
+    const { getByLabelText } = render(
+      <BillingIssueAlert
+        subscription={{ ...baseSubscription, status: "billing_issue" }}
+      />,
+    );
+
+    const style = StyleSheet.flatten(
+      getByLabelText("決済情報の更新を案内").props.style,
+    );
+    expect(style.paddingTop).toBe(57);
+    expect(style.paddingBottom).toBe(10);
   });
 });

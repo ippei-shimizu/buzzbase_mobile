@@ -1,5 +1,6 @@
 import type { ProSubscription } from "../../../types/pro";
 import { fireEvent, render } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import { TrialExpiringBanner } from "../TrialExpiringBanner";
 
 jest.mock("expo-router", () => {
@@ -9,6 +10,11 @@ jest.mock("expo-router", () => {
   } = require("../../../__tests__/test-utils/mockExpoRouter");
   return buildExpoRouterMock();
 });
+
+// 上部インセットの加算を検証するため、jest-setup.ts の top: 0 固定モックを上書きする。
+jest.mock("react-native-safe-area-context", () => ({
+  useSafeAreaInsets: () => ({ top: 47, right: 0, bottom: 34, left: 0 }),
+}));
 
 interface RouterSpies {
   push: jest.Mock;
@@ -96,5 +102,19 @@ describe("TrialExpiringBanner", () => {
     fireEvent.press(getByText("トライアルはあと 1 日で終了します"));
 
     expect(getRouterSpies().push).toHaveBeenCalledWith("/account/subscription");
+  });
+
+  it("バナーの上部パディングにセーフエリアの上部インセットを加算する", () => {
+    const { getByLabelText } = render(
+      <TrialExpiringBanner
+        subscription={{ ...baseSubscription, days_remaining: 1 }}
+      />,
+    );
+
+    const style = StyleSheet.flatten(
+      getByLabelText("トライアル期限の予告").props.style,
+    );
+    expect(style.paddingTop).toBe(57);
+    expect(style.paddingBottom).toBe(10);
   });
 });
