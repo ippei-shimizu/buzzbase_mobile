@@ -173,7 +173,8 @@ export default function Step1GameInfoScreen() {
       );
       try {
         const stadium =
-          existingStadium ?? (await createStadium({ name: trimmedStadiumName }));
+          existingStadium ??
+          (await createStadium({ name: trimmedStadiumName }));
         store.setField("stadiumId", stadium.id);
       } catch {
         // 新規作成に失敗しても遷移はブロックしない。stadium_id 未解決のまま送信する。

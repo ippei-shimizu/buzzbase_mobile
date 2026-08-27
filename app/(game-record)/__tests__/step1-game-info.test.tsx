@@ -214,10 +214,7 @@ describe("Step1GameInfoScreen / マスタ名の手入力", () => {
   ) => {
     // 候補が読み込まれてから入力する（入力名から id を解決するため）
     await findByPlaceholderText("チーム名を入力");
-    fireEvent.changeText(
-      getByPlaceholderText("チーム名を入力"),
-      "イーグルス",
-    );
+    fireEvent.changeText(getByPlaceholderText("チーム名を入力"), "イーグルス");
     fireEvent.changeText(
       getByPlaceholderText("相手のチーム名を入力"),
       "ライオンズ",
