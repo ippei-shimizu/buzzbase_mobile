@@ -86,15 +86,22 @@ export const useGameRecord = () => {
       let myTeamId = s.myTeamId;
       let opponentTeamId = s.opponentTeamId;
 
-      if (!myTeamId && s.myTeamName) {
-        const team = await createTeam(s.myTeamName);
-        myTeamId = team.id;
-        store.setField("myTeamId", team.id);
+      // 候補の読み込みが送信に間に合わなかった場合に備え、大会・シーズンと同じく
+      // 既存の同名を探してから新規作成に回す。
+      const resolveTeamId = async (name: string): Promise<number> => {
+        const trimmed = name.trim();
+        const existing = teamsQuery.data?.find((team) => team.name === trimmed);
+        const team = existing ?? (await createTeam(trimmed));
+        return team.id;
+      };
+
+      if (!myTeamId && s.myTeamName.trim()) {
+        myTeamId = await resolveTeamId(s.myTeamName);
+        store.setField("myTeamId", myTeamId);
       }
-      if (!opponentTeamId && s.opponentTeamName) {
-        const team = await createTeam(s.opponentTeamName);
-        opponentTeamId = team.id;
-        store.setField("opponentTeamId", team.id);
+      if (!opponentTeamId && s.opponentTeamName.trim()) {
+        opponentTeamId = await resolveTeamId(s.opponentTeamName);
+        store.setField("opponentTeamId", opponentTeamId);
       }
 
       if (!myTeamId || !opponentTeamId) {
