@@ -11,6 +11,7 @@
  * - 公開 UI（accessibilityRole="radio" の selected 状態 / SelectPicker の表示ラベル）
  *   経由で確認する。Zustand store の内部 state は直接参照しない。
  */
+import type { RenderResult } from "@testing-library/react-native";
 import { fireEvent, waitFor } from "@testing-library/react-native";
 import { useGameRecordStore } from "@stores/gameRecordStore";
 import {
@@ -57,7 +58,7 @@ beforeEach(() => {
       }),
     ),
     // シーズン一覧
-    http.get(apiUrl("/seasons/my"), () => HttpResponse.json([])),
+    http.get(apiUrl("/seasons"), () => HttpResponse.json([])),
   );
 });
 
@@ -177,5 +178,196 @@ describe("Step1GameInfoScreen / バリデーション", () => {
     // フィールド近傍のエラー（自チーム / 相手チーム は必須）
     expect(getByText("自チーム名を入力してください")).toBeTruthy();
     expect(getByText("相手チーム名を入力してください")).toBeTruthy();
+  });
+});
+
+describe("Step1GameInfoScreen / マスタ名の手入力", () => {
+  let teamPostCount = 0;
+
+  beforeEach(() => {
+    teamPostCount = 0;
+  });
+
+  const setupCommonHandlers = () => {
+    server.use(
+      // 守備位置は先発時の必須項目なので、送信バリデーションを通すため既定値を返す。
+      http.get(apiUrl("/positions"), () =>
+        HttpResponse.json([{ id: 1, name: "ピッチャー" }]),
+      ),
+      http.get(apiUrl("/match_results/form_defaults"), () =>
+        HttpResponse.json({
+          inning_format: 9,
+          match_type: "公式戦",
+          defensive_position: "ピッチャー",
+          batting_order: "3",
+        }),
+      ),
+      http.get(apiUrl("/teams"), () =>
+        HttpResponse.json([
+          { id: 10, name: "イーグルス" },
+          { id: 20, name: "ライオンズ" },
+        ]),
+      ),
+      // 候補の読み込みが間に合わず名前解決に失敗した場合の保険。
+      http.post(apiUrl("/teams"), () => {
+        teamPostCount += 1;
+        return HttpResponse.json({ id: 10 });
+      }),
+      http.post(apiUrl("/match_results"), () => HttpResponse.json({ id: 555 })),
+    );
+  };
+
+  const fillRequiredFields = async (
+    findByPlaceholderText: RenderResult["findByPlaceholderText"],
+    getByPlaceholderText: RenderResult["getByPlaceholderText"],
+  ) => {
+    // 候補が読み込まれてから入力する（入力名から id を解決するため）
+    await findByPlaceholderText("チーム名を入力");
+    fireEvent.changeText(getByPlaceholderText("チーム名を入力"), "イーグルス");
+    fireEvent.changeText(
+      getByPlaceholderText("相手のチーム名を入力"),
+      "ライオンズ",
+    );
+  };
+
+  it("既存のシーズン名・大会名を候補から選ばず打ち切っても、新規作成せず既存に紐づく", async () => {
+    setupCommonHandlers();
+    let seasonPostCount = 0;
+    let tournamentPostCount = 0;
+    let gameResultUpdateBody: Record<string, unknown> | null = null;
+
+    server.use(
+      http.get(apiUrl("/seasons"), () =>
+        HttpResponse.json([{ id: 5, name: "2026" }]),
+      ),
+      http.get(apiUrl("/tournaments"), () =>
+        HttpResponse.json([{ id: 8, name: "春季大会" }]),
+      ),
+      http.post(apiUrl("/seasons"), () => {
+        seasonPostCount += 1;
+        return HttpResponse.json({ id: 5, name: "2026" });
+      }),
+      http.post(apiUrl("/tournaments"), () => {
+        tournamentPostCount += 1;
+        return HttpResponse.json({ id: 8, name: "春季大会" });
+      }),
+      http.put(apiUrl("/game_results/1"), async ({ request }) => {
+        gameResultUpdateBody = (await request.json()) as Record<
+          string,
+          unknown
+        >;
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const { findByRole, getByPlaceholderText, findByPlaceholderText } =
+      renderWithProviders(<Step1GameInfoScreen />);
+
+    await fillRequiredFields(findByPlaceholderText, getByPlaceholderText);
+    fireEvent.changeText(getByPlaceholderText("シーズン名を入力"), "2026");
+    fireEvent.changeText(getByPlaceholderText("大会名を入力"), "春季大会");
+
+    fireEvent.press(await findByRole("button", { name: "打撃結果のみ入力" }));
+
+    await waitFor(() => {
+      expect(gameResultUpdateBody).toEqual({
+        game_result: { match_result_id: 555, season_id: 5 },
+      });
+    });
+    expect(seasonPostCount).toBe(0);
+    expect(tournamentPostCount).toBe(0);
+    // 既存チーム名を打ち切った場合も新規作成しない
+    expect(teamPostCount).toBe(0);
+  });
+
+  it("未登録のシーズン名なら新規作成して紐づく", async () => {
+    setupCommonHandlers();
+    let seasonPostCount = 0;
+    let gameResultUpdateBody: Record<string, unknown> | null = null;
+
+    server.use(
+      http.get(apiUrl("/seasons"), () => HttpResponse.json([])),
+      http.post(apiUrl("/seasons"), () => {
+        seasonPostCount += 1;
+        return HttpResponse.json({ id: 9, name: "2027" });
+      }),
+      http.put(apiUrl("/game_results/1"), async ({ request }) => {
+        gameResultUpdateBody = (await request.json()) as Record<
+          string,
+          unknown
+        >;
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const { findByRole, getByPlaceholderText, findByPlaceholderText } =
+      renderWithProviders(<Step1GameInfoScreen />);
+
+    await fillRequiredFields(findByPlaceholderText, getByPlaceholderText);
+    fireEvent.changeText(getByPlaceholderText("シーズン名を入力"), "2027");
+
+    fireEvent.press(await findByRole("button", { name: "打撃結果のみ入力" }));
+
+    await waitFor(() => {
+      expect(gameResultUpdateBody).toEqual({
+        game_result: { match_result_id: 555, season_id: 9 },
+      });
+    });
+    expect(seasonPostCount).toBe(1);
+  });
+
+  it("同名チームが複数あるとき、選んだ候補のidを打ち直しても保持する", async () => {
+    // 候補タップ直後に同じテキストで onChangeText が走るため、名前一致だけで id を導出すると
+    // 配列の先頭（別id）を掴んでしまう。確定済み id が維持されることを確認する。
+    setupCommonHandlers();
+    let matchResultBody: Record<string, unknown> | null = null;
+
+    server.use(
+      http.get(apiUrl("/teams"), () =>
+        HttpResponse.json([
+          { id: 10, name: "イーグルス" },
+          { id: 20, name: "ライオンズ" },
+          { id: 21, name: "ライオンズ" },
+        ]),
+      ),
+      http.post(apiUrl("/match_results"), async ({ request }) => {
+        matchResultBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ id: 555 });
+      }),
+      http.put(apiUrl("/game_results/1"), () =>
+        HttpResponse.json({ ok: true }),
+      ),
+    );
+
+    const {
+      findByRole,
+      getByPlaceholderText,
+      findByPlaceholderText,
+      getAllByText,
+    } = renderWithProviders(<Step1GameInfoScreen />);
+
+    await findByPlaceholderText("チーム名を入力");
+    fireEvent.changeText(getByPlaceholderText("チーム名を入力"), "イーグルス");
+
+    const opponentInput = getByPlaceholderText("相手のチーム名を入力");
+    fireEvent.changeText(opponentInput, "ライオンズ");
+    // サジェストは teams の並び順なので、2件目が id 21
+    const suggestions = await waitFor(() => {
+      const found = getAllByText("ライオンズ");
+      expect(found.length).toBeGreaterThan(1);
+      return found;
+    });
+    fireEvent.press(suggestions[1]);
+    // 候補タップ直後に同じテキストで発火する onChangeText を再現する
+    fireEvent.changeText(opponentInput, "ライオンズ");
+
+    fireEvent.press(await findByRole("button", { name: "打撃結果のみ入力" }));
+
+    await waitFor(() => {
+      expect(matchResultBody).toMatchObject({
+        match_result: { opponent_team_id: 21 },
+      });
+    });
+    expect(teamPostCount).toBe(0);
   });
 });
