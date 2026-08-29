@@ -260,6 +260,30 @@ describe("PaywallModal", () => {
     expect(await findByText("年間¥1,960お得")).toBeTruthy();
   });
 
+  it("RevenueCat が年額を先に返しても、月額を先頭に表示し初期選択も月額になる", async () => {
+    setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce({
+      ...mockOffering,
+      availablePackages: [...mockOffering.availablePackages].reverse(),
+    });
+    purchasePackageMock.mockResolvedValueOnce(undefined);
+
+    const { findAllByRole, findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    const planCards = await findAllByRole("radio");
+    expect(planCards[0].props.accessibilityLabel).toBe("月額プラン ¥980");
+
+    fireEvent.press(await findByLabelText("7日間無料で試す"));
+
+    await waitFor(() => {
+      expect(purchasePackageMock).toHaveBeenCalledWith(
+        expect.objectContaining({ identifier: "monthly" }),
+      );
+    });
+  });
+
   it("Pro状態の判定確定前は、実際はトライアル利用済みでもCTAボタンに中立文言を表示する", async () => {
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
     server.use(
@@ -324,14 +348,14 @@ describe("PaywallModal", () => {
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
 
-    // 年額プランがあるので初期選択は年額プランになる。
+    // 初期選択は月額プランになる。
     await waitFor(() => expect(getOfferingsMock).toHaveBeenCalledTimes(1));
     const ctaButton = await findByLabelText("7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
       expect(purchasePackageMock).toHaveBeenCalledWith(
-        expect.objectContaining({ identifier: "annual" }),
+        expect.objectContaining({ identifier: "monthly" }),
       );
     });
     await waitFor(() => {

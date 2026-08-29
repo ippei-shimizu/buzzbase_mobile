@@ -158,14 +158,14 @@ describe("ProScreen", () => {
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
 
-    // 年額プランがあるので初期選択は年額プランになる。
+    // 初期選択は月額プランになる。
     await waitFor(() => expect(getOfferingsMock).toHaveBeenCalledTimes(1));
     const ctaButton = await findByLabelText("7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
       expect(purchasePackageMock).toHaveBeenCalledWith(
-        expect.objectContaining({ identifier: "annual" }),
+        expect.objectContaining({ identifier: "monthly" }),
       );
     });
     await waitFor(() => {
@@ -176,7 +176,7 @@ describe("ProScreen", () => {
     });
   });
 
-  it("月額プランを選び直して PROを始めるを押すと選択中のプランで購入する", async () => {
+  it("年額プランを選び直して PROを始めるを押すと選択中のプランで購入する", async () => {
     useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     setupSnackbar();
     setupSyncEndpoint();
@@ -185,13 +185,61 @@ describe("ProScreen", () => {
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
 
-    const monthlyCard = await findByLabelText("月額プラン ¥980");
-    fireEvent.press(monthlyCard);
+    const annualCard = await findByLabelText("年額プラン ¥9,800");
+    fireEvent.press(annualCard);
+    fireEvent.press(await findByLabelText("7日間無料で試す"));
+
+    await waitFor(() => {
+      expect(purchasePackageMock).toHaveBeenCalledWith(
+        expect.objectContaining({ identifier: "annual" }),
+      );
+    });
+  });
+
+  it("RevenueCat が年額を先に返しても、月額を先頭に表示し初期選択も月額になる", async () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    setupSnackbar();
+    setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce({
+      ...mockOffering,
+      availablePackages: [...mockOffering.availablePackages].reverse(),
+    });
+    purchasePackageMock.mockResolvedValueOnce(undefined);
+
+    const { findAllByRole, findByLabelText } = renderWithProviders(
+      <ProScreen />,
+    );
+
+    const planCards = await findAllByRole("radio");
+    expect(planCards[0].props.accessibilityLabel).toBe("月額プラン ¥980");
+
     fireEvent.press(await findByLabelText("7日間無料で試す"));
 
     await waitFor(() => {
       expect(purchasePackageMock).toHaveBeenCalledWith(
         expect.objectContaining({ identifier: "monthly" }),
+      );
+    });
+  });
+
+  it("月額プランが無い構成では年額プランを初期選択する", async () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    setupSnackbar();
+    setupSyncEndpoint();
+    getOfferingsMock.mockResolvedValueOnce({
+      ...mockOffering,
+      availablePackages: mockOffering.availablePackages.filter(
+        (pkg) => pkg.packageType === "ANNUAL",
+      ),
+    });
+    purchasePackageMock.mockResolvedValueOnce(undefined);
+
+    const { findByLabelText } = renderWithProviders(<ProScreen />);
+    fireEvent.press(await findByLabelText("7日間無料で試す"));
+
+    await waitFor(() => {
+      expect(purchasePackageMock).toHaveBeenCalledWith(
+        expect.objectContaining({ identifier: "annual" }),
       );
     });
   });
