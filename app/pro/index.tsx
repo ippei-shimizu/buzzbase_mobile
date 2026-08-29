@@ -87,9 +87,11 @@ export default function ProScreen() {
         if (cancelled) return;
         setOffering(result);
         const packages = result?.availablePackages ?? [];
-        // 年額があれば「お得」導線として初期選択にする。無ければ最初のプランを選ぶ。
+        // 初期選択は月額。無い構成では表示順の先頭（年額→その他）にフォールバックする。
         const preferred =
-          packages.find((pkg) => pkg.packageType === "ANNUAL") ?? packages[0];
+          packages.find((pkg) => pkg.packageType === "MONTHLY") ??
+          packages.find((pkg) => pkg.packageType === "ANNUAL") ??
+          packages[0];
         setSelectedPackageId(preferred?.identifier ?? null);
       } catch (error: unknown) {
         // RevenueCat 側の商品未登録・App Store Connect 未反映などで取得失敗しても、
@@ -119,6 +121,15 @@ export default function ProScreen() {
   if (!proFeatures) return <Redirect href="/" />;
 
   const packages = offering?.availablePackages ?? [];
+  // RevenueCat が返す順序に依存せず、front と同じ「月額 → 年額」の順で表示する。
+  const planDisplayRank = (packageType: string) => {
+    if (packageType === "MONTHLY") return 0;
+    if (packageType === "ANNUAL") return 1;
+    return 2;
+  };
+  const displayPackages = [...packages].sort(
+    (a, b) => planDisplayRank(a.packageType) - planDisplayRank(b.packageType),
+  );
   const selectedPackage =
     packages.find((pkg) => pkg.identifier === selectedPackageId) ?? null;
   const monthlyPackage = packages.find((pkg) => pkg.packageType === "MONTHLY");
@@ -306,7 +317,7 @@ export default function ProScreen() {
           />
         ) : packages.length > 0 ? (
           <View style={styles.planList}>
-            {packages.map((pkg) => {
+            {displayPackages.map((pkg) => {
               const label = PLAN_LABELS[pkg.packageType] ?? {
                 name: pkg.product.title,
                 period: "",
