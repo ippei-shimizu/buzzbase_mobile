@@ -37,11 +37,7 @@ import { useAvailableMonths } from "@hooks/useAvailableMonths";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useUserAwards } from "@hooks/useAwards";
 import { useFilteredGameResults } from "@hooks/useGameResults";
-import {
-  useTeams,
-  usePrefectures,
-  useBaseballCategories,
-} from "@hooks/useMasterData";
+import { useMyTeam } from "@hooks/useMyTeam";
 import { useProfile } from "@hooks/useProfile";
 import { useProfileStats } from "@hooks/useProfileStats";
 import { useUserProfileDetail } from "@hooks/useRelationship";
@@ -180,10 +176,10 @@ export default function ProfileScreen() {
     }
   }, [battingStats, pitchingStats, triggerPositiveEvent]);
 
-  // マスターデータ・受賞歴
-  const { data: teams } = useTeams();
-  const { data: prefectures } = usePrefectures();
-  const { data: categories } = useBaseballCategories();
+  // 所属チーム情報・受賞歴
+  const { teamName, categoryName, prefectureName } = useMyTeam(
+    profile?.user_id,
+  );
   const { data: awards } = useUserAwards(profile?.id);
 
   // 試合結果
@@ -206,14 +202,6 @@ export default function ProfileScreen() {
     sort_by: "date",
     sort_order: gameSortDesc ? "desc" : "asc",
   });
-
-  const team = teams?.find((t) => t.id === profile?.team_id);
-  const categoryName = categories?.find(
-    (c) => c.id === team?.category_id,
-  )?.name;
-  const prefectureName = prefectures?.find(
-    (p) => p.id === team?.prefecture_id,
-  )?.name;
 
   const handleSharePress = async () => {
     if (!profile?.user_id) return;
@@ -277,7 +265,7 @@ export default function ProfileScreen() {
           followingCount={profileDetail?.following_count ?? undefined}
           followersCount={profileDetail?.followers_count ?? undefined}
           positions={profile.positions}
-          teamName={team?.name}
+          teamName={teamName}
           categoryName={categoryName}
           prefectureName={prefectureName}
           awards={awards}

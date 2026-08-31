@@ -14,7 +14,7 @@ import {
   createPitchingResult,
   updatePitchingResult,
   updatePitchingResultId,
-  getTeams,
+  searchTeams,
   getPositions,
   createTeam,
   getTournaments,
@@ -32,6 +32,9 @@ import { createSeason } from "../services/seasonService";
 import { useGameRecordStore } from "../stores/gameRecordStore";
 import { invalidateGameResultRelated } from "../utils/queryInvalidation";
 
+/** back の TeamsController::MAX_LIMIT。完全一致の引き当てはここまで取り切る。 */
+const TEAM_SEARCH_MAX_LIMIT = 100;
+
 export const useGameRecord = () => {
   const store = useGameRecordStore();
   const queryClient = useQueryClient();
@@ -44,11 +47,6 @@ export const useGameRecord = () => {
     store.setField("userId", profile.id);
     return profile.id;
   };
-
-  const teamsQuery = useQuery({
-    queryKey: ["teams"],
-    queryFn: getTeams,
-  });
 
   const positionsQuery = useQuery({
     queryKey: ["positions"],
@@ -86,11 +84,14 @@ export const useGameRecord = () => {
       let myTeamId = s.myTeamId;
       let opponentTeamId = s.opponentTeamId;
 
-      // 候補の読み込みが送信に間に合わなかった場合に備え、大会・シーズンと同じく
-      // 既存の同名を探してから新規作成に回す。
+      // 画面のサジェスト候補は入力連動の部分取得になったため、送信時は
+      // サーバー側で同名の既存チームを探してから新規作成に回す。
+      // 検索は部分一致のため、サジェスト用の件数だと完全一致が候補から溢れて
+      // 既存チームを重複作成しうる。ここではサーバー上限まで引き上げて取得する。
       const resolveTeamId = async (name: string): Promise<number> => {
         const trimmed = name.trim();
-        const existing = teamsQuery.data?.find((team) => team.name === trimmed);
+        const candidates = await searchTeams(trimmed, TEAM_SEARCH_MAX_LIMIT);
+        const existing = candidates.find((team) => team.name === trimmed);
         const team = existing ?? (await createTeam(trimmed));
         return team.id;
       };
@@ -354,7 +355,6 @@ export const useGameRecord = () => {
 
   return {
     store,
-    teamsQuery,
     positionsQuery,
     tournamentsQuery,
     createGameResultMutation,

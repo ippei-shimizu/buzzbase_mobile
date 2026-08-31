@@ -1,6 +1,6 @@
 import type { RunnersState } from "../../../../types/plateAppearance";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { RUNNERS_STATE_OPTIONS } from "@constants/runnersState";
+import { StyleSheet, View } from "react-native";
+import { RunnersDiamond } from "@components/baseball/RunnersDiamond";
 import { SectionHeader } from "./SectionHeader";
 
 interface Props {
@@ -10,34 +10,14 @@ interface Props {
 }
 
 /**
- * ランナー状況 8 択（無走者 〜 満塁）。
- * 同じチップを再選択すると未入力 (null) に戻る。
+ * ランナー状況を各塁のタップで指定するダイヤモンド UI。
+ * 未入力(null)と無走者(no_runner)の区別は RunnersDiamond 側のルールに従う。
  */
 export function RunnersStateSelector({ value, onChange, description }: Props) {
   return (
     <View style={styles.container}>
       <SectionHeader label="ランナー状況" description={description} />
-      <View style={styles.chipRow}>
-        {RUNNERS_STATE_OPTIONS.map((option) => {
-          const selected = value === option.key;
-          return (
-            <TouchableOpacity
-              key={option.key}
-              accessibilityRole="button"
-              accessibilityLabel={`ランナー状況 ${option.label}`}
-              accessibilityState={{ selected }}
-              style={[styles.chip, selected && styles.chipSelected]}
-              onPress={() => onChange(selected ? null : option.key)}
-            >
-              <Text
-                style={[styles.chipText, selected && styles.chipTextSelected]}
-              >
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      <RunnersDiamond value={value} onChange={onChange} />
     </View>
   );
 }
@@ -45,29 +25,5 @@ export function RunnersStateSelector({ value, onChange, description }: Props) {
 const styles = StyleSheet.create({
   container: {
     marginBottom: 0,
-  },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  chip: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#52525B",
-    backgroundColor: "#424242",
-  },
-  chipSelected: {
-    backgroundColor: "#d08000",
-    borderColor: "#d08000",
-  },
-  chipText: {
-    color: "#F4F4F4",
-    fontSize: 13,
-  },
-  chipTextSelected: {
-    fontWeight: "bold",
   },
 });

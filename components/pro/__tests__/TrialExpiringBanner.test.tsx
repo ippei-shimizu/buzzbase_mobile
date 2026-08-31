@@ -1,6 +1,8 @@
 import type { ProSubscription } from "../../../types/pro";
-import { fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import * as SecureStore from "expo-secure-store";
 import { StyleSheet } from "react-native";
+import { useTrialBannerDismissed } from "../../../hooks/useTrialBannerDismissed";
 import { TrialExpiringBanner } from "../TrialExpiringBanner";
 
 jest.mock("expo-router", () => {
@@ -34,85 +36,167 @@ const baseSubscription: ProSubscription = {
   plan_type: "monthly",
   platform: "ios",
   started_at: null,
-  expires_at: null,
+  expires_at: "2026-09-01T00:00:00Z",
   pro_active: true,
   in_trial: true,
   in_grace_period: false,
-  days_remaining: null,
+  days_remaining: 1,
   is_early_subscriber: false,
   has_used_trial: false,
+};
+
+// (tabs)/_layout と同じく、閉じた状態のフックを親で購読してバナーに渡す構成を再現する
+function BannerHarness({ subscription }: { subscription: ProSubscription }) {
+  const { dismissed, dismiss } = useTrialBannerDismissed(
+    subscription.expires_at,
+  );
+  return (
+    <TrialExpiringBanner
+      subscription={subscription}
+      dismissed={dismissed}
+      onDismiss={dismiss}
+    />
+  );
+}
+
+// 閉じた状態の永続化と再マウント時の復元を検証するためのインメモリストア
+const secureStoreValues = new Map<string, string>();
+const getItemAsyncMock = SecureStore.getItemAsync as jest.Mock;
+const setItemAsyncMock = SecureStore.setItemAsync as jest.Mock;
+
+const renderBanner = async (subscription: ProSubscription) => {
+  const result = render(<BannerHarness subscription={subscription} />);
+  // SecureStore の読み込み確定を待つ（確定前はバナーを描画しない仕様）
+  await waitFor(() => {
+    expect(getItemAsyncMock).toHaveBeenCalled();
+  });
+  return result;
 };
 
 describe("TrialExpiringBanner", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  it("in_trial かつ残り 3 日以内ならバナーを表示する", () => {
-    const { getByText } = render(
-      <TrialExpiringBanner
-        subscription={{ ...baseSubscription, days_remaining: 2 }}
-      />,
+    secureStoreValues.clear();
+    getItemAsyncMock.mockImplementation(
+      async (key: string) => secureStoreValues.get(key) ?? null,
     );
-
-    expect(getByText("トライアルはあと 2 日で終了します")).toBeTruthy();
+    setItemAsyncMock.mockImplementation(async (key: string, value: string) => {
+      secureStoreValues.set(key, value);
+    });
   });
 
-  it("in_trial だが残り 4 日以上なら描画しない", () => {
+  it("in_trial かつ残り 1 日ならバナーを表示する", async () => {
+    const { findByText } = await renderBanner(baseSubscription);
+
+    expect(await findByText("トライアルはあと 1 日で終了します")).toBeTruthy();
+  });
+
+  it("残り 2 日以上なら描画しない", async () => {
+    const { queryByText } = await renderBanner({
+      ...baseSubscription,
+      days_remaining: 2,
+    });
+
+    await waitFor(() => {
+      expect(queryByText(/トライアルはあと/)).toBeNull();
+    });
+  });
+
+  it("in_trial=false なら描画しない（残り日数を満たしていても）", async () => {
+    const { queryByText } = await renderBanner({
+      ...baseSubscription,
+      in_trial: false,
+    });
+
+    await waitFor(() => {
+      expect(queryByText(/トライアルはあと/)).toBeNull();
+    });
+  });
+
+  it("days_remaining が null なら描画しない", async () => {
+    const { queryByText } = await renderBanner({
+      ...baseSubscription,
+      days_remaining: null,
+    });
+
+    await waitFor(() => {
+      expect(queryByText(/トライアルはあと/)).toBeNull();
+    });
+  });
+
+  it("expires_at が null なら描画しない（閉じられないバナーを出さない）", async () => {
+    const { queryByText } = await renderBanner({
+      ...baseSubscription,
+      expires_at: null,
+    });
+
+    await waitFor(() => {
+      expect(queryByText(/トライアルはあと/)).toBeNull();
+    });
+  });
+
+  it("閉じた状態が確定するまで描画しない", () => {
+    // 読み込みを未解決のままにして確定前の状態を固定する
+    getItemAsyncMock.mockImplementation(() => new Promise(() => {}));
+
     const { queryByText } = render(
-      <TrialExpiringBanner
-        subscription={{ ...baseSubscription, days_remaining: 5 }}
-      />,
+      <BannerHarness subscription={baseSubscription} />,
     );
 
     expect(queryByText(/トライアルはあと/)).toBeNull();
   });
 
-  it("in_trial=false なら描画しない（残り日数を満たしていても）", () => {
-    const { queryByText } = render(
-      <TrialExpiringBanner
-        subscription={{
-          ...baseSubscription,
-          in_trial: false,
-          days_remaining: 1,
-        }}
-      />,
-    );
+  it("タップで /account/subscription に push する", async () => {
+    const { findByText } = await renderBanner(baseSubscription);
 
-    expect(queryByText(/トライアルはあと/)).toBeNull();
-  });
-
-  it("days_remaining が null なら描画しない", () => {
-    const { queryByText } = render(
-      <TrialExpiringBanner
-        subscription={{ ...baseSubscription, days_remaining: null }}
-      />,
-    );
-
-    expect(queryByText(/トライアルはあと/)).toBeNull();
-  });
-
-  it("タップで /account/subscription に push する", () => {
-    const { getByText } = render(
-      <TrialExpiringBanner
-        subscription={{ ...baseSubscription, days_remaining: 1 }}
-      />,
-    );
-
-    fireEvent.press(getByText("トライアルはあと 1 日で終了します"));
+    fireEvent.press(await findByText("トライアルはあと 1 日で終了します"));
 
     expect(getRouterSpies().push).toHaveBeenCalledWith("/account/subscription");
   });
 
-  it("バナーの上部パディングにセーフエリアの上部インセットを加算する", () => {
-    const { getByLabelText } = render(
-      <TrialExpiringBanner
-        subscription={{ ...baseSubscription, days_remaining: 1 }}
-      />,
+  it("閉じるボタンで非表示になり、再マウントしても表示されない", async () => {
+    const first = await renderBanner(baseSubscription);
+
+    fireEvent.press(
+      await first.findByLabelText("トライアル期限の予告を閉じる"),
     );
 
+    await waitFor(() => {
+      expect(first.queryByText(/トライアルはあと/)).toBeNull();
+    });
+
+    first.unmount();
+
+    // 端末ローカルに永続化されるため、再マウント（アプリ再起動相当）でも表示されない
+    const second = await renderBanner(baseSubscription);
+    await waitFor(() => {
+      expect(getItemAsyncMock).toHaveBeenCalled();
+    });
+    expect(second.queryByText(/トライアルはあと/)).toBeNull();
+  });
+
+  it("閉じた後でも expires_at が変わったら（再加入）再び表示される", async () => {
+    const first = await renderBanner(baseSubscription);
+    fireEvent.press(
+      await first.findByLabelText("トライアル期限の予告を閉じる"),
+    );
+    first.unmount();
+
+    const second = await renderBanner({
+      ...baseSubscription,
+      expires_at: "2026-12-01T00:00:00Z",
+    });
+
+    expect(
+      await second.findByText("トライアルはあと 1 日で終了します"),
+    ).toBeTruthy();
+  });
+
+  it("バナーの上部パディングにセーフエリアの上部インセットを加算する", async () => {
+    const { findByLabelText } = await renderBanner(baseSubscription);
+
     const style = StyleSheet.flatten(
-      getByLabelText("トライアル期限の予告").props.style,
+      (await findByLabelText("トライアル期限の予告")).props.style,
     );
     expect(style.paddingTop).toBe(57);
     expect(style.paddingBottom).toBe(10);
