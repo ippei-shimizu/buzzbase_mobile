@@ -45,6 +45,7 @@ export const usePlateAppearancesByGame = (gameResultId: number | null) => {
 export const usePlateAppearance = (
   id: number | null,
   gameResultId?: number,
+  viewerUserId?: number | null,
 ) => {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
@@ -57,7 +58,11 @@ export const usePlateAppearance = (
         "plateAppearancesV2",
         gameResultId,
       ]);
-      return list?.plate_appearances.find((pa) => pa.id === id);
+      const cached = list?.plate_appearances.find((pa) => pa.id === id);
+      // 他ユーザーの打席は相互フォロー判定をサーバーに委ねる必要がある。
+      // initialData を返すと staleTime の間 queryFn が走らず、403 を受け取れない。
+      if (!cached || cached.user_id !== viewerUserId) return undefined;
+      return cached;
     },
   });
 

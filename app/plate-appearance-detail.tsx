@@ -10,6 +10,7 @@ import {
 import { PlateAppearanceDetailView } from "@components/plate-appearance-detail/PlateAppearanceDetailView";
 import { usePlateAppearance } from "@hooks/usePlateAppearances";
 import { useProfile } from "@hooks/useProfile";
+import { isMutualFollowRequiredError } from "@utils/axiosError";
 
 /**
  * 打席詳細画面（閲覧専用）。
@@ -25,11 +26,12 @@ export default function PlateAppearanceDetailScreen() {
   const numericId = id ? Number(id) : null;
   const numericGameResultId = gameResultId ? Number(gameResultId) : undefined;
 
-  const { plateAppearance, isLoading, isError } = usePlateAppearance(
+  const { profile } = useProfile();
+  const { plateAppearance, isLoading, isError, error } = usePlateAppearance(
     numericId,
     numericGameResultId,
+    profile?.id ?? null,
   );
-  const { profile } = useProfile();
 
   const handleEditPress = () => {
     if (!plateAppearance) return;
@@ -41,6 +43,18 @@ export default function PlateAppearanceDetailScreen() {
       },
     });
   };
+
+  // 試合詳細のキャッシュ（initialData）が残っていても詳細を見せないため、
+  // ローディング・データ有無より先に判定する。
+  if (isMutualFollowRequiredError(error)) {
+    return (
+      <View style={styles.centerBox}>
+        <Text style={styles.errorText}>
+          相互フォローのユーザーのみ打席詳細を閲覧できます
+        </Text>
+      </View>
+    );
+  }
 
   if (isLoading) {
     return (
