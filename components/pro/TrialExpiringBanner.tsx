@@ -26,6 +26,8 @@ export function shouldShowTrialExpiringBanner(
 ): boolean {
   if (dismissed !== false) return false;
   if (!subscription.in_trial) return false;
+  // 閉じた状態は expires_at にひもづけて保存するため、null だと閉じられないバナーになる。
+  if (subscription.expires_at === null) return false;
   const days = subscription.days_remaining;
   return days !== null && days <= TRIAL_WARN_DAYS;
 }

@@ -124,6 +124,17 @@ describe("TrialExpiringBanner", () => {
     });
   });
 
+  it("expires_at が null なら描画しない（閉じられないバナーを出さない）", async () => {
+    const { queryByText } = await renderBanner({
+      ...baseSubscription,
+      expires_at: null,
+    });
+
+    await waitFor(() => {
+      expect(queryByText(/トライアルはあと/)).toBeNull();
+    });
+  });
+
   it("閉じた状態が確定するまで描画しない", () => {
     // 読み込みを未解決のままにして確定前の状態を固定する
     getItemAsyncMock.mockImplementation(() => new Promise(() => {}));
