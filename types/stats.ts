@@ -263,6 +263,48 @@ export interface PitchTypeData {
   total_target_pa: number;
 }
 
+/** GET /api/v2/stats/pitch_courses の 1 セル分（zones は必ず 25 要素で返る）。 */
+export interface PitchCourseZone {
+  course: number;
+  row: number;
+  col: number;
+  is_strike_zone: boolean;
+  plate_appearances: number;
+  at_bats: number;
+  hits: number;
+  batting_average: number;
+  /** 打数が min_at_bats 以上か。false は参考値（半透明表示）。 */
+  is_reliable: boolean;
+}
+
+export interface PitchCourseZoneSummary {
+  plate_appearances: number;
+  at_bats: number;
+  hits: number;
+  batting_average: number;
+}
+
+export interface PitchCourseData {
+  zones: PitchCourseZone[];
+  strike_zone: PitchCourseZoneSummary;
+  ball_zone: PitchCourseZoneSummary;
+  total_target_pa: number;
+  min_at_bats: number;
+}
+
+export interface PitchCoursePitchTypeRow {
+  id: number;
+  label: string;
+  plate_appearances: number;
+  zones: PitchCourseZone[];
+}
+
+export interface PitchCoursePitchTypeData {
+  rows: PitchCoursePitchTypeRow[];
+  total_target_pa: number;
+  min_at_bats: number;
+}
+
 /**
  * stats 打撃の追加スタッツ（主要スタッツ以外）。
  * マイページ / ダッシュボードの SummaryStatsTable と同じ 16 項目。

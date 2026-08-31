@@ -30,6 +30,8 @@ export interface UserProfile {
   team_id: number | null;
   is_private: boolean;
   positions: { id: number; name: string }[];
+  throw_hand: "right" | "left" | null;
+  batting_side: "right" | "left" | "both" | null;
 }
 
 export type FollowStatus = "self" | "none" | "pending" | "following";
