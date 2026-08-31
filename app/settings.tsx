@@ -8,7 +8,6 @@ import {
   type SettingsItem,
 } from "@components/profile/SettingsSection";
 import { useAuth } from "@hooks/useAuth";
-import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { useStoreReview } from "@hooks/useStoreReview";
 
 interface SettingsSectionData {
@@ -24,7 +23,6 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { logout } = useAuth();
   const { openStoreReviewPage } = useStoreReview();
-  const { enabled: proFeatures } = useFeatureFlag("pro_features");
 
   const handleLogout = () => {
     Alert.alert("ログアウト", "ログアウトしますか？", [
@@ -48,24 +46,18 @@ export default function SettingsScreen() {
     },
   ];
 
-  if (proFeatures) {
-    // TODO: Pro プラン動線の仮実装。リリース前に下記を磨き込む:
-    //   - 加入済み / 未加入で表示文言とアイコンを切り替える（useProStatus 連携）
-    //   - 加入済みなら「Pro プランを見る」項目自体を非表示にする等の UX 調整
-    //   - SettingsSection のアイコン・カラーを Pro ブランディングに合わせる
-    accountItems.push({
-      icon: "star-outline",
-      title: "Pro プランを見る",
-      description: "全機能を解放する Pro プランの詳細を確認",
-      onPress: () => router.push("/pro"),
-    });
-    accountItems.push({
-      icon: "card-outline",
-      title: "サブスクリプション管理",
-      description: "Pro プランの加入状態・解約方法を確認",
-      onPress: () => router.push("/account/subscription"),
-    });
-  }
+  accountItems.push({
+    icon: "star-outline",
+    title: "Pro プランを見る",
+    description: "全機能を解放する Pro プランの詳細を確認",
+    onPress: () => router.push("/pro"),
+  });
+  accountItems.push({
+    icon: "card-outline",
+    title: "サブスクリプション管理",
+    description: "Pro プランの加入状態・解約方法を確認",
+    onPress: () => router.push("/account/subscription"),
+  });
 
   const sections: SettingsSectionData[] = [
     {

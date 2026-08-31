@@ -23,10 +23,6 @@ jest.mock("expo-router", () => {
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 // PaywallModal が pro_features フラグで kill switch される設計のため、常時 true を返す。
-jest.mock("@hooks/useFeatureFlag", () => ({
-  useFeatureFlag: jest.fn(() => ({ enabled: true, isLoading: false })),
-}));
-
 const getRouterSpies = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const m = require("expo-router") as { __routerSpies: { push: jest.Mock } };

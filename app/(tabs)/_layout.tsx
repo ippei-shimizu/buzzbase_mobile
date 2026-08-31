@@ -15,7 +15,6 @@ import {
 } from "@components/pro/TrialExpiringBanner";
 import { BOTTOM_TAB_ITEMS } from "@components/ui/bottomTabItems";
 import { useAuth } from "@hooks/useAuth";
-import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { useGroups } from "@hooks/useGroups";
 import { useGroupTabBadge } from "@hooks/useGroupTabBadge";
 import { useOnboarding } from "@hooks/useOnboarding";
@@ -26,9 +25,7 @@ import { shouldResetTabStack } from "@utils/tabStackReset";
 
 export default function TabLayout() {
   const { isLoggedIn, isLoading } = useAuth();
-  const { enabled: proFeatures } = useFeatureFlag("pro_features");
-  // pro_features=false の環境では Banner/Alert を一切表示しないため、/pro/status も叩かない。
-  const { proStatus } = useProStatus({ enabled: proFeatures });
+  const { proStatus } = useProStatus();
   const { isCompleted: isOnboardingCompleted } = useOnboarding();
   const { groups, isFetched: isGroupsFetched } = useGroups({
     enabled: isLoggedIn === true,
@@ -57,12 +54,11 @@ export default function TabLayout() {
   // ヘッダーは兄弟要素を知らず insets.top を必ず加算するため、バナー表示中は Tabs 配下に
   // top: 0 を渡してインセットの二重確保を防ぐ。
   const hasTopBanner =
-    proFeatures === true &&
-    (shouldShowBillingIssueAlert(proStatus.subscription) ||
-      shouldShowTrialExpiringBanner(
-        proStatus.subscription,
-        isTrialBannerDismissed,
-      ));
+    shouldShowBillingIssueAlert(proStatus.subscription) ||
+    shouldShowTrialExpiringBanner(
+      proStatus.subscription,
+      isTrialBannerDismissed,
+    );
 
   const isResolvingAuth = isLoading || isLoggedIn === undefined;
   // ログイン済みユーザーにはオンボーディングを出さないため、未ログイン時のみ
@@ -94,16 +90,12 @@ export default function TabLayout() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#2E2E2E" }}>
-      {proFeatures ? (
-        <>
-          <BillingIssueAlert subscription={proStatus.subscription} />
-          <TrialExpiringBanner
-            subscription={proStatus.subscription}
-            dismissed={isTrialBannerDismissed}
-            onDismiss={dismissTrialBanner}
-          />
-        </>
-      ) : null}
+      <BillingIssueAlert subscription={proStatus.subscription} />
+      <TrialExpiringBanner
+        subscription={proStatus.subscription}
+        dismissed={isTrialBannerDismissed}
+        onDismiss={dismissTrialBanner}
+      />
       <SafeAreaInsetsContext.Provider
         value={hasTopBanner ? { ...insets, top: 0 } : insets}
       >
