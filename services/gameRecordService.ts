@@ -128,9 +128,25 @@ export const updatePitchingResult = async (
   return response.data;
 };
 
-/** GET /teams — チーム一覧取得 */
-export const getTeams = async (): Promise<Team[]> => {
-  const response = await axiosInstance.get("/teams");
+/**
+ * GET /teams — チーム名のインクリメンタル検索。
+ * teams は全ユーザー共有で単調増加するマスタのため全件取得はせず、
+ * 検索語と件数上限を必ず付けて取得する。
+ *
+ * @param q 部分一致の検索語
+ * @param limit 最大件数（サーバー既定 50 / 上限 100）
+ */
+export const searchTeams = async (
+  q: string,
+  limit: number = 20,
+): Promise<Team[]> => {
+  const response = await axiosInstance.get("/teams", { params: { q, limit } });
+  return response.data;
+};
+
+/** GET /teams/:id/team_name — チーム ID からチーム名を解決する */
+export const getTeamName = async (id: number): Promise<{ name: string }> => {
+  const response = await axiosInstance.get(`/teams/${id}/team_name`);
   return response.data;
 };
 

@@ -20,6 +20,14 @@ export interface TeamDetail {
   prefecture_id: number | null;
 }
 
+export interface MyTeamResponse {
+  name?: string;
+  category_name?: string | null;
+  prefecture_name?: string | null;
+  // チーム未設定時はバックエンドが { message } のみを返す
+  message?: string;
+}
+
 export interface UserProfile {
   id: number;
   email: string;
@@ -30,6 +38,8 @@ export interface UserProfile {
   team_id: number | null;
   is_private: boolean;
   positions: { id: number; name: string }[];
+  throw_hand: "right" | "left" | null;
+  batting_side: "right" | "left" | "both" | null;
 }
 
 export type FollowStatus = "self" | "none" | "pending" | "following";

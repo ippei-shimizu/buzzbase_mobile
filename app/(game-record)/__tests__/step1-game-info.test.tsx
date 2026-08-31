@@ -13,6 +13,7 @@
  */
 import type { RenderResult } from "@testing-library/react-native";
 import { fireEvent, waitFor } from "@testing-library/react-native";
+import { API_BASE_URL } from "@constants/api";
 import { useGameRecordStore } from "@stores/gameRecordStore";
 import {
   apiUrl,
@@ -314,6 +315,54 @@ describe("Step1GameInfoScreen / マスタ名の手入力", () => {
       });
     });
     expect(seasonPostCount).toBe(1);
+  });
+
+  it("球場の新規作成待ちの間に連打しても match_results の POST は1回だけ送信される", async () => {
+    setupCommonHandlers();
+    let matchResultPostCount = 0;
+    let gameResultPutCount = 0;
+
+    server.use(
+      // サジェストを空にして、送信時に球場の新規作成（await 待ち）へ入らせる
+      http.get(`${API_BASE_URL}/api/v2/stadiums`, () =>
+        HttpResponse.json({ data: [], pagination: { current_page: 1 } }),
+      ),
+      // 新規作成の応答を遅らせて、ネットワーク待ち中の再タップ窓を再現する
+      http.post(`${API_BASE_URL}/api/v2/stadiums`, async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        return HttpResponse.json({ id: 99, name: "市民球場" });
+      }),
+      // 応答を遅らせ、1本目の作成完了（matchResultId 反映）前に2本目が走る本番の並行条件を再現する
+      http.post(apiUrl("/match_results"), async () => {
+        matchResultPostCount += 1;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        return HttpResponse.json({ id: 555 });
+      }),
+      http.put(apiUrl("/game_results/1"), () => {
+        gameResultPutCount += 1;
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const { findByRole, getByPlaceholderText, findByPlaceholderText } =
+      renderWithProviders(<Step1GameInfoScreen />);
+
+    await fillRequiredFields(findByPlaceholderText, getByPlaceholderText);
+    fireEvent.changeText(getByPlaceholderText("球場名を入力"), "市民球場");
+
+    const submitButton = await findByRole("button", {
+      name: "打撃結果のみ入力",
+    });
+    // 1回目の押下は球場作成の await で中断し、その間に2回目の押下が入る
+    fireEvent.press(submitButton);
+    fireEvent.press(submitButton);
+
+    await waitFor(() => {
+      expect(gameResultPutCount).toBeGreaterThan(0);
+    });
+    // 二重送信していた場合の遅れて届く2本目を待ってから確認する
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    expect(matchResultPostCount).toBe(1);
   });
 
   it("同名チームが複数あるとき、選んだ候補のidを打ち直しても保持する", async () => {
