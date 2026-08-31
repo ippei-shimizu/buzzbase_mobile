@@ -20,6 +20,14 @@ export interface TeamDetail {
   prefecture_id: number | null;
 }
 
+export interface MyTeamResponse {
+  name?: string;
+  category_name?: string | null;
+  prefecture_name?: string | null;
+  // チーム未設定時はバックエンドが { message } のみを返す
+  message?: string;
+}
+
 export interface UserProfile {
   id: number;
   email: string;
