@@ -62,6 +62,8 @@ const buildDetailPlateAppearance = (
   runners_state: "first_second",
   inning: 7,
   pitch_course: 13,
+  pitch_course_x: "0.512",
+  pitch_course_y: "0.436",
   self_analysis_memo: "低めを我慢できた",
   opponent_memo: null,
   is_new_format: true,

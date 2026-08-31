@@ -1,6 +1,9 @@
 import React from "react";
 import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
-import { isStrikeZoneCourse } from "@constants/pitchCourse";
+import {
+  PITCH_COURSE_TRACK_FRACTIONS,
+  isStrikeZoneCourse,
+} from "@constants/pitchCourse";
 
 interface Props {
   /** 各セルの中身（ボタンや色付き View）。セル枠・ストライクゾーン枠線はグリッド側が描く。 */
@@ -8,8 +11,7 @@ interface Props {
   style?: StyleProp<ViewStyle>;
 }
 
-// 外周のボールゾーンは内側より細くする（行・列とも 0.62 : 1 : 1 : 1 : 0.62）。
-const TRACK_FLEX = [0.62, 1, 1, 1, 0.62];
+const TRACK_FLEX = PITCH_COURSE_TRACK_FRACTIONS;
 
 // ストライクゾーン（中央3x3）の外周にだけ実線ボーダーを引く。
 const strikeZoneBorder = (row: number, col: number): ViewStyle => {

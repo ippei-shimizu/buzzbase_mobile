@@ -1,21 +1,33 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Svg, { Polygon } from "react-native-svg";
-import { PitchCourseGrid } from "@components/stats/PitchCourseGrid";
-import { pitchCourseLabel } from "@constants/pitchCourse";
+import {
+  pitchCourseLabel,
+  type PitchCoursePoint,
+} from "@constants/pitchCourse";
+import { PitchCourseTapField } from "./PitchCourseTapField";
 import { SectionHeader } from "./SectionHeader";
 
 interface Props {
   value: number | null;
-  onChange: (value: number | null) => void;
+  location: PitchCoursePoint | null;
+  onChange: (
+    value: { course: number; location: PitchCoursePoint } | null,
+  ) => void;
   description?: string;
 }
 
 /**
- * 投球コース（捕手目線 5x5）の入力セレクタ。
- * 選択済みセルの再タップ、または「クリア」で解除できる。
+ * 投球コース（捕手目線）の入力セレクタ。
+ * コース図の任意の位置をタップして指定し、そこから導出した 5x5 のコースを
+ * マスのハイライトとテキストで示す。「クリア」で未選択に戻せる。
  */
-export function PitchCourseSelector({ value, onChange, description }: Props) {
+export function PitchCourseSelector({
+  value,
+  location,
+  onChange,
+  description,
+}: Props) {
   return (
     <View style={styles.container}>
       <SectionHeader label="コース" description={description} />
@@ -27,24 +39,12 @@ export function PitchCourseSelector({ value, onChange, description }: Props) {
           <Text style={styles.axisLabel}>低め</Text>
         </View>
         <View style={styles.gridColumn}>
-          <PitchCourseGrid
-            style={styles.grid}
-            renderCell={(course, isStrikeZone) => {
-              const isSelected = value === course;
-              return (
-                <TouchableOpacity
-                  accessibilityRole="radio"
-                  accessibilityLabel={pitchCourseLabel(course)}
-                  accessibilityState={{ selected: isSelected }}
-                  style={[
-                    styles.cellButton,
-                    isStrikeZone ? styles.cellStrike : styles.cellBall,
-                    isSelected && styles.cellSelected,
-                  ]}
-                  onPress={() => onChange(isSelected ? null : course)}
-                />
-              );
-            }}
+          <PitchCourseTapField
+            course={value}
+            location={location}
+            onSelect={({ x, y, course }) =>
+              onChange({ course, location: { x, y } })
+            }
           />
           <View style={styles.horizontalAxis}>
             <Text style={styles.axisLabel}>三塁側</Text>
@@ -63,19 +63,27 @@ export function PitchCourseSelector({ value, onChange, description }: Props) {
           </View>
         </View>
       </View>
-      <Text accessibilityLiveRegion="polite" style={styles.selectionLabel}>
-        {value !== null ? pitchCourseLabel(value) : "未選択"}
-      </Text>
-      {value !== null ? (
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel="コースをクリア"
-          onPress={() => onChange(null)}
-          style={styles.clearButton}
+      <View style={styles.selectionRow}>
+        <Text
+          accessibilityLiveRegion="polite"
+          style={[
+            styles.selectionChip,
+            value === null ? styles.selectionChipEmpty : null,
+          ]}
         >
-          <Text style={styles.clearText}>クリア</Text>
-        </TouchableOpacity>
-      ) : null}
+          {value !== null ? pitchCourseLabel(value) : "未選択"}
+        </Text>
+        {value !== null ? (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="コースをクリア"
+            onPress={() => onChange(null)}
+            style={styles.clearButton}
+          >
+            <Text style={styles.clearText}>クリア</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -96,23 +104,6 @@ const styles = StyleSheet.create({
     flex: 1,
     maxWidth: 300,
   },
-  grid: {
-    height: 300,
-  },
-  cellButton: {
-    flex: 1,
-    borderRadius: 2,
-  },
-  // 最小タップ領域 44px は外周セル（300 * 0.62 / 4.24 ≈ 44px）で実寸確保する。
-  cellBall: {
-    backgroundColor: "#2a2a2a",
-  },
-  cellStrike: {
-    backgroundColor: "#454545",
-  },
-  cellSelected: {
-    backgroundColor: "#d08000",
-  },
   horizontalAxis: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -126,14 +117,30 @@ const styles = StyleSheet.create({
     color: "#71717A",
     fontSize: 10,
   },
-  selectionLabel: {
+  selectionRow: {
     marginTop: 8,
-    color: "#D4D4D8",
-    fontSize: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  // ダイヤモンドの塗りだけでは選択位置が読み取りづらいため、チップで明示する。
+  selectionChip: {
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    backgroundColor: "#d08000",
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+    overflow: "hidden",
+  },
+  selectionChipEmpty: {
+    backgroundColor: "#3A3A3A",
+    color: "#A1A1AA",
   },
   clearButton: {
-    alignSelf: "flex-start",
-    marginTop: 4,
+    position: "absolute",
+    right: 0,
     padding: 4,
   },
   clearText: {

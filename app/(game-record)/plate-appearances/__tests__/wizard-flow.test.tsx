@@ -58,6 +58,8 @@ const buildCreatedResponse = (
   runners_state: null,
   inning: null,
   pitch_course: null,
+  pitch_course_x: null,
+  pitch_course_y: null,
   self_analysis_memo: null,
   opponent_memo: null,
   is_new_format: true,

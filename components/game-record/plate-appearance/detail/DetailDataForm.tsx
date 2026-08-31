@@ -52,6 +52,8 @@ export function DetailDataForm() {
   const timingId = useBattingRecordStore((s) => s.timingId);
   const pitchTypeId = useBattingRecordStore((s) => s.pitchTypeId);
   const pitchCourse = useBattingRecordStore((s) => s.pitchCourse);
+  const pitchCourseX = useBattingRecordStore((s) => s.pitchCourseX);
+  const pitchCourseY = useBattingRecordStore((s) => s.pitchCourseY);
   const selfAnalysisMemo = useBattingRecordStore((s) => s.selfAnalysisMemo);
   const pitcherId = useBattingRecordStore((s) => s.pitcherId);
   const appearanceSituationId = useBattingRecordStore(
@@ -137,6 +139,11 @@ export function DetailDataForm() {
         <SectionDivider />
         <PitchCourseSelector
           value={pitchCourse}
+          location={
+            pitchCourseX !== null && pitchCourseY !== null
+              ? { x: pitchCourseX, y: pitchCourseY }
+              : null
+          }
           onChange={setPitchCourse}
           description={SECTION_DESCRIPTIONS.pitchCourse}
         />

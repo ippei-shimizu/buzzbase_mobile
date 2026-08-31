@@ -70,6 +70,9 @@ export interface PlateAppearanceV2 {
   inning: number | null;
   // 投球コース（捕手目線 5x5、1〜25）。詳細は constants/pitchCourse.ts。
   pitch_course: number | null;
+  // コース図のタップ位置。hit_location と同じく decimal のため文字列で返る。
+  pitch_course_x: string | null;
+  pitch_course_y: string | null;
   self_analysis_memo: string | null;
   opponent_memo: string | null;
   is_new_format: boolean;
@@ -111,6 +114,8 @@ export interface PlateAppearanceV2Input {
   timing_id?: number | null;
   pitch_type_id?: number | null;
   pitch_course?: number | null;
+  pitch_course_x?: number | null;
+  pitch_course_y?: number | null;
   self_analysis_memo?: string | null;
   pitcher_id?: number | null;
   appearance_situation_id?: number | null;
