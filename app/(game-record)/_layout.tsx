@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
-import { Stack, useNavigation, useRouter, useSegments } from "expo-router";
+import { Stack, useNavigation, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
 import { TouchableOpacity, Alert } from "react-native";
 import { Icon } from "@components/icon/Icon";
@@ -36,12 +36,10 @@ const addBeforeRemoveListener = (
 export default function GameRecordLayout() {
   const router = useRouter();
   const navigation = useNavigation();
-  const segments = useSegments();
   const queryClient = useQueryClient();
   const reset = useGameRecordStore((s) => s.reset);
   // 破棄確認を済ませた離脱で beforeRemove がもう一度確認を出さないようにする。
   const isLeavingRef = useRef(false);
-  const hasReachedSummaryRef = useRef(false);
 
   /** フロー用の一時状態だけ片付ける。サーバー上のデータには触らない。 */
   const resetDraftState = useCallback(() => {
@@ -87,14 +85,6 @@ export default function GameRecordLayout() {
     [discardDraft],
   );
 
-  // サマリーへ到達した時点で試合結果・打席は保存済みなので、以降の離脱を
-  // 「入力の中断」として扱わないための記録。
-  useEffect(() => {
-    if (segments[segments.length - 1] === "summary") {
-      hasReachedSummaryRef.current = true;
-    }
-  }, [segments]);
-
   // ×ボタン以外（iOS のエッジスワイプ / Android の物理戻る）の離脱でも
   // サーバー上の未完成ドラフトが残らないようにする。
   useEffect(() => {
@@ -105,7 +95,7 @@ export default function GameRecordLayout() {
       }
       // 保存済みの記録を「破棄」と案内すると消してよいデータだと誤解させるため、
       // サマリー到達後は確認を出さず一時状態だけ片付ける。
-      if (hasReachedSummaryRef.current) {
+      if (useGameRecordStore.getState().hasReachedSummary) {
         resetDraftState();
         return;
       }

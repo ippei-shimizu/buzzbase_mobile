@@ -30,12 +30,6 @@ const getNavigationSpies = (): NavigationSpies => {
   return m.__navigationSpies;
 };
 
-const setSegments = (segments: string[]) => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const m = require("expo-router") as { __setSegments: (s: string[]) => void };
-  m.__setSegments(segments);
-};
-
 const DRAFT_GAME_RESULT_ID = 55;
 
 const deletedIds: string[] = [];
@@ -45,7 +39,6 @@ beforeEach(() => {
   // テスト間で呼び出し履歴が混ざらないよう毎回クリアする。
   jest.clearAllMocks();
   deletedIds.length = 0;
-  setSegments([]);
   useGameRecordStore.getState().reset();
   // 「中断する」を選んだ状態を再現する。
   jest
@@ -107,8 +100,8 @@ describe("記録ウィザードのドラフト削除", () => {
     useGameRecordStore.setState({
       isEditMode: false,
       gameResultId: DRAFT_GAME_RESULT_ID,
+      hasReachedSummary: true,
     });
-    setSegments(["(game-record)", "summary"]);
 
     renderWithProviders(<GameRecordLayout />);
     leaveByGesture();
