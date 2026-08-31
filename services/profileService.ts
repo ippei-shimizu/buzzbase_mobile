@@ -17,6 +17,7 @@ export const updateUserProfile = async (data: FormData): Promise<void> => {
     headers: { "Content-Type": "multipart/form-data" },
     // プロフィール画像を含む更新は回線とサーバー側の画像処理で既定の 15 秒を超えうる。
     // タイムアウトすると「失敗表示なのにサーバー側では成功」の不整合を招くため個別に延長する。
+    // サーバー側の画像処理が改善されたら、この値の妥当性を測り直す。
     timeout: 60000,
   });
 };
