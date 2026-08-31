@@ -38,7 +38,11 @@ export default function NotificationUserProfileScreen() {
   const { followUser, isFollowing } = useFollowUser();
   const { unfollowUser, isUnfollowing } = useUnfollowUser();
 
-  const { teamName, categoryName, prefectureName } = useMyTeam(userId);
+  // プロフィール取得が通ってから叩く。非公開アカウントで本体が 403 のときに
+  // チーム情報だけ取得してしまわないようにする。
+  const { teamName, categoryName, prefectureName } = useMyTeam(
+    data ? userId : undefined,
+  );
   const { data: awards } = useUserAwards(data?.user.id);
 
   // 成績フィルター
