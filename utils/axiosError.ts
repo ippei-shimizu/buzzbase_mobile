@@ -58,6 +58,23 @@ export const groupLimitErrorMessage = (error: unknown): string | undefined => {
 };
 
 /**
+ * 打席詳細が「相互フォロー限定」で拒否された403かどうかを判定する。
+ *
+ * 同じエンドポイントに別理由の403が増えても誤判定しないよう、
+ * status だけでなく back が返す安定コード（`mutual_follow_required`）まで見る。
+ *
+ * @param error - try/catchで受けた error 値（unknown）
+ * @returns AxiosErrorかつ相互フォロー未成立による403の場合のみ true
+ */
+export const isMutualFollowRequiredError = (error: unknown): boolean => {
+  if (!axios.isAxiosError(error) || error.response?.status !== 403)
+    return false;
+
+  const data = error.response.data as { error?: string } | undefined;
+  return data?.error === "mutual_follow_required";
+};
+
+/**
  * APIが返した日本語エラーメッセージを取り出す。
  *
  * バックエンドはバリデーション失敗を `{ errors: [...] }`、権限エラーを `{ error: "..." }` で
