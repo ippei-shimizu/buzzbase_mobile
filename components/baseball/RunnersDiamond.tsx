@@ -51,6 +51,9 @@ export function RunnersDiamond({ value, onChange }: Props) {
   const bases = runnersStateToBases(value);
   const caption = value === null ? "未入力" : RUNNERS_STATE_LABELS[value];
   const isInteractive = onChange !== undefined;
+  // ダイヤモンドの塗りだけでは読み取りづらいため、選択結果は色付きチップで明示する。
+  const captionChipStyle =
+    value === null ? styles.captionChipEmpty : styles.captionChipFilled;
 
   const handleToggle = (key: keyof RunnersBases) => {
     if (!onChange) return;
@@ -104,7 +107,11 @@ export function RunnersDiamond({ value, onChange }: Props) {
           importantForAccessibility="no-hide-descendants"
         >
           {diamond}
-          <Text style={styles.caption}>{caption}</Text>
+          <View style={styles.captionRow}>
+            <Text style={[styles.captionChip, captionChipStyle]}>
+              {caption}
+            </Text>
+          </View>
         </View>
       </View>
     );
@@ -113,19 +120,24 @@ export function RunnersDiamond({ value, onChange }: Props) {
   return (
     <View accessibilityLabel="ランナー状況">
       {diamond}
-      <Text accessibilityLiveRegion="polite" style={styles.caption}>
-        {caption}
-      </Text>
-      {value !== null ? (
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel="未入力に戻す"
-          onPress={() => onChange?.(null)}
-          style={styles.resetButton}
+      <View style={styles.captionRow}>
+        <Text
+          accessibilityLiveRegion="polite"
+          style={[styles.captionChip, captionChipStyle]}
         >
-          <Text style={styles.resetText}>未入力に戻す</Text>
-        </TouchableOpacity>
-      ) : null}
+          {caption}
+        </Text>
+        {value !== null ? (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="未入力に戻す"
+            onPress={() => onChange?.(null)}
+            style={styles.resetButton}
+          >
+            <Text style={styles.resetText}>未入力に戻す</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -171,15 +183,33 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 65,
   },
-  caption: {
-    marginTop: 4,
-    textAlign: "center",
+  captionRow: {
+    marginTop: 8,
+    minHeight: 32,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  captionChip: {
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    fontSize: 14,
+    fontWeight: "bold",
+    // iOS では overflow: hidden がないと Text の角丸が効かない。
+    overflow: "hidden",
+  },
+  captionChipEmpty: {
+    backgroundColor: "#3A3A3A",
     color: "#A1A1AA",
-    fontSize: 12,
+  },
+  captionChipFilled: {
+    backgroundColor: "#d08000",
+    color: "#FFFFFF",
   },
   resetButton: {
-    alignSelf: "center",
-    marginTop: 4,
+    position: "absolute",
+    right: 0,
     padding: 4,
   },
   resetText: {
