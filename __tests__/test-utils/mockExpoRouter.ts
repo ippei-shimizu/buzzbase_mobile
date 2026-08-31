@@ -63,6 +63,8 @@ export interface ExpoRouterMockOptions {
   searchParams?: Record<string, string | string[]>;
   /** Stack.Screen の headerLeft / headerRight も描画する。既定は無効。 */
   renderScreenOptions?: boolean;
+  /** useSegments() の初期値。テスト中に __setSegments で差し替えられる。 */
+  segments?: string[];
 }
 
 interface ScreenProps {
@@ -96,14 +98,18 @@ export const buildExpoRouterMock = (options: ExpoRouterMockOptions = {}) => {
   // <Redirect> は router.push 等を呼ばない宣言的コンポーネントのため、
   // 遷移先 href を記録するスパイを別途用意して「リダイレクトが発火したか」を検証可能にする。
   const redirectSpy = jest.fn();
+  let segments = options.segments ?? [];
 
   return {
     __routerSpies: routerSpies,
+    __setSegments: (next: string[]) => {
+      segments = next;
+    },
     __navigationSpies: navigationSpies,
     __redirectSpy: redirectSpy,
     useRouter: () => routerSpies,
     useLocalSearchParams: () => searchParams,
-    useSegments: () => [] as string[],
+    useSegments: () => segments,
     usePathname: () => "/",
     useFocusEffect: (cb: () => (() => void) | void) => cb(),
     // headerLeft 等の Stack スクリーン options 上書きと、
