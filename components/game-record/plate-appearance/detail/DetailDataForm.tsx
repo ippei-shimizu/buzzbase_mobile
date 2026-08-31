@@ -13,6 +13,7 @@ import { FirstPitchSwingToggle } from "./FirstPitchSwingToggle";
 import { InningStepper } from "./InningStepper";
 import { MasterChipSelector } from "./MasterChipSelector";
 import { MemoTextArea } from "./MemoTextArea";
+import { PitchCourseSelector } from "./PitchCourseSelector";
 import { PitcherSelector } from "./PitcherSelector";
 import { RunnersStateSelector } from "./RunnersStateSelector";
 
@@ -27,6 +28,7 @@ const SECTION_DESCRIPTIONS = {
   inning: "この打席が何回（イニング）目に発生したか",
   contactQuality: "ボールがバットのどこに当たった感触か",
   timing: "ピッチャーの球に対するスイングのタイミング",
+  pitchCourse: "打席結果が決まった最後の 1 球のコース（捕手目線）",
   pitchType: "打席結果が決まった最後の 1 球の球種",
   selfAnalysisMemo: "打席を振り返って、自分の良かった点・課題を書き残す",
   pitcher: "対戦した投手を選択 / 新規追加すると、投手別の成績が見られる",
@@ -49,6 +51,9 @@ export function DetailDataForm() {
   const contactQualityId = useBattingRecordStore((s) => s.contactQualityId);
   const timingId = useBattingRecordStore((s) => s.timingId);
   const pitchTypeId = useBattingRecordStore((s) => s.pitchTypeId);
+  const pitchCourse = useBattingRecordStore((s) => s.pitchCourse);
+  const pitchCourseX = useBattingRecordStore((s) => s.pitchCourseX);
+  const pitchCourseY = useBattingRecordStore((s) => s.pitchCourseY);
   const selfAnalysisMemo = useBattingRecordStore((s) => s.selfAnalysisMemo);
   const pitcherId = useBattingRecordStore((s) => s.pitcherId);
   const appearanceSituationId = useBattingRecordStore(
@@ -60,6 +65,7 @@ export function DetailDataForm() {
   const setRunnersState = useBattingRecordStore((s) => s.setRunnersState);
   const setInning = useBattingRecordStore((s) => s.setInning);
   const setMasterSelection = useBattingRecordStore((s) => s.setMasterSelection);
+  const setPitchCourse = useBattingRecordStore((s) => s.setPitchCourse);
   const setMemo = useBattingRecordStore((s) => s.setMemo);
   const setPitcherSelection = useBattingRecordStore(
     (s) => s.setPitcherSelection,
@@ -129,6 +135,17 @@ export function DetailDataForm() {
           isLoading={timing.isLoading}
           isError={timing.isError}
           description={SECTION_DESCRIPTIONS.timing}
+        />
+        <SectionDivider />
+        <PitchCourseSelector
+          value={pitchCourse}
+          location={
+            pitchCourseX !== null && pitchCourseY !== null
+              ? { x: pitchCourseX, y: pitchCourseY }
+              : null
+          }
+          onChange={setPitchCourse}
+          description={SECTION_DESCRIPTIONS.pitchCourse}
         />
         <SectionDivider />
         <MasterChipSelector

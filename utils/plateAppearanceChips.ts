@@ -1,4 +1,5 @@
 import type { PlateAppearanceV2 } from "../types/plateAppearance";
+import { pitchCourseLabel } from "@constants/pitchCourse";
 import { RUNNERS_STATE_OPTIONS } from "@constants/runnersState";
 import { THROW_HAND_SHORT_LABELS } from "@constants/throwHand";
 
@@ -43,6 +44,9 @@ export const buildPitchAndPitcherChips = (pa: PlateAppearanceV2): string[] => {
   const chips: string[] = [];
   if (pa.contact_quality?.name) chips.push(pa.contact_quality.name);
   if (pa.timing?.name) chips.push(pa.timing.name);
+  if (pa.pitch_course !== null && pa.pitch_course !== undefined) {
+    chips.push(pitchCourseLabel(pa.pitch_course));
+  }
   if (pa.pitch_type?.name) chips.push(pa.pitch_type.name);
   if (pa.pitcher) {
     const hand = pa.pitcher.throw_hand
