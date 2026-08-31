@@ -1,7 +1,7 @@
-import type { RecordPattern } from "../../types/gameRecord";
+import type { RecordPattern, Team } from "../../types/gameRecord";
 import type { GameInfoFieldErrors } from "@components/game-record/GameInfoForm";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -15,6 +15,7 @@ import { useGameRecord } from "@hooks/useGameRecord";
 import { useProfile } from "@hooks/useProfile";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useCreateStadium, useStadiumSearch } from "@hooks/useStadiums";
+import { useTeamName, useTeamSearch } from "@hooks/useTeamSearch";
 import { getMatchResultFormDefaults } from "@services/matchResultService";
 import { trackGameRecordStepViewed } from "@utils/analytics";
 import { serverErrorMessage } from "@utils/axiosError";
@@ -26,7 +27,6 @@ export default function Step1GameInfoScreen() {
   const {
     createGameResultMutation,
     submitStep1,
-    teamsQuery,
     positionsQuery,
     tournamentsQuery,
   } = useGameRecord();
@@ -34,6 +34,18 @@ export default function Step1GameInfoScreen() {
   const { profile } = useProfile();
   const { seasons } = useMySeasons();
   const { stadiums } = useStadiumSearch(store.stadiumName);
+  // teams は全件先読みせず、各チーム名入力に連動した部分取得に分ける
+  const { teams: myTeamCandidates } = useTeamSearch(store.myTeamName);
+  const { teams: opponentTeamCandidates } = useTeamSearch(store.opponentTeamName);
+  const { teamName: profileTeamName } = useTeamName(profile?.team_id);
+  // GameInfoForm は自チーム・相手チームで同じ候補リストを受け取るため、両検索結果を統合する
+  const teamCandidates = useMemo(() => {
+    const byId = new Map<number, Team>();
+    for (const team of [...myTeamCandidates, ...opponentTeamCandidates]) {
+      byId.set(team.id, team);
+    }
+    return [...byId.values()];
+  }, [myTeamCandidates, opponentTeamCandidates]);
   const { createStadium } = useCreateStadium();
   const [fieldErrors, setFieldErrors] = useState<GameInfoFieldErrors>({});
   const [isInitializing, setIsInitializing] = useState(false);
@@ -50,15 +62,12 @@ export default function Step1GameInfoScreen() {
       !state.isEditMode &&
       !state.myTeamId &&
       profile?.team_id &&
-      teamsQuery.data
+      profileTeamName
     ) {
-      const team = teamsQuery.data.find((t) => t.id === profile.team_id);
-      if (team) {
-        useGameRecordStore.getState().setField("myTeamId", team.id);
-        useGameRecordStore.getState().setField("myTeamName", team.name);
-      }
+      useGameRecordStore.getState().setField("myTeamId", profile.team_id);
+      useGameRecordStore.getState().setField("myTeamName", profileTeamName);
     }
-  }, [profile, teamsQuery.data]);
+  }, [profile, profileTeamName]);
 
   useEffect(() => {
     if (hasInitialized.current) return;
@@ -267,7 +276,7 @@ export default function Step1GameInfoScreen() {
         seasonId={store.seasonId}
         stadiums={stadiums}
         seasons={seasons}
-        teams={teamsQuery.data ?? []}
+        teams={teamCandidates}
         positions={positionsQuery.data ?? []}
         inningFormat={store.inningFormat}
         appearanceType={store.appearanceType}

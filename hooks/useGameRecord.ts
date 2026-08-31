@@ -14,7 +14,7 @@ import {
   createPitchingResult,
   updatePitchingResult,
   updatePitchingResultId,
-  getTeams,
+  searchTeams,
   getPositions,
   createTeam,
   getTournaments,
@@ -44,11 +44,6 @@ export const useGameRecord = () => {
     store.setField("userId", profile.id);
     return profile.id;
   };
-
-  const teamsQuery = useQuery({
-    queryKey: ["teams"],
-    queryFn: getTeams,
-  });
 
   const positionsQuery = useQuery({
     queryKey: ["positions"],
@@ -86,11 +81,12 @@ export const useGameRecord = () => {
       let myTeamId = s.myTeamId;
       let opponentTeamId = s.opponentTeamId;
 
-      // 候補の読み込みが送信に間に合わなかった場合に備え、大会・シーズンと同じく
-      // 既存の同名を探してから新規作成に回す。
+      // 画面のサジェスト候補は入力連動の部分取得になったため、送信時は
+      // サーバー側で同名の既存チームを探してから新規作成に回す。
       const resolveTeamId = async (name: string): Promise<number> => {
         const trimmed = name.trim();
-        const existing = teamsQuery.data?.find((team) => team.name === trimmed);
+        const candidates = await searchTeams(trimmed);
+        const existing = candidates.find((team) => team.name === trimmed);
         const team = existing ?? (await createTeam(trimmed));
         return team.id;
       };
@@ -354,7 +350,6 @@ export const useGameRecord = () => {
 
   return {
     store,
-    teamsQuery,
     positionsQuery,
     tournamentsQuery,
     createGameResultMutation,
