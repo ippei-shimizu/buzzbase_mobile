@@ -36,7 +36,9 @@ export default function Step1GameInfoScreen() {
   const { stadiums } = useStadiumSearch(store.stadiumName);
   // teams は全件先読みせず、各チーム名入力に連動した部分取得に分ける
   const { teams: myTeamCandidates } = useTeamSearch(store.myTeamName);
-  const { teams: opponentTeamCandidates } = useTeamSearch(store.opponentTeamName);
+  const { teams: opponentTeamCandidates } = useTeamSearch(
+    store.opponentTeamName,
+  );
   const { teamName: profileTeamName } = useTeamName(profile?.team_id);
   // GameInfoForm は自チーム・相手チームで同じ候補リストを受け取るため、両検索結果を統合する
   const teamCandidates = useMemo(() => {
