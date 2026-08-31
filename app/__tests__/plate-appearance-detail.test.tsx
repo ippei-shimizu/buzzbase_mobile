@@ -107,6 +107,30 @@ const mockPlateAppearance = (pa: PlateAppearanceV2) => {
 };
 
 describe("PlateAppearanceDetailScreen", () => {
+  it("相互フォローでない他ユーザーの打席は閲覧できない旨を表示する", async () => {
+    mockProfile(1);
+    server.use(
+      http.get(baseUrl("/api/v2/plate_appearances/10"), () =>
+        HttpResponse.json(
+          {
+            error: "mutual_follow_required",
+            message: "相互フォローのユーザーのみ閲覧できます",
+          },
+          { status: 403 },
+        ),
+      ),
+    );
+
+    const { findByText, queryByText } = renderWithProviders(
+      <PlateAppearanceDetailScreen />,
+    );
+
+    expect(
+      await findByText("相互フォローのユーザーのみ打席詳細を閲覧できます"),
+    ).toBeTruthy();
+    expect(queryByText("中安")).toBeNull();
+  });
+
   it("フル記録の打席は各項目が表示される", async () => {
     mockProfile(1);
     mockPlateAppearance(buildDetailPlateAppearance());
@@ -124,6 +148,7 @@ describe("PlateAppearanceDetailScreen", () => {
     expect(getByLabelText("カウント ボール3 ストライク2 アウト1")).toBeTruthy();
     expect(getByLabelText("ランナー状況: 一・二塁")).toBeTruthy();
     expect(getByText("真ん中（ストライク）")).toBeTruthy();
+    expect(getByLabelText("コース図")).toBeTruthy();
     // 打点 0 は未記録ではなく 0 のまま表示する
     expect(getByText("打点")).toBeTruthy();
     expect(getByText("0")).toBeTruthy();

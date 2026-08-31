@@ -19,10 +19,14 @@ interface Props {
   course: number | null;
   /** タップ位置の正規化座標。座標を持たない既存レコードでは null。 */
   location: PitchCoursePoint | null;
-  onSelect: (args: { x: number; y: number; course: number }) => void;
+  /** 未指定なら表示専用モード（打席詳細の読み取り専用プロット）。 */
+  onSelect?: (args: { x: number; y: number; course: number }) => void;
+  /** 図の一辺の長さ。既定は入力フォーム向けの 300。 */
+  size?: number;
 }
 
 const MARKER_SIZE = 16;
+const DEFAULT_FIELD_SIZE = 300;
 
 const clampNormalized = (value: number): number =>
   Math.max(0, Math.min(1, value));
@@ -32,36 +36,45 @@ const clampNormalized = (value: number): number =>
  * タップ座標から detectPitchCourse で 5x5 のどのコースかを導出し、
  * 該当マスをハイライトして「大まかにどのコースか」も同時に示す。
  */
-export function PitchCourseTapField({ course, location, onSelect }: Props) {
+export function PitchCourseTapField({
+  course,
+  location,
+  onSelect,
+  size = DEFAULT_FIELD_SIZE,
+}: Props) {
   // 幅は端末サイズで変わるため、正規化には実測値が要る。
-  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [layout, setLayout] = useState({ width: 0, height: 0 });
+  const isInteractive = onSelect !== undefined;
   // 座標のない既存レコードはコースの中心にマーカーを置く。
   const marker =
     location ?? (course !== null ? pitchCourseCenter(course) : null);
 
   const handleLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
-    setSize({ width, height });
+    setLayout({ width, height });
   };
 
   const handlePress = (event: GestureResponderEvent) => {
-    if (size.width === 0 || size.height === 0) return;
-    const x = clampNormalized(event.nativeEvent.locationX / size.width);
-    const y = clampNormalized(event.nativeEvent.locationY / size.height);
+    if (!onSelect || layout.width === 0 || layout.height === 0) return;
+    const x = clampNormalized(event.nativeEvent.locationX / layout.width);
+    const y = clampNormalized(event.nativeEvent.locationY / layout.height);
     onSelect({ x, y, course: detectPitchCourse({ x, y }) });
   };
 
   return (
     <Pressable
-      accessibilityRole="button"
+      accessibilityRole={isInteractive ? "button" : "image"}
       accessibilityLabel="コース図"
-      accessibilityHint="タップして投球コースを選択"
+      accessibilityHint={
+        isInteractive ? "タップして投球コースを選択" : undefined
+      }
       accessibilityValue={{
         text: course !== null ? pitchCourseLabel(course) : "未選択",
       }}
+      disabled={!isInteractive}
       onLayout={handleLayout}
       onPress={handlePress}
-      style={styles.field}
+      style={[styles.field, { height: size }]}
     >
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <PitchCourseGrid
@@ -95,7 +108,6 @@ export function PitchCourseTapField({ course, location, onSelect }: Props) {
 
 const styles = StyleSheet.create({
   field: {
-    height: 300,
     width: "100%",
   },
   grid: {
