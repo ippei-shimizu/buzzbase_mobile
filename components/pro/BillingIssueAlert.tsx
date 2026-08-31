@@ -1,6 +1,9 @@
 import type { Platform, ProSubscription } from "../../types/pro";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const BANNER_PADDING_VERTICAL = 10;
 
 interface BillingIssueAlertProps {
   subscription: ProSubscription;
@@ -19,17 +22,33 @@ function billingIssueDescription(platform: Platform | null): string {
 }
 
 /**
+ * 決済問題バナーを表示すべきか。バナーの有無でセーフエリアの扱いを変える
+ * (tabs)/_layout からも参照するため、判定をコンポーネントの外に出している。
+ */
+export function shouldShowBillingIssueAlert(
+  subscription: ProSubscription,
+): boolean {
+  return subscription.status === "billing_issue";
+}
+
+/**
  * billing_issue 状態のときだけ表示する警告バナー。
  * タップで /account/subscription に遷移し、ユーザーに次のアクションを案内する。
  */
 export function BillingIssueAlert({ subscription }: BillingIssueAlertProps) {
   const router = useRouter();
+  // Tabs より上に描画されるためヘッダーの上部インセットが効かない。ステータスバーと
+  // 重ならないよう、このバナー自身で上部インセットを確保する。
+  const insets = useSafeAreaInsets();
 
-  if (subscription.status !== "billing_issue") return null;
+  if (!shouldShowBillingIssueAlert(subscription)) return null;
 
   return (
     <TouchableOpacity
-      style={styles.banner}
+      style={[
+        styles.banner,
+        { paddingTop: insets.top + BANNER_PADDING_VERTICAL },
+      ]}
       onPress={() => router.push("/account/subscription")}
       accessibilityRole="button"
       accessibilityLabel="決済情報の更新を案内"
@@ -46,7 +65,7 @@ const styles = StyleSheet.create({
   banner: {
     backgroundColor: "#7f1d1d",
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingBottom: BANNER_PADDING_VERTICAL,
   },
   label: {
     color: "#F4F4F4",

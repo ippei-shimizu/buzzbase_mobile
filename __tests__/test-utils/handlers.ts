@@ -15,6 +15,7 @@ export const defaultHandlers = [
   http.get(`${API_V1_URL}/teams`, () => HttpResponse.json([])),
   http.get(`${API_V1_URL}/positions`, () => HttpResponse.json([])),
   http.get(`${API_V1_URL}/tournaments`, () => HttpResponse.json([])),
+  http.get(`${API_V1_URL}/seasons`, () => HttpResponse.json([])),
   // 上達ループ機能のフックが各画面のマウント時に走らせる GET。個別テストで
   // 必要なら server.use(...) で上書きする。既定は空を返してノイズを抑える。
   http.get(`${API_BASE_URL}/api/v2/improvement_themes`, () =>

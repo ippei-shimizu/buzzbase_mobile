@@ -65,6 +65,7 @@ interface Props {
   tournamentId: number | null;
   tournaments: { id: number; name: string }[];
   seasonName: string;
+  seasonId: number | null;
   stadiums: Stadium[];
   seasons: Season[];
   teams: Team[];
@@ -145,29 +146,49 @@ function FormRow({
   );
 }
 
+/**
+ * 入力名から候補の id を解決する。
+ *
+ * 確定済みの id の名前と入力が一致する間はその id を維持する。単純な名前一致だけで導出すると、
+ * 同名レコード（チーム名は実在する）のときに選んだ候補と別の id を掴んでしまうため。
+ *
+ * @returns 一致する候補の id。無ければ null（＝送信時に新規作成へ回る）
+ */
+function resolveIdByName<T extends { id: number; name: string }>(
+  currentId: number | null,
+  value: string,
+  items: T[],
+): number | null {
+  const confirmed = items.find((item) => item.id === currentId);
+  if (confirmed && confirmed.name === value) return currentId;
+  const matched = items.find((item) => item.name === value);
+  return matched ? matched.id : null;
+}
+
 export function GameInfoForm({
   date,
   matchType,
   myTeamName,
-  myTeamId: _myTeamId,
+  myTeamId,
   opponentTeamName,
-  opponentTeamId: _opponentTeamId,
+  opponentTeamId,
   myTeamScore,
   opponentTeamScore,
   battingOrder,
   defensivePosition,
   memo,
   tournamentName,
-  tournamentId: _tournamentId,
+  tournamentId,
   tournaments,
   seasonName,
+  seasonId,
   stadiums,
   seasons,
   teams,
   positions,
   inningFormat,
   appearanceType,
-  stadiumId: _stadiumId,
+  stadiumId,
   stadiumName,
   isSubmitting,
   fieldErrors,
@@ -452,7 +473,10 @@ export function GameInfoForm({
               value={stadiumName}
               onChangeText={(v) => {
                 onFieldChange("stadiumName", v);
-                onFieldChange("stadiumId", null);
+                onFieldChange(
+                  "stadiumId",
+                  resolveIdByName(stadiumId, v, stadiums),
+                );
                 setShowStadiumSuggestions(true);
               }}
               onFocus={() => setShowStadiumSuggestions(true)}
@@ -504,10 +528,16 @@ export function GameInfoForm({
               value={tournamentName}
               onChangeText={(v) => {
                 onFieldChange("tournamentName", v);
-                onFieldChange("tournamentId", null);
+                onFieldChange(
+                  "tournamentId",
+                  resolveIdByName(tournamentId, v, tournaments),
+                );
                 setShowTournamentSuggestions(true);
               }}
               onFocus={() => setShowTournamentSuggestions(true)}
+              onBlur={() =>
+                setTimeout(() => setShowTournamentSuggestions(false), 200)
+              }
               placeholder="大会名を入力"
               placeholderTextColor="#71717A"
             />
@@ -558,7 +588,10 @@ export function GameInfoForm({
               value={seasonName}
               onChangeText={(v) => {
                 onFieldChange("seasonName", v);
-                onFieldChange("seasonId", null);
+                onFieldChange(
+                  "seasonId",
+                  resolveIdByName(seasonId, v, seasons),
+                );
                 setShowSeasonSuggestions(true);
               }}
               onFocus={() => setShowSeasonSuggestions(true)}
@@ -614,7 +647,7 @@ export function GameInfoForm({
               value={myTeamName}
               onChangeText={(v) => {
                 onFieldChange("myTeamName", v);
-                onFieldChange("myTeamId", null);
+                onFieldChange("myTeamId", resolveIdByName(myTeamId, v, teams));
                 setShowMyTeamSuggestions(true);
               }}
               onFocus={() => setShowMyTeamSuggestions(true)}
@@ -651,7 +684,10 @@ export function GameInfoForm({
               value={opponentTeamName}
               onChangeText={(v) => {
                 onFieldChange("opponentTeamName", v);
-                onFieldChange("opponentTeamId", null);
+                onFieldChange(
+                  "opponentTeamId",
+                  resolveIdByName(opponentTeamId, v, teams),
+                );
                 setShowOpponentTeamSuggestions(true);
               }}
               onFocus={() => setShowOpponentTeamSuggestions(true)}
