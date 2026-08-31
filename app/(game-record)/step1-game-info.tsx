@@ -38,6 +38,9 @@ export default function Step1GameInfoScreen() {
   const [fieldErrors, setFieldErrors] = useState<GameInfoFieldErrors>({});
   const [isInitializing, setIsInitializing] = useState(false);
   const hasInitialized = useRef(false);
+  // isPending はレンダー時にキャプチャした値のため、mutate() 直後の再レンダー前や
+  // 球場作成の await 中の連打を止められない。同期的に読める ref で二重送信を塞ぐ。
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
     trackGameRecordStepViewed(1);
@@ -123,7 +126,8 @@ export default function Step1GameInfoScreen() {
     pattern: RecordPattern | null,
     options?: { completeEdit?: boolean },
   ) => {
-    if (submitStep1.isPending) return;
+    if (isSubmittingRef.current || submitStep1.isPending) return;
+    isSubmittingRef.current = true;
 
     const errors: GameInfoFieldErrors = {};
     if (!store.date) errors.date = "試合日を入力してください";
@@ -156,6 +160,7 @@ export default function Step1GameInfoScreen() {
         // 詳細メッセージは長くなりがちなので既定より長めに表示する。
         durationMs: 5000,
       });
+      isSubmittingRef.current = false;
       return;
     }
 
@@ -213,6 +218,9 @@ export default function Step1GameInfoScreen() {
             (error instanceof Error ? error.message : "エラーが発生しました"),
           durationMs: serverMessage ? 5000 : undefined,
         });
+      },
+      onSettled: () => {
+        isSubmittingRef.current = false;
       },
     });
   };
