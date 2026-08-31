@@ -52,6 +52,9 @@ export const usePlateAppearance = (
     queryKey: ["plateAppearanceV2", id],
     queryFn: () => getPlateAppearanceV2(id as number),
     enabled: id !== null,
+    // 閲覧可否がフォロー関係に依存するため、既定の 5 分キャッシュに載せず
+    // 画面を開くたびにサーバーの認可判定を取り直す。
+    staleTime: 0,
     initialData: () => {
       if (id === null || gameResultId === undefined) return undefined;
       const list = queryClient.getQueryData<PlateAppearanceListResponse>([
