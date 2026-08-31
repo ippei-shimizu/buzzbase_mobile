@@ -41,6 +41,9 @@ export default function Step1GameInfoScreen() {
   // isPending はレンダー時にキャプチャした値のため、mutate() 直後の再レンダー前や
   // 球場作成の await 中の連打を止められない。同期的に読める ref で二重送信を塞ぐ。
   const isSubmittingRef = useRef(false);
+  // ref は同期的なガード、state はボタンの disabled 表示用。片方だけ戻し忘れないよう
+  // 必ず updateSubmitting 経由で更新する。
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     trackGameRecordStepViewed(1);
@@ -122,12 +125,17 @@ export default function Step1GameInfoScreen() {
 
   // 編集モードと未出場 (no_play) は「次へ」ボタン経由の固定遷移、
   // 新規作成時は GameInfoForm 下部の PatternSelector からパターンを選んで遷移する。
+  const updateSubmitting = (value: boolean) => {
+    isSubmittingRef.current = value;
+    setIsSubmitting(value);
+  };
+
   const runSubmit = async (
     pattern: RecordPattern | null,
     options?: { completeEdit?: boolean },
   ) => {
     if (isSubmittingRef.current || submitStep1.isPending) return;
-    isSubmittingRef.current = true;
+    updateSubmitting(true);
 
     const errors: GameInfoFieldErrors = {};
     if (!store.date) errors.date = "試合日を入力してください";
@@ -160,7 +168,7 @@ export default function Step1GameInfoScreen() {
         // 詳細メッセージは長くなりがちなので既定より長めに表示する。
         durationMs: 5000,
       });
-      isSubmittingRef.current = false;
+      updateSubmitting(false);
       return;
     }
 
@@ -220,7 +228,7 @@ export default function Step1GameInfoScreen() {
         });
       },
       onSettled: () => {
-        isSubmittingRef.current = false;
+        updateSubmitting(false);
       },
     });
   };
@@ -281,7 +289,7 @@ export default function Step1GameInfoScreen() {
         appearanceType={store.appearanceType}
         stadiumId={store.stadiumId}
         stadiumName={store.stadiumName}
-        isSubmitting={submitStep1.isPending}
+        isSubmitting={isSubmitting || submitStep1.isPending}
         fieldErrors={fieldErrors}
         onFieldChange={handleFieldChange}
         onSubmit={handleSubmit}
