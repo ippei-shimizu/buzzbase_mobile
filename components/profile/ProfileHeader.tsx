@@ -2,11 +2,11 @@ import type { UserProfile, FollowStatus } from "../../types/profile";
 import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { BallIcon } from "@components/icon/BallIcon";
+import { BatIcon } from "@components/icon/BatIcon";
 import { CrownIcon } from "@components/icon/CrownIcon";
 import { GloveIcon } from "@components/icon/GloveIcon";
 import { Icon } from "@components/icon/Icon";
 import { LockIcon } from "@components/icon/LockIcon";
-import { RecordIcon } from "@components/icon/RecordIcon";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
 import { API_BASE_URL } from "@constants/api";
 import { BATTING_SIDE_LABELS } from "@constants/handedness";
@@ -108,7 +108,7 @@ export const ProfileHeader = ({
       {/* 利き腕・打席（両方 null なら行ごと非表示） */}
       {handednessText !== "" && (
         <View style={styles.infoRow}>
-          <RecordIcon size={16} color="#A1A1AA" />
+          <BatIcon size={16} color="#A1A1AA" />
           <Text style={styles.infoText}>{handednessText}</Text>
         </View>
       )}
