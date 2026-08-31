@@ -41,7 +41,6 @@ jest.mock("expo-constants", () => ({
   default: { expoConfig: { version: "1.0.25" } },
 }));
 
-
 const getRouterSpies = (): RouterSpies => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const m = require("expo-router") as { __routerSpies: RouterSpies };
