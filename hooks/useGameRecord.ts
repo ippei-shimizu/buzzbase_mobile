@@ -32,6 +32,9 @@ import { createSeason } from "../services/seasonService";
 import { useGameRecordStore } from "../stores/gameRecordStore";
 import { invalidateGameResultRelated } from "../utils/queryInvalidation";
 
+/** back の TeamsController::MAX_LIMIT。完全一致の引き当てはここまで取り切る。 */
+const TEAM_SEARCH_MAX_LIMIT = 100;
+
 export const useGameRecord = () => {
   const store = useGameRecordStore();
   const queryClient = useQueryClient();
@@ -83,9 +86,11 @@ export const useGameRecord = () => {
 
       // 画面のサジェスト候補は入力連動の部分取得になったため、送信時は
       // サーバー側で同名の既存チームを探してから新規作成に回す。
+      // 検索は部分一致のため、サジェスト用の件数だと完全一致が候補から溢れて
+      // 既存チームを重複作成しうる。ここではサーバー上限まで引き上げて取得する。
       const resolveTeamId = async (name: string): Promise<number> => {
         const trimmed = name.trim();
-        const candidates = await searchTeams(trimmed);
+        const candidates = await searchTeams(trimmed, TEAM_SEARCH_MAX_LIMIT);
         const existing = candidates.find((team) => team.name === trimmed);
         const team = existing ?? (await createTeam(trimmed));
         return team.id;
