@@ -6,24 +6,29 @@ import { StyleSheet, Text, View } from "react-native";
  * - null / 空文字は「未記録」をグレーで表示する
  * - `0` は未記録ではない（打点 0 は `0` のまま表示する）
  * - 行ごと出し分けたい条件付き項目は、呼び出し側で行自体を描画しない
+ * - `stacked` はグラウンド図など横幅を使う children 用。ラベルの下に全幅で置く
  */
 export function DetailRow({
   label,
   value,
   children,
+  stacked = false,
 }: {
   label: string;
   value?: string | number | null;
   children?: React.ReactNode;
+  stacked?: boolean;
 }) {
   const isUnrecorded =
     children === undefined &&
     (value === null || value === undefined || value === "");
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, stacked && styles.rowStacked]}>
       <Text style={styles.label}>{label}</Text>
       {children !== undefined ? (
-        <View style={styles.content}>{children}</View>
+        <View style={[styles.content, stacked && styles.contentStacked]}>
+          {children}
+        </View>
       ) : isUnrecorded ? (
         <Text style={styles.unrecorded}>未記録</Text>
       ) : (
@@ -63,6 +68,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#3F3F46",
   },
+  rowStacked: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 8,
+  },
   label: {
     color: "#A1A1AA",
     fontSize: 13,
@@ -71,6 +81,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     alignItems: "flex-end",
+  },
+  contentStacked: {
+    alignItems: "center",
   },
   value: {
     color: "#F4F4F4",
