@@ -1,5 +1,4 @@
 import { fireEvent, waitFor } from "@testing-library/react-native";
-import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import {
   getOfferings,
   purchasePackage,
@@ -31,10 +30,6 @@ jest.mock("@services/revenueCatService", () => ({
   restorePurchases: jest.fn(),
 }));
 
-jest.mock("@hooks/useFeatureFlag", () => ({
-  useFeatureFlag: jest.fn(),
-}));
-
 jest.mock("@stores/snackbarStore", () => ({
   useSnackbarStore: jest.fn(),
 }));
@@ -52,7 +47,6 @@ const getRouterSpies = (): RouterSpies => {
   return m.__routerSpies;
 };
 
-const useFeatureFlagMock = useFeatureFlag as jest.Mock;
 const useSnackbarStoreMock = useSnackbarStore as unknown as jest.Mock;
 const getOfferingsMock = getOfferings as jest.Mock;
 const purchasePackageMock = purchasePackage as jest.Mock;
@@ -113,19 +107,7 @@ describe("ProScreen", () => {
     jest.clearAllMocks();
   });
 
-  it("pro_features=false なら / にリダイレクト（API も叩かない）", async () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: false });
-    setupSnackbar();
-
-    renderWithProviders(<ProScreen />);
-
-    await waitFor(() => {
-      expect(getOfferingsMock).not.toHaveBeenCalled();
-    });
-  });
-
-  it("pro_features=true で PaywallModal と同じ構成（ブランド表示・機能比較表・プラン一覧）を表示する", async () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+  it("PaywallModal と同じ構成（ブランド表示・機能比較表・プラン一覧）を表示する", async () => {
     setupSnackbar();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
 
@@ -139,7 +121,6 @@ describe("ProScreen", () => {
   });
 
   it("年額プランに月額換算比のお得金額バッジが表示される", async () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     setupSnackbar();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
 
@@ -150,7 +131,6 @@ describe("ProScreen", () => {
   });
 
   it("プランを選択して PROを始めるを押すと購入し、成功後 success 画面へ遷移する", async () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     setupSnackbar();
     const syncTracker = setupSyncEndpoint();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
@@ -177,7 +157,6 @@ describe("ProScreen", () => {
   });
 
   it("月額プランを選び直して PROを始めるを押すと選択中のプランで購入する", async () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     setupSnackbar();
     setupSyncEndpoint();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
@@ -197,7 +176,6 @@ describe("ProScreen", () => {
   });
 
   it("PROを始めるボタンを連打しても購入処理は1回しか実行されない", async () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     setupSnackbar();
     setupSyncEndpoint();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
@@ -216,7 +194,6 @@ describe("ProScreen", () => {
   });
 
   it("購入を復元を連打しても復元処理は1回しか実行されない", async () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     setupSnackbar();
     setupSyncEndpoint();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
@@ -234,7 +211,6 @@ describe("ProScreen", () => {
   });
 
   it("ユーザーキャンセル（userCancelled=true）では snackbar も画面遷移もしない", async () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     const showMock = setupSnackbar();
     const syncTracker = setupSyncEndpoint();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
@@ -255,7 +231,6 @@ describe("ProScreen", () => {
   });
 
   it("getOfferings が失敗しても画面は表示され、プラン欄が空状態になる", async () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     setupSnackbar();
     getOfferingsMock.mockRejectedValueOnce(new Error("offerings unavailable"));
 
@@ -269,7 +244,6 @@ describe("ProScreen", () => {
   });
 
   it("購入エラー（userCancelled でない）では snackbar を出す", async () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     const showMock = setupSnackbar();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
     purchasePackageMock.mockRejectedValueOnce(new Error("network down"));
@@ -287,7 +261,6 @@ describe("ProScreen", () => {
   });
 
   it("課金成功後に /pro/sync が失敗しても「購入失敗」にせず success 画面へ遷移する", async () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     const showMock = setupSnackbar();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
     purchasePackageMock.mockResolvedValueOnce(undefined);
@@ -310,7 +283,6 @@ describe("ProScreen", () => {
 
   it("購入を復元を押すと restorePurchases が呼ばれ、復元対象があれば前の画面に戻る", async () => {
     setupSyncEndpoint();
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
     restorePurchasesMock.mockResolvedValueOnce({
       entitlements: { active: { buzzbase_pro: {} } },
@@ -333,7 +305,6 @@ describe("ProScreen", () => {
   });
 
   it("復元成功後に /pro/sync が失敗しても「復元失敗」にせず成功表示する", async () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
     restorePurchasesMock.mockResolvedValueOnce({
       entitlements: { active: { buzzbase_pro: {} } },
@@ -361,7 +332,6 @@ describe("ProScreen", () => {
 
   it("復元対象が 0 件のときは成功表示せず画面に留まり、案内を出す", async () => {
     setupSyncEndpoint();
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
     restorePurchasesMock.mockResolvedValueOnce({
       entitlements: { active: {} },
