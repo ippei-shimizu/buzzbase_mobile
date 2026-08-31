@@ -1,3 +1,5 @@
+import type { ThrowHand } from "../../../types/pitcher";
+import type { BattingSide } from "@constants/handedness";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
@@ -51,6 +53,10 @@ export default function ProfileEditScreen() {
   // ポジション
   const [selectedPositionIds, setSelectedPositionIds] = useState<number[]>([]);
 
+  // 利き腕・打席
+  const [throwHand, setThrowHand] = useState<ThrowHand | null>(null);
+  const [battingSide, setBattingSide] = useState<BattingSide | null>(null);
+
   // チーム
   const [teamName, setTeamName] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
@@ -73,6 +79,8 @@ export default function ProfileEditScreen() {
       setIsPrivate(profile.is_private);
       setImageUri(profile.image?.url ?? null);
       setSelectedPositionIds(profile.positions?.map((p) => p.id) ?? []);
+      setThrowHand(profile.throw_hand ?? null);
+      setBattingSide(profile.batting_side ?? null);
 
       if (profile.team_id && allTeams) {
         const team = allTeams.find((t) => t.id === profile.team_id);
@@ -171,6 +179,9 @@ export default function ProfileEditScreen() {
       formData.append("user[user_id]", userId);
       formData.append("user[introduction]", introduction);
       formData.append("user[is_private]", String(isPrivate));
+      // 未選択に戻したときは空文字を送り、サーバー側で nil に正規化される。
+      formData.append("user[throw_hand]", throwHand ?? "");
+      formData.append("user[batting_side]", battingSide ?? "");
 
       if (imageChanged && imageUri) {
         const filename = imageUri.split("/").pop() ?? "photo.jpg";
@@ -309,6 +320,11 @@ export default function ProfileEditScreen() {
           selectedPositionIds={selectedPositionIds}
           positionItems={positionItems}
           onSelectPositions={setSelectedPositionIds}
+          // 利き腕・打席
+          throwHand={throwHand}
+          battingSide={battingSide}
+          onChangeThrowHand={setThrowHand}
+          onChangeBattingSide={setBattingSide}
           // チーム
           teamName={teamName}
           selectedTeamId={selectedTeamId}
