@@ -574,6 +574,19 @@ export function PaywallModal({
         });
         return;
       }
+      if (code === PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR) {
+        // スクリーンタイム等の端末側制限が原因で、リトライしても解決しないため
+        // 設定確認を促す文言に分ける。発生頻度の把握のため Sentry への送信は維持する。
+        Sentry.captureException(error, {
+          tags: { source: "revenue_cat_purchase" },
+        });
+        showSnackbar({
+          type: "error",
+          message:
+            "この端末ではアプリ内課金が制限されています。スクリーンタイムなどの設定をご確認ください",
+        });
+        return;
+      }
       Sentry.captureException(error, {
         tags: { source: "revenue_cat_purchase" },
       });
