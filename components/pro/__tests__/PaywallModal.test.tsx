@@ -7,6 +7,7 @@
  *   services を jest.mock する（app/pro/index.test.tsx と同じ例外パターン）。
  * - 購入成功時の syncProStatus は /pro/sync への実リクエストを MSW で観測する。
  */
+import * as Sentry from "@sentry/react-native";
 import { fireEvent, waitFor } from "@testing-library/react-native";
 import { delay } from "msw";
 import { PURCHASES_ERROR_CODE } from "react-native-purchases";
@@ -493,6 +494,37 @@ describe("PaywallModal", () => {
         }),
       );
     });
+    expect(mockOnClose).not.toHaveBeenCalled();
+  });
+
+  it("PURCHASE_NOT_ALLOWED_ERROR では端末の課金制限を案内し、Sentry へも送信する", async () => {
+    const showMock = setupSnackbar();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    purchasePackageMock.mockRejectedValueOnce(
+      Object.assign(
+        new Error("The device or user is not allowed to make the purchase."),
+        { code: PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR },
+      ),
+    );
+    const { findByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+    fireEvent.press(await findByLabelText("7日間無料で試す"));
+
+    await waitFor(() => {
+      expect(showMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "error",
+          message: expect.stringContaining("アプリ内課金が制限"),
+        }),
+      );
+    });
+    expect(jest.mocked(Sentry.captureException)).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        tags: { source: "revenue_cat_purchase" },
+      }),
+    );
     expect(mockOnClose).not.toHaveBeenCalled();
   });
 

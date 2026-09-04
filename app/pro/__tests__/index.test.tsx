@@ -1,4 +1,6 @@
+import * as Sentry from "@sentry/react-native";
 import { fireEvent, waitFor } from "@testing-library/react-native";
+import { PURCHASES_ERROR_CODE } from "react-native-purchases";
 import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import {
   getOfferings,
@@ -283,6 +285,36 @@ describe("ProScreen", () => {
         expect.objectContaining({ type: "error" }),
       );
     });
+    expect(getRouterSpies().replace).not.toHaveBeenCalled();
+  });
+
+  it("PURCHASE_NOT_ALLOWED_ERROR では端末の課金制限を案内し、Sentry へも送信する", async () => {
+    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
+    const showMock = setupSnackbar();
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+    purchasePackageMock.mockRejectedValueOnce(
+      Object.assign(
+        new Error("The device or user is not allowed to make the purchase."),
+        { code: PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR },
+      ),
+    );
+    const { findByLabelText } = renderWithProviders(<ProScreen />);
+    fireEvent.press(await findByLabelText("7日間無料で試す"));
+
+    await waitFor(() => {
+      expect(showMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "error",
+          message: expect.stringContaining("アプリ内課金が制限"),
+        }),
+      );
+    });
+    expect(jest.mocked(Sentry.captureException)).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        tags: { source: "revenue_cat_purchase" },
+      }),
+    );
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });
 
