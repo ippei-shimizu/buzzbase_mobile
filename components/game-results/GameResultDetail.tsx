@@ -1,4 +1,5 @@
 import type { GameResult } from "../../types/gameResult";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -74,6 +75,7 @@ export const GameResultDetail = ({
   onShare,
   scroll = true,
 }: GameResultDetailProps) => {
+  const router = useRouter();
   const { match_result, batting_average, pitching_result } = game;
   const isWin = match_result.my_team_score > match_result.opponent_team_score;
   const isLoss = match_result.my_team_score < match_result.opponent_team_score;
@@ -237,7 +239,7 @@ export const GameResultDetail = ({
         )}
       </View>
 
-      {/* 打席リスト（読み取り専用、編集・削除は鉛筆アイコンの編集フローで実施） */}
+      {/* 打席リスト（タップで打席詳細へ。編集・削除は詳細画面の導線または鉛筆アイコンの編集フローで実施） */}
       {(isPlateAppearancesLoading ||
         isPlateAppearancesError ||
         sortedPlateAppearances.length > 0) && (
@@ -255,7 +257,19 @@ export const GameResultDetail = ({
             </View>
           ) : (
             sortedPlateAppearances.map((pa) => (
-              <PlateAppearanceCard key={pa.id} plateAppearance={pa} />
+              <PlateAppearanceCard
+                key={pa.id}
+                plateAppearance={pa}
+                onPress={() =>
+                  router.push({
+                    pathname: "/plate-appearance-detail",
+                    params: {
+                      id: String(pa.id),
+                      gameResultId: String(pa.game_result_id),
+                    },
+                  })
+                }
+              />
             ))
           )}
         </View>

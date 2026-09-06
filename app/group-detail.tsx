@@ -1,4 +1,4 @@
-import { useLocalSearchParams, Stack } from "expo-router";
+import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import React, { useState } from "react";
 import {
   ScrollView,
@@ -15,6 +15,7 @@ import { useGroupDetail } from "@hooks/useGroups";
 
 export default function GroupDetailModal() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const groupId = id ? Number(id) : undefined;
   const [selectedYear, setSelectedYear] = useState("通算");
   const [selectedMatchType, setSelectedMatchType] = useState("全て");
@@ -102,6 +103,7 @@ export default function GroupDetailModal() {
           onTournamentChange={setSelectedTournamentId}
           onStartMonthChange={setSelectedStartMonth}
           onEndMonthChange={setSelectedEndMonth}
+          onUserPress={(userId) => router.push(`/(profile)/${userId}`)}
         />
       </ScrollView>
     </>

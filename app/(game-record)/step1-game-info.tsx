@@ -1,7 +1,7 @@
-import type { RecordPattern } from "../../types/gameRecord";
+import type { RecordPattern, Team } from "../../types/gameRecord";
 import type { GameInfoFieldErrors } from "@components/game-record/GameInfoForm";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -15,6 +15,7 @@ import { useGameRecord } from "@hooks/useGameRecord";
 import { useProfile } from "@hooks/useProfile";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useCreateStadium, useStadiumSearch } from "@hooks/useStadiums";
+import { useTeamName, useTeamSearch } from "@hooks/useTeamSearch";
 import { getMatchResultFormDefaults } from "@services/matchResultService";
 import { trackGameRecordStepViewed } from "@utils/analytics";
 import { serverErrorMessage } from "@utils/axiosError";
@@ -26,7 +27,6 @@ export default function Step1GameInfoScreen() {
   const {
     createGameResultMutation,
     submitStep1,
-    teamsQuery,
     positionsQuery,
     tournamentsQuery,
   } = useGameRecord();
@@ -34,10 +34,30 @@ export default function Step1GameInfoScreen() {
   const { profile } = useProfile();
   const { seasons } = useMySeasons();
   const { stadiums } = useStadiumSearch(store.stadiumName);
+  // teams は全件先読みせず、各チーム名入力に連動した部分取得に分ける
+  const { teams: myTeamCandidates } = useTeamSearch(store.myTeamName);
+  const { teams: opponentTeamCandidates } = useTeamSearch(
+    store.opponentTeamName,
+  );
+  const { teamName: profileTeamName } = useTeamName(profile?.team_id);
+  // GameInfoForm は自チーム・相手チームで同じ候補リストを受け取るため、両検索結果を統合する
+  const teamCandidates = useMemo(() => {
+    const byId = new Map<number, Team>();
+    for (const team of [...myTeamCandidates, ...opponentTeamCandidates]) {
+      byId.set(team.id, team);
+    }
+    return [...byId.values()];
+  }, [myTeamCandidates, opponentTeamCandidates]);
   const { createStadium } = useCreateStadium();
   const [fieldErrors, setFieldErrors] = useState<GameInfoFieldErrors>({});
   const [isInitializing, setIsInitializing] = useState(false);
   const hasInitialized = useRef(false);
+  // isPending はレンダー時にキャプチャした値のため、mutate() 直後の再レンダー前や
+  // 球場作成の await 中の連打を止められない。同期的に読める ref で二重送信を塞ぐ。
+  const isSubmittingRef = useRef(false);
+  // ref は同期的なガード、state はボタンの disabled 表示用。片方だけ戻し忘れないよう
+  // 必ず updateSubmitting 経由で更新する。
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     trackGameRecordStepViewed(1);
@@ -50,15 +70,12 @@ export default function Step1GameInfoScreen() {
       !state.isEditMode &&
       !state.myTeamId &&
       profile?.team_id &&
-      teamsQuery.data
+      profileTeamName
     ) {
-      const team = teamsQuery.data.find((t) => t.id === profile.team_id);
-      if (team) {
-        useGameRecordStore.getState().setField("myTeamId", team.id);
-        useGameRecordStore.getState().setField("myTeamName", team.name);
-      }
+      useGameRecordStore.getState().setField("myTeamId", profile.team_id);
+      useGameRecordStore.getState().setField("myTeamName", profileTeamName);
     }
-  }, [profile, teamsQuery.data]);
+  }, [profile, profileTeamName]);
 
   useEffect(() => {
     if (hasInitialized.current) return;
@@ -119,11 +136,17 @@ export default function Step1GameInfoScreen() {
 
   // 編集モードと未出場 (no_play) は「次へ」ボタン経由の固定遷移、
   // 新規作成時は GameInfoForm 下部の PatternSelector からパターンを選んで遷移する。
+  const updateSubmitting = (value: boolean) => {
+    isSubmittingRef.current = value;
+    setIsSubmitting(value);
+  };
+
   const runSubmit = async (
     pattern: RecordPattern | null,
     options?: { completeEdit?: boolean },
   ) => {
-    if (submitStep1.isPending) return;
+    if (isSubmittingRef.current || submitStep1.isPending) return;
+    updateSubmitting(true);
 
     const errors: GameInfoFieldErrors = {};
     if (!store.date) errors.date = "試合日を入力してください";
@@ -156,6 +179,7 @@ export default function Step1GameInfoScreen() {
         // 詳細メッセージは長くなりがちなので既定より長めに表示する。
         durationMs: 5000,
       });
+      updateSubmitting(false);
       return;
     }
 
@@ -214,6 +238,9 @@ export default function Step1GameInfoScreen() {
           durationMs: serverMessage ? 5000 : undefined,
         });
       },
+      onSettled: () => {
+        updateSubmitting(false);
+      },
     });
   };
 
@@ -267,13 +294,13 @@ export default function Step1GameInfoScreen() {
         seasonId={store.seasonId}
         stadiums={stadiums}
         seasons={seasons}
-        teams={teamsQuery.data ?? []}
+        teams={teamCandidates}
         positions={positionsQuery.data ?? []}
         inningFormat={store.inningFormat}
         appearanceType={store.appearanceType}
         stadiumId={store.stadiumId}
         stadiumName={store.stadiumName}
-        isSubmitting={submitStep1.isPending}
+        isSubmitting={isSubmitting || submitStep1.isPending}
         fieldErrors={fieldErrors}
         onFieldChange={handleFieldChange}
         onSubmit={handleSubmit}

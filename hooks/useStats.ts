@@ -12,6 +12,8 @@ import {
   getCountSituations,
   getHitDirections,
   getHitLocations,
+  getPitchCoursePitchTypes,
+  getPitchCourses,
   getPitchTypes,
   getPitcherAttributeSummary,
   getPitcherFaceoffs,
@@ -216,6 +218,31 @@ export const usePitchTypes = (filters: StatsFilters, enabled = true) =>
   useQuery({
     queryKey: ["pitchTypes", filters],
     queryFn: () => getPitchTypes(filters),
+    enabled,
+    staleTime: STATS_STALE_TIME,
+    placeholderData: keepPreviousData,
+  });
+
+export const usePitchCourses = (filters: StatsFilters, enabled = true) =>
+  useQuery({
+    queryKey: ["pitchCourses", filters],
+    queryFn: () => getPitchCourses(filters),
+    enabled,
+    staleTime: STATS_STALE_TIME,
+    placeholderData: keepPreviousData,
+  });
+
+/**
+ * 球種×コースのクロス集計。最大 250 セルと大きいため、
+ * 「球種別」タブを開いたときにだけ enabled で取得する。
+ */
+export const usePitchCoursePitchTypes = (
+  filters: StatsFilters,
+  enabled = false,
+) =>
+  useQuery({
+    queryKey: ["pitchCoursePitchTypes", filters],
+    queryFn: () => getPitchCoursePitchTypes(filters),
     enabled,
     staleTime: STATS_STALE_TIME,
     placeholderData: keepPreviousData,

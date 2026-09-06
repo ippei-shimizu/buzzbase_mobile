@@ -111,6 +111,7 @@ export default function GroupDetailScreen() {
           onTournamentChange={setSelectedTournamentId}
           onStartMonthChange={setSelectedStartMonth}
           onEndMonthChange={setSelectedEndMonth}
+          onUserPress={(userId) => router.push(`/(profile)/${userId}`)}
         />
       </ScrollView>
     </>

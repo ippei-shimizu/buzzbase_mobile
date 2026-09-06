@@ -1,3 +1,4 @@
+import type { PitchCourseData, PitchCourseZone } from "../../types/stats";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -57,3 +58,73 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
 });
+
+/**
+ * コース別の打率カードのサンプルデータ（PitchCourseCard に渡す）。
+ * 真ん中〜内寄りが得意、外角低めが苦手という分かりやすい傾向を作る。
+ */
+const DUMMY_PITCH_COURSE_SEEDS: readonly [number, number, number][] = [
+  [7, 6, 2],
+  [8, 8, 3],
+  [9, 5, 1],
+  [12, 10, 4],
+  [13, 14, 6],
+  [14, 8, 2],
+  [17, 9, 3],
+  [18, 12, 4],
+  [19, 7, 1],
+  [2, 3, 1],
+  [10, 2, 0],
+  [16, 4, 1],
+  [22, 2, 0],
+  [24, 1, 0],
+];
+
+const STRIKE_ZONE = new Set([7, 8, 9, 12, 13, 14, 17, 18, 19]);
+
+const DUMMY_PITCH_COURSE_ZONES: PitchCourseZone[] = Array.from(
+  { length: 25 },
+  (_, index) => {
+    const course = index + 1;
+    const seed = DUMMY_PITCH_COURSE_SEEDS.find(([c]) => c === course);
+    const atBats = seed?.[1] ?? 0;
+    const hits = seed?.[2] ?? 0;
+    return {
+      course,
+      row: Math.floor((course - 1) / 5) + 1,
+      col: ((course - 1) % 5) + 1,
+      is_strike_zone: STRIKE_ZONE.has(course),
+      plate_appearances: atBats,
+      at_bats: atBats,
+      hits,
+      batting_average: atBats > 0 ? Number((hits / atBats).toFixed(3)) : 0,
+      is_reliable: atBats >= 3,
+    };
+  },
+);
+
+const sumDummyZones = (zones: PitchCourseZone[]) => {
+  const atBats = zones.reduce((sum, z) => sum + z.at_bats, 0);
+  const hits = zones.reduce((sum, z) => sum + z.hits, 0);
+  return {
+    plate_appearances: zones.reduce((sum, z) => sum + z.plate_appearances, 0),
+    at_bats: atBats,
+    hits,
+    batting_average: atBats > 0 ? Number((hits / atBats).toFixed(3)) : 0,
+  };
+};
+
+export const DUMMY_PITCH_COURSES: PitchCourseData = {
+  zones: DUMMY_PITCH_COURSE_ZONES,
+  strike_zone: sumDummyZones(
+    DUMMY_PITCH_COURSE_ZONES.filter((z) => z.is_strike_zone),
+  ),
+  ball_zone: sumDummyZones(
+    DUMMY_PITCH_COURSE_ZONES.filter((z) => !z.is_strike_zone),
+  ),
+  total_target_pa: DUMMY_PITCH_COURSE_ZONES.reduce(
+    (sum, z) => sum + z.plate_appearances,
+    0,
+  ),
+  min_at_bats: 3,
+};

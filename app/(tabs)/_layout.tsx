@@ -20,6 +20,7 @@ import { useGroups } from "@hooks/useGroups";
 import { useGroupTabBadge } from "@hooks/useGroupTabBadge";
 import { useOnboarding } from "@hooks/useOnboarding";
 import { useProStatus } from "@hooks/useProStatus";
+import { useTrialBannerDismissed } from "@hooks/useTrialBannerDismissed";
 import { trackAppLaunchForAds } from "@services/interstitialAdService";
 import { shouldResetTabStack } from "@utils/tabStackReset";
 
@@ -34,6 +35,8 @@ export default function TabLayout() {
   });
   const { seen: isGroupBadgeSeen, markSeen: markGroupBadgeSeen } =
     useGroupTabBadge();
+  const { dismissed: isTrialBannerDismissed, dismiss: dismissTrialBanner } =
+    useTrialBannerDismissed(proStatus.subscription.expires_at);
   const insets = useSafeAreaInsets();
 
   // 広告の猶予期間判定に使う起動回数は、タブ画面(ログイン済み)到達時にだけ数える。
@@ -56,7 +59,10 @@ export default function TabLayout() {
   const hasTopBanner =
     proFeatures === true &&
     (shouldShowBillingIssueAlert(proStatus.subscription) ||
-      shouldShowTrialExpiringBanner(proStatus.subscription));
+      shouldShowTrialExpiringBanner(
+        proStatus.subscription,
+        isTrialBannerDismissed,
+      ));
 
   const isResolvingAuth = isLoading || isLoggedIn === undefined;
   // ログイン済みユーザーにはオンボーディングを出さないため、未ログイン時のみ
@@ -91,7 +97,11 @@ export default function TabLayout() {
       {proFeatures ? (
         <>
           <BillingIssueAlert subscription={proStatus.subscription} />
-          <TrialExpiringBanner subscription={proStatus.subscription} />
+          <TrialExpiringBanner
+            subscription={proStatus.subscription}
+            dismissed={isTrialBannerDismissed}
+            onDismiss={dismissTrialBanner}
+          />
         </>
       ) : null}
       <SafeAreaInsetsContext.Provider

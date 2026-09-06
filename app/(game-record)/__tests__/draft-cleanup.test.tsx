@@ -96,6 +96,21 @@ describe("記録ウィザードのドラフト削除", () => {
     expect(deletedIds).toEqual([]);
   });
 
+  it("サマリー到達後の離脱では確認ダイアログを出さず保存済みの記録も削除しない", async () => {
+    useGameRecordStore.setState({
+      isEditMode: false,
+      gameResultId: DRAFT_GAME_RESULT_ID,
+      hasReachedSummary: true,
+    });
+
+    renderWithProviders(<GameRecordLayout />);
+    leaveByGesture();
+
+    expect(Alert.alert).not.toHaveBeenCalled();
+    expect(deletedIds).toEqual([]);
+    expect(useGameRecordStore.getState().gameResultId).toBeNull();
+  });
+
   it("記録完了後の遷移では確認ダイアログを出さずにそのまま離脱する", async () => {
     renderWithProviders(<GameRecordLayout />);
     leaveByGesture();

@@ -34,6 +34,9 @@ export default function SummaryScreen() {
 
   useEffect(() => {
     trackGameRecordStepViewed("summary");
+    // ここまで来た時点で試合結果・打席は保存済み。以降の離脱で
+    // 破棄確認とドラフト削除を走らせないよう記録する。
+    useGameRecordStore.getState().markSummaryReached();
   }, []);
 
   // v2 で記録された打席は plate_appearances API から取得する。

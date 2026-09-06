@@ -27,11 +27,7 @@ import { useAvailableMonths } from "@hooks/useAvailableMonths";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useUserAwards } from "@hooks/useAwards";
 import { useFilteredUserGameResults } from "@hooks/useGameResults";
-import {
-  useTeams,
-  usePrefectures,
-  useBaseballCategories,
-} from "@hooks/useMasterData";
+import { useMyTeam } from "@hooks/useMyTeam";
 import { useUserStats } from "@hooks/useProfileStats";
 import {
   useUserProfileDetail,
@@ -53,18 +49,12 @@ export default function UserProfileScreen() {
   const { followUser, isFollowing } = useFollowUser();
   const { unfollowUser, isUnfollowing } = useUnfollowUser();
 
-  const { data: teams } = useTeams();
-  const { data: prefectures } = usePrefectures();
-  const { data: categories } = useBaseballCategories();
+  // プロフィール取得が通ってから叩く。非公開アカウントで本体が 403 のときに
+  // チーム情報だけ取得してしまわないようにする。
+  const { teamName, categoryName, prefectureName } = useMyTeam(
+    data ? userId : undefined,
+  );
   const { data: awards } = useUserAwards(data?.user.id);
-
-  const team = teams?.find((t) => t.id === data?.user.team_id);
-  const categoryName = categories?.find(
-    (c) => c.id === team?.category_id,
-  )?.name;
-  const prefectureName = prefectures?.find(
-    (p) => p.id === team?.prefecture_id,
-  )?.name;
 
   // 成績フィルター
   const [selectedYear, setSelectedYear] = useState<string | undefined>(
@@ -286,7 +276,7 @@ export default function UserProfileScreen() {
           }}
           isFollowLoading={isFollowing || isUnfollowing}
           positions={data.user.positions}
-          teamName={team?.name}
+          teamName={teamName}
           categoryName={categoryName}
           prefectureName={prefectureName}
           awards={awards}

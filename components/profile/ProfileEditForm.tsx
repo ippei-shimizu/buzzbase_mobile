@@ -1,3 +1,5 @@
+import type { ThrowHand } from "../../types/pitcher";
+import type { BattingSide } from "@constants/handedness";
 import React from "react";
 import {
   View,
@@ -12,6 +14,7 @@ import {
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
 import { API_BASE_URL } from "@constants/api";
 import { AwardSection } from "./AwardSection";
+import { HandednessSection } from "./HandednessSection";
 import { PositionSection } from "./PositionSection";
 import { TeamSection } from "./TeamSection";
 
@@ -37,6 +40,11 @@ interface ProfileEditFormProps {
   selectedPositionIds: number[];
   positionItems: { label: string; value: number }[];
   onSelectPositions: (values: number[]) => void;
+  // 利き腕・打席
+  throwHand: ThrowHand | null;
+  battingSide: BattingSide | null;
+  onChangeThrowHand: (value: ThrowHand | null) => void;
+  onChangeBattingSide: (value: BattingSide | null) => void;
   // チーム
   teamName: string;
   selectedTeamId: number | null;
@@ -72,6 +80,10 @@ export const ProfileEditForm = ({
   selectedPositionIds,
   positionItems,
   onSelectPositions,
+  throwHand,
+  battingSide,
+  onChangeThrowHand,
+  onChangeBattingSide,
   teamName,
   selectedTeamId,
   selectedCategoryId,
@@ -182,6 +194,14 @@ export const ProfileEditForm = ({
         selectedPositionIds={selectedPositionIds}
         positions={positionItems}
         onSelect={onSelectPositions}
+      />
+
+      {/* 利き腕・打席 */}
+      <HandednessSection
+        throwHand={throwHand}
+        battingSide={battingSide}
+        onChangeThrowHand={onChangeThrowHand}
+        onChangeBattingSide={onChangeBattingSide}
       />
 
       {/* チーム設定 */}

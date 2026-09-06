@@ -41,6 +41,13 @@ export default function GameRecordLayout() {
   // 破棄確認を済ませた離脱で beforeRemove がもう一度確認を出さないようにする。
   const isLeavingRef = useRef(false);
 
+  /** フロー用の一時状態だけ片付ける。サーバー上のデータには触らない。 */
+  const resetDraftState = useCallback(() => {
+    reset();
+    // v2 ステップ式ウィザードの一時状態（打席途中入力）も同時に破棄する。
+    useBattingRecordStore.getState().reset();
+  }, [reset]);
+
   const discardDraft = useCallback(async () => {
     const { gameResultId, isEditMode } = useGameRecordStore.getState();
     // 編集モードでは元々存在していたデータのため削除しない。新規記録モードのみ、
@@ -57,10 +64,8 @@ export default function GameRecordLayout() {
         }
       }
     }
-    reset();
-    // v2 ステップ式ウィザードの一時状態（打席途中入力）も同時に破棄する。
-    useBattingRecordStore.getState().reset();
-  }, [queryClient, reset]);
+    resetDraftState();
+  }, [queryClient, resetDraftState]);
 
   const confirmDiscard = useCallback(
     (onDiscarded: () => void) => {
@@ -88,12 +93,18 @@ export default function GameRecordLayout() {
         isLeavingRef.current = false;
         return;
       }
+      // 保存済みの記録を「破棄」と案内すると消してよいデータだと誤解させるため、
+      // サマリー到達後は確認を出さず一時状態だけ片付ける。
+      if (useGameRecordStore.getState().hasReachedSummary) {
+        resetDraftState();
+        return;
+      }
       // 記録完了・保存後はストアがリセット済みで破棄対象が無いため確認しない。
       if (useGameRecordStore.getState().gameResultId == null) return;
       event.preventDefault();
       confirmDiscard(() => navigation.dispatch(event.data.action));
     });
-  }, [navigation, confirmDiscard]);
+  }, [navigation, confirmDiscard, resetDraftState]);
 
   const handleClose = () => confirmDiscard(() => router.back());
 
