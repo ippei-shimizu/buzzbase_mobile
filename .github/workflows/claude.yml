@@ -40,6 +40,11 @@ jobs:
           # 指示をClaudeが読み込まないよう、処理対象のコメント投稿者を限定する
           include_comments_by_actor: "ippei-shimizu"
 
+          # インラインコメント用のMCPサーバーは allowedTools に指定されたときのみ
+          # インストールされるため、明示的に許可する（ベースツールには追加される）
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment"
+
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
             actions: read
