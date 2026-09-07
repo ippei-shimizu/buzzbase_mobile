@@ -23,7 +23,6 @@ jest.mock("expo-router", () => {
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
 
-// PaywallModal が pro_features フラグで kill switch される設計のため、常時 true を返す。
 describe("相関インサイト", () => {
   it("無料ユーザーにはダミーデータ入りの訴求カードを表示する", async () => {
     server.use(

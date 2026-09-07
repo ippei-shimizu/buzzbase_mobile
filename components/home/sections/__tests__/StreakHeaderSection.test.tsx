@@ -24,7 +24,6 @@ jest.mock("expo-router", () => {
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
 
-// PaywallModal が pro_features フラグで kill switch される設計のため、常時 true を返す。
 const setupCommonHandlers = () => {
   server.use(
     http.get(apiUrl("/pro/status"), () =>
