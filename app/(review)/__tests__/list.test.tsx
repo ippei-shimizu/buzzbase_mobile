@@ -81,7 +81,8 @@ describe("ReviewListScreen", () => {
     ).toBeOnTheScreen();
 
     // サンプルも実データと同じ月別ページャに載せる。同じ月の3週分なので前後には送れない。
-    expect(screen.getByText(/2026年7月/)).toBeOnTheScreen();
+    // 月ラベルは件数の Text を入れ子に持つため、テキスト検索は複数ヒットする。
+    expect(screen.getAllByText(/2026年7月/).length).toBeGreaterThan(0);
     expect(screen.getByLabelText("前の月")).toBeDisabled();
     expect(screen.getByLabelText("次の月")).toBeDisabled();
 
