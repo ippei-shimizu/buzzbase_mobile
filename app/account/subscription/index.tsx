@@ -1,4 +1,4 @@
-import { Redirect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -11,26 +11,20 @@ import {
 import { CancelGuideModal } from "@components/pro/CancelGuideModal";
 import { SubscriptionStatusCard } from "@components/pro/SubscriptionStatusCard";
 import { WebCancelConfirmModal } from "@components/pro/WebCancelConfirmModal";
-import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { useProStatus } from "@hooks/useProStatus";
 
 export default function SubscriptionScreen() {
   const router = useRouter();
-  const { enabled: proFeatures, isLoading: flagLoading } =
-    useFeatureFlag("pro_features");
   const { proStatus, isLoading, isError, refetch } = useProStatus();
   const [cancelGuideOpen, setCancelGuideOpen] = useState(false);
 
-  // flag 取得中に false 倒しで redirect すると、Pro ユーザーが初回アクセスでこの画面を開けない。
-  if (flagLoading || isLoading) {
+  if (isLoading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#d08000" />
       </View>
     );
   }
-
-  if (!proFeatures) return <Redirect href="/" />;
 
   // API エラー時に DEFAULT_PRO_STATUS（無料状態）で描画すると、Pro 加入者に
   // 「未加入」と誤表示してしまうため、エラーであることを明示して再試行導線を出す。

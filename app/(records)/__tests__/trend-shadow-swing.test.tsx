@@ -30,10 +30,6 @@ jest.mock("expo-router", () => {
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
 
-jest.mock("@hooks/useFeatureFlag", () => ({
-  useFeatureFlag: jest.fn(() => ({ enabled: true, isLoading: false })),
-}));
-
 const shadowSwingTrend = {
   menu: {
     id: null,
