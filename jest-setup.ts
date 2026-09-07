@@ -39,6 +39,7 @@ jest.mock("react-native-purchases", () => ({
   // 実パッケージの enum 値（文字列の数値コード）に合わせる。
   // エラーコード分岐（PaywallModal / pro 画面）のテストで参照する。
   PURCHASES_ERROR_CODE: {
+    PURCHASE_NOT_ALLOWED_ERROR: "3",
     PRODUCT_ALREADY_PURCHASED_ERROR: "6",
     PAYMENT_PENDING_ERROR: "20",
   },
