@@ -32,6 +32,15 @@ const fmtCount = (value: number | null | undefined, unit = ""): string =>
 const fmtFixed = (value: number | null | undefined, digits: number): string =>
   value == null ? "-" : value.toFixed(digits);
 
+/**
+ * 前期間比の文字色。上がったか下がったかを数字を読む前に判別できるよう符号で塗り分ける。
+ * 増減なし（±0）は良し悪しが無いため通常色のままにする。
+ */
+const deltaToneStyle = (value: number) => {
+  if (value === 0) return styles.trendFlat;
+  return value > 0 ? styles.trendUp : styles.trendDown;
+};
+
 /** 目標の「指標ラベル 現在値 / 目標値」。kind ごとに current_value の意味が違う。 */
 const goalValueLabel = (goal: PeriodicReviewGoal): string => {
   if (goal.kind === "qualitative") return "";
@@ -103,8 +112,11 @@ export function PeriodicReviewCard({ review }: { review: PeriodicReview }) {
           </View>
           {batting.delta != null ? (
             <Text style={styles.trend}>
-              打率 前期間比 {batting.delta >= 0 ? "+" : ""}
-              {fmt3(batting.delta)}
+              打率 前期間比{" "}
+              <Text style={[styles.trendValue, deltaToneStyle(batting.delta)]}>
+                {batting.delta >= 0 ? "+" : ""}
+                {fmt3(batting.delta)}
+              </Text>
             </Text>
           ) : null}
         </>
@@ -305,6 +317,10 @@ const styles = StyleSheet.create({
   metricValue: { color: "#F4F4F4", fontSize: 16, fontWeight: "700" },
   metricLabel: { color: "#A1A1AA", fontSize: 11, marginTop: 3 },
   trend: { color: "#A1A1AA", fontSize: 12, marginTop: 8 },
+  trendValue: { fontSize: 13, fontWeight: "700" },
+  trendUp: { color: "#4ade80" },
+  trendDown: { color: "#f87171" },
+  trendFlat: { color: "#A1A1AA" },
   menuList: { gap: 6 },
   menuRow: {
     flexDirection: "row",
