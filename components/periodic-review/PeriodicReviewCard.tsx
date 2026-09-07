@@ -45,7 +45,10 @@ const deltaToneStyle = (value: number) => {
 const goalValueLabel = (goal: PeriodicReviewGoal): string => {
   if (goal.kind === "qualitative") return "";
   if (goal.kind === "manual") {
-    return `${goal.custom_metric_label ?? ""} ${fmtCount(goal.current_value)} / ${fmtCount(goal.target_value)}`;
+    const label = goal.custom_metric_label
+      ? `${goal.custom_metric_label} `
+      : "";
+    return `${label}${fmtCount(goal.current_value)} / ${fmtCount(goal.target_value)}`;
   }
   const current =
     goal.current_value == null
