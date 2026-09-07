@@ -80,6 +80,12 @@ describe("ReviewListScreen", () => {
       screen.getByText("サンプルデータ（実際の記録ではありません）"),
     ).toBeOnTheScreen();
 
+    // サンプルも実データと同じ月別ページャに載せる。同じ月の3週分なので前後には送れない。
+    // 月ラベルは件数の Text を入れ子に持つため、テキスト検索は複数ヒットする。
+    expect(screen.getAllByText(/2026年7月/).length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("前の月")).toBeDisabled();
+    expect(screen.getByLabelText("次の月")).toBeDisabled();
+
     fireEvent.press(screen.getByText("Pro プランを見る"));
     // オーバーレイと PaywallModal 両方に見出しが出るため複数ヒットで開いたことを確認する。
     expect(
@@ -95,5 +101,35 @@ describe("ReviewListScreen", () => {
 
     expect(await screen.findByText("99日")).toBeOnTheScreen();
     expect(screen.queryByText("Pro プランを見る")).not.toBeOnTheScreen();
+  });
+
+  it("月別ページャで最新月だけを表示し、前の月へ送れる", async () => {
+    respondPro();
+    server.use(
+      http.get(baseUrl("/api/v2/periodic_reviews"), () =>
+        HttpResponse.json([
+          realReview,
+          {
+            ...realReview,
+            id: 2,
+            period_type: "monthly",
+            period_start: "2026-06-01",
+            period_end: "2026-06-30",
+            summary: { ...realReview.summary, period_type: "monthly" },
+          },
+        ]),
+      ),
+    );
+
+    renderWithProviders(<ReviewListScreen />);
+
+    // 最新月（7月）のレポートだけが表示され、見出しは月内の週番号になる。
+    expect(await screen.findByText("7月 第2週の振り返り")).toBeOnTheScreen();
+    expect(screen.queryByText("2026年6月の振り返り")).not.toBeOnTheScreen();
+
+    fireEvent.press(screen.getByLabelText("前の月"));
+
+    expect(await screen.findByText("2026年6月の振り返り")).toBeOnTheScreen();
+    expect(screen.queryByText("7月 第2週の振り返り")).not.toBeOnTheScreen();
   });
 });
