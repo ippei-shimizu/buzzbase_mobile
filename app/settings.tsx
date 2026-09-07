@@ -46,6 +46,8 @@ export default function SettingsScreen() {
     },
   ];
 
+  // TODO: Pro 動線の UX を磨き込む。加入済み / 未加入で表示文言とアイコンを切り替え
+  // （useProStatus 連携）、加入済みなら「Pro プランを見る」項目自体を非表示にする。
   accountItems.push({
     icon: "star-outline",
     title: "Pro プランを見る",
