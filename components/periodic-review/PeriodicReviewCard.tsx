@@ -126,6 +126,10 @@ export function PeriodicReviewCard({ review }: { review: PeriodicReview }) {
         <>
           <Text style={styles.sectionLabel}>投手</Text>
           <View style={styles.metricRow}>
+            <Metric
+              label="投球回"
+              value={fmtFixed(pitching!.innings_pitched, 1)}
+            />
             <Metric label="防御率" value={fmtFixed(pitching!.era, 2)} />
             <Metric label="WHIP" value={fmtFixed(pitching!.whip, 2)} />
             <Metric label="K/9" value={fmtFixed(pitching!.k_per_9, 1)} />
