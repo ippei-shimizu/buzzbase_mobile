@@ -22,12 +22,14 @@ import {
 
 // 振り返りレポートは Pro 限定機能。無料ユーザーには実データの代わりにこのサンプルを見せ、
 // 実際のレイアウトのまま「何が届くか」を伝える。3週分見せて毎週届く機能だと分かるようにする。
+// 実データと同じ月別ページャに載せるため、3週とも同じ月に収める（月をまたぐと
+// 初期表示が1件になり「毎週届く」ことが伝わらない）。
 const DUMMY_REVIEWS: PeriodicReview[] = [
   {
     id: -1,
     period_type: "weekly",
-    period_start: "2026-07-06",
-    period_end: "2026-07-12",
+    period_start: "2026-07-20",
+    period_end: "2026-07-26",
     read: true,
     summary: {
       period_type: "weekly",
@@ -127,8 +129,8 @@ const DUMMY_REVIEWS: PeriodicReview[] = [
   {
     id: -2,
     period_type: "weekly",
-    period_start: "2026-06-29",
-    period_end: "2026-07-05",
+    period_start: "2026-07-13",
+    period_end: "2026-07-19",
     read: true,
     summary: {
       period_type: "weekly",
@@ -187,8 +189,8 @@ const DUMMY_REVIEWS: PeriodicReview[] = [
   {
     id: -3,
     period_type: "weekly",
-    period_start: "2026-06-22",
-    period_end: "2026-06-28",
+    period_start: "2026-07-06",
+    period_end: "2026-07-12",
     read: true,
     summary: {
       period_type: "weekly",
@@ -336,7 +338,8 @@ export default function ReviewListScreen() {
   const { reviews, isLoading } = usePeriodicReviews();
   const { markReadMany } = usePeriodicReviewMutations();
   const [isPaywallOpen, setPaywallOpen] = useState(false);
-  const pager = useMonthPagination(reviews);
+  // サンプルも同じページャに載せ、加入後の一覧の見え方をそのまま伝える。
+  const pager = useMonthPagination(canViewReviews ? reviews : DUMMY_REVIEWS);
 
   // 一覧を開いた時点で未読を既読化する（未読バッジの解消）。
   // 個別ミューテーションを並列発火すると未読件数分の再フェッチが起きるため、
@@ -370,8 +373,15 @@ export default function ReviewListScreen() {
             onPressCta={() => setPaywallOpen(true)}
           />
           <SampleDataLabel />
+          <MonthPaginator
+            label={pager.currentMonthLabel}
+            count={pager.currentItems.length}
+            index={pager.monthIndex}
+            total={pager.months.length}
+            onChange={pager.setMonthIndex}
+          />
           <View pointerEvents="none" style={styles.dummyList}>
-            {DUMMY_REVIEWS.map((review) => (
+            {pager.currentItems.map((review) => (
               <PeriodicReviewCard key={review.id} review={review} />
             ))}
           </View>

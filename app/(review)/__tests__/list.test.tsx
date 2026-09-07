@@ -80,6 +80,11 @@ describe("ReviewListScreen", () => {
       screen.getByText("サンプルデータ（実際の記録ではありません）"),
     ).toBeOnTheScreen();
 
+    // サンプルも実データと同じ月別ページャに載せる。同じ月の3週分なので前後には送れない。
+    expect(screen.getByText(/2026年7月/)).toBeOnTheScreen();
+    expect(screen.getByLabelText("前の月")).toBeDisabled();
+    expect(screen.getByLabelText("次の月")).toBeDisabled();
+
     fireEvent.press(screen.getByText("Pro プランを見る"));
     // オーバーレイと PaywallModal 両方に見出しが出るため複数ヒットで開いたことを確認する。
     expect(
