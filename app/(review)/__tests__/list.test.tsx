@@ -14,11 +14,6 @@ import { server } from "../../../jest-setup-msw";
 import { DEFAULT_PRO_STATUS, FREE_FEATURES } from "../../../types/pro";
 import ReviewListScreen from "../list";
 
-// PaywallModal が pro_features フラグで kill switch される設計のため、常時 true を返す。
-jest.mock("@hooks/useFeatureFlag", () => ({
-  useFeatureFlag: jest.fn(() => ({ enabled: true, isLoading: false })),
-}));
-
 const realReview = {
   id: 1,
   period_type: "weekly",

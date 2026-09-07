@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
-import { Redirect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -25,7 +25,6 @@ import {
   PLAN_LABELS,
   PRO_PAYWALL_COPY,
 } from "@components/pro/PaywallModal";
-import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { useProStatus } from "@hooks/useProStatus";
 import { syncProStatus } from "@services/proService";
 import {
@@ -45,8 +44,6 @@ export default function ProScreen() {
   ] as const;
   const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((s) => s.show);
-  const { enabled: proFeatures, isLoading: flagLoading } =
-    useFeatureFlag("pro_features");
   // fullScreenModal で表示すると SafeAreaView の top inset が反映されないことがあるため、
   // useSafeAreaInsets で取得して直接 paddingTop に適用する。
   const insets = useSafeAreaInsets();
@@ -79,7 +76,6 @@ export default function ProScreen() {
   };
 
   useEffect(() => {
-    if (!proFeatures) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -106,17 +102,7 @@ export default function ProScreen() {
     return () => {
       cancelled = true;
     };
-  }, [proFeatures]);
-
-  // flag 取得中に false 倒しで redirect すると、Pro ユーザーが初回アクセスで /pro を開けない。
-  if (flagLoading) {
-    return (
-      <View style={[styles.container, styles.centerFull]}>
-        <ActivityIndicator size="large" color="#d08000" />
-      </View>
-    );
-  }
-  if (!proFeatures) return <Redirect href="/" />;
+  }, []);
 
   const packages = offering?.availablePackages ?? [];
   const selectedPackage =

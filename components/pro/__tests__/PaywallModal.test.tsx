@@ -11,7 +11,6 @@ import * as Sentry from "@sentry/react-native";
 import { fireEvent, waitFor } from "@testing-library/react-native";
 import { delay } from "msw";
 import { PURCHASES_ERROR_CODE } from "react-native-purchases";
-import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import {
   getOfferings,
   purchasePackage,
@@ -47,10 +46,6 @@ jest.mock("@services/revenueCatService", () => ({
   restorePurchases: jest.fn(),
 }));
 
-jest.mock("@hooks/useFeatureFlag", () => ({
-  useFeatureFlag: jest.fn(),
-}));
-
 jest.mock("@stores/snackbarStore", () => ({
   useSnackbarStore: jest.fn(),
 }));
@@ -68,7 +63,6 @@ const getRouterSpies = (): RouterSpies => {
   return m.__routerSpies;
 };
 
-const useFeatureFlagMock = useFeatureFlag as jest.Mock;
 const useSnackbarStoreMock = useSnackbarStore as unknown as jest.Mock;
 const getOfferingsMock = getOfferings as jest.Mock;
 const purchasePackageMock = purchasePackage as jest.Mock;
@@ -129,7 +123,6 @@ const mockOnClose = jest.fn();
 describe("PaywallModal", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     setupSnackbar();
   });
 
@@ -191,40 +184,6 @@ describe("PaywallModal", () => {
     );
 
     expect(queryByText("シーズンを跨いだ成長を可視化")).not.toBeOnTheScreen();
-  });
-
-  it("pro_features=false のときは購入導線（プラン一覧・加入・復元）を隠すが、上限到達の説明は表示する", () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: false });
-
-    const { queryByText, getByText } = renderWithProviders(
-      <PaywallModal
-        isOpen
-        onClose={mockOnClose}
-        feature="season_transition_graph"
-        contextMessage="無料プランで設定できる目標は2件までのため、追加できません。"
-      />,
-    );
-
-    expect(
-      getByText("無料プランで設定できる目標は2件までのため、追加できません。"),
-    ).toBeOnTheScreen();
-    expect(queryByText("シーズンを跨いだ成長を可視化")).not.toBeOnTheScreen();
-    expect(queryByText("7日間無料で試す")).not.toBeOnTheScreen();
-    expect(queryByText("購入を復元")).not.toBeOnTheScreen();
-  });
-
-  it("pro_features=false でもOfferings取得は行わない", () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: false });
-
-    renderWithProviders(
-      <PaywallModal
-        isOpen
-        onClose={mockOnClose}
-        feature="season_transition_graph"
-      />,
-    );
-
-    expect(getOfferingsMock).not.toHaveBeenCalled();
   });
 
   it("閉じるボタンで onClose が呼ばれる", () => {
