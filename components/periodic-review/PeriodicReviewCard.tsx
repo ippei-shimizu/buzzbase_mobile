@@ -3,6 +3,7 @@ import type {
   PeriodicReviewGoal,
 } from "../../types/periodicReview";
 import { StyleSheet, Text, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { formatMetricValue, metricLabel } from "@constants/goal";
 import { formatJaFullDate } from "@utils/formatDate";
 
@@ -232,7 +233,14 @@ export function PeriodicReviewCard({ review }: { review: PeriodicReview }) {
       {summary.insight ? (
         <>
           <Text style={styles.sectionLabel}>インサイト</Text>
-          <Text style={styles.insight}>{summary.insight.body}</Text>
+          {/* レポートの中で最も行動につながる情報のため、他のセクションより一段強く見せる。 */}
+          <View style={styles.insightBox}>
+            <Icon name="bulb-outline" size={22} color="#d08000" />
+            <View style={styles.insightBody}>
+              <Text style={styles.insightTitle}>{summary.insight.title}</Text>
+              <Text style={styles.insight}>{summary.insight.body}</Text>
+            </View>
+          </View>
         </>
       ) : null}
     </View>
@@ -326,10 +334,17 @@ const styles = StyleSheet.create({
   },
   goalValue: { color: "#A1A1AA", fontSize: 12 },
   detail: { color: "#F4F4F4", fontSize: 13, lineHeight: 19 },
-  insight: {
-    color: "#F4F4F4",
-    fontSize: 13,
-    lineHeight: 19,
-    fontStyle: "italic",
+  insightBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    backgroundColor: "#3a3024",
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#d08000",
+    padding: 14,
   },
+  insightBody: { flex: 1, gap: 6 },
+  insightTitle: { color: "#d08000", fontSize: 15, fontWeight: "700" },
+  insight: { color: "#F4F4F4", fontSize: 15, lineHeight: 23 },
 });
