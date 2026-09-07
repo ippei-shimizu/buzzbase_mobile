@@ -1,5 +1,4 @@
 import { fireEvent } from "@testing-library/react-native";
-import { useFeatureFlag } from "@hooks/useFeatureFlag";
 import { useProStatus } from "@hooks/useProStatus";
 import { renderWithProviders } from "../../../../__tests__/test-utils/renderWithProviders";
 import { DEFAULT_PRO_STATUS, type ProStatus } from "../../../../types/pro";
@@ -12,10 +11,6 @@ jest.mock("expo-router", () => {
   } = require("../../../../__tests__/test-utils/mockExpoRouter");
   return buildExpoRouterMock();
 });
-
-jest.mock("@hooks/useFeatureFlag", () => ({
-  useFeatureFlag: jest.fn(),
-}));
 
 jest.mock("@hooks/useProStatus", () => ({
   useProStatus: jest.fn(),
@@ -34,13 +29,6 @@ const getRouterSpies = (): RouterSpies => {
   return m.__routerSpies;
 };
 
-const getRedirectSpy = (): jest.Mock => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const m = require("expo-router") as { __redirectSpy: jest.Mock };
-  return m.__redirectSpy;
-};
-
-const useFeatureFlagMock = useFeatureFlag as jest.Mock;
 const useProStatusMock = useProStatus as jest.Mock;
 
 const stubProStatus = (
@@ -64,28 +52,7 @@ describe("SubscriptionScreen", () => {
     jest.clearAllMocks();
   });
 
-  it("pro_features=false なら / にリダイレクトし、画面内容を描画しない", () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: false });
-    stubProStatus();
-
-    const { queryByLabelText } = renderWithProviders(<SubscriptionScreen />);
-
-    expect(getRedirectSpy()).toHaveBeenCalledWith("/");
-    expect(queryByLabelText("Pro に加入する")).toBeNull();
-  });
-
-  it("flag 取得中はローディング表示し、リダイレクトも画面描画もしない", () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: false, isLoading: true });
-    stubProStatus();
-
-    const { queryByLabelText } = renderWithProviders(<SubscriptionScreen />);
-
-    expect(getRedirectSpy()).not.toHaveBeenCalled();
-    expect(queryByLabelText("Pro に加入する")).toBeNull();
-  });
-
   it("状態取得エラー時は「未加入」と誤表示せず、エラーと再試行ボタンを出す", () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     const refetch = jest.fn();
     stubProStatus({}, { isError: true, refetch });
 
@@ -101,7 +68,6 @@ describe("SubscriptionScreen", () => {
   });
 
   it("free 状態のとき「Pro に加入する」ボタンを表示、タップで /pro に push", () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     stubProStatus();
 
     const { getByLabelText } = renderWithProviders(<SubscriptionScreen />);
@@ -111,7 +77,6 @@ describe("SubscriptionScreen", () => {
   });
 
   it("active 状態のとき「Pro に加入する」CTA は出さず、解約方法を見るボタンが出る", () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     stubProStatus({
       subscription: {
         ...DEFAULT_PRO_STATUS.subscription,
@@ -130,7 +95,6 @@ describe("SubscriptionScreen", () => {
   });
 
   it("解約方法を見る → CancelGuideModal が開く（iOS 加入者は Apple の案内）", () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     stubProStatus({
       subscription: {
         ...DEFAULT_PRO_STATUS.subscription,
@@ -152,7 +116,6 @@ describe("SubscriptionScreen", () => {
   });
 
   it("解約方法を見る → Android 加入者には Google Play の案内を出す（Apple の案内を誤表示しない）", () => {
-    useFeatureFlagMock.mockReturnValue({ enabled: true, isLoading: false });
     stubProStatus({
       subscription: {
         ...DEFAULT_PRO_STATUS.subscription,

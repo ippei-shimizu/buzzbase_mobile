@@ -51,6 +51,7 @@ export const PRO_FEATURES = [
   "count_situation_average", // カウント別の打率(初球・有利・追い込み等)
   "pitch_type_average", // 球種別の打率(ストレート・変化球等)
   "pitcher_faceoff_average", // 対戦投手別の打撃成績
+  "pitch_course_average", // コース別の打率(5x5ヒートマップ・球種別クロス集計を含む)
 ] as const;
 
 export type FreeFeature = (typeof FREE_FEATURES)[number];

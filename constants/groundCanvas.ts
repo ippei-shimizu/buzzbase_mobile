@@ -69,6 +69,20 @@ export const DIRECTION_LABEL_POSITIONS: Record<
   13: { x: 360, y: 160 },
 };
 
+// 旧9方向 (batting_position_id) → 新13方向 (hit_direction_id)。
+// 旧形式の打席で打球方向を表示するときだけ使う（1〜6 は同一、左/中/右は中央寄せ）。
+export const LEGACY_POSITION_TO_DIRECTION: Record<number, number> = {
+  1: 1,
+  2: 2,
+  3: 3,
+  4: 4,
+  5: 5,
+  6: 6,
+  7: 8, // 左
+  8: 10, // 中
+  9: 12, // 右
+};
+
 /** hit_direction_id (1〜13) → 日本語短縮ラベル。SVG chip の表示文言として使う。 */
 export const DIRECTION_LABELS: Record<number, string> = {
   1: "投",

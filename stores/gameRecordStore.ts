@@ -28,6 +28,10 @@ export interface GameRecordState {
   // 編集モード
   isEditMode: boolean;
 
+  // サマリー画面へ到達したか。到達時点で試合結果・打席は保存済みなので、
+  // 以降の離脱を「入力の中断」として扱わない判定に使う。
+  hasReachedSummary: boolean;
+
   // IDs
   userId: number | null;
   gameResultId: number | null;
@@ -98,11 +102,13 @@ export interface GameRecordState {
   updateBattingBoxResult: (index: number, resultId: number) => void;
   computeInningsPitched: () => number;
   loadFromGameResult: (game: GameResult) => void;
+  markSummaryReached: () => void;
   reset: () => void;
 }
 
 const initialState = {
   isEditMode: false,
+  hasReachedSummary: false,
 
   userId: null,
   gameResultId: null,
@@ -318,6 +324,8 @@ export const useGameRecordStore = create<GameRecordState>((set, get) => ({
       pitchingHitByPitch: pr?.hit_by_pitch ?? 0,
     });
   },
+
+  markSummaryReached: () => set({ hasReachedSummary: true }),
 
   reset: () => {
     const now = new Date();

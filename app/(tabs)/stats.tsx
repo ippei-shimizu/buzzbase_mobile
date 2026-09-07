@@ -38,11 +38,15 @@ import { FilterResetButton } from "@components/stats/FilterResetButton";
 import { HeadlineStatsCard } from "@components/stats/HeadlineStatsCard";
 import { HitDirectionTable } from "@components/stats/HitDirectionTable";
 import { PeriodToggle } from "@components/stats/PeriodToggle";
+import { PitchCourseCard } from "@components/stats/PitchCourseCard";
 import { PitcherAttributeSummary } from "@components/stats/PitcherAttributeSummary";
 import { PitcherFaceoffList } from "@components/stats/PitcherFaceoffList";
 import { PitchTypeCard } from "@components/stats/PitchTypeCard";
 import { PlateAppearanceDonut } from "@components/stats/PlateAppearanceDonut";
-import { CountSituationDummy } from "@components/stats/proComingSoonDummies";
+import {
+  CountSituationDummy,
+  DUMMY_PITCH_COURSES,
+} from "@components/stats/proComingSoonDummies";
 import { ProComingSoonHitDirectionField } from "@components/stats/ProComingSoonHitDirectionField";
 import { RunnersSituationCard } from "@components/stats/RunnersSituationCard";
 import { SprayChart } from "@components/stats/SprayChart";
@@ -70,6 +74,7 @@ import {
   useCountSituations,
   useHitDirections,
   useHitLocations,
+  usePitchCourses,
   usePitchTypes,
   usePitcherAttributeSummary,
   usePitcherFaceoffs,
@@ -616,6 +621,10 @@ export default function StatsScreen() {
     filters,
     hasEntitlement("pitch_type_average"),
   );
+  const pitchCourses = usePitchCourses(
+    filters,
+    hasEntitlement("pitch_course_average"),
+  );
   const pitcherFaceoffs = usePitcherFaceoffs(
     filters,
     hasEntitlement("pitcher_faceoff_average"),
@@ -696,6 +705,9 @@ export default function StatsScreen() {
         ? [countSituations.refetch()]
         : []),
       ...(hasEntitlement("pitch_type_average") ? [pitchTypes.refetch()] : []),
+      ...(hasEntitlement("pitch_course_average")
+        ? [pitchCourses.refetch()]
+        : []),
       ...(hasEntitlement("pitcher_faceoff_average")
         ? [pitcherFaceoffs.refetch()]
         : []),
@@ -969,6 +981,33 @@ export default function StatsScreen() {
                   rows={DUMMY_PITCH_TYPE_ROWS}
                   totalTargetPa={DUMMY_PITCH_TYPE_TOTAL_PA}
                 />
+              </View>
+            </View>
+          )}
+          {/* PitchCourseCard（コース別の打率） */}
+          {isProLoading ? (
+            <ProSectionLoadingPlaceholder />
+          ) : hasEntitlement("pitch_course_average") ? (
+            pitchCourses.data && (
+              <FetchingOverlay isFetching={pitchCourses.isFetching}>
+                <PitchCourseCard
+                  data={pitchCourses.data}
+                  crossFilters={filters}
+                />
+              </FetchingOverlay>
+            )
+          ) : (
+            <View style={styles.proSectionSpacing}>
+              <ProUpsellCard
+                feature="pitch_course_average"
+                onPressCta={() => {
+                  trackProFeatureTapped("pitch_course");
+                  setComingSoonPaywallOpen(true);
+                }}
+              />
+              <SampleDataLabel />
+              <View style={styles.comingSoonDummy}>
+                <PitchCourseCard data={DUMMY_PITCH_COURSES} />
               </View>
             </View>
           )}
