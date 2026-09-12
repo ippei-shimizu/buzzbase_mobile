@@ -1,5 +1,4 @@
 import type { CountSituation, CountSituations } from "../../types/stats";
-import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Modal,
@@ -9,6 +8,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { formatBattingAverage } from "@utils/formatBattingAverage";
 
 interface CountSituationCardsProps {
@@ -85,11 +85,7 @@ export const CountSituationCards = ({ data }: CountSituationCardsProps) => {
                   onPress={() => setOpenTooltipKey(cell.key)}
                   hitSlop={6}
                 >
-                  <Ionicons
-                    name="help-circle-outline"
-                    size={14}
-                    color="#A1A1AA"
-                  />
+                  <Icon name="help-circle-outline" size={14} color="#A1A1AA" />
                 </Pressable>
               </View>
               <Text style={styles.cellAverage}>{formatAverage(situation)}</Text>

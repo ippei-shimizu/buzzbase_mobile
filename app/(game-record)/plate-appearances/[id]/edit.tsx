@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useCallback, useLayoutEffect } from "react";
 import {
@@ -12,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { PlateAppearanceWizard } from "@components/game-record/plate-appearance/PlateAppearanceWizard";
+import { Icon } from "@components/icon/Icon";
 import {
   useDeletePlateAppearance,
   usePlateAppearancesByGame,
@@ -116,7 +116,7 @@ export default function EditPlateAppearanceScreen() {
           style={styles.headerLeftButton}
           hitSlop={8}
         >
-          <Ionicons name="chevron-back" size={28} color="#F4F4F4" />
+          <Icon name="chevron-back" size={28} color="#F4F4F4" />
           <Text style={styles.headerLeftLabel}>戻る</Text>
         </TouchableOpacity>
       ),
@@ -133,7 +133,7 @@ export default function EditPlateAppearanceScreen() {
           {isDeleting ? (
             <ActivityIndicator color="#EF4444" />
           ) : (
-            <Ionicons name="trash-outline" size={22} color="#EF4444" />
+            <Icon name="trash-outline" size={22} color="#EF4444" />
           )}
         </TouchableOpacity>
       ),

@@ -1,9 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
+import type { IconName } from "../../types/icon";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 export interface SettingsItem {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: IconName;
   title: string;
   description: string;
   onPress: () => void;
@@ -34,13 +35,13 @@ export const SettingsSection = ({ title, items }: Props) => {
               accessibilityRole="button"
             >
               <View style={styles.iconContainer}>
-                <Ionicons name={item.icon} size={22} color="#F4F4F4" />
+                <Icon name={item.icon} size={22} color="#F4F4F4" />
               </View>
               <View style={styles.textContainer}>
                 <Text style={styles.title}>{item.title}</Text>
                 <Text style={styles.description}>{item.description}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#71717A" />
+              <Icon name="chevron-forward" size={18} color="#71717A" />
             </TouchableOpacity>
             {index < items.length - 1 && <View style={styles.divider} />}
           </React.Fragment>

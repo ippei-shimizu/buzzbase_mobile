@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   View,
@@ -8,6 +7,7 @@ import {
   TouchableWithoutFeedback,
   StyleSheet,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 interface FilterDropdownProps {
   label: string;
@@ -116,7 +116,7 @@ export function FilterDropdown({
         >
           {label}: {selectedLabel}
         </Text>
-        <Ionicons
+        <Icon
           name="chevron-down"
           size={14}
           color={isFiltered ? "#d08000" : "#A1A1AA"}

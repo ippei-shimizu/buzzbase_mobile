@@ -1,9 +1,9 @@
+import type { IconName } from "../../types/icon";
 import type {
   NotificationItem as NotificationItemType,
   UserNotification,
   ManagementNotification,
 } from "../../types/notification";
-import { Ionicons } from "@expo/vector-icons";
 import * as Sentry from "@sentry/react-native";
 import React, { useState } from "react";
 import {
@@ -14,6 +14,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
 import { API_BASE_URL } from "@constants/api";
 import {
@@ -35,7 +36,7 @@ const isUserNotification = (
 
 const getIconName = (
   eventType: NotificationItemType["event_type"],
-): keyof typeof Ionicons.glyphMap => {
+): IconName => {
   switch (eventType) {
     case "followed":
     case "follow_request":
@@ -157,7 +158,7 @@ export const NotificationItemComponent = ({
         )
       ) : (
         <View style={[styles.avatar, styles.iconContainer]}>
-          <Ionicons name={iconName} size={22} color="#d08000" />
+          <Icon name={iconName} size={22} color="#d08000" />
         </View>
       )}
 
@@ -182,7 +183,7 @@ export const NotificationItemComponent = ({
             </Text>
             <View style={styles.meta}>
               {isUserNotification(notification) && (
-                <Ionicons
+                <Icon
                   name={iconName}
                   size={14}
                   color="#A1A1AA"

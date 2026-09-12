@@ -95,7 +95,10 @@ function PulseCircle({
 
 interface Props {
   hitLocation: Point | null;
-  onTap: (args: { x: number; y: number; directionId: number | null }) => void;
+  /** 未指定なら表示専用（打席詳細画面での読み取り専用プロット）。 */
+  onTap?: (args: { x: number; y: number; directionId: number | null }) => void;
+  /** 表示幅。省略時はキャンバス実寸で描画する。 */
+  width?: number;
 }
 
 // 球場形状（HOME / 塁 / 外野フェンス / ファウルライン端点）は SprayChart と
@@ -148,14 +151,16 @@ const estimateChipWidth = (label: string): number =>
  * 13 方向それぞれのラベル chip を重ねる。タップ済みで最寄りラベルが特定された
  * 方向の chip は primary 色でハイライトし、どの方向で記録されるかをユーザーに明示する。
  */
-export function GroundTapField({ hitLocation, onTap }: Props) {
+export function GroundTapField({ hitLocation, onTap, width }: Props) {
+  const canvasWidth = width ?? GROUND_CANVAS_WIDTH;
+  // 正規化座標を保つため、高さは常にキャンバスの縦横比に従わせる。
+  const canvasHeight =
+    (GROUND_CANVAS_HEIGHT * canvasWidth) / GROUND_CANVAS_WIDTH;
+
   const handlePress = (event: GestureResponderEvent) => {
-    const xNorm = clampNormalized(
-      event.nativeEvent.locationX / GROUND_CANVAS_WIDTH,
-    );
-    const yNorm = clampNormalized(
-      event.nativeEvent.locationY / GROUND_CANVAS_HEIGHT,
-    );
+    if (!onTap) return;
+    const xNorm = clampNormalized(event.nativeEvent.locationX / canvasWidth);
+    const yNorm = clampNormalized(event.nativeEvent.locationY / canvasHeight);
     const directionId = detectClosestDirection({ x: xNorm, y: yNorm });
     onTap({ x: xNorm, y: yNorm, directionId });
   };
@@ -173,15 +178,16 @@ export function GroundTapField({ hitLocation, onTap }: Props) {
   return (
     <View style={styles.container}>
       <Pressable
-        accessibilityRole="button"
+        accessibilityRole={onTap ? "button" : "image"}
         accessibilityLabel="グラウンド"
-        accessibilityHint="タップして打球方向を選択"
+        accessibilityHint={onTap ? "タップして打球方向を選択" : undefined}
+        disabled={!onTap}
         onPress={handlePress}
-        style={styles.tapArea}
+        style={{ width: canvasWidth, height: canvasHeight }}
       >
         <Svg
-          width={GROUND_CANVAS_WIDTH}
-          height={GROUND_CANVAS_HEIGHT}
+          width={canvasWidth}
+          height={canvasHeight}
           viewBox={`0 0 ${GROUND_CANVAS_WIDTH} ${GROUND_CANVAS_HEIGHT}`}
         >
           <Path
@@ -345,9 +351,5 @@ export function GroundTapField({ hitLocation, onTap }: Props) {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-  },
-  tapArea: {
-    width: GROUND_CANVAS_WIDTH,
-    height: GROUND_CANVAS_HEIGHT,
   },
 });

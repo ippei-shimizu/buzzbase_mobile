@@ -24,6 +24,8 @@ interface GroupDetailStatsProps {
   onTournamentChange: (tournamentId: string | undefined) => void;
   onStartMonthChange: (startMonth: string | undefined) => void;
   onEndMonthChange: (endMonth: string | undefined) => void;
+  /** ランキング行タップ時の遷移先。user_id（文字列ハンドル）を受け取る。 */
+  onUserPress: (userId: string) => void;
 }
 
 interface Category {
@@ -112,11 +114,13 @@ const RankingRow = ({
   user,
   value,
   decimals,
+  onPress,
 }: {
   rank: number;
   user: GroupUser;
   value: number | null;
   decimals: number;
+  onPress: () => void;
 }) => {
   const hasValidImage =
     user.image?.url &&
@@ -124,7 +128,11 @@ const RankingRow = ({
     user.image.url.length > 0;
 
   return (
-    <View style={styles.rankingRow}>
+    <TouchableOpacity
+      style={styles.rankingRow}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <Text style={styles.rankNumber}>{rank}</Text>
       {hasValidImage ? (
         <Image
@@ -145,7 +153,7 @@ const RankingRow = ({
         <Text style={styles.rankingUserId}>{user.user_id}</Text>
       </View>
       <Text style={styles.rankingValue}>{formatValue(value, decimals)}</Text>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -164,6 +172,7 @@ export const GroupDetailStats = ({
   onTournamentChange,
   onStartMonthChange,
   onEndMonthChange,
+  onUserPress,
 }: GroupDetailStatsProps) => {
   const [activeTab, setActiveTab] = useState<"batting" | "pitching">("batting");
   const [selectedCategory, setSelectedCategory] = useState(0);
@@ -320,6 +329,7 @@ export const GroupDetailStats = ({
               user={item.user}
               value={item.value}
               decimals={category.decimals}
+              onPress={() => onUserPress(item.user.user_id)}
             />
           ))
         )}

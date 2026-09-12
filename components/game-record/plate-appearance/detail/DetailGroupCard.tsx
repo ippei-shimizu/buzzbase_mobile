@@ -1,14 +1,13 @@
-import type { ComponentProps, ReactNode } from "react";
-import { Ionicons } from "@expo/vector-icons";
+import type { IconName } from "../../../../types/icon";
+import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
-
-type IoniconName = ComponentProps<typeof Ionicons>["name"];
+import { Icon } from "@components/icon/Icon";
 
 interface Props {
   /** カード見出しの大ラベル（例: "打席の状況"）。 */
   title: string;
-  /** 見出し横の Ionicons 名（識別性を上げて視覚的にスキャンしやすくする）。 */
-  iconName: IoniconName;
+  /** 見出し横のアイコン名（識別性を上げて視覚的にスキャンしやすくする）。 */
+  iconName: IconName;
   /** 補助テキスト（例: "打席時の状況を記録"）。 */
   subtitle?: string;
   /** 内側に並べるセクション群。`SectionDivider` を間に入れて視覚的に区切る。 */
@@ -29,7 +28,7 @@ export function DetailGroupCard({
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Ionicons name={iconName} size={20} color="#d08000" />
+        <Icon name={iconName} size={20} color="#d08000" />
         <View style={styles.headerTexts}>
           <Text style={styles.title}>{title}</Text>
           {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}

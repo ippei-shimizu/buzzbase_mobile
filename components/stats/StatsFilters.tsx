@@ -1,5 +1,4 @@
 import type { StatsFilters as StatsFiltersType } from "../../types/profile";
-import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   View,
@@ -9,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { monthOptionsFromRecorded } from "@utils/monthOptions";
 import { FilterResetButton } from "./FilterResetButton";
 
@@ -56,7 +56,7 @@ function FilterDropdown({
         >
           {label}: {selectedLabel}
         </Text>
-        <Ionicons
+        <Icon
           name="chevron-down"
           size={14}
           color={isFiltered ? "#d08000" : "#A1A1AA"}

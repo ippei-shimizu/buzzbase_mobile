@@ -1,0 +1,632 @@
+import type {
+  ConditionInput,
+  PracticeMenu,
+  PracticeSession,
+  PracticeSessionItemInput,
+  PracticeType,
+  PresetMenu,
+} from "../../types/practice";
+import type { ConditionDraft } from "@components/practice/ConditionForm";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { Icon } from "@components/icon/Icon";
+import { ThemePickerField } from "@components/improvement-theme/ThemePickerField";
+import {
+  ConditionForm,
+  EMPTY_CONDITION_DRAFT,
+} from "@components/practice/ConditionForm";
+import { PaywallModal } from "@components/pro/PaywallModal";
+import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
+import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
+import { SegmentedControl } from "@components/ui/SegmentedControl";
+import {
+  CATEGORY_ICON,
+  PRACTICE_CATEGORIES,
+  PRACTICE_TYPE_LABELS,
+} from "@constants/practice";
+import { useEntitlement } from "@hooks/useEntitlement";
+import { usePracticeMenus } from "@hooks/usePracticeMenus";
+import {
+  usePracticeSessionByDate,
+  usePracticeSessionMutations,
+} from "@hooks/usePracticeSessions";
+import { formatAmount } from "@utils/formatAmount";
+import { formatJaFullDate } from "@utils/formatDate";
+
+const toDateString = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate(),
+  ).padStart(2, "0")}`;
+
+// "YYYY-MM-DD" をローカル日付の Date に変換する（new Date(string) の UTC ずれを避ける）。
+const parseDateString = (value: string): Date => {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const toConditionDraft = (session: PracticeSession | null): ConditionDraft => {
+  const condition = session?.condition;
+  if (!condition) return EMPTY_CONDITION_DRAFT;
+  return {
+    fatigue_level: condition.fatigue_level,
+    physical_level: condition.physical_level,
+    sleep_hours:
+      condition.sleep_hours != null ? String(condition.sleep_hours) : "",
+    mood: condition.mood,
+    memo: condition.memo ?? "",
+    injuries: condition.injuries ?? [],
+  };
+};
+
+const draftHasContent = (draft: ConditionDraft): boolean =>
+  draft.fatigue_level != null ||
+  draft.physical_level != null ||
+  draft.sleep_hours.trim() !== "" ||
+  draft.mood != null ||
+  draft.memo.trim() !== "" ||
+  draft.injuries.length > 0;
+
+const toConditionInput = (draft: ConditionDraft): ConditionInput => ({
+  fatigue_level: draft.fatigue_level,
+  physical_level: draft.physical_level,
+  sleep_hours: draft.sleep_hours.trim() ? Number(draft.sleep_hours) : null,
+  mood: draft.mood,
+  memo: draft.memo.trim() || null,
+  injuries: draft.injuries,
+});
+
+/** 選択済みメニュー（量の編集途中文字列を保持）。 */
+type SelectedItems = Record<number, string>;
+
+const toSelectedItems = (session: PracticeSession | null): SelectedItems => {
+  const selected: SelectedItems = {};
+  session?.practice_logs
+    .filter((log) => log.source === "manual" && log.practice_menu_id != null)
+    .forEach((log) => {
+      selected[log.practice_menu_id as number] = formatAmount(log.amount);
+    });
+  return selected;
+};
+
+// 筋トレ（weight_reps）の重さ(kg)。menu_id ごとに編集途中文字列で保持する。
+const toSelectedWeights = (
+  session: PracticeSession | null,
+): Record<number, string> => {
+  const weights: Record<number, string> = {};
+  session?.practice_logs
+    .filter(
+      (log) =>
+        log.source === "manual" &&
+        log.practice_menu_id != null &&
+        log.weight != null,
+    )
+    .forEach((log) => {
+      weights[log.practice_menu_id as number] = formatAmount(log.weight);
+    });
+  return weights;
+};
+
+function DailyEditor({
+  dateString,
+  initialSession,
+  menus,
+  presetMenus,
+}: {
+  dateString: string;
+  initialSession: PracticeSession | null;
+  menus: PracticeMenu[];
+  presetMenus: PresetMenu[];
+}) {
+  const router = useRouter();
+  const { saveSession, isSaving } = usePracticeSessionMutations();
+  const { hasEntitlement, isLoading: isProLoading } = useEntitlement();
+  const isEditing = initialSession != null;
+
+  // 既存の記録済み量を優先しつつ、未選択のプリセットメニューを目標量つきで追加する。
+  // 予定のメニューにチェックを入れると量なしのログが先に作られるため、
+  // 量が空の既存ログは予定の目標量で埋める（実績は 0 でも上書きしない）。
+  const [selected, setSelected] = useState<SelectedItems>(() => {
+    const base = toSelectedItems(initialSession);
+    presetMenus.forEach((preset) => {
+      if ((base[preset.practice_menu_id] ?? "") !== "") return;
+      base[preset.practice_menu_id] = formatAmount(preset.target_value);
+    });
+    return base;
+  });
+  const [weights, setWeights] = useState<Record<number, string>>(() => {
+    const base = toSelectedWeights(initialSession);
+    presetMenus.forEach((preset) => {
+      if (preset.practice_menu_id in base) return;
+      const menu = menus.find((item) => item.id === preset.practice_menu_id);
+      if (menu?.unit === "weight_reps") base[preset.practice_menu_id] = "";
+    });
+    return base;
+  });
+  const [practiceType, setPracticeType] = useState<PracticeType>(
+    () => initialSession?.practice_type ?? "self_practice",
+  );
+  const [condition, setCondition] = useState<ConditionDraft>(() =>
+    toConditionDraft(initialSession),
+  );
+  const [improvementThemeIds, setImprovementThemeIds] = useState<number[]>(
+    initialSession?.improvement_theme_ids ?? [],
+  );
+  const [isConditionPaywallOpen, setConditionPaywallOpen] = useState(false);
+  const canSaveCondition = hasEntitlement("detailed_condition_log");
+
+  const toggleMenu = (menu: PracticeMenu) => {
+    const isSelected = menu.id in selected;
+    setSelected((prev) => {
+      if (isSelected) {
+        const next = { ...prev };
+        delete next[menu.id];
+        return next;
+      }
+      return { ...prev, [menu.id]: formatAmount(menu.default_value) };
+    });
+    setWeights((prev) => {
+      const next = { ...prev };
+      if (isSelected) delete next[menu.id];
+      else if (menu.unit === "weight_reps") next[menu.id] = "";
+      return next;
+    });
+  };
+
+  const setAmount = (menuId: number, amount: string) =>
+    setSelected((prev) => ({ ...prev, [menuId]: amount }));
+
+  const setWeight = (menuId: number, weight: string) =>
+    setWeights((prev) => ({ ...prev, [menuId]: weight }));
+
+  const items: PracticeSessionItemInput[] = Object.entries(selected).map(
+    ([menuId, amount]) => {
+      const id = Number(menuId);
+      const menu = menus.find((item) => item.id === id);
+      const isWeightReps = menu?.unit === "weight_reps";
+      const weight = weights[id];
+      return {
+        practice_menu_id: id,
+        amount: amount.trim() ? Number(amount) : null,
+        weight: isWeightReps && weight?.trim() ? Number(weight) : null,
+      };
+    },
+  );
+
+  // 保存後に野球ノートへ進むか、練習記録のみで終えるかを呼び出し側のボタンで分ける。
+  const handleSave = async (withNote: boolean) => {
+    const hasCondition = draftHasContent(condition);
+    if (items.length === 0 && !hasCondition) {
+      Alert.alert("記録する内容がありません", "メニューを選んでください");
+      return;
+    }
+    try {
+      // 無料ユーザーは condition の入力ができないため、state に何が残っていても送らない
+      // （Pro/トライアル時代の記録を持つユーザーが他項目だけ編集した際に、
+      // condition の Pro 判定で保存全体が失敗しないようにする）。
+      const session = await saveSession({
+        logged_on: dateString,
+        items,
+        practice_type: practiceType,
+        condition:
+          hasCondition && canSaveCondition ? toConditionInput(condition) : null,
+        improvement_theme_ids: improvementThemeIds,
+      });
+      if (withNote) {
+        router.replace({
+          pathname: "/(note)/new",
+          params: {
+            date: dateString,
+            practiceSessionId: String(session.id),
+            ...(improvementThemeIds.length > 0
+              ? { improvementThemeIds: improvementThemeIds.join(",") }
+              : {}),
+          },
+        });
+      } else {
+        router.replace("/(records)/list?tab=practice");
+      }
+    } catch {
+      Alert.alert("保存に失敗しました");
+    }
+  };
+
+  const renderMenu = (menu: PracticeMenu) => {
+    const isSelected = menu.id in selected;
+    return (
+      <View key={menu.id} style={styles.menuItem}>
+        <TouchableOpacity
+          style={styles.menuRow}
+          onPress={() => toggleMenu(menu)}
+        >
+          <Icon
+            name={isSelected ? "checkbox" : "square-outline"}
+            size={22}
+            color={isSelected ? "#d08000" : "#71717A"}
+          />
+          <Text style={styles.menuName}>{menu.name}</Text>
+        </TouchableOpacity>
+        {isSelected ? (
+          menu.unit === "weight_reps" ? (
+            <View style={styles.amountRow}>
+              <TextInput
+                style={styles.amountInputSm}
+                value={weights[menu.id] ?? ""}
+                onChangeText={(text) => setWeight(menu.id, text)}
+                keyboardType="numeric"
+                placeholder="0"
+                placeholderTextColor="#71717A"
+              />
+              <Text style={styles.unitLabel}>kg ×</Text>
+              <TextInput
+                style={styles.amountInputSm}
+                value={selected[menu.id]}
+                onChangeText={(text) => setAmount(menu.id, text)}
+                keyboardType="numeric"
+                placeholder="0"
+                placeholderTextColor="#71717A"
+              />
+              <Text style={styles.unitLabel}>回</Text>
+            </View>
+          ) : (
+            <View style={styles.amountRow}>
+              <TextInput
+                style={styles.amountInput}
+                value={selected[menu.id]}
+                onChangeText={(text) => setAmount(menu.id, text)}
+                keyboardType="numeric"
+                placeholder="0"
+                placeholderTextColor="#71717A"
+              />
+              <Text style={styles.unitLabel}>{menu.unit_label ?? ""}</Text>
+            </View>
+          )
+        ) : null}
+      </View>
+    );
+  };
+
+  return (
+    <View>
+      <Text style={styles.sectionTitle}>練習の種別</Text>
+      <View style={styles.practiceTypeSegment}>
+        <SegmentedControl
+          options={PRACTICE_TYPE_LABELS.map((option) => option.label)}
+          selectedIndex={PRACTICE_TYPE_LABELS.findIndex(
+            (option) => option.value === practiceType,
+          )}
+          onSelect={(index: number) =>
+            setPracticeType(PRACTICE_TYPE_LABELS[index].value)
+          }
+        />
+      </View>
+
+      <Text style={styles.sectionTitle}>練習メニュー（複数選択可）</Text>
+      <TouchableOpacity
+        style={styles.addMenuButton}
+        onPress={() => router.push("/(practice-menu)/form")}
+      >
+        <Icon name="add" size={18} color="#d08000" />
+        <Text style={styles.addMenuButtonText}>新しいメニューを追加</Text>
+      </TouchableOpacity>
+
+      {PRACTICE_CATEGORIES.map((category) => {
+        const inCategory = menus.filter(
+          (menu) => menu.category === category.key,
+        );
+        if (inCategory.length === 0) return null;
+        return (
+          <View key={category.key} style={styles.group}>
+            <View style={styles.groupTitleRow}>
+              <Icon
+                name={CATEGORY_ICON[category.key]}
+                size={15}
+                color="#d08000"
+              />
+              <Text style={styles.groupTitle}>{category.label}</Text>
+            </View>
+            {inCategory.map(renderMenu)}
+          </View>
+        );
+      })}
+
+      <View style={styles.sectionTitleRow}>
+        <Text style={styles.sectionTitleInline}>コンディション</Text>
+        {!isProLoading && !canSaveCondition ? (
+          <Text style={styles.proBadge}>Pro限定</Text>
+        ) : null}
+      </View>
+      <View style={styles.conditionWrapper}>
+        <ProUpsellOverlay
+          unlocked={canSaveCondition}
+          loading={isProLoading}
+          feature="detailed_condition_log"
+          onPressCta={() => setConditionPaywallOpen(true)}
+        >
+          <ConditionForm
+            value={condition}
+            onChange={setCondition}
+            disabled={!canSaveCondition}
+          />
+        </ProUpsellOverlay>
+      </View>
+      <PaywallModal
+        isOpen={isConditionPaywallOpen}
+        onClose={() => setConditionPaywallOpen(false)}
+        feature="detailed_condition_log"
+      />
+
+      <Text style={styles.sectionTitle}>取り組む課題（任意）</Text>
+      <ThemePickerField
+        selectedThemeIds={improvementThemeIds}
+        onChange={setImprovementThemeIds}
+      />
+
+      <TouchableOpacity
+        style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+        onPress={() => handleSave(true)}
+        disabled={isSaving}
+      >
+        <Text style={styles.saveButtonText}>野球ノートを書く</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.saveSubButton, isSaving && styles.saveButtonDisabled]}
+        onPress={() => handleSave(false)}
+        disabled={isSaving}
+      >
+        <Text style={styles.saveSubButtonText}>
+          {isEditing ? "練習記録の変更を保存" : "練習記録のみ保存"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+export default function DailyRecordScreen() {
+  const params = useLocalSearchParams<{
+    date?: string;
+    presetMenus?: string;
+  }>();
+  const [date, setDate] = useState(() =>
+    params.date ? parseDateString(params.date) : new Date(),
+  );
+  const [showPicker, setShowPicker] = useState(false);
+  const dateString = useMemo(() => toDateString(date), [date]);
+
+  // 日付ピッカーで別日に切り替えたらプリセットを注入しない（元の日付のみ有効）。
+  const presetMenus = useMemo<PresetMenu[]>(() => {
+    if (!params.presetMenus || dateString !== params.date) return [];
+    try {
+      return JSON.parse(params.presetMenus) as PresetMenu[];
+    } catch {
+      return [];
+    }
+  }, [params.presetMenus, params.date, dateString]);
+
+  const { menus, isLoading: isMenusLoading } = usePracticeMenus();
+  const { session, isLoading: isSessionLoading } =
+    usePracticeSessionByDate(dateString);
+
+  const router = useRouter();
+
+  return (
+    <KeyboardAwareScreen>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
+        <Text style={styles.label}>日付</Text>
+        <TouchableOpacity
+          style={styles.dateRow}
+          onPress={() => setShowPicker((prev) => !prev)}
+        >
+          <Text style={styles.dateText}>{formatJaFullDate(dateString)}</Text>
+          <Icon name="calendar-outline" size={18} color="#A1A1AA" />
+        </TouchableOpacity>
+        {showPicker ? (
+          <DateTimePicker
+            value={date}
+            mode="date"
+            maximumDate={new Date()}
+            themeVariant="dark"
+            accentColor="#d08000"
+            display={Platform.OS === "ios" ? "inline" : "default"}
+            onChange={(_event, selected) => {
+              setShowPicker(false);
+              if (selected) setDate(selected);
+            }}
+          />
+        ) : null}
+
+        {isMenusLoading || isSessionLoading ? (
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color="#d08000" />
+          </View>
+        ) : menus.length === 0 ? (
+          <View style={styles.empty}>
+            <Text style={styles.emptyTitle}>まだ練習メニューがありません</Text>
+            <Text style={styles.emptyText}>
+              よくやる練習を登録すると、ワンタップで選べます
+            </Text>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => router.push("/(practice-menu)/form")}
+            >
+              <Icon name="add" size={18} color="#FFFFFF" />
+              <Text style={styles.primaryButtonText}>最初のメニューを作る</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <DailyEditor
+            key={dateString}
+            dateString={dateString}
+            initialSession={session}
+            menus={menus}
+            presetMenus={presetMenus}
+          />
+        )}
+      </ScrollView>
+    </KeyboardAwareScreen>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#2E2E2E" },
+  content: { padding: 16, paddingBottom: 48 },
+  centered: { paddingVertical: 48, alignItems: "center" },
+  practiceTypeSegment: { marginBottom: 8 },
+  label: {
+    color: "#A1A1AA",
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    color: "#F4F4F4",
+    fontSize: 15,
+    fontWeight: "700",
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 36,
+    marginBottom: 12,
+  },
+  sectionTitleInline: {
+    color: "#F4F4F4",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  proBadge: {
+    color: "#d08000",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  dateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#3A3A3A",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  dateText: { color: "#F4F4F4", fontSize: 15 },
+  group: { marginBottom: 12 },
+  groupTitle: {
+    color: "#A1A1AA",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  groupTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 8,
+  },
+  menuItem: {
+    backgroundColor: "#3A3A3A",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  menuRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  menuName: { color: "#F4F4F4", fontSize: 15, fontWeight: "600", flex: 1 },
+  amountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 10,
+    marginLeft: 32,
+  },
+  amountInput: {
+    width: 120,
+    backgroundColor: "#2E2E2E",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: "#F4F4F4",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  amountInputSm: {
+    width: 72,
+    backgroundColor: "#2E2E2E",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: "#F4F4F4",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  unitLabel: { color: "#A1A1AA", fontSize: 15 },
+  addMenuButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "rgba(208,128,0,0.08)",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d08000",
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+  addMenuButtonText: { color: "#d08000", fontSize: 13, fontWeight: "700" },
+  conditionWrapper: { marginTop: 8 },
+  empty: { alignItems: "center", paddingVertical: 40 },
+  emptyTitle: {
+    color: "#F4F4F4",
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  emptyText: {
+    color: "#A1A1AA",
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  primaryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#d08000",
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  primaryButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
+  saveButton: {
+    backgroundColor: "#d08000",
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 32,
+  },
+  saveButtonDisabled: { opacity: 0.5 },
+  saveButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
+  saveSubButton: {
+    backgroundColor: "#424242",
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  saveSubButtonText: { color: "#F4F4F4", fontSize: 15, fontWeight: "600" },
+});

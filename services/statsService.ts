@@ -7,6 +7,8 @@ import type {
   CountSituations,
   HitDirectionData,
   HitLocationData,
+  PitchCourseData,
+  PitchCoursePitchTypeData,
   PitchTypeData,
   PitcherAttributeSummaryData,
   PitcherFaceoffData,
@@ -14,7 +16,8 @@ import type {
   TimingBreakdownData,
   BattingStatsRow,
   PitchingStatsRow,
-  EraTrendPoint,
+  EraTrendData,
+  EraTrendGranularity,
   GameSummary,
   HeadlineStats,
   RunnersSituationSummary,
@@ -101,17 +104,22 @@ export const getEraTrend = async (
   tournamentId?: string,
   startMonth?: string,
   endMonth?: string,
-): Promise<EraTrendPoint[]> => {
+  granularity: EraTrendGranularity = "month",
+): Promise<EraTrendData> => {
   const params = new URLSearchParams();
   if (year) params.append("year", year);
-  if (seasonId) params.append("season_id", seasonId);
+  // granularity=season はシーズン跨ぎで全シーズンを比較するため、season_id を送らない
+  // （back側でも無視されるが、意図が伝わる形にしておく）。
+  if (seasonId && granularity !== "season")
+    params.append("season_id", seasonId);
   if (tournamentId) params.append("tournament_id", tournamentId);
   if (startMonth) params.append("start_month", startMonth);
   if (endMonth) params.append("end_month", endMonth);
+  params.append("granularity", granularity);
   const query = params.toString();
-  const url = `${STATS_URL}/era_trend${query ? `?${query}` : ""}`;
-  const res = await axiosInstance.get(url);
-  return res.data.trend;
+  const url = `${STATS_URL}/era_trend?${query}`;
+  const res = await axiosInstance.get<EraTrendData>(url);
+  return res.data;
 };
 
 export const getGameSummary = async (
@@ -192,6 +200,26 @@ export const getPitchTypes = async (
   const query = buildStatsQuery(filters);
   const res = await axiosInstance.get(
     `${STATS_URL}/pitch_types${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+export const getPitchCourses = async (
+  filters: StatsFilters,
+): Promise<PitchCourseData> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/pitch_courses${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+export const getPitchCoursePitchTypes = async (
+  filters: StatsFilters,
+): Promise<PitchCoursePitchTypeData> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get(
+    `${STATS_URL}/pitch_course_pitch_types${query ? `?${query}` : ""}`,
   );
   return res.data;
 };

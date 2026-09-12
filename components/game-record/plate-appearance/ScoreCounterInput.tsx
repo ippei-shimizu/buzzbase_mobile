@@ -1,5 +1,5 @@
-import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { NumberInput } from "@components/ui/NumberInput";
 
 export type ScoreCounterKey =
@@ -80,7 +80,7 @@ function StepperRow({ label, value, onChangeValue }: StepperRowProps) {
           onPress={() => onChangeValue(Math.max(MIN_VALUE, value - 1))}
           hitSlop={6}
         >
-          <Ionicons
+          <Icon
             name="remove-circle"
             size={28}
             color={decrementDisabled ? DISABLED_COLOR : PRIMARY_COLOR}
@@ -99,7 +99,7 @@ function StepperRow({ label, value, onChangeValue }: StepperRowProps) {
           onPress={() => onChangeValue(value + 1)}
           hitSlop={6}
         >
-          <Ionicons name="add-circle" size={28} color={PRIMARY_COLOR} />
+          <Icon name="add-circle" size={28} color={PRIMARY_COLOR} />
         </TouchableOpacity>
       </View>
     </View>

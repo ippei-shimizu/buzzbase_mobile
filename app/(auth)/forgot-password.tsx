@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ForgotPasswordView } from "@components/auth/ForgotPasswordView";
 import { useAuth } from "@hooks/useAuth";
 import { useFormValidation } from "@hooks/useFormValidation";
+import { isRateLimitError, rateLimitErrorMessage } from "@utils/axiosError";
 
 export default function ForgotPasswordScreen() {
   const { requestPasswordReset } = useAuth();
@@ -23,11 +24,17 @@ export default function ForgotPasswordScreen() {
 
     try {
       await requestPasswordReset(email);
-    } catch {
-      // 成否にかかわらず同一文言を表示するため、ここではエラー内容を利用しない
+      setSubmitted(true);
+    } catch (error) {
+      // アカウント列挙を防ぐため成否にかかわらず同一文言を出すが、
+      // レート制限は対象メールの有無に依存しないため例外的に別文言を出す。
+      if (isRateLimitError(error)) {
+        setErrors([rateLimitErrorMessage(error)]);
+      } else {
+        setSubmitted(true);
+      }
     } finally {
       setIsSubmitting(false);
-      setSubmitted(true);
     }
   };
 

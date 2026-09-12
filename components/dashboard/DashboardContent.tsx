@@ -5,8 +5,12 @@ import {
   ScrollView,
   RefreshControl,
   StyleSheet,
+  View,
   type ViewStyle,
 } from "react-native";
+import { InlineBannerAd } from "@components/ads/InlineBannerAd";
+import { BackToTopButton } from "@components/ui/BackToTopButton";
+import { useBackToTop } from "@hooks/useBackToTop";
 import { useInviteCardDismissal } from "@hooks/useInviteCardDismissal";
 import { useProfile } from "@hooks/useProfile";
 import { GroupRankings } from "./GroupRankings";
@@ -20,6 +24,8 @@ interface DashboardContentProps {
   onRefresh: () => void;
   style?: ViewStyle;
   headerComponent?: React.ReactNode;
+  /** 広告を描くか。表示していない面から出すと見えない広告が計上されるため。 */
+  showInlineAd?: boolean;
 }
 
 export const DashboardContent = ({
@@ -28,11 +34,14 @@ export const DashboardContent = ({
   onRefresh,
   style,
   headerComponent,
+  showInlineAd = true,
 }: DashboardContentProps) => {
   const router = useRouter();
   const { profile, isLoading: isProfileLoading } = useProfile();
   const { isDismissed: isInviteDismissed, dismiss: dismissInviteCard } =
     useInviteCardDismissal();
+  const { scrollRef, showBackToTop, handleScroll, scrollToTop } =
+    useBackToTop();
 
   // 段階的オンボーディング: 未記録 → 記録済みかつ未所属 → 完了 の3段階で出し分ける。
   const hasRecord =
@@ -68,60 +77,70 @@ export const DashboardContent = ({
   };
 
   return (
-    <ScrollView
-      style={[styles.container, style]}
-      contentContainerStyle={styles.content}
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={onRefresh}
-          tintColor="#d08000"
+    <View style={styles.wrapper}>
+      <ScrollView
+        ref={scrollRef}
+        style={[styles.container, style]}
+        contentContainerStyle={styles.content}
+        onScroll={handleScroll}
+        scrollEventThrottle={64}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor="#d08000"
+          />
+        }
+      >
+        {!hasRecord ? (
+          <WelcomeCard
+            variant="record"
+            onPress={handleRecordGame}
+            style={styles.welcomeCard}
+          />
+        ) : (
+          <>
+            {headerComponent}
+            {!inGroup && isInviteDismissed === false && (
+              <WelcomeCard
+                variant="invite"
+                onPress={handleInviteFriends}
+                style={styles.welcomeCard}
+                disabled={isProfileLoading}
+                onDismiss={dismissInviteCard}
+              />
+            )}
+          </>
+        )}
+        <StatsOverview
+          battingStats={data.batting_stats}
+          pitchingStats={data.pitching_stats}
+          onRecordGame={handleRecordGame}
         />
-      }
-    >
-      {!hasRecord ? (
-        <WelcomeCard
-          variant="record"
-          onPress={handleRecordGame}
-          style={styles.welcomeCard}
+        <RecentGameResults
+          results={data.recent_game_results}
+          style={styles.section}
+          onRecordGame={handleRecordGame}
         />
-      ) : (
-        <>
-          {headerComponent}
-          {!inGroup && isInviteDismissed === false && (
-            <WelcomeCard
-              variant="invite"
-              onPress={handleInviteFriends}
-              style={styles.welcomeCard}
-              disabled={isProfileLoading}
-              onDismiss={dismissInviteCard}
-            />
-          )}
-        </>
-      )}
-      <StatsOverview
-        battingStats={data.batting_stats}
-        pitchingStats={data.pitching_stats}
-        onRecordGame={handleRecordGame}
-      />
-      <RecentGameResults
-        results={data.recent_game_results}
-        style={styles.section}
-        onRecordGame={handleRecordGame}
-      />
-      <GroupRankings
-        rankings={data.group_rankings}
-        style={styles.section}
-        onGroupPress={handleGroupPress}
-        onShowAll={handleShowAll}
-        onCreateGroup={handleCreateGroup}
-        onJoinGroup={handleJoinGroup}
-      />
-    </ScrollView>
+        <GroupRankings
+          rankings={data.group_rankings}
+          style={styles.section}
+          onGroupPress={handleGroupPress}
+          onShowAll={handleShowAll}
+          onCreateGroup={handleCreateGroup}
+          onJoinGroup={handleJoinGroup}
+        />
+        {showInlineAd ? <InlineBannerAd placement="home" /> : null}
+      </ScrollView>
+      <BackToTopButton visible={showBackToTop} onPress={scrollToTop} />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },

@@ -1,5 +1,4 @@
 import type { GroupRanking, RankingEntry } from "../../types/dashboard";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   View,
@@ -10,6 +9,7 @@ import {
 } from "react-native";
 import { Image } from "react-native";
 import { GroupDefaultIcon } from "@components/icon/GroupDefaultIcon";
+import { Icon } from "@components/icon/Icon";
 import { API_BASE_URL } from "@constants/api";
 import { EmptyState } from "./EmptyState";
 
@@ -108,7 +108,7 @@ const GroupCard = ({
             <Text style={styles.memberCount}>{group.total_members}人</Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={20} color="#A1A1AA" />
+        <Icon name="chevron-forward" size={20} color="#A1A1AA" />
       </TouchableOpacity>
 
       {/* Batting Rankings */}
@@ -165,7 +165,7 @@ export const GroupRankings = ({
           )}
           {onJoinGroup && (
             <TouchableOpacity style={styles.joinButton} onPress={onJoinGroup}>
-              <Ionicons name="ticket-outline" size={16} color="#d08000" />
+              <Icon name="ticket-outline" size={16} color="#d08000" />
               <Text style={styles.joinButtonText}>招待コードで参加</Text>
             </TouchableOpacity>
           )}

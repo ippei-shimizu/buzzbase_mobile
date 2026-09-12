@@ -14,7 +14,7 @@ import {
   createPitchingResult,
   updatePitchingResult,
   updatePitchingResultId,
-  getTeams,
+  searchTeams,
   getPositions,
   createTeam,
   getTournaments,
@@ -26,10 +26,14 @@ import {
   checkExistingPlateAppearance,
   updatePlateAppearance,
 } from "../services/plateAppearanceService";
+import type { Season } from "../types/season";
 import { getCurrentUserProfile } from "../services/profileService";
 import { createSeason } from "../services/seasonService";
 import { useGameRecordStore } from "../stores/gameRecordStore";
 import { invalidateGameResultRelated } from "../utils/queryInvalidation";
+
+/** back の TeamsController::MAX_LIMIT。完全一致の引き当てはここまで取り切る。 */
+const TEAM_SEARCH_MAX_LIMIT = 100;
 
 export const useGameRecord = () => {
   const store = useGameRecordStore();
@@ -43,11 +47,6 @@ export const useGameRecord = () => {
     store.setField("userId", profile.id);
     return profile.id;
   };
-
-  const teamsQuery = useQuery({
-    queryKey: ["teams"],
-    queryFn: getTeams,
-  });
 
   const positionsQuery = useQuery({
     queryKey: ["positions"],
@@ -85,36 +84,61 @@ export const useGameRecord = () => {
       let myTeamId = s.myTeamId;
       let opponentTeamId = s.opponentTeamId;
 
-      if (!myTeamId && s.myTeamName) {
-        const team = await createTeam(s.myTeamName);
-        myTeamId = team.id;
-        store.setField("myTeamId", team.id);
+      // 画面のサジェスト候補は入力連動の部分取得になったため、送信時は
+      // サーバー側で同名の既存チームを探してから新規作成に回す。
+      // 検索は部分一致のため、サジェスト用の件数だと完全一致が候補から溢れて
+      // 既存チームを重複作成しうる。ここではサーバー上限まで引き上げて取得する。
+      const resolveTeamId = async (name: string): Promise<number> => {
+        const trimmed = name.trim();
+        const candidates = await searchTeams(trimmed, TEAM_SEARCH_MAX_LIMIT);
+        const existing = candidates.find((team) => team.name === trimmed);
+        const team = existing ?? (await createTeam(trimmed));
+        return team.id;
+      };
+
+      if (!myTeamId && s.myTeamName.trim()) {
+        myTeamId = await resolveTeamId(s.myTeamName);
+        store.setField("myTeamId", myTeamId);
       }
-      if (!opponentTeamId && s.opponentTeamName) {
-        const team = await createTeam(s.opponentTeamName);
-        opponentTeamId = team.id;
-        store.setField("opponentTeamId", team.id);
+      if (!opponentTeamId && s.opponentTeamName.trim()) {
+        opponentTeamId = await resolveTeamId(s.opponentTeamName);
+        store.setField("opponentTeamId", opponentTeamId);
       }
 
       if (!myTeamId || !opponentTeamId) {
         throw new Error("チームを選択してください");
       }
 
-      // 大会名の処理
+      // 大会名の処理: 候補から選ばず打ち切った場合に備え、既存の同名を探してから新規作成に回す。
       let tournamentId = s.tournamentId;
-      if (!tournamentId && s.tournamentName.trim()) {
-        const tournament = await createTournament(s.tournamentName.trim());
+      const trimmedTournamentName = s.tournamentName.trim();
+      if (!tournamentId && trimmedTournamentName) {
+        const existing = tournamentsQuery.data?.find(
+          (tournament) => tournament.name === trimmedTournamentName,
+        );
+        const tournament =
+          existing ?? (await createTournament(trimmedTournamentName));
         tournamentId = tournament.id;
         store.setField("tournamentId", tournament.id);
       }
 
-      // シーズン名の処理: 既存選択（seasonId 有）はそのまま、未選択で名前のみ入力されていれば新規作成する
+      // シーズン名の処理: 既存選択（seasonId 有）はそのまま、未選択で名前のみ入力されていれば
+      // キャッシュ済みの一覧から同名を探し、無ければ新規作成する。
       let seasonId = s.seasonId;
-      if (!seasonId && s.seasonName.trim()) {
-        const season = await createSeason({ name: s.seasonName.trim() });
-        seasonId = season.id;
-        store.setField("seasonId", season.id);
-        queryClient.invalidateQueries({ queryKey: ["seasons"] });
+      const trimmedSeasonName = s.seasonName.trim();
+      if (!seasonId && trimmedSeasonName) {
+        const cachedSeasons = queryClient.getQueryData<Season[]>(["seasons"]);
+        const existing = cachedSeasons?.find(
+          (season) => season.name === trimmedSeasonName,
+        );
+        if (existing) {
+          seasonId = existing.id;
+        } else {
+          const season = await createSeason({ name: trimmedSeasonName });
+          seasonId = season.id;
+          queryClient.invalidateQueries({ queryKey: ["seasons"] });
+        }
+        store.setField("seasonId", seasonId);
       }
 
       const matchResultPayload = {
@@ -331,7 +355,6 @@ export const useGameRecord = () => {
 
   return {
     store,
-    teamsQuery,
     positionsQuery,
     tournamentsQuery,
     createGameResultMutation,

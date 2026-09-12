@@ -78,4 +78,30 @@ describe("forgot-password: パスワードリセット申請", () => {
 
     await findByText(GENERIC_MESSAGE);
   });
+
+  it("レート制限（429）のときは専用文言を表示し、送信完了画面に進まない", async () => {
+    server.use(
+      http.post(apiUrl("/auth/password"), () =>
+        HttpResponse.json(
+          {
+            error: "rate_limit_exceeded",
+            message: "試行回数が上限に達しました",
+          },
+          { status: 429 },
+        ),
+      ),
+    );
+
+    const { getByPlaceholderText, getByText, findByText, queryByText } =
+      renderForgotPassword();
+
+    fireEvent.changeText(
+      getByPlaceholderText("email@example.com"),
+      "limited@example.com",
+    );
+    fireEvent.press(getByText("送信する"));
+
+    await findByText("試行回数が上限に達しました");
+    expect(queryByText(GENERIC_MESSAGE)).toBeNull();
+  });
 });

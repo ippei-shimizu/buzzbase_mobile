@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect } from "react";
@@ -10,6 +9,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { useGetOrCreateInviteLink } from "@hooks/useGroupMutations";
 
 const APP_STORE_URL = "https://apps.apple.com/jp/app/buzz-base/id6761011816";
@@ -79,12 +79,12 @@ export default function ShareInviteScreen() {
       </View>
 
       <TouchableOpacity style={styles.copyButton} onPress={handleCopy}>
-        <Ionicons name="copy-outline" size={18} color="#d08000" />
+        <Icon name="copy-outline" size={18} color="#d08000" />
         <Text style={styles.copyButtonText}>コードをコピー</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-        <Ionicons name="share-outline" size={18} color="#FFFFFF" />
+        <Icon name="share-outline" size={18} color="#FFFFFF" />
         <Text style={styles.shareButtonText}>LINEなどで共有</Text>
       </TouchableOpacity>
 
@@ -92,7 +92,7 @@ export default function ShareInviteScreen() {
         style={styles.viewGroupButton}
         onPress={handleViewGroup}
       >
-        <Ionicons name="people-outline" size={18} color="#d08000" />
+        <Icon name="people-outline" size={18} color="#d08000" />
         <Text style={styles.viewGroupButtonText}>グループを見る</Text>
       </TouchableOpacity>
 

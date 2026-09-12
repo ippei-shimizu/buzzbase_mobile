@@ -1,5 +1,9 @@
 import type { StatsFilters } from "../types/profile";
-import type { BattingTrendGranularity, StatsPeriod } from "../types/stats";
+import type {
+  BattingTrendGranularity,
+  EraTrendGranularity,
+  StatsPeriod,
+} from "../types/stats";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   getAdditionalStats,
@@ -8,6 +12,8 @@ import {
   getCountSituations,
   getHitDirections,
   getHitLocations,
+  getPitchCoursePitchTypes,
+  getPitchCourses,
   getPitchTypes,
   getPitcherAttributeSummary,
   getPitcherFaceoffs,
@@ -110,11 +116,27 @@ export const useEraTrend = (
   enabled = true,
   startMonth?: string,
   endMonth?: string,
+  granularity: EraTrendGranularity = "month",
 ) =>
   useQuery({
-    queryKey: ["eraTrend", year, seasonId, tournamentId, startMonth, endMonth],
+    queryKey: [
+      "eraTrend",
+      year,
+      seasonId,
+      tournamentId,
+      startMonth,
+      endMonth,
+      granularity,
+    ],
     queryFn: () =>
-      getEraTrend(year, seasonId, tournamentId, startMonth, endMonth),
+      getEraTrend(
+        year,
+        seasonId,
+        tournamentId,
+        startMonth,
+        endMonth,
+        granularity,
+      ),
     enabled,
     staleTime: 0,
     placeholderData: keepPreviousData,
@@ -196,6 +218,31 @@ export const usePitchTypes = (filters: StatsFilters, enabled = true) =>
   useQuery({
     queryKey: ["pitchTypes", filters],
     queryFn: () => getPitchTypes(filters),
+    enabled,
+    staleTime: STATS_STALE_TIME,
+    placeholderData: keepPreviousData,
+  });
+
+export const usePitchCourses = (filters: StatsFilters, enabled = true) =>
+  useQuery({
+    queryKey: ["pitchCourses", filters],
+    queryFn: () => getPitchCourses(filters),
+    enabled,
+    staleTime: STATS_STALE_TIME,
+    placeholderData: keepPreviousData,
+  });
+
+/**
+ * 球種×コースのクロス集計。最大 250 セルと大きいため、
+ * 「球種別」タブを開いたときにだけ enabled で取得する。
+ */
+export const usePitchCoursePitchTypes = (
+  filters: StatsFilters,
+  enabled = false,
+) =>
+  useQuery({
+    queryKey: ["pitchCoursePitchTypes", filters],
+    queryFn: () => getPitchCoursePitchTypes(filters),
     enabled,
     staleTime: STATS_STALE_TIME,
     placeholderData: keepPreviousData,
