@@ -2,6 +2,13 @@ import * as Sentry from "@sentry/react-native";
 import { Platform } from "react-native";
 import { TestIds } from "react-native-google-mobile-ads";
 
+/**
+ * 広告を運用しているプラットフォームかどうか。AndroidはAdMob側のアプリ・広告
+ * ユニットが未整備で配信していないため、未設定を設定漏れとして扱わない。
+ * Androidで広告を始めるときにこの条件を外す。
+ */
+export const IS_ADS_ENABLED_PLATFORM = Platform.OS === "ios";
+
 export type BannerPlacement =
   | "home"
   | "game_results"
@@ -67,6 +74,7 @@ const reportMissingAdUnitId = (adUnitName: string): undefined => {
 export const bannerAdUnitIdFor = (
   placement: BannerPlacement,
 ): string | undefined => {
+  if (!IS_ADS_ENABLED_PLATFORM) return undefined;
   if (__DEV__) return TestIds.BANNER;
   const ids = BANNER_UNIT_ID_BY_PLACEMENT[placement];
   const unitId = Platform.OS === "ios" ? ids.ios : ids.android;
@@ -78,6 +86,7 @@ export const bannerAdUnitIdFor = (
  * バナー(bannerAdUnitIdFor)とは別に、スクロール位置に関わらず常に見える枠として使う。
  */
 export const bottomNavBannerAdUnitId = (): string | undefined => {
+  if (!IS_ADS_ENABLED_PLATFORM) return undefined;
   if (__DEV__) return TestIds.BANNER;
   const unitId =
     Platform.OS === "ios"
@@ -88,6 +97,7 @@ export const bottomNavBannerAdUnitId = (): string | undefined => {
 
 /** インタースティシャル広告のユニットIDを返す。未設定ならundefined。 */
 export const interstitialAdUnitId = (): string | undefined => {
+  if (!IS_ADS_ENABLED_PLATFORM) return undefined;
   if (__DEV__) return TestIds.INTERSTITIAL;
   const unitId =
     Platform.OS === "ios"
