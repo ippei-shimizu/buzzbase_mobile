@@ -239,7 +239,12 @@ jest.mock("react-native-video-trim", () => ({
 jest.mock("react-native-google-mobile-ads", () => {
   const React = require("react");
   const { View } = require("react-native");
+  // initialize は呼び出し回数を assert するため、mobileAds() を呼ぶたびに
+  // 作り直さず同じ jest.fn を返す。
+  const initialize = jest.fn().mockResolvedValue([]);
   return {
+    __esModule: true,
+    default: jest.fn(() => ({ initialize })),
     BannerAd: (props: Record<string, unknown>) =>
       React.createElement(View, {
         ...props,
