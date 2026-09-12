@@ -3,53 +3,51 @@
  * 初期化が走らないと広告が一切返らないため、起動時に1回だけ実行されること、
  * 失敗してもアプリを落とさずSentryへ送ることを担保する。
  */
-import * as Sentry from "@sentry/react-native";
-import mobileAds from "react-native-google-mobile-ads";
 
-const initializeMock = () =>
-  (mobileAds() as unknown as { initialize: jest.Mock }).initialize;
-
-const loadService = async () => {
-  // モジュール内で初期化済みPromiseを保持するため、テストごとに読み直す。
+/**
+ * サービスは初期化済みPromiseをモジュール内に保持するため、テストごとに読み直す。
+ * resetModulesでモックも作り直されるので、サービスと同じタイミングで取得した
+ * インスタンスを返す。
+ */
+const loadService = () => {
   jest.resetModules();
-  return import("../mobileAdsService");
+  const { initializeMobileAds } = require("../mobileAdsService");
+  const mobileAds = require("react-native-google-mobile-ads").default;
+  const Sentry = require("@sentry/react-native");
+  return {
+    initializeMobileAds: initializeMobileAds as () => Promise<void>,
+    initialize: mobileAds().initialize as jest.Mock,
+    captureException: Sentry.captureException as jest.Mock,
+  };
 };
 
 describe("initializeMobileAds", () => {
-  beforeEach(() => {
-    initializeMock().mockClear();
-    initializeMock().mockResolvedValue([]);
-    (Sentry.captureException as jest.Mock).mockClear();
-  });
-
   it("SDKの初期化を実行する", async () => {
-    const { initializeMobileAds } = await loadService();
+    const { initializeMobileAds, initialize } = loadService();
 
     await initializeMobileAds();
 
-    expect(initializeMock()).toHaveBeenCalledTimes(1);
+    expect(initialize).toHaveBeenCalledTimes(1);
   });
 
   it("複数回呼ばれても初期化は1回だけ実行する", async () => {
-    const { initializeMobileAds } = await loadService();
+    const { initializeMobileAds, initialize } = loadService();
 
     await Promise.all([initializeMobileAds(), initializeMobileAds()]);
     await initializeMobileAds();
 
-    expect(initializeMock()).toHaveBeenCalledTimes(1);
+    expect(initialize).toHaveBeenCalledTimes(1);
   });
 
   it("初期化が失敗しても例外を投げずSentryへ送る", async () => {
-    initializeMock().mockRejectedValueOnce(new Error("init failed"));
-    const { initializeMobileAds } = await loadService();
+    const { initializeMobileAds, initialize, captureException } = loadService();
+    initialize.mockRejectedValueOnce(new Error("init failed"));
 
     await expect(initializeMobileAds()).resolves.toBeUndefined();
 
-    expect(Sentry.captureException).toHaveBeenCalledWith(
+    expect(captureException).toHaveBeenCalledWith(
       expect.any(Error),
-      expect.objectContaining({
-        tags: { source: "mobile_ads_initialize" },
-      }),
+      expect.objectContaining({ tags: { source: "mobile_ads_initialize" } }),
     );
   });
 });
