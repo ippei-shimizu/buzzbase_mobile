@@ -1,5 +1,5 @@
-import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 /**
  * Step3 上部の価値訴求バナー。
@@ -10,7 +10,7 @@ import { StyleSheet, Text, View } from "react-native";
 export function DetailValueBanner() {
   return (
     <View style={styles.banner}>
-      <Ionicons name="bulb-outline" size={20} color="#d08000" />
+      <Icon name="bulb-outline" size={20} color="#d08000" />
       <View style={styles.body}>
         <Text style={styles.headline}>
           詳細を記録すると、球質別の打率や状況別の分析が見られます

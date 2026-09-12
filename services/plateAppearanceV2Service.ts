@@ -50,6 +50,19 @@ export const deletePlateAppearanceV2 = async (id: number): Promise<void> => {
 };
 
 /**
+ * v2 打席記録を 1 件取得する。
+ * 公開アカウントであれば他ユーザーの打席も取得できる（by_game と同じポリシー）。
+ */
+export const getPlateAppearanceV2 = async (
+  id: number,
+): Promise<PlateAppearanceV2> => {
+  const response = await axiosInstance.get<PlateAppearanceV2>(
+    `${V2_PLATE_APPEARANCES_URL}/${id}`,
+  );
+  return response.data;
+};
+
+/**
  * 試合単位で打席リストを取得する。
  * back 側は `batter_box_number` 昇順 + マスタ includes 済みで返す。
  */

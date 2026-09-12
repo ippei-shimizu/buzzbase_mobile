@@ -1,0 +1,29 @@
+// このファイルは scripts/icons/generate-solar-icons.mjs が生成する。直接編集しない。
+// 出典: Solar Icons (moon-bold-duotone) by 480 Design / CC BY 4.0
+import type { StyleProp, ViewStyle } from "react-native";
+import React from "react";
+import Svg, { G, Path } from "react-native-svg";
+
+interface IconProps {
+  size?: number;
+  color?: string;
+  style?: StyleProp<ViewStyle>;
+}
+
+export const MoonIcon = ({
+  size = 24,
+  color = "#F4F4F4",
+  style,
+}: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={style}>
+    <G fill={color}>
+      <Path
+        fillRule="evenodd"
+        d="M22 12c0 5.523-4.477 10-10 10a10 10 0 0 1-3.321-.564A9 9 0 0 1 8 18a8.97 8.97 0 0 1 2.138-5.824A6.5 6.5 0 0 0 15.5 15a6.5 6.5 0 0 0 5.567-3.143c.24-.396.933-.32.933.143"
+        clipRule="evenodd"
+        opacity={0.5}
+      />
+      <Path d="M2 12c0 4.359 2.789 8.066 6.679 9.435A9 9 0 0 1 8 18c0-2.221.805-4.254 2.138-5.824A6.47 6.47 0 0 1 9 8.5a6.5 6.5 0 0 1 3.143-5.567C12.54 2.693 12.463 2 12 2C6.477 2 2 6.477 2 12" />
+    </G>
+  </Svg>
+);

@@ -1,4 +1,3 @@
-import axiosInstance from "@utils/axiosInstance";
 import type {
   MatchResultPayload,
   BattingAveragePayload,
@@ -9,6 +8,7 @@ import type {
   Team,
   Position,
 } from "../types/gameRecord";
+import axiosInstance from "@utils/axiosInstance";
 
 /** POST /game_results — 空のgame_resultを作成 */
 export const createGameResult = async (): Promise<{
@@ -77,6 +77,24 @@ export const createPitchingResult = async (
   return response.data;
 };
 
+/**
+ * GET /match_results/existing_search — 指定 game_result_id + user_id に紐づく match_result を取得する。
+ * @returns 存在すれば { id }、存在しなければ null
+ */
+export const findExistingMatchResult = async (
+  gameResultId: number,
+  userId: number,
+): Promise<{ id: number } | null> => {
+  try {
+    const response = await axiosInstance.get("/match_results/existing_search", {
+      params: { game_result_id: gameResultId, user_id: userId },
+    });
+    return response.data;
+  } catch {
+    return null;
+  }
+};
+
 /** PUT /match_results/:id */
 export const updateMatchResult = async (
   id: number,
@@ -110,9 +128,25 @@ export const updatePitchingResult = async (
   return response.data;
 };
 
-/** GET /teams — チーム一覧取得 */
-export const getTeams = async (): Promise<Team[]> => {
-  const response = await axiosInstance.get("/teams");
+/**
+ * GET /teams — チーム名のインクリメンタル検索。
+ * teams は全ユーザー共有で単調増加するマスタのため全件取得はせず、
+ * 検索語と件数上限を必ず付けて取得する。
+ *
+ * @param q 部分一致の検索語
+ * @param limit 最大件数（サーバー既定 50 / 上限 100）
+ */
+export const searchTeams = async (
+  q: string,
+  limit: number = 20,
+): Promise<Team[]> => {
+  const response = await axiosInstance.get("/teams", { params: { q, limit } });
+  return response.data;
+};
+
+/** GET /teams/:id/team_name — チーム ID からチーム名を解決する */
+export const getTeamName = async (id: number): Promise<{ name: string }> => {
+  const response = await axiosInstance.get(`/teams/${id}/team_name`);
   return response.data;
 };
 

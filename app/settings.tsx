@@ -37,18 +37,34 @@ export default function SettingsScreen() {
     ]);
   };
 
+  const accountItems: SettingsItem[] = [
+    {
+      icon: "person-outline",
+      title: "プロフィール編集",
+      description: "アカウントの公開設定・名前・チーム・ポジションなどを変更",
+      onPress: () => router.push("/(profile)/edit"),
+    },
+  ];
+
+  // TODO: Pro 動線の UX を磨き込む。加入済み / 未加入で表示文言とアイコンを切り替え
+  // （useProStatus 連携）、加入済みなら「Pro プランを見る」項目自体を非表示にする。
+  accountItems.push({
+    icon: "star-outline",
+    title: "Pro プランを見る",
+    description: "全機能を解放する Pro プランの詳細を確認",
+    onPress: () => router.push("/pro"),
+  });
+  accountItems.push({
+    icon: "card-outline",
+    title: "サブスクリプション管理",
+    description: "Pro プランの加入状態・解約方法を確認",
+    onPress: () => router.push("/account/subscription"),
+  });
+
   const sections: SettingsSectionData[] = [
     {
       title: "アカウント",
-      items: [
-        {
-          icon: "person-outline",
-          title: "プロフィール編集",
-          description:
-            "アカウントの公開設定・名前・チーム・ポジションなどを変更",
-          onPress: () => router.push("/(profile)/edit"),
-        },
-      ],
+      items: accountItems,
     },
     {
       title: "ヘルプ",
@@ -82,13 +98,25 @@ export default function SettingsScreen() {
           icon: "shield-outline",
           title: "プライバシーポリシー",
           description: "個人情報の取り扱いについて",
-          onPress: () => router.push("/(profile)/privacy-policy"),
+          onPress: () => router.push("/privacy-policy"),
         },
         {
           icon: "document-text-outline",
           title: "利用規約",
           description: "サービスの利用条件について",
-          onPress: () => router.push("/(profile)/terms-of-service"),
+          onPress: () => router.push("/terms-of-service"),
+        },
+        {
+          icon: "receipt-outline",
+          title: "特定商取引法に基づく表記",
+          description: "販売事業者・支払方法・解約について",
+          onPress: () => router.push("/tokushoho"),
+        },
+        {
+          icon: "book-outline",
+          title: "ライセンス表記",
+          description: "利用しているオープンソースソフトウェアについて",
+          onPress: () => router.push("/licenses"),
         },
       ],
     },

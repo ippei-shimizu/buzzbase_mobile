@@ -1,9 +1,9 @@
 import type { GameResult } from "../../../types/gameResult";
-import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, Stack } from "expo-router";
 import React from "react";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 import { GameResultDetail } from "@components/game-results/GameResultDetail";
+import { Icon } from "@components/icon/Icon";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
 import { shareGameResult } from "@utils/shareGameResult";
@@ -39,7 +39,7 @@ export default function NotificationGameDetailScreen() {
                 onPress={handleShare}
                 style={styles.headerButton}
               >
-                <Ionicons name="share-outline" size={22} color="#F4F4F4" />
+                <Icon name="share-outline" size={22} color="#F4F4F4" />
               </TouchableOpacity>
             </View>
           ),

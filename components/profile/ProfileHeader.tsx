@@ -1,13 +1,16 @@
 import type { UserProfile, FollowStatus } from "../../types/profile";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { BallIcon } from "@components/icon/BallIcon";
+import { BatIcon } from "@components/icon/BatIcon";
+import { CrownIcon } from "@components/icon/CrownIcon";
+import { GloveIcon } from "@components/icon/GloveIcon";
+import { Icon } from "@components/icon/Icon";
+import { LockIcon } from "@components/icon/LockIcon";
 import { DefaultUserIcon } from "@components/ui/DefaultUserIcon";
-import { BallIcon } from "@components/ui/icons/BallIcon";
-import { CrownIcon } from "@components/ui/icons/CrownIcon";
-import { GloveIcon } from "@components/ui/icons/GloveIcon";
-import { LockIcon } from "@components/ui/icons/LockIcon";
 import { API_BASE_URL } from "@constants/api";
+import { BATTING_SIDE_LABELS } from "@constants/handedness";
+import { THROW_HAND_FULL_LABELS } from "@constants/throwHand";
 import { FollowButton } from "./FollowButton";
 import { FollowCounts } from "./FollowCounts";
 
@@ -51,6 +54,12 @@ export const ProfileHeader = ({
   const hasPositions = positions && positions.length > 0;
   const hasTeam = !!teamName;
   const hasAwards = awards && awards.length > 0;
+  const handednessText = [
+    profile.throw_hand ? THROW_HAND_FULL_LABELS[profile.throw_hand] : null,
+    profile.batting_side ? BATTING_SIDE_LABELS[profile.batting_side] : null,
+  ]
+    .filter(Boolean)
+    .join(" / ");
 
   return (
     <View style={styles.container}>
@@ -73,9 +82,7 @@ export const ProfileHeader = ({
             <Text style={styles.name} numberOfLines={1}>
               {profile.name ?? "未設定"}
             </Text>
-            {profile.is_private && (
-              <LockIcon width={14} height={14} fill="#A1A1AA" />
-            )}
+            {profile.is_private && <LockIcon size={14} color="#A1A1AA" />}
           </View>
           {profile.user_id && (
             <Text style={styles.userId}>@{profile.user_id}</Text>
@@ -91,17 +98,25 @@ export const ProfileHeader = ({
       {/* ポジション */}
       {hasPositions && (
         <View style={styles.infoRow}>
-          <GloveIcon width={13} height={16} fill="#A1A1AA" />
+          <GloveIcon size={16} color="#A1A1AA" />
           <Text style={styles.infoText}>
             {positions.map((p) => p.name).join(" / ")}
           </Text>
         </View>
       )}
 
+      {/* 利き腕・打席（両方 null なら行ごと非表示） */}
+      {handednessText !== "" && (
+        <View style={styles.infoRow}>
+          <BatIcon size={16} color="#A1A1AA" />
+          <Text style={styles.infoText}>{handednessText}</Text>
+        </View>
+      )}
+
       {/* チーム */}
       {hasTeam && (
         <View style={styles.infoRow}>
-          <BallIcon width={14} height={15} fill="#A1A1AA" />
+          <BallIcon size={15} color="#A1A1AA" />
           <Text style={styles.infoText}>
             {teamName}
             {categoryName ? `（${categoryName}）` : ""}
@@ -113,7 +128,7 @@ export const ProfileHeader = ({
       {/* 受賞歴 */}
       {hasAwards && (
         <View style={styles.infoRow}>
-          <CrownIcon width={16} height={16} fill="#d08000" />
+          <CrownIcon size={16} color="#d08000" />
           <Text style={styles.awardText}>
             {awards.map((a) => a.title).join("  ")}
           </Text>
@@ -137,7 +152,7 @@ export const ProfileHeader = ({
             <Text style={styles.editButtonText}>プロフィール編集</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.shareButton} onPress={onSharePress}>
-            <Ionicons name="share-outline" size={16} color="#F4F4F4" />
+            <Icon name="share-outline" size={16} color="#F4F4F4" />
             <Text style={styles.shareButtonText}>シェアする</Text>
           </TouchableOpacity>
         </View>

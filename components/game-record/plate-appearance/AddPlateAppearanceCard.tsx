@@ -1,5 +1,5 @@
-import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 interface Props {
   batterBoxNumber: number;
@@ -23,7 +23,7 @@ export function AddPlateAppearanceCard({ batterBoxNumber, onPress }: Props) {
         style={styles.button}
         activeOpacity={0.85}
       >
-        <Ionicons name="add" size={16} color="#F4F4F4" />
+        <Icon name="add" size={16} color="#F4F4F4" />
         <Text style={styles.buttonLabel}>結果を入力</Text>
       </TouchableOpacity>
     </View>

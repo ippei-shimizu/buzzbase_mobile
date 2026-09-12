@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -12,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { CalendarIcon } from "@components/icon/CalendarIcon";
+import { Icon } from "@components/icon/Icon";
 import { NoteIcon } from "@components/icon/NoteIcon";
 
 interface Props {
@@ -29,10 +29,13 @@ interface Props {
  * メニュー本体はヘッダーの直下（`useHeaderHeight()` で動的に算出）に配置し、
  * 親 (`useGlobalMenu`) から渡される `Animated.Value` で opacity フェードする。
  *
- * 表示項目は3つ:
+ * 表示項目は4つ:
+ *   - 練習記録
  *   - 野球ノート
  *   - シーズン管理
  *   - 設定
+ *
+ * 練習記録・野球ノートはホームと同じ記録一覧（/(records)/list）の各タブへ遷移する。
  */
 export const GlobalMenuOverlay = ({ visible, opacity, onClose }: Props) => {
   const router = useRouter();
@@ -61,7 +64,20 @@ export const GlobalMenuOverlay = ({ visible, opacity, onClose }: Props) => {
         >
           <TouchableOpacity
             style={styles.item}
-            onPress={() => handleSelect(() => router.push("/(profile)/notes"))}
+            onPress={() =>
+              handleSelect(() => router.push("/(records)/list?tab=practice"))
+            }
+            accessibilityRole="menuitem"
+          >
+            <Icon name="barbell-outline" size={20} color="#F4F4F4" />
+            <Text style={styles.itemText}>練習記録</Text>
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity
+            style={styles.item}
+            onPress={() =>
+              handleSelect(() => router.push("/(records)/list?tab=note"))
+            }
             accessibilityRole="menuitem"
           >
             <NoteIcon size={20} color="#F4F4F4" />
@@ -70,9 +86,7 @@ export const GlobalMenuOverlay = ({ visible, opacity, onClose }: Props) => {
           <View style={styles.divider} />
           <TouchableOpacity
             style={styles.item}
-            onPress={() =>
-              handleSelect(() => router.push("/(profile)/seasons"))
-            }
+            onPress={() => handleSelect(() => router.push("/(season)/list"))}
             accessibilityRole="menuitem"
           >
             <CalendarIcon size={20} color="#F4F4F4" />
@@ -84,7 +98,7 @@ export const GlobalMenuOverlay = ({ visible, opacity, onClose }: Props) => {
             onPress={() => handleSelect(() => router.push("/settings"))}
             accessibilityRole="menuitem"
           >
-            <Ionicons name="settings-outline" size={20} color="#F4F4F4" />
+            <Icon name="settings-outline" size={20} color="#F4F4F4" />
             <Text style={styles.itemText}>設定</Text>
           </TouchableOpacity>
         </Animated.View>

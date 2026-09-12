@@ -7,7 +7,6 @@ import type {
   OutTypeOption,
   PlateResultId,
 } from "@constants/plateResults";
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
@@ -18,6 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { HelpTooltipIcon } from "@components/ui/HelpTooltipIcon";
 import { PLATE_RESULT_IDS } from "@constants/plateResults";
 import {
@@ -167,7 +167,7 @@ export function PlateAppearanceWizard({
             style={styles.headerBack}
             hitSlop={6}
           >
-            <Ionicons name="chevron-back" size={28} color="#F4F4F4" />
+            <Icon name="chevron-back" size={28} color="#F4F4F4" />
           </TouchableOpacity>
         ),
       });
@@ -181,7 +181,7 @@ export function PlateAppearanceWizard({
             style={styles.headerBack}
             hitSlop={6}
           >
-            <Ionicons name="chevron-back" size={28} color="#F4F4F4" />
+            <Icon name="chevron-back" size={28} color="#F4F4F4" />
           </TouchableOpacity>
         ),
       });
@@ -391,7 +391,7 @@ export function PlateAppearanceWizard({
             >
               <View style={styles.primaryButtonInner}>
                 <Text style={styles.primaryLabel}>詳細を入力する</Text>
-                <Ionicons name="chevron-forward" size={20} color="#F4F4F4" />
+                <Icon name="chevron-forward" size={20} color="#F4F4F4" />
               </View>
             </TouchableOpacity>
             <TouchableOpacity
@@ -441,7 +441,7 @@ export function PlateAppearanceWizard({
             onPress={clearHitLocation}
             style={styles.clearLocationButton}
           >
-            <Ionicons name="close-circle" size={16} color="#A1A1AA" />
+            <Icon name="close-circle" size={16} color="#A1A1AA" />
             <Text style={styles.clearLocationLabel}>打球方向をクリア</Text>
           </TouchableOpacity>
         )}

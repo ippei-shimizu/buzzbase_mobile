@@ -1,6 +1,6 @@
-import type { EraTrendPoint } from "../../types/stats";
+import type { EraTrendGranularity, EraTrendPoint } from "../../types/stats";
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import Svg, {
   Path,
   Circle,
@@ -10,9 +10,12 @@ import Svg, {
   LinearGradient,
   Stop,
 } from "react-native-svg";
+import { Icon } from "@components/icon/Icon";
 
 interface EraTrendChartProps {
-  data: EraTrendPoint[];
+  points: EraTrendPoint[];
+  granularity: EraTrendGranularity;
+  onGranularityChange?: (granularity: EraTrendGranularity) => void;
 }
 
 const CHART_WIDTH = 300;
@@ -24,10 +27,49 @@ const PADDING_BOTTOM = 24;
 const PLOT_WIDTH = CHART_WIDTH - PADDING_LEFT - PADDING_RIGHT;
 const PLOT_HEIGHT = CHART_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
 
-export const EraTrendChart = ({ data }: EraTrendChartProps) => {
-  if (data.length === 0) return null;
+const GRANULARITY_OPTIONS: readonly {
+  key: EraTrendGranularity;
+  label: string;
+}[] = [
+  { key: "month", label: "月" },
+  { key: "season", label: "シーズン" },
+];
 
-  const maxEra = Math.max(...data.map((d) => d.era), 1);
+const GranularityToggle = ({
+  value,
+  onChange,
+}: {
+  value: EraTrendGranularity;
+  onChange: (value: EraTrendGranularity) => void;
+}) => (
+  <View style={styles.toggle}>
+    {GRANULARITY_OPTIONS.map((option) => {
+      const isActive = value === option.key;
+      return (
+        <Pressable
+          key={option.key}
+          onPress={() => onChange(option.key)}
+          style={[styles.toggleButton, isActive && styles.toggleActive]}
+        >
+          <Text
+            style={[styles.toggleText, isActive && styles.toggleTextActive]}
+          >
+            {option.label}
+          </Text>
+        </Pressable>
+      );
+    })}
+  </View>
+);
+
+export const EraTrendChart = ({
+  points,
+  granularity,
+  onGranularityChange,
+}: EraTrendChartProps) => {
+  if (points.length === 0) return null;
+
+  const maxEra = Math.max(...points.map((p) => p.era), 1);
   const minEra = 0;
   const eraRange = maxEra - minEra || 1;
 
@@ -36,21 +78,37 @@ export const EraTrendChart = ({ data }: EraTrendChartProps) => {
 
   const getX = (i: number) =>
     PADDING_LEFT +
-    (data.length === 1 ? PLOT_WIDTH / 2 : (i / (data.length - 1)) * PLOT_WIDTH);
+    (points.length === 1
+      ? PLOT_WIDTH / 2
+      : (i / (points.length - 1)) * PLOT_WIDTH);
   const getY = (era: number) =>
     PADDING_TOP + PLOT_HEIGHT - ((era - minEra) / eraRange) * PLOT_HEIGHT;
 
   // 折れ線パス
-  const linePath = data
-    .map((d, i) => `${i === 0 ? "M" : "L"} ${getX(i)},${getY(d.era)}`)
+  const linePath = points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${getX(i)},${getY(p.era)}`)
     .join(" ");
 
   // エリア塗りつぶしパス
-  const areaPath = `${linePath} L ${getX(data.length - 1)},${PADDING_TOP + PLOT_HEIGHT} L ${getX(0)},${PADDING_TOP + PLOT_HEIGHT} Z`;
+  const areaPath = `${linePath} L ${getX(points.length - 1)},${PADDING_TOP + PLOT_HEIGHT} L ${getX(0)},${PADDING_TOP + PLOT_HEIGHT} Z`;
+
+  // 自己ベスト(ERAは低いほど良い)。シーズン粒度で複数点あるときのみ表示。
+  const bestPoint =
+    granularity === "season" && points.length > 1
+      ? points.reduce((best, point) => (point.era < best.era ? point : best))
+      : null;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>防御率推移</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>防御率推移</Text>
+        {onGranularityChange && (
+          <GranularityToggle
+            value={granularity}
+            onChange={onGranularityChange}
+          />
+        )}
+      </View>
       <View style={styles.chartWrapper}>
         <Svg
           width={CHART_WIDTH}
@@ -101,43 +159,52 @@ export const EraTrendChart = ({ data }: EraTrendChartProps) => {
           />
 
           {/* データポイント */}
-          {data.map((d, i) => (
-            <React.Fragment key={`pt-${d.month}`}>
-              <Circle cx={getX(i)} cy={getY(d.era)} r={4} fill="#006fee" />
-              <Circle cx={getX(i)} cy={getY(d.era)} r={2} fill="#F4F4F4" />
+          {points.map((p, i) => (
+            <React.Fragment key={`pt-${p.key}`}>
+              <Circle cx={getX(i)} cy={getY(p.era)} r={4} fill="#006fee" />
+              <Circle cx={getX(i)} cy={getY(p.era)} r={2} fill="#F4F4F4" />
             </React.Fragment>
           ))}
 
-          {/* X軸ラベル（月） */}
-          {data.map((d, i) => (
+          {/* X軸ラベル */}
+          {points.map((p, i) => (
             <SvgText
-              key={`xl-${d.month}`}
+              key={`xl-${p.key}`}
               x={getX(i)}
               y={CHART_HEIGHT - 4}
               textAnchor="middle"
               fill="#A1A1AA"
               fontSize={10}
             >
-              {d.month}月
+              {p.label}
             </SvgText>
           ))}
 
           {/* データポイントの値 */}
-          {data.map((d, i) => (
+          {points.map((p, i) => (
             <SvgText
-              key={`val-${d.month}`}
+              key={`val-${p.key}`}
               x={getX(i)}
-              y={getY(d.era) - 10}
+              y={getY(p.era) - 10}
               textAnchor="middle"
               fill="#F4F4F4"
               fontSize={9}
               fontWeight="600"
             >
-              {d.era.toFixed(2)}
+              {p.era.toFixed(2)}
             </SvgText>
           ))}
         </Svg>
       </View>
+
+      {bestPoint ? (
+        <View style={styles.bestRow}>
+          <Icon name="star" size={12} color="#FFD43B" />
+          <Text style={styles.bestText}>
+            自己ベスト防御率 {bestPoint.era.toFixed(2)}（{bestPoint.label}）
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -149,13 +216,52 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
   },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
   title: {
     color: "#F4F4F4",
     fontSize: 16,
     fontWeight: "700",
-    marginBottom: 12,
   },
   chartWrapper: {
     alignItems: "center",
+  },
+  toggle: {
+    flexDirection: "row",
+    backgroundColor: "#2E2E2E",
+    borderRadius: 8,
+    padding: 2,
+    gap: 2,
+  },
+  toggleButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+  },
+  toggleActive: {
+    backgroundColor: "#006fee",
+  },
+  toggleText: {
+    color: "#A1A1AA",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  toggleTextActive: {
+    color: "#FFFFFF",
+  },
+  bestRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 10,
+  },
+  bestText: {
+    color: "#FFD43B",
+    fontSize: 12,
+    fontWeight: "600",
   },
 });
