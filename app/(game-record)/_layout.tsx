@@ -1,28 +1,112 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Stack, useRouter } from "expo-router";
+import * as Sentry from "@sentry/react-native";
+import { useQueryClient } from "@tanstack/react-query";
+import { Stack, useNavigation, useRouter } from "expo-router";
+import { useCallback, useEffect, useRef } from "react";
 import { TouchableOpacity, Alert } from "react-native";
+import { Icon } from "@components/icon/Icon";
+import { deleteGameResult } from "@services/gameResultService";
+import { isAxios404 } from "@utils/axiosError";
+import { invalidateGameResultRelated } from "@utils/queryInvalidation";
 import { useBattingRecordStore } from "../../stores/battingRecordStore";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 
+interface BeforeRemoveEvent {
+  preventDefault: () => void;
+  data: { action: Readonly<{ type: string }> };
+}
+
+/**
+ * 画面がスタックから取り除かれる直前の beforeRemove を購読する。
+ * expo-router の useNavigation の型には stack 固有のイベントが含まれないため、
+ * ここでキャストを閉じ込める。
+ */
+const addBeforeRemoveListener = (
+  navigation: ReturnType<typeof useNavigation>,
+  listener: (event: BeforeRemoveEvent) => void,
+): (() => void) =>
+  (
+    navigation as unknown as {
+      addListener: (
+        type: "beforeRemove",
+        listener: (event: BeforeRemoveEvent) => void,
+      ) => () => void;
+    }
+  ).addListener("beforeRemove", listener);
+
 export default function GameRecordLayout() {
   const router = useRouter();
+  const navigation = useNavigation();
+  const queryClient = useQueryClient();
   const reset = useGameRecordStore((s) => s.reset);
+  // 破棄確認を済ませた離脱で beforeRemove がもう一度確認を出さないようにする。
+  const isLeavingRef = useRef(false);
 
-  const handleClose = () => {
-    Alert.alert("入力を中断しますか？", "入力中のデータは破棄されます。", [
-      { text: "キャンセル", style: "cancel" },
-      {
-        text: "中断する",
-        style: "destructive",
-        onPress: () => {
-          reset();
-          // v2 ステップ式ウィザードの一時状態（打席途中入力）も同時に破棄する。
-          useBattingRecordStore.getState().reset();
-          router.back();
+  /** フロー用の一時状態だけ片付ける。サーバー上のデータには触らない。 */
+  const resetDraftState = useCallback(() => {
+    reset();
+    // v2 ステップ式ウィザードの一時状態（打席途中入力）も同時に破棄する。
+    useBattingRecordStore.getState().reset();
+  }, [reset]);
+
+  const discardDraft = useCallback(async () => {
+    const { gameResultId, isEditMode } = useGameRecordStore.getState();
+    // 編集モードでは元々存在していたデータのため削除しない。新規記録モードのみ、
+    // Step1送信時点でサーバーに作成済みの未完成ドラフトを削除する。
+    if (!isEditMode && gameResultId) {
+      try {
+        await deleteGameResult(gameResultId);
+        invalidateGameResultRelated(queryClient, "refetch");
+      } catch (error) {
+        if (!isAxios404(error)) {
+          Sentry.captureException(error, {
+            tags: { source: "game-record-cancel", action: "delete" },
+          });
+        }
+      }
+    }
+    resetDraftState();
+  }, [queryClient, resetDraftState]);
+
+  const confirmDiscard = useCallback(
+    (onDiscarded: () => void) => {
+      Alert.alert("入力を中断しますか？", "入力中のデータは破棄されます。", [
+        { text: "キャンセル", style: "cancel" },
+        {
+          text: "中断する",
+          style: "destructive",
+          onPress: async () => {
+            await discardDraft();
+            isLeavingRef.current = true;
+            onDiscarded();
+          },
         },
-      },
-    ]);
-  };
+      ]);
+    },
+    [discardDraft],
+  );
+
+  // ×ボタン以外（iOS のエッジスワイプ / Android の物理戻る）の離脱でも
+  // サーバー上の未完成ドラフトが残らないようにする。
+  useEffect(() => {
+    return addBeforeRemoveListener(navigation, (event) => {
+      if (isLeavingRef.current) {
+        isLeavingRef.current = false;
+        return;
+      }
+      // 保存済みの記録を「破棄」と案内すると消してよいデータだと誤解させるため、
+      // サマリー到達後は確認を出さず一時状態だけ片付ける。
+      if (useGameRecordStore.getState().hasReachedSummary) {
+        resetDraftState();
+        return;
+      }
+      // 記録完了・保存後はストアがリセット済みで破棄対象が無いため確認しない。
+      if (useGameRecordStore.getState().gameResultId == null) return;
+      event.preventDefault();
+      confirmDiscard(() => navigation.dispatch(event.data.action));
+    });
+  }, [navigation, confirmDiscard, resetDraftState]);
+
+  const handleClose = () => confirmDiscard(() => router.back());
 
   return (
     <Stack
@@ -39,7 +123,7 @@ export default function GameRecordLayout() {
           title: "試合情報",
           headerLeft: () => (
             <TouchableOpacity onPress={handleClose} style={{ padding: 8 }}>
-              <Ionicons name="close" size={24} color="#F4F4F4" />
+              <Icon name="close" size={24} color="#F4F4F4" />
             </TouchableOpacity>
           ),
         }}

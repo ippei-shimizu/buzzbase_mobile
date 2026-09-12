@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ConfirmationPendingView } from "@components/auth/ConfirmationPendingView";
 import { useAuth } from "@hooks/useAuth";
+import { isRateLimitError, rateLimitErrorMessage } from "@utils/axiosError";
 
 export default function ConfirmationPendingScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -24,7 +25,9 @@ export default function ConfirmationPendingScreen() {
       await resendConfirmation(email);
       setResent(true);
     } catch (error) {
-      if (error instanceof AxiosError) {
+      if (isRateLimitError(error)) {
+        setErrors([rateLimitErrorMessage(error)]);
+      } else if (error instanceof AxiosError) {
         setErrors(["確認メールの再送信に失敗しました"]);
       } else {
         setErrors(["ネットワークエラーが発生しました"]);

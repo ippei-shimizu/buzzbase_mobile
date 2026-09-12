@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   View,
@@ -8,6 +7,7 @@ import {
   FlatList,
   StyleSheet,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 interface PickerItem {
   label: string;
@@ -58,10 +58,10 @@ export function SelectPicker({
         <View style={styles.triggerActions}>
           {showClear && selectedValue ? (
             <TouchableOpacity onPress={() => onSelect(null)} hitSlop={8}>
-              <Ionicons name="close-circle" size={18} color="#71717A" />
+              <Icon name="close-circle" size={18} color="#71717A" />
             </TouchableOpacity>
           ) : null}
-          <Ionicons name="chevron-down" size={18} color="#A1A1AA" />
+          <Icon name="chevron-down" size={18} color="#A1A1AA" />
         </View>
       </TouchableOpacity>
 

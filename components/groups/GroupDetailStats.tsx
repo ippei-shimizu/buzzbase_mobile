@@ -14,11 +14,18 @@ interface GroupDetailStatsProps {
   selectedYear: string;
   selectedMatchType: string;
   selectedTournamentId?: string;
+  selectedStartMonth?: string;
+  selectedEndMonth?: string;
   availableYears: number[];
+  availableMonths?: string[];
   availableTournaments?: { id: number; name: string }[];
   onYearChange: (year: string) => void;
   onMatchTypeChange: (matchType: string) => void;
   onTournamentChange: (tournamentId: string | undefined) => void;
+  onStartMonthChange: (startMonth: string | undefined) => void;
+  onEndMonthChange: (endMonth: string | undefined) => void;
+  /** ランキング行タップ時の遷移先。user_id（文字列ハンドル）を受け取る。 */
+  onUserPress: (userId: string) => void;
 }
 
 interface Category {
@@ -107,11 +114,13 @@ const RankingRow = ({
   user,
   value,
   decimals,
+  onPress,
 }: {
   rank: number;
   user: GroupUser;
   value: number | null;
   decimals: number;
+  onPress: () => void;
 }) => {
   const hasValidImage =
     user.image?.url &&
@@ -119,7 +128,11 @@ const RankingRow = ({
     user.image.url.length > 0;
 
   return (
-    <View style={styles.rankingRow}>
+    <TouchableOpacity
+      style={styles.rankingRow}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <Text style={styles.rankNumber}>{rank}</Text>
       {hasValidImage ? (
         <Image
@@ -140,7 +153,7 @@ const RankingRow = ({
         <Text style={styles.rankingUserId}>{user.user_id}</Text>
       </View>
       <Text style={styles.rankingValue}>{formatValue(value, decimals)}</Text>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -149,11 +162,17 @@ export const GroupDetailStats = ({
   selectedYear,
   selectedMatchType,
   selectedTournamentId,
+  selectedStartMonth,
+  selectedEndMonth,
   availableYears,
+  availableMonths = [],
   availableTournaments = [],
   onYearChange,
   onMatchTypeChange,
   onTournamentChange,
+  onStartMonthChange,
+  onEndMonthChange,
+  onUserPress,
 }: GroupDetailStatsProps) => {
   const [activeTab, setActiveTab] = useState<"batting" | "pitching">("batting");
   const [selectedCategory, setSelectedCategory] = useState(0);
@@ -176,13 +195,19 @@ export const GroupDetailStats = ({
         ? undefined
         : (matchTypeToJa[selectedMatchType] ?? selectedMatchType),
     tournamentId: selectedTournamentId,
+    startMonth: selectedStartMonth,
+    endMonth: selectedEndMonth,
   };
 
   const handleFiltersChange = (newFilters: StatsFiltersType) => {
     onYearChange(newFilters.year ?? "通算");
-    const mt = newFilters.matchType;
-    onMatchTypeChange(mt ? (matchTypeToEn[mt] ?? mt) : "全て");
+    const matchType = newFilters.matchType;
+    onMatchTypeChange(
+      matchType ? (matchTypeToEn[matchType] ?? matchType) : "全て",
+    );
     onTournamentChange(newFilters.tournamentId);
+    onStartMonthChange(newFilters.startMonth);
+    onEndMonthChange(newFilters.endMonth);
   };
 
   const categories =
@@ -225,6 +250,7 @@ export const GroupDetailStats = ({
         filters={filters}
         onFiltersChange={handleFiltersChange}
         availableYears={availableYears}
+        availableMonths={availableMonths}
         availableTournaments={availableTournaments.map((t) => ({
           id: String(t.id),
           name: t.name,
@@ -303,6 +329,7 @@ export const GroupDetailStats = ({
               user={item.user}
               value={item.value}
               decimals={category.decimals}
+              onPress={() => onUserPress(item.user.user_id)}
             />
           ))
         )}

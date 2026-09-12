@@ -6,9 +6,11 @@ import { Share, View } from "react-native";
 import { SummaryView } from "@components/game-record/SummaryView";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { BottomTabBar } from "@components/ui/BottomTabBar";
+import { useEntitlement } from "@hooks/useEntitlement";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { usePlateAppearancesByGame } from "@hooks/usePlateAppearances";
 import { useStoreReview } from "@hooks/useStoreReview";
+import { showMatchSaveInterstitial } from "@services/interstitialAdService";
 import {
   trackGameRecordCompleted,
   trackGameRecordStepViewed,
@@ -26,11 +28,15 @@ export default function SummaryScreen() {
   const store = useGameRecordStore();
   const { incrementPositiveEvent, checkAndShowPrePrompt, requestNativeReview } =
     useStoreReview();
+  const { hasEntitlement } = useEntitlement();
   const [prePromptVisible, setPrePromptVisible] = useState(false);
   const sourceRef = useRef<PrePromptSource>("complete");
 
   useEffect(() => {
     trackGameRecordStepViewed("summary");
+    // ここまで来た時点で試合結果・打席は保存済み。以降の離脱で
+    // 破棄確認とドラフト削除を走らせないよう記録する。
+    useGameRecordStore.getState().markSummaryReached();
   }, []);
 
   // v2 で記録された打席は plate_appearances API から取得する。
@@ -150,11 +156,34 @@ export default function SummaryScreen() {
     resetFlow();
     invalidateGameResultRelated(queryClient);
 
+    // ストアレビュー促進プロンプトとインタースティシャル広告を同時に出すと
+    // 割り込みが二重になるため、プロンプトが出た場合は広告を出さずに優先する。
     const shown = await tryShowPrePrompt("complete");
     if (shown) return;
+
+    await showMatchSaveInterstitial(hasEntitlement("no_ads"));
     router.replace({
       pathname: "/(tabs)/(game-results)",
       params: { tab: "list" },
+    });
+  };
+
+  const handleRecordNote = async () => {
+    // resetFlow() で store がクリアされる前に gameResultId を退避する。
+    const gameResultId = store.gameResultId;
+    if (!store.isEditMode) {
+      trackGameRecordCompleted({
+        match_type: toMatchTypeKey(store.matchType),
+        appearance_type: store.appearanceType,
+        has_pitching: store.pitchingResultId !== null,
+      });
+    }
+    resetFlow();
+    invalidateGameResultRelated(queryClient);
+    await showMatchSaveInterstitial(hasEntitlement("no_ads"));
+    router.replace({
+      pathname: "/(note)/new",
+      params: gameResultId ? { gameResultId: String(gameResultId) } : {},
     });
   };
 
@@ -224,6 +253,7 @@ export default function SummaryScreen() {
         pitchingHitByPitch={store.pitchingHitByPitch}
         onComplete={handleComplete}
         onShare={handleShare}
+        onRecordNote={handleRecordNote}
       />
       <BottomTabBar />
       <PreReviewPrompt

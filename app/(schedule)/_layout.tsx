@@ -1,0 +1,76 @@
+import { Stack, useRouter } from "expo-router";
+import { TouchableOpacity } from "react-native";
+import { Icon } from "@components/icon/Icon";
+
+export default function ScheduleLayout() {
+  const router = useRouter();
+
+  return (
+    <Stack
+      initialRouteName="calendar"
+      screenOptions={{
+        headerStyle: { backgroundColor: "#2E2E2E" },
+        headerTintColor: "#F4F4F4",
+        headerTitleStyle: { fontSize: 16, fontWeight: "600" },
+        contentStyle: { backgroundColor: "#2E2E2E" },
+      }}
+    >
+      <Stack.Screen
+        name="new"
+        options={{
+          title: "予定を登録",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ padding: 8 }}
+            >
+              <Icon name="chevron-back" size={24} color="#F4F4F4" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="[id]"
+        options={{
+          title: "予定の詳細",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ padding: 8 }}
+            >
+              <Icon name="chevron-back" size={24} color="#F4F4F4" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="calendar"
+        options={{
+          title: "カレンダー",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ padding: 8 }}
+            >
+              <Icon name="chevron-back" size={24} color="#F4F4F4" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="weekly"
+        options={{
+          title: "今週のプラン",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ padding: 8 }}
+            >
+              <Icon name="chevron-back" size={24} color="#F4F4F4" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+    </Stack>
+  );
+}

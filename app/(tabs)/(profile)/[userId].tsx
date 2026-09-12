@@ -1,6 +1,5 @@
 import type { GameResult } from "../../../types/gameResult";
 import type { StatsFilters } from "../../../types/profile";
-import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
@@ -15,6 +14,7 @@ import {
 } from "react-native";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
+import { Icon } from "@components/icon/Icon";
 import { FollowRequestBanner } from "@components/profile/FollowRequestBanner";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
@@ -23,14 +23,11 @@ import {
   MATCH_TYPE_OPTIONS,
   pillButtonStyle,
 } from "@components/ui/FilterDropdown";
+import { useAvailableMonths } from "@hooks/useAvailableMonths";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useUserAwards } from "@hooks/useAwards";
 import { useFilteredUserGameResults } from "@hooks/useGameResults";
-import {
-  useTeams,
-  usePrefectures,
-  useBaseballCategories,
-} from "@hooks/useMasterData";
+import { useMyTeam } from "@hooks/useMyTeam";
 import { useUserStats } from "@hooks/useProfileStats";
 import {
   useUserProfileDetail,
@@ -39,6 +36,7 @@ import {
 } from "@hooks/useRelationship";
 import { useSeasons } from "@hooks/useSeasons";
 import { useTournaments } from "@hooks/useTournaments";
+import { monthOptionsFromRecorded } from "@utils/monthOptions";
 
 export default function UserProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
@@ -51,18 +49,12 @@ export default function UserProfileScreen() {
   const { followUser, isFollowing } = useFollowUser();
   const { unfollowUser, isUnfollowing } = useUnfollowUser();
 
-  const { data: teams } = useTeams();
-  const { data: prefectures } = usePrefectures();
-  const { data: categories } = useBaseballCategories();
+  // プロフィール取得が通ってから叩く。非公開アカウントで本体が 403 のときに
+  // チーム情報だけ取得してしまわないようにする。
+  const { teamName, categoryName, prefectureName } = useMyTeam(
+    data ? userId : undefined,
+  );
   const { data: awards } = useUserAwards(data?.user.id);
-
-  const team = teams?.find((t) => t.id === data?.user.team_id);
-  const categoryName = categories?.find(
-    (c) => c.id === team?.category_id,
-  )?.name;
-  const prefectureName = prefectures?.find(
-    (p) => p.id === team?.prefecture_id,
-  )?.name;
 
   // 成績フィルター
   const [selectedYear, setSelectedYear] = useState<string | undefined>(
@@ -77,6 +69,12 @@ export default function UserProfileScreen() {
   const [selectedTournamentId, setSelectedTournamentId] = useState<
     string | undefined
   >(undefined);
+  const [selectedStartMonth, setSelectedStartMonth] = useState<
+    string | undefined
+  >(undefined);
+  const [selectedEndMonth, setSelectedEndMonth] = useState<string | undefined>(
+    undefined,
+  );
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const toggleFilter = (id: string) =>
     setActiveFilter((prev) => (prev === id ? null : id));
@@ -85,10 +83,49 @@ export default function UserProfileScreen() {
     ...(selectedMatchType ? { matchType: selectedMatchType } : {}),
     ...(selectedSeasonId ? { seasonId: selectedSeasonId } : {}),
     ...(selectedTournamentId ? { tournamentId: selectedTournamentId } : {}),
+    ...(selectedStartMonth ? { startMonth: selectedStartMonth } : {}),
+    ...(selectedEndMonth ? { endMonth: selectedEndMonth } : {}),
   };
+
+  // 年度と期間（開始/終了月）は排他。年度を選んだら期間を、期間を選んだら年度をクリアする。
+  const handleYearSelect = (value: string | undefined) => {
+    const year = value;
+    setSelectedYear(year);
+    if (year) {
+      setSelectedStartMonth(undefined);
+      setSelectedEndMonth(undefined);
+    }
+    setGameCurrentPage(1);
+  };
+
+  // 開始を選ぶと終了が未指定/開始より前のとき終了を同月に合わせ、単月をワンタップで作れる。
+  const handleStartMonthSelect = (value: string | undefined) => {
+    setGameCurrentPage(1);
+    if (!value) {
+      setSelectedStartMonth(undefined);
+      return;
+    }
+    setSelectedStartMonth(value);
+    setSelectedYear(undefined);
+    setSelectedEndMonth((prev) => (!prev || prev < value ? value : prev));
+  };
+
+  const handleEndMonthSelect = (value: string | undefined) => {
+    setGameCurrentPage(1);
+    if (!value) {
+      setSelectedEndMonth(undefined);
+      return;
+    }
+    setSelectedEndMonth(value);
+    setSelectedYear(undefined);
+    setSelectedStartMonth((prev) => (prev && prev > value ? value : prev));
+  };
+
   const { seasons } = useSeasons(data?.user.id);
   const { tournaments } = useTournaments(data?.user.id);
   const { years: availableYears } = useAvailableYears(data?.user.id);
+  const { months: availableMonths } = useAvailableMonths(data?.user.id);
+  const monthOptions = monthOptionsFromRecorded(availableMonths);
   const {
     battingStats,
     pitchingStats,
@@ -124,6 +161,8 @@ export default function UserProfileScreen() {
     match_type: selectedMatchType ?? "全て",
     season_id: selectedSeasonId,
     tournament_id: selectedTournamentId,
+    start_month: selectedStartMonth,
+    end_month: selectedEndMonth,
     search: debouncedGameSearch || undefined,
     sort_by: "date",
     sort_order: gameSortDesc ? "desc" : "asc",
@@ -237,7 +276,7 @@ export default function UserProfileScreen() {
           }}
           isFollowLoading={isFollowing || isUnfollowing}
           positions={data.user.positions}
-          teamName={team?.name}
+          teamName={teamName}
           categoryName={categoryName}
           prefectureName={prefectureName}
           awards={awards}
@@ -246,7 +285,7 @@ export default function UserProfileScreen() {
 
       {isPrivateAndNotFollowing ? (
         <View style={styles.privateContainer}>
-          <Ionicons name="lock-closed" size={32} color="#71717A" />
+          <Icon name="lock-closed" size={32} color="#71717A" />
           <Text style={styles.privateText}>このアカウントは非公開です</Text>
           <Text style={styles.privateSubText}>
             フォローが承認されると成績や試合結果を閲覧できます
@@ -330,19 +369,35 @@ export default function UserProfileScreen() {
                         label="年度"
                         value={selectedYear}
                         options={[
-                          { key: "all", label: "通算" },
                           ...availableYears.map((y) => ({
                             key: y,
                             label: y,
                           })),
                         ]}
-                        onSelect={(v) => {
-                          setSelectedYear(v === "all" ? undefined : v);
-                          setGameCurrentPage(1);
-                        }}
+                        onSelect={handleYearSelect}
                         isOpen={activeFilter === "year"}
                         onToggle={() => toggleFilter("year")}
                       />
+                      {monthOptions.length > 0 && (
+                        <>
+                          <FilterDropdown
+                            label="開始"
+                            value={selectedStartMonth}
+                            options={monthOptions}
+                            onSelect={handleStartMonthSelect}
+                            isOpen={activeFilter === "startMonth"}
+                            onToggle={() => toggleFilter("startMonth")}
+                          />
+                          <FilterDropdown
+                            label="終了"
+                            value={selectedEndMonth}
+                            options={monthOptions}
+                            onSelect={handleEndMonthSelect}
+                            isOpen={activeFilter === "endMonth"}
+                            onToggle={() => toggleFilter("endMonth")}
+                          />
+                        </>
+                      )}
                       <FilterDropdown
                         label="種別"
                         value={selectedMatchType}
@@ -403,16 +458,32 @@ export default function UserProfileScreen() {
                     label="年度"
                     value={selectedYear}
                     options={[
-                      { key: "all", label: "通算" },
                       ...availableYears.map((y) => ({ key: y, label: y })),
                     ]}
-                    onSelect={(v) => {
-                      setSelectedYear(v === "all" ? undefined : v);
-                      setGameCurrentPage(1);
-                    }}
+                    onSelect={handleYearSelect}
                     isOpen={activeFilter === "game-year"}
                     onToggle={() => toggleFilter("game-year")}
                   />
+                  {monthOptions.length > 0 && (
+                    <>
+                      <FilterDropdown
+                        label="開始"
+                        value={selectedStartMonth}
+                        options={monthOptions}
+                        onSelect={handleStartMonthSelect}
+                        isOpen={activeFilter === "game-startMonth"}
+                        onToggle={() => toggleFilter("game-startMonth")}
+                      />
+                      <FilterDropdown
+                        label="終了"
+                        value={selectedEndMonth}
+                        options={monthOptions}
+                        onSelect={handleEndMonthSelect}
+                        isOpen={activeFilter === "game-endMonth"}
+                        onToggle={() => toggleFilter("game-endMonth")}
+                      />
+                    </>
+                  )}
                   <FilterDropdown
                     label="種別"
                     value={selectedMatchType}
@@ -466,7 +537,7 @@ export default function UserProfileScreen() {
                   }}
                 >
                   <View style={styles.searchBox}>
-                    <Ionicons name="search" size={16} color="#71717A" />
+                    <Icon name="search" size={16} color="#71717A" />
                     <TextInput
                       style={styles.searchInput}
                       placeholder="対戦相手を検索"
@@ -485,7 +556,7 @@ export default function UserProfileScreen() {
                     <Text style={pillButtonStyle.buttonText}>
                       日付（{gameSortDesc ? "新しい順" : "古い順"}）
                     </Text>
-                    <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+                    <Icon name="chevron-down" size={14} color="#A1A1AA" />
                   </TouchableOpacity>
                 </View>
 

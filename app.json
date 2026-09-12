@@ -3,7 +3,7 @@
     "name": "BUZZ BASE",
     "slug": "buzzbase",
     "scheme": "buzzbase",
-    "version": "1.1.6",
+    "version": "2.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -15,15 +15,68 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "jp.buzzbase.mobile",
-      "buildNumber": "5",
+      "buildNumber": "6",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "プロフィール画像の撮影に使用します",
         "NSPhotoLibraryUsageDescription": "プロフィール画像の選択に使用します",
+        "NSUserTrackingUsageDescription": "あなたに最適な広告を表示するためにトラッキングの許可をお願いします。広告は無料機能の継続提供に役立てられます。",
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "ja",
         "UIDesignRequiresCompatibility": true,
         "LSApplicationQueriesSchemes": ["twitter"]
+      },
+      "privacyManifests": {
+        "NSPrivacyTracking": true,
+        "NSPrivacyTrackingDomains": [
+          "doubleclick.net",
+          "googlesyndication.com",
+          "googleadservices.com",
+          "googleads.g.doubleclick.net",
+          "admob.com"
+        ],
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeEmailAddress",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeUserID",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypePurchaseHistory",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeCrashData",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeDeviceID",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": true,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeThirdPartyAdvertising"
+            ]
+          }
+        ]
       }
     },
     "android": {
@@ -81,7 +134,19 @@
           }
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "expo-audio",
+      "expo-video",
+      "./plugins/withVideoTrimHttps.js",
+      "./plugins/withGoogleMobileAdsSdkVersion.js",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "iosAppId": "ca-app-pub-2173577862865148~9541878905",
+          "delayAppMeasurementInit": true
+        }
+      ],
+      "expo-tracking-transparency"
     ],
     "extra": {
       "eas": {

@@ -46,10 +46,17 @@ jest.mock("@hooks/useAvailableYears", () => ({
     mockUseAvailableYears(userId),
 }));
 
-jest.mock("@hooks/useMasterData", () => ({
-  useTeams: () => ({ data: [] }),
-  usePrefectures: () => ({ data: [] }),
-  useBaseballCategories: () => ({ data: [] }),
+jest.mock("@hooks/useAvailableMonths", () => ({
+  useAvailableMonths: () => ({ months: [], isLoading: false }),
+}));
+
+jest.mock("@hooks/useMyTeam", () => ({
+  useMyTeam: () => ({
+    teamName: undefined,
+    categoryName: undefined,
+    prefectureName: undefined,
+    isLoading: false,
+  }),
 }));
 
 jest.mock("@hooks/useAwards", () => ({

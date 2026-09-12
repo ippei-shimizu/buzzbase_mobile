@@ -82,6 +82,14 @@ export function SignInForm({
         autoComplete="password"
       />
 
+      <Link href="/(auth)/forgot-password" asChild>
+        <TouchableOpacity style={{ alignSelf: "flex-end", marginBottom: 16 }}>
+          <Text style={{ fontSize: 13, color: "#d08000" }}>
+            パスワードをお忘れですか？
+          </Text>
+        </TouchableOpacity>
+      </Link>
+
       <Button
         title="ログイン"
         onPress={onSubmit}

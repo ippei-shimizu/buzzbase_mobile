@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -13,6 +12,7 @@ import {
 } from "react-native";
 import { GroupDetailStats } from "@components/groups/GroupDetailStats";
 import { GroupDefaultIcon } from "@components/icon/GroupDefaultIcon";
+import { Icon } from "@components/icon/Icon";
 import { useGroupDetail } from "@hooks/useGroups";
 
 export default function GroupDetailScreen() {
@@ -24,6 +24,12 @@ export default function GroupDetailScreen() {
   const [selectedTournamentId, setSelectedTournamentId] = useState<
     string | undefined
   >(undefined);
+  const [selectedStartMonth, setSelectedStartMonth] = useState<
+    string | undefined
+  >(undefined);
+  const [selectedEndMonth, setSelectedEndMonth] = useState<string | undefined>(
+    undefined,
+  );
   const year = selectedYear === "通算" ? undefined : selectedYear;
   const matchType =
     selectedMatchType === "全て" ? undefined : selectedMatchType;
@@ -32,6 +38,8 @@ export default function GroupDetailScreen() {
     year,
     matchType,
     selectedTournamentId,
+    selectedStartMonth,
+    selectedEndMonth,
   );
 
   if (isLoading || !data) {
@@ -58,7 +66,7 @@ export default function GroupDetailScreen() {
             <TouchableOpacity
               onPress={() => router.push(`/(groups)/members?id=${group.id}`)}
             >
-              <Ionicons name="menu-outline" size={24} color="#F4F4F4" />
+              <Icon name="menu-outline" size={24} color="#F4F4F4" />
             </TouchableOpacity>
           ),
         }}
@@ -93,11 +101,17 @@ export default function GroupDetailScreen() {
           selectedYear={selectedYear}
           selectedMatchType={selectedMatchType}
           selectedTournamentId={selectedTournamentId}
+          selectedStartMonth={selectedStartMonth}
+          selectedEndMonth={selectedEndMonth}
           availableYears={data.available_years ?? []}
+          availableMonths={data.available_months ?? []}
           availableTournaments={data.available_tournaments ?? []}
           onYearChange={setSelectedYear}
           onMatchTypeChange={setSelectedMatchType}
           onTournamentChange={setSelectedTournamentId}
+          onStartMonthChange={setSelectedStartMonth}
+          onEndMonthChange={setSelectedEndMonth}
+          onUserPress={(userId) => router.push(`/(profile)/${userId}`)}
         />
       </ScrollView>
     </>

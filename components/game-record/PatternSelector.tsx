@@ -1,6 +1,6 @@
 import type { RecordPattern } from "../../types/gameRecord";
-import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 interface Props {
   onSelect: (pattern: RecordPattern) => void;
@@ -50,7 +50,7 @@ export function PatternSelector({ onSelect, disabled }: Props) {
             <Text style={[styles.label, { color: textColor }]}>
               {option.title}
             </Text>
-            <Ionicons
+            <Icon
               name="chevron-forward"
               size={20}
               color={textColor}

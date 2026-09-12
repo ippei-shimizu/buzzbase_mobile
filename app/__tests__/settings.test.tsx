@@ -133,6 +133,28 @@ describe("SettingsScreen", () => {
     expect(getRouterSpies().push).toHaveBeenCalledWith("/(profile)/edit");
   });
 
+  describe("Pro 動線", () => {
+    it("「Pro プランを見る」リンクが表示され、タップで /pro に push する", () => {
+      const { getByText } = renderWithProviders(<SettingsScreen />);
+
+      expect(getByText("Pro プランを見る")).toBeTruthy();
+      fireEvent.press(getByText("Pro プランを見る"));
+
+      expect(getRouterSpies().push).toHaveBeenCalledWith("/pro");
+    });
+
+    it("「サブスクリプション管理」リンクが表示され、タップで /account/subscription に push する", () => {
+      const { getByText } = renderWithProviders(<SettingsScreen />);
+
+      expect(getByText("サブスクリプション管理")).toBeTruthy();
+      fireEvent.press(getByText("サブスクリプション管理"));
+
+      expect(getRouterSpies().push).toHaveBeenCalledWith(
+        "/account/subscription",
+      );
+    });
+  });
+
   it("「アカウント削除」タップで account-deletion 画面へ遷移する", () => {
     const { getByText } = renderWithProviders(<SettingsScreen />);
     fireEvent.press(getByText("アカウント削除"));

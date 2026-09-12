@@ -1,6 +1,5 @@
 import type { GameResult } from "../../../types/gameResult";
 import type { StatsFilters } from "../../../types/profile";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack } from "expo-router";
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
@@ -16,8 +15,11 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
+import { AppBannerAd } from "@components/ads/AppBannerAd";
+import { InlineBannerAd } from "@components/ads/InlineBannerAd";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
+import { Icon } from "@components/icon/Icon";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
 import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
@@ -31,20 +33,18 @@ import {
   GlobalMenuOverlay,
   useGlobalMenu,
 } from "@components/ui/GlobalMenu";
+import { useAvailableMonths } from "@hooks/useAvailableMonths";
 import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useUserAwards } from "@hooks/useAwards";
 import { useFilteredGameResults } from "@hooks/useGameResults";
-import {
-  useTeams,
-  usePrefectures,
-  useBaseballCategories,
-} from "@hooks/useMasterData";
+import { useMyTeam } from "@hooks/useMyTeam";
 import { useProfile } from "@hooks/useProfile";
 import { useProfileStats } from "@hooks/useProfileStats";
 import { useUserProfileDetail } from "@hooks/useRelationship";
 import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useTournaments } from "@hooks/useTournaments";
+import { monthOptionsFromRecorded } from "@utils/monthOptions";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -62,6 +62,12 @@ export default function ProfileScreen() {
   const [selectedTournamentId, setSelectedTournamentId] = useState<
     string | undefined
   >(undefined);
+  const [selectedStartMonth, setSelectedStartMonth] = useState<
+    string | undefined
+  >(undefined);
+  const [selectedEndMonth, setSelectedEndMonth] = useState<string | undefined>(
+    undefined,
+  );
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const toggleFilter = (id: string) =>
     setActiveFilter((prev) => (prev === id ? null : id));
@@ -70,6 +76,42 @@ export default function ProfileScreen() {
     ...(selectedMatchType ? { matchType: selectedMatchType } : {}),
     ...(selectedSeasonId ? { seasonId: selectedSeasonId } : {}),
     ...(selectedTournamentId ? { tournamentId: selectedTournamentId } : {}),
+    ...(selectedStartMonth ? { startMonth: selectedStartMonth } : {}),
+    ...(selectedEndMonth ? { endMonth: selectedEndMonth } : {}),
+  };
+
+  // 年度と期間（開始/終了月）は排他。年度を選んだら期間を、期間を選んだら年度をクリアする。
+  const handleYearSelect = (value: string | undefined) => {
+    const year = value;
+    setSelectedYear(year);
+    if (year) {
+      setSelectedStartMonth(undefined);
+      setSelectedEndMonth(undefined);
+    }
+    setGameCurrentPage(1);
+  };
+
+  // 開始を選ぶと終了が未指定/開始より前のとき終了を同月に合わせ、単月をワンタップで作れる。
+  const handleStartMonthSelect = (value: string | undefined) => {
+    setGameCurrentPage(1);
+    if (!value) {
+      setSelectedStartMonth(undefined);
+      return;
+    }
+    setSelectedStartMonth(value);
+    setSelectedYear(undefined);
+    setSelectedEndMonth((prev) => (!prev || prev < value ? value : prev));
+  };
+
+  const handleEndMonthSelect = (value: string | undefined) => {
+    setGameCurrentPage(1);
+    if (!value) {
+      setSelectedEndMonth(undefined);
+      return;
+    }
+    setSelectedEndMonth(value);
+    setSelectedYear(undefined);
+    setSelectedStartMonth((prev) => (prev && prev > value ? value : prev));
   };
   // 試合タブフィルター
   const [gameSearchQuery, setGameSearchQuery] = useState("");
@@ -109,6 +151,8 @@ export default function ProfileScreen() {
   const { seasons } = useMySeasons();
   const { tournaments } = useTournaments();
   const { years: availableYears } = useAvailableYears();
+  const { months: availableMonths } = useAvailableMonths();
+  const monthOptions = monthOptionsFromRecorded(availableMonths);
   const { data: profileDetail } = useUserProfileDetail(
     profile?.user_id ?? undefined,
   );
@@ -132,10 +176,10 @@ export default function ProfileScreen() {
     }
   }, [battingStats, pitchingStats, triggerPositiveEvent]);
 
-  // マスターデータ・受賞歴
-  const { data: teams } = useTeams();
-  const { data: prefectures } = usePrefectures();
-  const { data: categories } = useBaseballCategories();
+  // 所属チーム情報・受賞歴
+  const { teamName, categoryName, prefectureName } = useMyTeam(
+    profile?.user_id,
+  );
   const { data: awards } = useUserAwards(profile?.id);
 
   // 試合結果
@@ -152,18 +196,12 @@ export default function ProfileScreen() {
     match_type: selectedMatchType ?? "全て",
     season_id: selectedSeasonId,
     tournament_id: selectedTournamentId,
+    start_month: selectedStartMonth,
+    end_month: selectedEndMonth,
     search: debouncedGameSearch || undefined,
     sort_by: "date",
     sort_order: gameSortDesc ? "desc" : "asc",
   });
-
-  const team = teams?.find((t) => t.id === profile?.team_id);
-  const categoryName = categories?.find(
-    (c) => c.id === team?.category_id,
-  )?.name;
-  const prefectureName = prefectures?.find(
-    (p) => p.id === team?.prefecture_id,
-  )?.name;
 
   const handleSharePress = async () => {
     if (!profile?.user_id) return;
@@ -213,7 +251,7 @@ export default function ProfileScreen() {
   const headerRightContent = () => (
     <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
       <TouchableOpacity onPress={() => router.push("/(profile)/search")}>
-        <Ionicons name="search-outline" size={22} color="#F4F4F4" />
+        <Icon name="search-outline" size={22} color="#F4F4F4" />
       </TouchableOpacity>
       <GlobalMenuButton onPress={openMenu} />
     </View>
@@ -227,7 +265,7 @@ export default function ProfileScreen() {
           followingCount={profileDetail?.following_count ?? undefined}
           followersCount={profileDetail?.followers_count ?? undefined}
           positions={profile.positions}
-          teamName={team?.name}
+          teamName={teamName}
           categoryName={categoryName}
           prefectureName={prefectureName}
           awards={awards}
@@ -352,16 +390,32 @@ export default function ProfileScreen() {
                       label="年度"
                       value={selectedYear}
                       options={[
-                        { key: "all", label: "通算" },
                         ...availableYears.map((y) => ({ key: y, label: y })),
                       ]}
-                      onSelect={(v) => {
-                        setSelectedYear(v === "all" ? undefined : v);
-                        setGameCurrentPage(1);
-                      }}
+                      onSelect={handleYearSelect}
                       isOpen={activeFilter === "year"}
                       onToggle={() => toggleFilter("year")}
                     />
+                    {monthOptions.length > 0 && (
+                      <>
+                        <FilterDropdown
+                          label="開始"
+                          value={selectedStartMonth}
+                          options={monthOptions}
+                          onSelect={handleStartMonthSelect}
+                          isOpen={activeFilter === "startMonth"}
+                          onToggle={() => toggleFilter("startMonth")}
+                        />
+                        <FilterDropdown
+                          label="終了"
+                          value={selectedEndMonth}
+                          options={monthOptions}
+                          onSelect={handleEndMonthSelect}
+                          isOpen={activeFilter === "endMonth"}
+                          onToggle={() => toggleFilter("endMonth")}
+                        />
+                      </>
+                    )}
                     <FilterDropdown
                       label="種別"
                       value={selectedMatchType}
@@ -407,9 +461,11 @@ export default function ProfileScreen() {
                 }
               />
             )}
+            <InlineBannerAd placement="profile" />
           </View>
         </ScrollView>
 
+        <AppBannerAd />
         <GlobalMenuOverlay
           visible={menuVisible}
           opacity={menuOpacity}
@@ -457,17 +513,31 @@ export default function ProfileScreen() {
             <FilterDropdown
               label="年度"
               value={selectedYear}
-              options={[
-                { key: "all", label: "通算" },
-                ...availableYears.map((y) => ({ key: y, label: y })),
-              ]}
-              onSelect={(v) => {
-                setSelectedYear(v === "all" ? undefined : v);
-                setGameCurrentPage(1);
-              }}
+              options={[...availableYears.map((y) => ({ key: y, label: y }))]}
+              onSelect={handleYearSelect}
               isOpen={activeFilter === "game-year"}
               onToggle={() => toggleFilter("game-year")}
             />
+            {monthOptions.length > 0 && (
+              <>
+                <FilterDropdown
+                  label="開始"
+                  value={selectedStartMonth}
+                  options={monthOptions}
+                  onSelect={handleStartMonthSelect}
+                  isOpen={activeFilter === "game-startMonth"}
+                  onToggle={() => toggleFilter("game-startMonth")}
+                />
+                <FilterDropdown
+                  label="終了"
+                  value={selectedEndMonth}
+                  options={monthOptions}
+                  onSelect={handleEndMonthSelect}
+                  isOpen={activeFilter === "game-endMonth"}
+                  onToggle={() => toggleFilter("game-endMonth")}
+                />
+              </>
+            )}
             <FilterDropdown
               label="種別"
               value={selectedMatchType}
@@ -521,7 +591,7 @@ export default function ProfileScreen() {
             }}
           >
             <View style={styles.searchBox}>
-              <Ionicons name="search" size={16} color="#71717A" />
+              <Icon name="search" size={16} color="#71717A" />
               <TextInput
                 style={styles.searchInput}
                 placeholder="対戦相手を検索"
@@ -540,7 +610,7 @@ export default function ProfileScreen() {
               <Text style={pillButtonStyle.buttonText}>
                 日付（{gameSortDesc ? "新しい順" : "古い順"}）
               </Text>
-              <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+              <Icon name="chevron-down" size={14} color="#A1A1AA" />
             </TouchableOpacity>
           </View>
 
@@ -575,9 +645,11 @@ export default function ProfileScreen() {
               </>
             )}
           </View>
+          <InlineBannerAd placement="profile" />
         </View>
       </ScrollView>
 
+      <AppBannerAd />
       <GlobalMenuOverlay
         visible={menuVisible}
         opacity={menuOpacity}

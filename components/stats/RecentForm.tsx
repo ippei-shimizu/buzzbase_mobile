@@ -1,6 +1,7 @@
 import type { RecentFormGame } from "../../types/stats";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { formatJaFullDate } from "@utils/formatDate";
 import { formatMatchTypeLabel } from "@utils/matchType";
 
 interface RecentFormProps {
@@ -32,7 +33,7 @@ export const RecentForm = ({ games }: RecentFormProps) => {
               ) : (
                 <View style={styles.badgePlaceholder} />
               )}
-              <Text style={styles.date}>{g.date}</Text>
+              <Text style={styles.date}>{formatJaFullDate(g.date)}</Text>
               <Text style={[styles.mark, { color: display.color }]}>
                 {display.mark}
               </Text>

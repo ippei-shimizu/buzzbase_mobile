@@ -90,6 +90,94 @@ describe("useGameRecord submitStep1", () => {
     // 振る舞いとして、新規作成後 matchResultId がストアに反映される
     expect(useGameRecordStore.getState().matchResultId).toBe(555);
   });
+
+  it("createMatchResultが失敗しても既存レコードがあれば復旧してupdateにフォールバックする", async () => {
+    // createMatchResult のレスポンス消失後にユーザーが再送信し、サーバー側では
+    // 既に該当 game_result_id の match_result が存在する状況を再現する。
+    useGameRecordStore.getState().setField("gameResultId", 100);
+    useGameRecordStore.getState().setField("userId", 7);
+    useGameRecordStore.getState().setField("myTeamId", 10);
+    useGameRecordStore.getState().setField("myTeamName", "イーグルス");
+    useGameRecordStore.getState().setField("opponentTeamId", 20);
+    useGameRecordStore.getState().setField("opponentTeamName", "ライオンズ");
+    useGameRecordStore.getState().setField("date", "2026-05-09");
+    useGameRecordStore.getState().setField("matchType", "公式戦");
+
+    let updateBody: Record<string, unknown> | null = null;
+    let gameResultUpdateBody: Record<string, unknown> | null = null;
+
+    server.use(
+      http.post(apiUrl("/match_results"), () =>
+        HttpResponse.json(
+          { errors: ["Game result は既に存在します"] },
+          { status: 422 },
+        ),
+      ),
+      http.get(apiUrl("/match_results/existing_search"), () =>
+        HttpResponse.json({ id: 555 }),
+      ),
+      http.put(apiUrl("/match_results/555"), async ({ request }) => {
+        updateBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ id: 555 });
+      }),
+      http.put(apiUrl("/game_results/100"), async ({ request }) => {
+        gameResultUpdateBody = (await request.json()) as Record<
+          string,
+          unknown
+        >;
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const { result } = renderHook(() => useGameRecord(), {
+      wrapper: createWrapper(),
+    });
+
+    await act(async () => {
+      await result.current.submitStep1.mutateAsync();
+    });
+
+    expect(updateBody).toMatchObject({
+      match_result: { game_result_id: 100, my_team_id: 10 },
+    });
+    expect(gameResultUpdateBody).toEqual({
+      game_result: { match_result_id: 555, season_id: null },
+    });
+    expect(useGameRecordStore.getState().matchResultId).toBe(555);
+  });
+
+  it("createMatchResultが失敗し既存レコードも見つからない場合は元のエラーをそのまま投げる", async () => {
+    useGameRecordStore.getState().setField("gameResultId", 100);
+    useGameRecordStore.getState().setField("userId", 7);
+    useGameRecordStore.getState().setField("myTeamId", 10);
+    useGameRecordStore.getState().setField("myTeamName", "イーグルス");
+    useGameRecordStore.getState().setField("opponentTeamId", 20);
+    useGameRecordStore.getState().setField("opponentTeamName", "ライオンズ");
+    useGameRecordStore.getState().setField("date", "2026-05-09");
+    useGameRecordStore.getState().setField("matchType", "公式戦");
+
+    server.use(
+      http.post(apiUrl("/match_results"), () =>
+        HttpResponse.json({ errors: ["エラー"] }, { status: 422 }),
+      ),
+      http.get(apiUrl("/match_results/existing_search"), () =>
+        HttpResponse.json(
+          { message: "No matching record found" },
+          { status: 404 },
+        ),
+      ),
+    );
+
+    const { result } = renderHook(() => useGameRecord(), {
+      wrapper: createWrapper(),
+    });
+
+    await act(async () => {
+      await expect(result.current.submitStep1.mutateAsync()).rejects.toThrow();
+    });
+
+    expect(useGameRecordStore.getState().matchResultId).toBeNull();
+  });
 });
 
 describe("useGameRecord submitStep2", () => {

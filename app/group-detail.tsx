@@ -1,4 +1,4 @@
-import { useLocalSearchParams, Stack } from "expo-router";
+import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import React, { useState } from "react";
 import {
   ScrollView,
@@ -15,12 +15,19 @@ import { useGroupDetail } from "@hooks/useGroups";
 
 export default function GroupDetailModal() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const groupId = id ? Number(id) : undefined;
   const [selectedYear, setSelectedYear] = useState("通算");
   const [selectedMatchType, setSelectedMatchType] = useState("全て");
   const [selectedTournamentId, setSelectedTournamentId] = useState<
     string | undefined
   >(undefined);
+  const [selectedStartMonth, setSelectedStartMonth] = useState<
+    string | undefined
+  >(undefined);
+  const [selectedEndMonth, setSelectedEndMonth] = useState<string | undefined>(
+    undefined,
+  );
   const year = selectedYear === "通算" ? undefined : selectedYear;
   const matchType =
     selectedMatchType === "全て" ? undefined : selectedMatchType;
@@ -29,6 +36,8 @@ export default function GroupDetailModal() {
     year,
     matchType,
     selectedTournamentId,
+    selectedStartMonth,
+    selectedEndMonth,
   );
 
   if (isLoading || !data) {
@@ -84,11 +93,17 @@ export default function GroupDetailModal() {
           selectedYear={selectedYear}
           selectedMatchType={selectedMatchType}
           selectedTournamentId={selectedTournamentId}
+          selectedStartMonth={selectedStartMonth}
+          selectedEndMonth={selectedEndMonth}
           availableYears={data.available_years ?? []}
+          availableMonths={data.available_months ?? []}
           availableTournaments={data.available_tournaments ?? []}
           onYearChange={setSelectedYear}
           onMatchTypeChange={setSelectedMatchType}
           onTournamentChange={setSelectedTournamentId}
+          onStartMonthChange={setSelectedStartMonth}
+          onEndMonthChange={setSelectedEndMonth}
+          onUserPress={(userId) => router.push(`/(profile)/${userId}`)}
         />
       </ScrollView>
     </>

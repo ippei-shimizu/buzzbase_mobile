@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   View,
@@ -8,6 +7,7 @@ import {
   TouchableWithoutFeedback,
   StyleSheet,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 interface FilterDropdownProps {
   label: string;
@@ -35,6 +35,12 @@ export const pillButtonStyle = StyleSheet.create({
     color: "#F4F4F4",
     fontSize: 12,
     fontWeight: "500",
+  },
+  buttonActive: {
+    borderColor: "#d08000",
+  },
+  buttonTextActive: {
+    color: "#d08000",
   },
 });
 
@@ -90,14 +96,31 @@ export function FilterDropdown({
   onToggle,
 }: FilterDropdownProps) {
   const selectedLabel = options.find((o) => o.key === value)?.label ?? "全て";
+  // 「全て」以外を選択中は primary で強調し、絞り込み中だと一目で分かるようにする。
+  const isFiltered = value !== undefined;
 
   return (
     <View style={{ zIndex: isOpen ? 100 : 0 }}>
-      <TouchableOpacity style={pillButtonStyle.button} onPress={onToggle}>
-        <Text style={pillButtonStyle.buttonText}>
+      <TouchableOpacity
+        style={[
+          pillButtonStyle.button,
+          isFiltered && pillButtonStyle.buttonActive,
+        ]}
+        onPress={onToggle}
+      >
+        <Text
+          style={[
+            pillButtonStyle.buttonText,
+            isFiltered && pillButtonStyle.buttonTextActive,
+          ]}
+        >
           {label}: {selectedLabel}
         </Text>
-        <Ionicons name="chevron-down" size={14} color="#A1A1AA" />
+        <Icon
+          name="chevron-down"
+          size={14}
+          color={isFiltered ? "#d08000" : "#A1A1AA"}
+        />
       </TouchableOpacity>
 
       {isOpen && (

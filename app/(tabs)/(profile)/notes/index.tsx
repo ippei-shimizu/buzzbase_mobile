@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack } from "expo-router";
 import React from "react";
 import {
@@ -11,6 +10,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { NoteListCard } from "@components/baseball-notes/NoteListCard";
+import { Icon } from "@components/icon/Icon";
 import { useBaseballNotes } from "@hooks/useBaseballNotes";
 
 export default function NotesIndexScreen() {
@@ -29,11 +29,24 @@ export default function NotesIndexScreen() {
       <Stack.Screen
         options={{
           headerRight: () => (
-            <TouchableOpacity
-              onPress={() => router.push("/(profile)/notes/create")}
-            >
-              <Ionicons name="add" size={24} color="#F4F4F4" />
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                style={styles.templateButton}
+                onPress={() => router.push("/(reflect-template)/list")}
+                accessibilityRole="button"
+                accessibilityLabel="振り返りテンプレを管理"
+              >
+                <Icon name="document-text-outline" size={16} color="#F4F4F4" />
+                <Text style={styles.templateButtonText}>テンプレ</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => router.push("/(profile)/notes/create")}
+                accessibilityRole="button"
+                accessibilityLabel="ノートを作成"
+              >
+                <Icon name="add" size={24} color="#F4F4F4" />
+              </TouchableOpacity>
+            </View>
           ),
         }}
       />
@@ -79,6 +92,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#2E2E2E",
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  templateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#3A3A3A",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  templateButtonText: {
+    color: "#F4F4F4",
+    fontSize: 13,
+    fontWeight: "600",
   },
   loader: {
     marginTop: 40,

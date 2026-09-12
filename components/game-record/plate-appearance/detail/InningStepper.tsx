@@ -1,5 +1,5 @@
-import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { SectionHeader } from "./SectionHeader";
 
 interface Props {
@@ -42,7 +42,7 @@ export function InningStepper({ value, onChange, description }: Props) {
           onPress={decrement}
           hitSlop={6}
         >
-          <Ionicons
+          <Icon
             name="remove-circle"
             size={28}
             color={decrementDisabled ? DISABLED_COLOR : PRIMARY_COLOR}
@@ -59,7 +59,7 @@ export function InningStepper({ value, onChange, description }: Props) {
           onPress={increment}
           hitSlop={6}
         >
-          <Ionicons name="add-circle" size={28} color={PRIMARY_COLOR} />
+          <Icon name="add-circle" size={28} color={PRIMARY_COLOR} />
         </TouchableOpacity>
         {value !== null && (
           <TouchableOpacity

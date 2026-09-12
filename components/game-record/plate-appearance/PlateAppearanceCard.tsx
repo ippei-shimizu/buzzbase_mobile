@@ -1,6 +1,6 @@
 import type { PlateAppearanceV2 } from "../../../types/plateAppearance";
-import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Icon } from "@components/icon/Icon";
 import { getBattingResultColor } from "@utils/battingResultColor";
 import {
   buildPitchAndPitcherChips,
@@ -102,7 +102,7 @@ export function PlateAppearanceCard({
         )}
       </View>
       {isInteractive && (
-        <Ionicons name="chevron-forward" size={20} color="#A1A1AA" />
+        <Icon name="chevron-forward" size={20} color="#A1A1AA" />
       )}
     </>
   );
