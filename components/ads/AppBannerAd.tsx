@@ -1,5 +1,5 @@
 import { BannerAd, BannerAdSize } from "react-native-google-mobile-ads";
-import { BOTTOM_NAV_BANNER_AD_UNIT_ID } from "@constants/admob";
+import { bottomNavBannerAdUnitId } from "@constants/admob";
 import { useEntitlement } from "@hooks/useEntitlement";
 
 /**
@@ -15,13 +15,16 @@ export function AppBannerAd() {
   const { hasEntitlement, isLoading } = useEntitlement();
   // Pro状態確定前はhasEntitlementが常にfalse(無料扱い)になるため、
   // isLoading中も広告を出さないことでPro加入者への一瞬の広告フラッシュを防ぐ。
-  if (isLoading || hasEntitlement("no_ads") || !BOTTOM_NAV_BANNER_AD_UNIT_ID) {
-    return null;
-  }
+  if (isLoading || hasEntitlement("no_ads")) return null;
+
+  // ユニットIDの取得はPro判定の後に行う。未設定時のSentry警告がPro加入者の
+  // 表示されない枠にまで出るのを避けるため。
+  const unitId = bottomNavBannerAdUnitId();
+  if (!unitId) return null;
 
   return (
     <BannerAd
-      unitId={BOTTOM_NAV_BANNER_AD_UNIT_ID}
+      unitId={unitId}
       // 固定320x50のBANNERだと横幅の広い端末で画面いっぱいにならないため、
       // 画面幅に応じて自動調整されるアンカー型アダプティブバナーを使う。
       // LARGE版は高さも大きく画面を圧迫するため、通常サイズの方を使う。

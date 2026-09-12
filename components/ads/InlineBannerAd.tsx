@@ -18,10 +18,14 @@ interface InlineBannerAdProps {
  */
 export function InlineBannerAd({ placement }: InlineBannerAdProps) {
   const { hasEntitlement, isLoading } = useEntitlement();
-  const unitId = bannerAdUnitIdFor(placement);
   // Pro状態確定前はhasEntitlementが常にfalse(無料扱い)になるため、
   // isLoading中も広告を出さないことでPro加入者への一瞬の広告フラッシュを防ぐ。
-  if (isLoading || hasEntitlement("no_ads") || !unitId) return null;
+  if (isLoading || hasEntitlement("no_ads")) return null;
+
+  // ユニットIDの取得はPro判定の後に行う。未設定時のSentry警告がPro加入者の
+  // 表示されない枠にまで出るのを避けるため。
+  const unitId = bannerAdUnitIdFor(placement);
+  if (!unitId) return null;
 
   return (
     <View style={styles.container}>

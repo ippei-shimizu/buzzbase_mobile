@@ -1,6 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 import { AdEventType, InterstitialAd } from "react-native-google-mobile-ads";
-import { INTERSTITIAL_AD_UNIT_ID } from "@constants/admob";
+import { interstitialAdUnitId } from "@constants/admob";
 
 const KEYS = {
   INSTALL_DATE: "admob_install_date",
@@ -76,13 +76,16 @@ const recordShown = async (): Promise<void> => {
 export const showMatchSaveInterstitial = async (
   hasNoAdsEntitlement: boolean,
 ): Promise<void> => {
-  if (hasNoAdsEntitlement || !INTERSTITIAL_AD_UNIT_ID) return;
+  if (hasNoAdsEntitlement) return;
   if (await isWithinGracePeriod()) return;
   if ((await todayShownCount()) >= DAILY_LIMIT) return;
 
-  const interstitial = InterstitialAd.createForAdRequest(
-    INTERSTITIAL_AD_UNIT_ID,
-  );
+  // ユニットIDの取得はPro判定・表示条件の後に行う。未設定時のSentry警告が
+  // そもそも広告を出さないケースにまで出るのを避けるため。
+  const unitId = interstitialAdUnitId();
+  if (!unitId) return;
+
+  const interstitial = InterstitialAd.createForAdRequest(unitId);
 
   await new Promise<void>((resolve) => {
     let settled = false;
