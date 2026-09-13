@@ -28,7 +28,6 @@ import {
   EMPTY_CONDITION_DRAFT,
 } from "@components/practice/ConditionForm";
 import { PaywallModal } from "@components/pro/PaywallModal";
-import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import { SegmentedControl } from "@components/ui/SegmentedControl";
 import {
@@ -70,22 +69,44 @@ const toConditionDraft = (session: PracticeSession | null): ConditionDraft => {
   };
 };
 
-const draftHasContent = (draft: ConditionDraft): boolean =>
-  draft.fatigue_level != null ||
-  draft.physical_level != null ||
+/** 疲労度・体調（無料項目）に入力があるか。 */
+const draftHasBasicContent = (draft: ConditionDraft): boolean =>
+  draft.fatigue_level != null || draft.physical_level != null;
+
+/** 睡眠・気分・メモ・怪我（Pro 限定項目）に入力があるか。 */
+const draftHasDetailContent = (draft: ConditionDraft): boolean =>
   draft.sleep_hours.trim() !== "" ||
   draft.mood != null ||
   draft.memo.trim() !== "" ||
   draft.injuries.length > 0;
 
-const toConditionInput = (draft: ConditionDraft): ConditionInput => ({
-  fatigue_level: draft.fatigue_level,
-  physical_level: draft.physical_level,
-  sleep_hours: draft.sleep_hours.trim() ? Number(draft.sleep_hours) : null,
-  mood: draft.mood,
-  memo: draft.memo.trim() || null,
-  injuries: draft.injuries,
-});
+/**
+ * 保存リクエストに載せるコンディションを決める。載せない場合は null。
+ * 詳細項目は canSaveDetail が false ならキーごと落とす。null を送ると back が既存値を
+ * 空で上書きしてしまうため、「送らない」と「空にする」を区別する必要がある。
+ */
+const toConditionInput = (
+  draft: ConditionDraft,
+  canSaveDetail: boolean,
+): ConditionInput | null => {
+  const sendsDetail = canSaveDetail && draftHasDetailContent(draft);
+  if (!draftHasBasicContent(draft) && !sendsDetail) return null;
+
+  return {
+    fatigue_level: draft.fatigue_level,
+    physical_level: draft.physical_level,
+    ...(canSaveDetail
+      ? {
+          sleep_hours: draft.sleep_hours.trim()
+            ? Number(draft.sleep_hours)
+            : null,
+          mood: draft.mood,
+          memo: draft.memo.trim() || null,
+          injuries: draft.injuries,
+        }
+      : {}),
+  };
+};
 
 /** 選択済みメニュー（量の編集途中文字列を保持）。 */
 type SelectedItems = Record<number, string>;
@@ -164,7 +185,7 @@ function DailyEditor({
     initialSession?.improvement_theme_ids ?? [],
   );
   const [isConditionPaywallOpen, setConditionPaywallOpen] = useState(false);
-  const canSaveCondition = hasEntitlement("detailed_condition_log");
+  const canSaveConditionDetail = hasEntitlement("detailed_condition_log");
 
   const toggleMenu = (menu: PracticeMenu) => {
     const isSelected = menu.id in selected;
@@ -206,21 +227,21 @@ function DailyEditor({
 
   // 保存後に野球ノートへ進むか、練習記録のみで終えるかを呼び出し側のボタンで分ける。
   const handleSave = async (withNote: boolean) => {
-    const hasCondition = draftHasContent(condition);
-    if (items.length === 0 && !hasCondition) {
+    // 疲労度・体調は無料でも送る。詳細項目は entitlement を持たない間だけ落とす。
+    const conditionInput = toConditionInput(
+      condition,
+      !isProLoading && canSaveConditionDetail,
+    );
+    if (items.length === 0 && conditionInput === null) {
       Alert.alert("記録する内容がありません", "メニューを選んでください");
       return;
     }
     try {
-      // 無料ユーザーは condition の入力ができないため、state に何が残っていても送らない
-      // （Pro/トライアル時代の記録を持つユーザーが他項目だけ編集した際に、
-      // condition の Pro 判定で保存全体が失敗しないようにする）。
       const session = await saveSession({
         logged_on: dateString,
         items,
         practice_type: practiceType,
-        condition:
-          hasCondition && canSaveCondition ? toConditionInput(condition) : null,
+        condition: conditionInput,
         improvement_theme_ids: improvementThemeIds,
       });
       if (withNote) {
@@ -341,25 +362,15 @@ function DailyEditor({
         );
       })}
 
-      <View style={styles.sectionTitleRow}>
-        <Text style={styles.sectionTitleInline}>コンディション</Text>
-        {!isProLoading && !canSaveCondition ? (
-          <Text style={styles.proBadge}>Pro限定</Text>
-        ) : null}
-      </View>
+      <Text style={styles.sectionTitle}>コンディション</Text>
       <View style={styles.conditionWrapper}>
-        <ProUpsellOverlay
-          unlocked={canSaveCondition}
-          loading={isProLoading}
-          feature="detailed_condition_log"
-          onPressCta={() => setConditionPaywallOpen(true)}
-        >
-          <ConditionForm
-            value={condition}
-            onChange={setCondition}
-            disabled={!canSaveCondition}
-          />
-        </ProUpsellOverlay>
+        <ConditionForm
+          value={condition}
+          onChange={setCondition}
+          detailUnlocked={canSaveConditionDetail}
+          detailLoading={isProLoading}
+          onPressDetailCta={() => setConditionPaywallOpen(true)}
+        />
       </View>
       <PaywallModal
         isOpen={isConditionPaywallOpen}
@@ -498,23 +509,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 24,
     marginBottom: 12,
-  },
-  sectionTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 36,
-    marginBottom: 12,
-  },
-  sectionTitleInline: {
-    color: "#F4F4F4",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  proBadge: {
-    color: "#d08000",
-    fontSize: 12,
-    fontWeight: "700",
   },
   dateRow: {
     flexDirection: "row",

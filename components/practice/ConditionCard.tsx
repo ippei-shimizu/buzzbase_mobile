@@ -39,18 +39,41 @@ function ConditionFace({
   );
 }
 
-/** 練習記録・野球ノートの詳細画面で共通利用するコンディション表示カード。 */
+/**
+ * 描画する範囲。無料項目（疲労度・体調）と Pro 限定項目（睡眠・気分・怪我・メモ）は
+ * 呼び出し元が別々に扱えるよう、セクション単位で描き分けられるようにする。
+ */
+export type ConditionSection = "all" | "basic" | "detail";
+
+/** Pro 限定セクションに表示できる値があるか。無いときはサンプルのプレビューへ差し替える。 */
+export function hasConditionDetail(condition: ConditionLog): boolean {
+  return (
+    condition.sleep_hours != null ||
+    Boolean(condition.mood) ||
+    Boolean(condition.memo) ||
+    (condition.injuries ?? []).length > 0
+  );
+}
+
+/**
+ * 練習記録・野球ノートの詳細画面で共通利用するコンディション表示カード。
+ * section で無料項目 / Pro 限定項目のどちらを描くかを選べる。
+ */
 export function ConditionCard({
   condition,
   style,
   showTitle = true,
+  section = "all",
 }: {
   condition: ConditionLog;
   /** 呼び出し元のレイアウトに合わせて外枠（marginTop・区切り線等）を上書きする。 */
   style?: StyleProp<ViewStyle>;
   /** 呼び出し元が独自に見出しを描画する場合は false にして内部見出しの二重表示を防ぐ。 */
   showTitle?: boolean;
+  section?: ConditionSection;
 }) {
+  const showsBasic = section !== "detail";
+  const showsDetail = section !== "basic";
   const chips: { icon: IconName; text: string }[] = [];
   if (condition.sleep_hours != null) {
     chips.push({ icon: "moon", text: `睡眠 ${condition.sleep_hours}h` });
@@ -65,7 +88,8 @@ export function ConditionCard({
       {showTitle ? (
         <Text style={styles.sectionTitle}>コンディション</Text>
       ) : null}
-      {condition.fatigue_level != null || condition.physical_level != null ? (
+      {showsBasic &&
+      (condition.fatigue_level != null || condition.physical_level != null) ? (
         <View style={styles.faceRow}>
           {condition.fatigue_level != null ? (
             <ConditionFace
@@ -83,7 +107,7 @@ export function ConditionCard({
           ) : null}
         </View>
       ) : null}
-      {chips.length > 0 ? (
+      {showsDetail && chips.length > 0 ? (
         <View style={styles.chipRow}>
           {chips.map((chip) => (
             <View key={chip.text} style={styles.condChip}>
@@ -93,7 +117,7 @@ export function ConditionCard({
           ))}
         </View>
       ) : null}
-      {injuries.length > 0 ? (
+      {showsDetail && injuries.length > 0 ? (
         <View style={styles.chipRow}>
           {injuries.map((part) => (
             <View key={part} style={styles.injuryChip}>
@@ -103,7 +127,7 @@ export function ConditionCard({
           ))}
         </View>
       ) : null}
-      {condition.memo ? (
+      {showsDetail && condition.memo ? (
         <Text style={styles.conditionMemo}>{condition.memo}</Text>
       ) : null}
     </View>

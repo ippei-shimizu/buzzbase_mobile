@@ -9,6 +9,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { Icon } from "@components/icon/Icon";
+import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { CONDITION_MOODS } from "../../constants/practice";
 import { InjuryInput } from "./InjuryInput";
 
@@ -34,8 +35,12 @@ export const EMPTY_CONDITION_DRAFT: ConditionDraft = {
 interface Props {
   value: ConditionDraft;
   onChange: (next: ConditionDraft) => void;
-  /** true のとき見た目はそのまま操作不可にする（無料ユーザーへの Pro 機能プレビュー用）。 */
-  disabled?: boolean;
+  /** 詳細項目（睡眠・気分・メモ・怪我）を編集できるか。false なら Pro 訴求で覆う。 */
+  detailUnlocked: boolean;
+  /** Pro 判定の確定前。true の間は訴求カードを出さず暗幕だけにする。 */
+  detailLoading?: boolean;
+  /** 詳細項目の訴求カードを押したとき。省略時はカードを出さず暗幕とバッジのみ。 */
+  onPressDetailCta?: () => void;
 }
 
 // emoji は RN で表示されない端末があるためアイコンを使う。色は悪い→良いで赤→緑。
@@ -88,32 +93,21 @@ function LevelSelector({
 /**
  * コンディション入力フォーム（疲労/体調/睡眠/気分/怪我）。
  * 値と onChange を親が持つ制御コンポーネント。保存は親（練習セッション）側で一括して行う。
+ * 疲労度・体調は無料で入力でき、詳細項目は Pro 未加入なら訴求で覆って操作させない。
  */
-export function ConditionForm({ value, onChange, disabled = false }: Props) {
+export function ConditionForm({
+  value,
+  onChange,
+  detailUnlocked,
+  detailLoading = false,
+  onPressDetailCta,
+}: Props) {
   const patch = (partial: Partial<ConditionDraft>) => {
-    if (disabled) return;
     onChange({ ...value, ...partial });
   };
 
-  return (
-    <View
-      style={disabled ? styles.disabled : undefined}
-      pointerEvents={disabled ? "none" : "auto"}
-    >
-      <Text style={styles.label}>疲労度</Text>
-      <LevelSelector
-        value={value.fatigue_level}
-        onChange={(fatigue_level) => patch({ fatigue_level })}
-        labels={FATIGUE_LABELS}
-      />
-
-      <Text style={styles.label}>体調</Text>
-      <LevelSelector
-        value={value.physical_level}
-        onChange={(physical_level) => patch({ physical_level })}
-        labels={PHYSICAL_LABELS}
-      />
-
+  const detailFields = (
+    <View>
       <Text style={styles.label}>睡眠</Text>
       <View style={styles.sleepRow}>
         <TextInput
@@ -159,10 +153,39 @@ export function ConditionForm({ value, onChange, disabled = false }: Props) {
       />
     </View>
   );
+
+  return (
+    <View>
+      <Text style={styles.label}>疲労度</Text>
+      <LevelSelector
+        value={value.fatigue_level}
+        onChange={(fatigue_level) => patch({ fatigue_level })}
+        labels={FATIGUE_LABELS}
+      />
+
+      <Text style={styles.label}>体調</Text>
+      <LevelSelector
+        value={value.physical_level}
+        onChange={(physical_level) => patch({ physical_level })}
+        labels={PHYSICAL_LABELS}
+      />
+
+      <ProUpsellOverlay
+        style={styles.detailOverlay}
+        unlocked={detailUnlocked}
+        loading={detailLoading}
+        feature="detailed_condition_log"
+        hideCard={onPressDetailCta === undefined}
+        onPressCta={onPressDetailCta}
+      >
+        {detailFields}
+      </ProUpsellOverlay>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-  disabled: { opacity: 0.45 },
+  detailOverlay: { marginTop: 8 },
   label: {
     color: "#A1A1AA",
     fontSize: 13,
