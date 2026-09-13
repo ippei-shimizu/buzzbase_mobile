@@ -23,6 +23,9 @@ export const initializeMobileAds = (): Promise<void> => {
       Sentry.captureException(error, {
         tags: { source: "mobile_ads_initialize" },
       });
+      // 失敗した Promise を保持すると以降の呼び出しが「成功済み」として素通りする。
+      // 起動直後のネットワーク不通で広告が永久に出ない状態を避けるため捨てる。
+      initialization = null;
     });
   return initialization;
 };
