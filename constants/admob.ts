@@ -56,10 +56,17 @@ const reportedMissingAdUnitIds = new Set<string>();
 const reportMissingAdUnitId = (adUnitName: string): undefined => {
   if (reportedMissingAdUnitIds.has(adUnitName)) return undefined;
   reportedMissingAdUnitIds.add(adUnitName);
+  // adUnitName は extra ではなく tag に置く。Sentry の検索・アラート条件に使えるのは
+  // tag だけで、この警告は設定漏れに気付くための唯一の検知手段のため。
+  // fingerprint を固定して、メッセージ文言を変えても issue が枠ごとに1本にまとまるようにする。
   Sentry.captureMessage(`AdMob ad unit id is not configured: ${adUnitName}`, {
     level: "warning",
-    tags: { source: "admob_missing_ad_unit_id" },
-    extra: { adUnitName, platform: Platform.OS },
+    tags: {
+      source: "admob_missing_ad_unit_id",
+      adUnitName,
+      platform: Platform.OS,
+    },
+    fingerprint: ["admob_missing_ad_unit_id", adUnitName],
   });
   return undefined;
 };
