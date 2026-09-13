@@ -76,14 +76,15 @@ const recordShown = async (): Promise<void> => {
 export const showMatchSaveInterstitial = async (
   hasNoAdsEntitlement: boolean,
 ): Promise<void> => {
+  // ユニットIDの取得はPro判定の後、表示条件の判定より前に行う。Pro加入者に未設定
+  // 警告を出さないためにPro判定は先に置き、広告を配信しないAndroidで
+  // SecureStore を3回読むのを避けるため表示条件より前に置く。
   if (hasNoAdsEntitlement) return;
-  if (await isWithinGracePeriod()) return;
-  if ((await todayShownCount()) >= DAILY_LIMIT) return;
-
-  // ユニットIDの取得はPro判定・表示条件の後に行う。未設定時のSentry警告が
-  // そもそも広告を出さないケースにまで出るのを避けるため。
   const unitId = interstitialAdUnitId();
   if (!unitId) return;
+
+  if (await isWithinGracePeriod()) return;
+  if ((await todayShownCount()) >= DAILY_LIMIT) return;
 
   const interstitial = InterstitialAd.createForAdRequest(unitId);
 
