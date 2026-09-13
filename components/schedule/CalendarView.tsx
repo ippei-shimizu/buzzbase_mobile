@@ -16,6 +16,7 @@ import { SkeletonList, Skeleton } from "@components/ui/Skeleton";
 import { eventTypeMeta, scheduleTimeLabel } from "@constants/schedule";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useCalendar } from "@hooks/usePlans";
+import { trackProFeatureTapped } from "@utils/analytics";
 import { buildTimelineLayout, minutesFromMidnight } from "@utils/dayTimeline";
 import { formatJaFullDate } from "@utils/formatDate";
 import {
@@ -177,6 +178,7 @@ export function CalendarView({ swipeEnabled = true }: CalendarViewProps) {
         : addDays(cursor, direction * (mode === "week" ? 7 : 1));
 
     if (!canViewFullHistory && isOutsideFreeWindow(nextCursor)) {
+      trackProFeatureTapped("schedule_calendar_full_history");
       setPaywallOpen(true);
       return;
     }

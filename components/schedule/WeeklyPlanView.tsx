@@ -16,6 +16,7 @@ import { eventTypeMeta } from "@constants/schedule";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useSchedules } from "@hooks/useSchedules";
 import { copyScheduleWeekToNext } from "@services/scheduleService";
+import { trackProFeatureTapped } from "@utils/analytics";
 import { addDays, fromIsoDate, mondayOf, todayIso } from "@utils/planDate";
 
 const WEEKDAY_LABELS = ["月", "火", "水", "木", "金", "土", "日"];
@@ -69,6 +70,7 @@ export function WeeklyPlanView() {
       setWeekStart((prev) => addDays(prev, 7));
     } catch (error) {
       if (isAxiosError(error) && error.response?.status === 403) {
+        trackProFeatureTapped("schedule_copy_next_week");
         setPaywallOpen(true);
       } else {
         Alert.alert("コピーできませんでした");
