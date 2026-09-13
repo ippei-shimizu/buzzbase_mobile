@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/react-native";
 import { QueryClientProvider } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import * as Linking from "expo-linking";
-import { Stack, useRouter, usePathname } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { PostHogProvider } from "posthog-react-native";
 import { useCallback, useEffect } from "react";
@@ -52,16 +52,23 @@ const revenueCatApiKey =
 if (revenueCatApiKey) configureRevenueCat(revenueCatApiKey);
 
 /**
- * Expo Router の現在パスを PostHog の $screen イベントとして送信する。
+ * Expo Router の現在ルートを PostHog の $screen イベントとして送信する。
  * Expo Router は NavigationContainer を公開せず autocapture の captureScreens が
- * 使えないため、usePathname を監視して手動送信する。
+ * 使えないため、手動送信する。
+ *
+ * usePathname() ではなく useSegments() を使うのは、前者がグループセグメント
+ * （`(goal)` / `(theme)` 等）を落とし、`(goal)/list` と `(theme)/list` が同じ
+ * `/list` に潰れて機能別の使用率を出せなくなるため。動的セグメントは `[id]` の
+ * ままなので、ID ごとに screen 名が分散することもない。
+ * 送信例: `/(goal)/list`、`/(tabs)/(profile)/notes/[id]`。
  */
 function ScreenTracker() {
-  const pathname = usePathname();
+  const segments = useSegments();
+  const screenName = `/${segments.join("/")}`;
 
   useEffect(() => {
-    posthog?.screen(pathname);
-  }, [pathname]);
+    posthog?.screen(screenName);
+  }, [screenName]);
 
   return null;
 }
