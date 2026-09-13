@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/react-native";
 import mobileAds from "react-native-google-mobile-ads";
-import { IS_ADS_ENABLED_PLATFORM } from "@constants/admob";
+import { isAdsEnabledPlatform } from "@constants/admob";
 
 let initialization: Promise<void> | null = null;
 
@@ -12,7 +12,7 @@ let initialization: Promise<void> | null = null;
  */
 export const initializeMobileAds = (): Promise<void> => {
   // 広告を配信しないプラットフォームではSDKを起動しない。
-  if (!IS_ADS_ENABLED_PLATFORM) return Promise.resolve();
+  if (!isAdsEnabledPlatform()) return Promise.resolve();
 
   initialization ??= mobileAds()
     .initialize()
