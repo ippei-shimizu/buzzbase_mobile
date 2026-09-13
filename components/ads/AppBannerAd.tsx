@@ -30,6 +30,8 @@ export function AppBannerAd() {
 
   // ユニットIDの取得はPro判定の後に行う。未設定時のSentry警告がPro加入者の
   // 表示されない枠にまで出るのを避けるため。
+  // これはレンダー中の副作用になるが、未設定の報告は枠ごとに1回だけ送るよう
+  // dedupe されているため、StrictMode の二重レンダーでも多重送信にならない。
   const unitId = bottomNavBannerAdUnitId();
   if (!unitId) return null;
 
