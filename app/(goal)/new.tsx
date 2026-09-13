@@ -185,11 +185,17 @@ function GoalForm({ editing }: { editing?: Goal }) {
 
   // 保存時の 403 は「この目標タイプ / 件数が Pro 限定」で返る。どの制限に当たったかを
   // 計測と Pro 訴求の trigger に使うため、選択中の種類・期間から機能キーを引く。
+  // entitlement も条件に入れるのは、種類ロックが解放されている場合（Pro / 編集中）の
+  // 403 は件数上限が原因であり、種類側のキーへ吸われると内訳がずれるため。
   const lockedGoalFeature = (): ProFeature => {
-    if (isManual) return "manual_metric_goals";
-    if (periodType === "season") return "season_goals";
-    if (periodType === "tournament") return "tournament_goals";
-    if (periodType === "custom") return "custom_period_goals";
+    if (isLockedManual) return "manual_metric_goals";
+    if (periodType === "season" && !canSeason) return "season_goals";
+    if (periodType === "tournament" && !canTournament) {
+      return "tournament_goals";
+    }
+    if (periodType === "custom" && !canCustomPeriod) {
+      return "custom_period_goals";
+    }
     return "unlimited_monthly_goals";
   };
 
