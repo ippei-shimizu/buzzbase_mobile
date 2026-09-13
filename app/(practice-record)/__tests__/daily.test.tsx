@@ -103,7 +103,7 @@ describe("日次の練習記録", () => {
     await waitFor(() => expect(getByText("練習記録の変更を保存")).toBeTruthy());
   });
 
-  it("無料ユーザーが Pro 時代の condition 付き記録を編集しても condition を送信しない", async () => {
+  it("無料ユーザーの編集では疲労度・体調だけ送り、Pro 限定の詳細項目は送らない", async () => {
     let savedBody: {
       practice_session?: { items?: unknown[]; condition?: unknown };
     } = {};
@@ -138,6 +138,32 @@ describe("日次の練習記録", () => {
     fireEvent.press(getByText("練習記録の変更を保存"));
 
     await waitFor(() => expect(savedBody.practice_session).toBeTruthy());
-    expect(savedBody.practice_session?.condition).toBeNull();
+    // 詳細項目は null ではなくキーごと落とす（back に既存値を消させないため）。
+    expect(savedBody.practice_session?.condition).toEqual({
+      fatigue_level: 2,
+      physical_level: 3,
+    });
+  });
+
+  it("無料ユーザーでも疲労度を選んで保存できる", async () => {
+    let savedBody: {
+      practice_session?: { condition?: unknown };
+    } = {};
+    setupHandlers((body) => {
+      savedBody = body as typeof savedBody;
+    });
+
+    const { getByText } = renderWithProviders(<DailyRecordScreen />);
+
+    await waitFor(() => expect(getByText("素振り")).toBeTruthy());
+
+    fireEvent.press(getByText("元気"));
+    fireEvent.press(getByText("練習記録のみ保存"));
+
+    await waitFor(() => expect(savedBody.practice_session).toBeTruthy());
+    expect(savedBody.practice_session?.condition).toEqual({
+      fatigue_level: 4,
+      physical_level: null,
+    });
   });
 });

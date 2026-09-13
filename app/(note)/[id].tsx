@@ -12,7 +12,10 @@ import {
 import { GameResultDetail } from "@components/game-results/GameResultDetail";
 import { Icon } from "@components/icon/Icon";
 import { MediaAttachmentList } from "@components/note/MediaAttachmentList";
-import { ConditionCard } from "@components/practice/ConditionCard";
+import {
+  ConditionCard,
+  hasConditionDetail,
+} from "@components/practice/ConditionCard";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { Skeleton, SkeletonList } from "@components/ui/Skeleton";
@@ -109,17 +112,27 @@ function LinkedPractice({ sessionId }: { sessionId: number }) {
       )}
 
       {session.condition ? (
-        <ProUpsellOverlay
-          unlocked={hasEntitlement("detailed_condition_log")}
-          loading={isProLoading}
-          feature="detailed_condition_log"
-          onPressCta={() => setConditionPaywallOpen(true)}
-        >
+        <>
           <ConditionCard
             condition={session.condition}
+            section="basic"
             style={styles.conditionCard}
           />
-        </ProUpsellOverlay>
+          {hasConditionDetail(session.condition) ? (
+            <ProUpsellOverlay
+              unlocked={hasEntitlement("detailed_condition_log")}
+              loading={isProLoading}
+              feature="detailed_condition_log"
+              onPressCta={() => setConditionPaywallOpen(true)}
+            >
+              <ConditionCard
+                condition={session.condition}
+                section="detail"
+                showTitle={false}
+              />
+            </ProUpsellOverlay>
+          ) : null}
+        </>
       ) : null}
       <PaywallModal
         isOpen={isConditionPaywallOpen}

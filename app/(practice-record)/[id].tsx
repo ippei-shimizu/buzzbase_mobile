@@ -10,7 +10,10 @@ import {
   View,
 } from "react-native";
 import { Icon } from "@components/icon/Icon";
-import { ConditionCard } from "@components/practice/ConditionCard";
+import {
+  ConditionCard,
+  hasConditionDetail,
+} from "@components/practice/ConditionCard";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { formatPracticeValue, menuIconForLog } from "@constants/practice";
@@ -204,20 +207,26 @@ export default function PracticeSessionDetailScreen() {
 
         {session.condition ? (
           <>
-            <View style={styles.sectionTitleRow}>
-              <Text style={styles.sectionTitleInline}>コンディション</Text>
-              {!isProLoading && !hasEntitlement("detailed_condition_log") ? (
-                <Text style={styles.proBadge}>Pro限定</Text>
-              ) : null}
-            </View>
-            <ProUpsellOverlay
-              unlocked={hasEntitlement("detailed_condition_log")}
-              loading={isProLoading}
-              feature="detailed_condition_log"
-              onPressCta={() => setConditionPaywallOpen(true)}
-            >
-              <ConditionCard condition={session.condition} showTitle={false} />
-            </ProUpsellOverlay>
+            <Text style={styles.sectionTitle}>コンディション</Text>
+            <ConditionCard
+              condition={session.condition}
+              section="basic"
+              showTitle={false}
+            />
+            {hasConditionDetail(session.condition) ? (
+              <ProUpsellOverlay
+                unlocked={hasEntitlement("detailed_condition_log")}
+                loading={isProLoading}
+                feature="detailed_condition_log"
+                onPressCta={() => setConditionPaywallOpen(true)}
+              >
+                <ConditionCard
+                  condition={session.condition}
+                  section="detail"
+                  showTitle={false}
+                />
+              </ProUpsellOverlay>
+            ) : null}
           </>
         ) : null}
 
@@ -265,23 +274,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 24,
     marginBottom: 10,
-  },
-  sectionTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 24,
-    marginBottom: 10,
-  },
-  sectionTitleInline: {
-    color: "#F4F4F4",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  proBadge: {
-    color: "#d08000",
-    fontSize: 12,
-    fontWeight: "700",
   },
   muted: { color: "#A1A1AA", fontSize: 13 },
 
