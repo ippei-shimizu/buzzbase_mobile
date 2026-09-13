@@ -37,6 +37,7 @@ import { useGoalMutations, useGoals } from "@hooks/useGoals";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useTournaments } from "@hooks/useTournaments";
+import { trackFreeLimitReached, trackProFeatureTapped } from "@utils/analytics";
 
 const pad = (value: number): string => String(value).padStart(2, "0");
 const dateString = (date: Date): string =>
@@ -182,6 +183,16 @@ function GoalForm({ editing }: { editing?: Goal }) {
       (periodType === "tournament" && !canTournament) ||
       (periodType === "custom" && !canCustomPeriod));
 
+  // 保存時の 403 は「この目標タイプ / 件数が Pro 限定」で返る。どの制限に当たったかを
+  // 計測と Pro 訴求の trigger に使うため、選択中の種類・期間から機能キーを引く。
+  const lockedGoalFeature = (): ProFeature => {
+    if (isManual) return "manual_metric_goals";
+    if (periodType === "season") return "season_goals";
+    if (periodType === "tournament") return "tournament_goals";
+    if (periodType === "custom") return "custom_period_goals";
+    return "unlimited_monthly_goals";
+  };
+
   const handleSave = async () => {
     // isPending は再レンダー後にしか true にならないため、同一フレームの連打を ref で弾く。
     if (isSavingRef.current) return;
@@ -282,9 +293,17 @@ function GoalForm({ editing }: { editing?: Goal }) {
     } catch (error) {
       isSavingRef.current = false;
       if (isAxiosError(error) && error.response?.status === 403) {
+        const lockedFeature = lockedGoalFeature();
+        trackFreeLimitReached(lockedFeature);
         Alert.alert("Pro プラン", "この目標は Pro プランで設定できます", [
           { text: "閉じる", style: "cancel" },
-          { text: "Pro を見る", onPress: () => router.push("/pro") },
+          {
+            text: "Pro を見る",
+            onPress: () => {
+              trackProFeatureTapped(lockedFeature);
+              router.push(`/pro?trigger=${lockedFeature}`);
+            },
+          },
         ]);
       } else {
         Alert.alert("保存に失敗しました");

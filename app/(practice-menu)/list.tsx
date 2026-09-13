@@ -21,6 +21,7 @@ import {
   usePracticeMenuMutations,
   usePracticeMenus,
 } from "@hooks/usePracticeMenus";
+import { trackFreeLimitReached } from "@utils/analytics";
 
 export default function PracticeMenuListScreen() {
   const router = useRouter();
@@ -35,6 +36,7 @@ export default function PracticeMenuListScreen() {
       !hasEntitlement("unlimited_practice_menus") &&
       menus.length >= PRACTICE_MENU_FREE_LIMIT
     ) {
+      trackFreeLimitReached("unlimited_practice_menus");
       setPaywallOpen(true);
       return;
     }

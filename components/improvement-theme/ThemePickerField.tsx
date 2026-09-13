@@ -4,6 +4,7 @@ import { Icon } from "@components/icon/Icon";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useImprovementThemes } from "@hooks/useImprovementThemes";
+import { trackFreeLimitReached } from "@utils/analytics";
 
 interface Props {
   selectedThemeIds: number[];
@@ -31,6 +32,7 @@ export function ThemePickerField({ selectedThemeIds, onChange }: Props) {
       selectedThemeIds.length >= 1 &&
       !hasEntitlement("multi_improvement_theme_links")
     ) {
+      trackFreeLimitReached("multi_improvement_theme_links");
       setPaywallOpen(true);
       return;
     }

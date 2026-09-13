@@ -22,6 +22,7 @@ import {
 } from "@constants/goal";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useGoalHistory, useGoalMutations, useGoals } from "@hooks/useGoals";
+import { trackFreeLimitReached } from "@utils/analytics";
 
 type GoalTab = "in_progress" | "achieved" | "unachieved";
 
@@ -84,6 +85,7 @@ export default function GoalListScreen() {
       !hasEntitlement("unlimited_monthly_goals") &&
       personalGoalCount >= MONTHLY_GOAL_FREE_LIMIT
     ) {
+      trackFreeLimitReached("unlimited_monthly_goals");
       setPaywallOpen(true);
       return;
     }

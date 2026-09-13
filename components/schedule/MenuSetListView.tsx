@@ -13,6 +13,7 @@ import { PaywallModal } from "@components/pro/PaywallModal";
 import { MENU_SET_FREE_LIMIT } from "@constants/menuSet";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useMenuSets } from "@hooks/useMenuSets";
+import { trackFreeLimitReached } from "@utils/analytics";
 
 /**
  * 練習プランセット（MenuSet）一覧。練習プラン画面（(menu-set)/list.tsx）のデフォルトタブ。
@@ -29,6 +30,7 @@ export function MenuSetListView() {
       !hasEntitlement("unlimited_menu_sets") &&
       menuSets.length >= MENU_SET_FREE_LIMIT
     ) {
+      trackFreeLimitReached("unlimited_menu_sets");
       setPaywallOpen(true);
       return;
     }

@@ -19,6 +19,7 @@ import { PaywallModal } from "@components/pro/PaywallModal";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useMediaAttachmentUpload } from "@hooks/useMediaAttachmentUpload";
 import { useVideoTrim } from "@hooks/useVideoTrim";
+import { trackFreeLimitReached } from "@utils/analytics";
 import {
   FREE_MEDIA_MONTHLY_LIMIT,
   FREE_VIDEO_MAX_DURATION_SECONDS,
@@ -197,6 +198,7 @@ export function MediaPicker({ baseballNoteId, onStage, onUploaded }: Props) {
       reset();
     } catch (error) {
       if (isAxiosError(error) && error.response?.status === 403) {
+        trackFreeLimitReached("unlimited_media_uploads");
         setPaywallOpen(true);
       } else {
         Alert.alert("アップロードに失敗しました");

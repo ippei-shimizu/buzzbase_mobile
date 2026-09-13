@@ -18,6 +18,7 @@ import {
   useReflectionTemplateMutations,
   useReflectionTemplates,
 } from "@hooks/useReflectionTemplates";
+import { trackFreeLimitReached } from "@utils/analytics";
 
 export default function ReflectTemplateListScreen() {
   const router = useRouter();
@@ -35,6 +36,7 @@ export default function ReflectTemplateListScreen() {
       !hasEntitlement("unlimited_reflection_templates") &&
       custom.length >= 1
     ) {
+      trackFreeLimitReached("unlimited_reflection_templates");
       setPaywallOpen(true);
       return;
     }

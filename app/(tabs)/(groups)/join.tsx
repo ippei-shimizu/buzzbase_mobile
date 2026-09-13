@@ -21,6 +21,7 @@ import { useEntitlement } from "@hooks/useEntitlement";
 import { useAcceptInviteLink } from "@hooks/useGroupMutations";
 import { useGroups } from "@hooks/useGroups";
 import { getInviteLinkInfo } from "@services/groupService";
+import { trackFreeLimitReached } from "@utils/analytics";
 import { groupLimitErrorMessage, isGroupLimitError } from "@utils/axiosError";
 
 const GROUP_LIMIT_MESSAGE = `無料プランで参加できるグループは${GROUP_FREE_LIMIT}件までのため、参加できませんでした。`;
@@ -59,6 +60,7 @@ export default function JoinGroupScreen() {
       !hasEntitlement("unlimited_groups") &&
       groups.length >= GROUP_FREE_LIMIT
     ) {
+      trackFreeLimitReached("unlimited_groups");
       setPaywallMessage(GROUP_LIMIT_MESSAGE);
       return;
     }
@@ -70,6 +72,7 @@ export default function JoinGroupScreen() {
       // サーバー側の上限チェックによる 403 は障害ではないため、
       // 汎用エラーに潰さず Pro への導線を出す。
       if (isGroupLimitError(error)) {
+        trackFreeLimitReached("unlimited_groups");
         setPaywallMessage(groupLimitErrorMessage(error) ?? GROUP_LIMIT_MESSAGE);
         return;
       }
