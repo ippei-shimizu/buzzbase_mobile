@@ -90,6 +90,7 @@ import {
 import { useTournaments } from "@hooks/useTournaments";
 import {
   trackBattingTrendGranularityChanged,
+  trackProFeatureTapped,
   trackStatsFilterChanged,
 } from "@utils/analytics";
 import { monthOptionsFromRecorded } from "@utils/monthOptions";
@@ -854,6 +855,7 @@ export default function StatsScreen() {
                     next === "season" &&
                     !hasEntitlement("season_transition_graph")
                   ) {
+                    trackProFeatureTapped("season_transition_graph");
                     setSeasonPaywallOpen(true);
                     return;
                   }
@@ -1137,6 +1139,7 @@ export default function StatsScreen() {
                     next === "season" &&
                     !hasEntitlement("season_transition_graph")
                   ) {
+                    trackProFeatureTapped("season_transition_graph");
                     setSeasonPaywallOpen(true);
                     return;
                   }
@@ -1320,10 +1323,13 @@ export default function StatsScreen() {
         onClose={() => setSeasonPaywallOpen(false)}
         feature="season_transition_graph"
       />
+      {/* 未提供機能の訴求コピーを購入画面に出すため、加入直後に使えると誤解されない
+          よう公開予定であることを明示する。 */}
       <PaywallModal
         isOpen={comingSoonPaywallFeature !== null}
         onClose={() => setComingSoonPaywallFeature(null)}
         feature={comingSoonPaywallFeature ?? undefined}
+        contextMessage="この機能は近日公開予定です。Pro プランに加入すると公開時にそのまま使えます。"
       />
     </>
   );
