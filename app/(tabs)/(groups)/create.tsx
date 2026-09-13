@@ -19,6 +19,7 @@ import { useEntitlement } from "@hooks/useEntitlement";
 import { useCreateGroup, useInviteMembers } from "@hooks/useGroupMutations";
 import { useFollowingUsers, useGroups } from "@hooks/useGroups";
 import { useProfile } from "@hooks/useProfile";
+import { trackFreeLimitReached } from "@utils/analytics";
 import { groupLimitErrorMessage, isGroupLimitError } from "@utils/axiosError";
 
 const GROUP_LIMIT_MESSAGE = `無料プランで参加できるグループは${GROUP_FREE_LIMIT}件までのため、作成できませんでした。`;
@@ -61,6 +62,13 @@ export default function GroupCreateScreen() {
     );
   };
 
+  // クライアント判定とサーバー 403 のどちらで弾かれても同じ 1 イベントになるよう、
+  // 上限到達の計測と Paywall 表示はここに集約する。
+  const showGroupLimitPaywall = (message: string) => {
+    trackFreeLimitReached("unlimited_groups");
+    setPaywallMessage(message);
+  };
+
   const handleSave = async () => {
     // pro/status と所属グループの取得完了後にのみ上限判定する。
     // 判定確定前は誤ってPaywallを出さず、サーバー側の上限チェックに委ねる。
@@ -70,7 +78,7 @@ export default function GroupCreateScreen() {
       !hasEntitlement("unlimited_groups") &&
       groups.length >= GROUP_FREE_LIMIT
     ) {
-      setPaywallMessage(GROUP_LIMIT_MESSAGE);
+      showGroupLimitPaywall(GROUP_LIMIT_MESSAGE);
       return;
     }
 
@@ -110,7 +118,9 @@ export default function GroupCreateScreen() {
       // サーバー側の上限チェックによる 403 は障害ではないため、
       // 汎用エラーに潰さず Pro への導線を出す。
       if (isGroupLimitError(error)) {
-        setPaywallMessage(groupLimitErrorMessage(error) ?? GROUP_LIMIT_MESSAGE);
+        showGroupLimitPaywall(
+          groupLimitErrorMessage(error) ?? GROUP_LIMIT_MESSAGE,
+        );
         return;
       }
       Sentry.captureException(error, {

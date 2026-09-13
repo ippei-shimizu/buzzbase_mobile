@@ -1,3 +1,4 @@
+import type { ProFeature } from "../types/pro";
 import type { BattingTrendGranularity } from "../types/stats";
 import { posthog } from "@utils/posthog";
 
@@ -65,3 +66,12 @@ export const trackBattingTrendGranularityChanged = (
 /** Pro プラン Coming Soon カードのタップ。課金意向シグナルとして計測する。 */
 export const trackProFeatureTapped = (feature: string) =>
   posthog?.capture("pro feature tapped", { feature });
+
+/**
+ * 無料プランの上限に当たった瞬間。DB のスナップショット集計では「いつ・何回ぶつかったか」が
+ * 取れないため、課金に最も近いシグナルとしてイベントで残す。
+ *
+ * @param feature - 上限に当たった Pro 機能の正式キー（`PRO_FEATURES`）
+ */
+export const trackFreeLimitReached = (feature: ProFeature) =>
+  posthog?.capture("free limit reached", { feature });

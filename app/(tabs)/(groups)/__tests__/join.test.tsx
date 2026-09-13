@@ -19,7 +19,14 @@ jest.mock("expo-router", () => {
   } = require("../../../../__tests__/test-utils/mockExpoRouter");
   return buildExpoRouterMock();
 });
+
 /* eslint-enable @typescript-eslint/no-require-imports */
+
+const mockCapture = jest.fn();
+jest.mock("@utils/posthog", () => ({
+  isPostHogEnabled: true,
+  posthog: { capture: (...args: unknown[]) => mockCapture(...args) },
+}));
 
 interface RouterSpies {
   push: jest.Mock;
@@ -118,6 +125,9 @@ describe("JoinGroupScreen", () => {
       expect(screen.getByText("BUZZ BASE")).toBeOnTheScreen(),
     );
     expect(acceptCalled).toBe(false);
+    expect(mockCapture).toHaveBeenCalledWith("free limit reached", {
+      feature: "unlimited_groups",
+    });
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });
 
@@ -138,7 +148,7 @@ describe("JoinGroupScreen", () => {
     );
   });
 
-  it("Proユーザーは複数グループ所属していても制限なく参加できる", async () => {
+  it("Proユーザーは複数グループ所属していても制限なく参加でき、上限到達は計測しない", async () => {
     respondPro();
     setupCommonHandlers(3);
     server.use(
@@ -153,9 +163,13 @@ describe("JoinGroupScreen", () => {
     await waitFor(() =>
       expect(getRouterSpies().replace).toHaveBeenCalledWith("/(groups)/1"),
     );
+    expect(mockCapture).not.toHaveBeenCalledWith(
+      "free limit reached",
+      expect.anything(),
+    );
   });
 
-  it("サーバー側の上限エラー（403）では汎用エラーではなくPaywallとサーバーの文言を表示する", async () => {
+  it("サーバー側の上限エラー（403）では汎用エラーではなくPaywallとサーバーの文言を表示し、上限到達を計測する", async () => {
     respondFree();
     setupCommonHandlers(0);
     server.use(
@@ -178,6 +192,9 @@ describe("JoinGroupScreen", () => {
         screen.getByText("Pro プランでグループを無制限に作成・参加できます"),
       ).toBeOnTheScreen(),
     );
+    expect(mockCapture).toHaveBeenCalledWith("free limit reached", {
+      feature: "unlimited_groups",
+    });
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });
 
