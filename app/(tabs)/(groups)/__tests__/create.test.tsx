@@ -116,11 +116,20 @@ describe("GroupCreateScreen", () => {
       expect(screen.getByText("BUZZ BASE")).toBeOnTheScreen(),
     );
     expect(createCalled).toBe(false);
-    expect(mockCapture).toHaveBeenCalledWith("free limit reached", {
-      feature: "unlimited_groups",
-      source: "group_create",
-      detection: "client",
-    });
+    expect(
+      mockCapture.mock.calls.filter(
+        ([event]) => event === "free limit reached",
+      ),
+    ).toEqual([
+      [
+        "free limit reached",
+        {
+          feature: "unlimited_groups",
+          source: "group_create",
+          detection: "client",
+        },
+      ],
+    ]);
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });
 
@@ -150,11 +159,20 @@ describe("GroupCreateScreen", () => {
         screen.getByText("Pro プランでグループを無制限に作成・参加できます"),
       ).toBeOnTheScreen(),
     );
-    expect(mockCapture).toHaveBeenCalledWith("free limit reached", {
-      feature: "unlimited_groups",
-      source: "group_create",
-      detection: "server",
-    });
+    expect(
+      mockCapture.mock.calls.filter(
+        ([event]) => event === "free limit reached",
+      ),
+    ).toEqual([
+      [
+        "free limit reached",
+        {
+          feature: "unlimited_groups",
+          source: "group_create",
+          detection: "server",
+        },
+      ],
+    ]);
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });
 
