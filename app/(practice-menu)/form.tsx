@@ -95,7 +95,10 @@ function MenuForm({ menu }: { menu?: PracticeMenu }) {
               text: "Pro を見る",
               onPress: () => {
                 trackProFeatureTapped("unlimited_practice_menus");
-                router.push("/pro?trigger=unlimited_practice_menus");
+                router.push({
+                  pathname: "/pro",
+                  params: { trigger: "unlimited_practice_menus" },
+                });
               },
             },
           ],

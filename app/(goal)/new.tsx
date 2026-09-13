@@ -307,7 +307,10 @@ function GoalForm({ editing }: { editing?: Goal }) {
             text: "Pro を見る",
             onPress: () => {
               trackProFeatureTapped(lockedFeature);
-              router.push(`/pro?trigger=${lockedFeature}`);
+              router.push({
+                pathname: "/pro",
+                params: { trigger: lockedFeature },
+              });
             },
           },
         ]);

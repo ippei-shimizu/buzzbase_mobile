@@ -91,7 +91,10 @@ export default function MenuSetEditScreen() {
               text: "Pro を見る",
               onPress: () => {
                 trackProFeatureTapped("unlimited_menu_sets");
-                router.push("/pro?trigger=unlimited_menu_sets");
+                router.push({
+                  pathname: "/pro",
+                  params: { trigger: "unlimited_menu_sets" },
+                });
               },
             },
           ],
