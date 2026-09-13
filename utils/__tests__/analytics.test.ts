@@ -199,6 +199,8 @@ describe("analytics", () => {
     },
   );
 
+  // 固定のフィクスチャを走査するだけなので、呼び出し側がユーザー入力を渡す事故は
+  // 検出できない。新しいプロパティを足すときは値の出どころも確認すること。
   it("イベントプロパティに個人情報を含めない", () => {
     for (const testCase of SHARED_EVENT_CASES) {
       testCase.run(analytics);
