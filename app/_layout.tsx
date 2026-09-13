@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/react-native";
 import { QueryClientProvider } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import * as Linking from "expo-linking";
-import { Stack, useRouter, usePathname } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { PostHogProvider } from "posthog-react-native";
 import { useCallback, useEffect } from "react";
@@ -17,6 +17,7 @@ import {
 import { usePushNotifications } from "@hooks/usePushNotifications";
 import { useStoreReview } from "@hooks/useStoreReview";
 import { configureGoogleSignIn } from "@services/googleAuthService";
+import { initializeMobileAds } from "@services/mobileAdsService";
 import {
   addCustomerInfoUpdateListener,
   configureRevenueCat,
@@ -52,16 +53,26 @@ const revenueCatApiKey =
 if (revenueCatApiKey) configureRevenueCat(revenueCatApiKey);
 
 /**
- * Expo Router の現在パスを PostHog の $screen イベントとして送信する。
+ * Expo Router の現在ルートを PostHog の $screen イベントとして送信する。
  * Expo Router は NavigationContainer を公開せず autocapture の captureScreens が
- * 使えないため、usePathname を監視して手動送信する。
+ * 使えないため、手動送信する。
+ *
+ * usePathname() ではなく useSegments() を使うのは、前者がグループセグメント
+ * （`(goal)` / `(theme)` 等）を落とし、`(goal)/list` と `(theme)/list` が同じ
+ * `/list` に潰れて機能別の使用率を出せなくなるため。動的セグメントは `[id]` の
+ * ままなので、ID ごとに screen 名が分散することもない。
+ * 送信例: `/(goal)/list`、`/(tabs)/(profile)/notes/[id]`。
  */
 function ScreenTracker() {
-  const pathname = usePathname();
+  const segments = useSegments();
+  // ナビゲーション状態の初期化・復元中は segments が空になる。実在しないルート
+  // （`app/index.tsx` は無くホームは `(tabs)` 配下）の `/` を送らないよう、
+  // 確定するまで送信しない。
+  const screenName = segments.length > 0 ? `/${segments.join("/")}` : null;
 
   useEffect(() => {
-    posthog?.screen(pathname);
-  }, [pathname]);
+    if (screenName) posthog?.screen(screenName);
+  }, [screenName]);
 
   return null;
 }
@@ -137,8 +148,18 @@ function RootLayoutInner() {
 
   // ATT はログイン前も含めた起動直後に要求する。トラッキングされうるデータを
   // 集める前に許可を求める必要があり、未ログインのまま離脱するユーザーにも出すため。
+  // 広告 SDK の初期化は ATT の結果が確定してから行う。ATT が失敗しても広告自体は
+  // 出したいので、拒否・例外いずれの場合も初期化まで進める。
+  // ATT の失敗は IDFA が取れず配信が非パーソナライズに落ちることを意味するため、
+  // 握り潰さず Sentry へ送る。
   useEffect(() => {
-    void requestTrackingPermissionOnce();
+    void requestTrackingPermissionOnce()
+      .catch((error: unknown) => {
+        Sentry.captureException(error, {
+          tags: { source: "tracking_transparency_request" },
+        });
+      })
+      .then(initializeMobileAds);
   }, []);
 
   // RevenueCat 側の顧客情報更新（更新・解約・返金・別端末購入など）を検知して

@@ -37,6 +37,7 @@ import { useGoalMutations, useGoals } from "@hooks/useGoals";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useTournaments } from "@hooks/useTournaments";
+import { trackFreeLimitReached, trackProFeatureTapped } from "@utils/analytics";
 
 const pad = (value: number): string => String(value).padStart(2, "0");
 const dateString = (date: Date): string =>
@@ -182,6 +183,22 @@ function GoalForm({ editing }: { editing?: Goal }) {
       (periodType === "tournament" && !canTournament) ||
       (periodType === "custom" && !canCustomPeriod));
 
+  // 保存時の 403 は「この目標タイプ / 件数が Pro 限定」で返る。どの制限に当たったかを
+  // 計測と Pro 訴求の trigger に使うため、選択中の種類・期間から機能キーを引く。
+  // entitlement も条件に入れるのは、種類ロックが解放されている場合（Pro / 編集中）の
+  // 403 は件数上限が原因であり、種類側のキーへ吸われると内訳がずれるため。
+  const lockedGoalFeature = (): ProFeature => {
+    if (isLockedManual) return "manual_metric_goals";
+    if (periodType === "season" && !canSeason) return "season_goals";
+    if (periodType === "tournament" && !canTournament) {
+      return "tournament_goals";
+    }
+    if (periodType === "custom" && !canCustomPeriod) {
+      return "custom_period_goals";
+    }
+    return "unlimited_monthly_goals";
+  };
+
   const handleSave = async () => {
     // isPending は再レンダー後にしか true にならないため、同一フレームの連打を ref で弾く。
     if (isSavingRef.current) return;
@@ -282,9 +299,20 @@ function GoalForm({ editing }: { editing?: Goal }) {
     } catch (error) {
       isSavingRef.current = false;
       if (isAxiosError(error) && error.response?.status === 403) {
+        const lockedFeature = lockedGoalFeature();
+        trackFreeLimitReached(lockedFeature);
         Alert.alert("Pro プラン", "この目標は Pro プランで設定できます", [
           { text: "閉じる", style: "cancel" },
-          { text: "Pro を見る", onPress: () => router.push("/pro") },
+          {
+            text: "Pro を見る",
+            onPress: () => {
+              trackProFeatureTapped(lockedFeature);
+              router.push({
+                pathname: "/pro",
+                params: { trigger: lockedFeature },
+              });
+            },
+          },
         ]);
       } else {
         Alert.alert("保存に失敗しました");

@@ -28,6 +28,7 @@ import { DEFAULT_PRO_STATUS, PRO_FEATURES } from "../../../types/pro";
 import {
   FEATURE_GROUPS,
   filterFeatureGroups,
+  isTrialPurchase,
   PaywallModal,
   PRO_PAYWALL_COPY,
 } from "../PaywallModal";
@@ -652,5 +653,35 @@ describe("filterFeatureGroups", () => {
     );
 
     expect(result).toEqual([]);
+  });
+});
+
+describe("isTrialPurchase", () => {
+  const customerInfoWith = (periodTypes: string[]) =>
+    ({
+      entitlements: {
+        active: Object.fromEntries(
+          periodTypes.map((periodType, index) => [
+            `entitlement_${index}`,
+            { periodType },
+          ]),
+        ),
+      },
+    }) as unknown as Parameters<typeof isTrialPurchase>[0];
+
+  it("トライアル期間で始まった購入を true と判定する", () => {
+    expect(isTrialPurchase(customerInfoWith(["TRIAL"]))).toBe(true);
+  });
+
+  it("トライアルを挟まない購入を false と判定する", () => {
+    expect(isTrialPurchase(customerInfoWith(["NORMAL"]))).toBe(false);
+  });
+
+  it("entitlement が空でも false を返す", () => {
+    expect(isTrialPurchase(customerInfoWith([]))).toBe(false);
+  });
+
+  it("CustomerInfo が取れなくても例外を投げず false を返す", () => {
+    expect(isTrialPurchase(undefined)).toBe(false);
   });
 });

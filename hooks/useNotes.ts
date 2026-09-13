@@ -7,6 +7,7 @@ import {
   getNotes,
   updateNote,
 } from "../services/noteService";
+import { trackNoteCreated, trackReviewCompleted } from "@utils/analytics";
 
 export const useNotes = (params?: {
   date?: string;
@@ -36,7 +37,14 @@ export const useNoteMutations = () => {
 
   const create = useMutation({
     mutationFn: createNote,
-    onSuccess: invalidate,
+    onSuccess: (_data, input) => {
+      invalidate();
+      const answerCount = input.reflection_answers?.length ?? 0;
+      trackNoteCreated({ has_reflection: answerCount > 0 });
+      // 振り返りは「テンプレに回答したノート」として保存されるため、ノート作成と
+      // 同時に振り返り完了としても数える（機能別の使用率を別々に出すため）。
+      if (answerCount > 0) trackReviewCompleted({ answer_count: answerCount });
+    },
   });
   const update = useMutation({
     mutationFn: ({ id, input }: { id: number; input: NoteInput }) =>

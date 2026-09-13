@@ -1,5 +1,5 @@
 import type { IconName } from "../../types/icon";
-import type { Feature, ProFeature } from "../../types/pro";
+import type { Feature, PlanType, ProFeature } from "../../types/pro";
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import {
   PURCHASES_ERROR_CODE,
+  type CustomerInfo,
   type PACKAGE_TYPE,
   type PurchasesOffering,
 } from "react-native-purchases";
@@ -29,6 +30,14 @@ import {
   restorePurchases,
 } from "@services/revenueCatService";
 import { useSnackbarStore } from "@stores/snackbarStore";
+import {
+  trackPaywallViewed,
+  trackPurchaseCompleted,
+  trackPurchaseFailed,
+  trackUpgradeStarted,
+  type ProTrigger,
+} from "@utils/analytics";
+import { PRO_FEATURES } from "../../types/pro";
 
 // 解約導線の案内で実行中プラットフォームのストア名だけを出す。
 // 他ストア名を混在させると App Store の審査ガイドライン 2.3.10 に抵触する。
@@ -387,6 +396,57 @@ export const PLAN_LABELS: Partial<
   LIFETIME: { name: "買い切りプラン", period: "" },
 };
 
+// RevenueCat の packageType は 7 種類あるが、課金ファネルの集計軸は back の
+// ProSubscription#plan_type（monthly / yearly）に揃える。対応しないプランは null。
+export const toPlanType = (packageType: PACKAGE_TYPE): PlanType | null => {
+  if (packageType === "MONTHLY") return "monthly";
+  if (packageType === "ANNUAL") return "yearly";
+  return null;
+};
+
+/**
+ * 購入結果がトライアル開始だったか。`has_used_trial` から導く「トライアル権利の有無」は
+ * 判定確定前に false へ倒れるうえ、権利があってもトライアル無しで買った場合に true に
+ * なるため、購入後の CustomerInfo の periodType を見る。
+ *
+ * 引数はネイティブ Module 由来のため、欠けていても false を返して落とさない。
+ * ここで例外を投げると課金済みのユーザーが同期・成功画面に到達できなくなる。
+ */
+export const isTrialPurchase = (
+  customerInfo: CustomerInfo | null | undefined,
+): boolean =>
+  Object.values(customerInfo?.entitlements?.active ?? {}).some(
+    (entitlement) => entitlement.periodType === "TRIAL",
+  );
+
+/**
+ * 購入失敗の理由を計測用の短い識別子にする。未知のコードも数値のまま残して
+ * PostHog 側で内訳を追えるようにする。
+ */
+export const purchaseFailureReason = (
+  code: PURCHASES_ERROR_CODE | undefined,
+): string => {
+  if (code === PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR) {
+    return "payment_pending";
+  }
+  if (code === PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR) {
+    return "already_purchased";
+  }
+  if (code === PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR) {
+    return "purchase_not_allowed";
+  }
+  return code == null ? "unknown" : `code_${code}`;
+};
+
+/**
+ * Pro 訴求の起点キーを計測用に正規化する。`feature` は FreeFeature や URL 由来の
+ * 任意文字列も取りうるため、PRO_FEATURES に無いキーと未指定は "general" に倒す。
+ */
+export const toProTrigger = (feature: string | undefined): ProTrigger =>
+  feature && (PRO_FEATURES as readonly string[]).includes(feature)
+    ? (feature as ProFeature)
+    : "general";
+
 export const isUserCancelled = (error: unknown): boolean =>
   typeof error === "object" &&
   error !== null &&
@@ -433,6 +493,11 @@ export function PaywallModal({
     ? ((PRO_PAYWALL_COPY as Record<string, PaywallCopy>)[feature] ??
       DEFAULT_COPY)
     : DEFAULT_COPY;
+  const trigger = toProTrigger(feature);
+
+  useEffect(() => {
+    if (isOpen) trackPaywallViewed(trigger);
+  }, [isOpen, trigger]);
 
   const [offering, setOffering] = useState<PurchasesOffering | null>(null);
   const [loadingOfferings, setLoadingOfferings] = useState(false);
@@ -506,13 +571,26 @@ export function PaywallModal({
   const handlePurchase = async () => {
     // disabled プロパティだけに頼らず、連打による purchasePackage の多重起動を関数側でも防ぐ。
     if (!selectedPackage || purchasingRef.current) return;
+    const planType = toPlanType(selectedPackage.packageType);
     setPurchasing(true);
+    trackUpgradeStarted({ plan_type: planType, trigger });
+    let customerInfo;
     try {
-      await purchasePackage(selectedPackage);
+      customerInfo = await purchasePackage(selectedPackage);
     } catch (error: unknown) {
       setPurchasing(false);
-      if (isUserCancelled(error)) return;
+      if (isUserCancelled(error)) {
+        trackPurchaseFailed({
+          reason: "user_cancelled",
+          plan_type: planType,
+        });
+        return;
+      }
       const code = (error as { code?: PURCHASES_ERROR_CODE })?.code;
+      trackPurchaseFailed({
+        reason: purchaseFailureReason(code),
+        plan_type: planType,
+      });
       if (code === PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR) {
         showSnackbar({
           type: "info",
@@ -550,6 +628,12 @@ export function PaywallModal({
       });
       return;
     }
+
+    trackPurchaseCompleted({
+      plan_type: planType,
+      platform: Platform.OS === "android" ? "android" : "ios",
+      is_trial: isTrialPurchase(customerInfo),
+    });
 
     // ここから先は Apple への課金が既に成功している。バックエンドへの同期失敗を
     // 「購入失敗」と誤表示すると二重購入を誘発するため、Sentry への記録に留めて

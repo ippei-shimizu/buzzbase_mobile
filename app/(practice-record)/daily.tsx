@@ -216,12 +216,17 @@ function DailyEditor({
       // （Pro/トライアル時代の記録を持つユーザーが他項目だけ編集した際に、
       // condition の Pro 判定で保存全体が失敗しないようにする）。
       const session = await saveSession({
-        logged_on: dateString,
-        items,
-        practice_type: practiceType,
-        condition:
-          hasCondition && canSaveCondition ? toConditionInput(condition) : null,
-        improvement_theme_ids: improvementThemeIds,
+        input: {
+          logged_on: dateString,
+          items,
+          practice_type: practiceType,
+          condition:
+            hasCondition && canSaveCondition
+              ? toConditionInput(condition)
+              : null,
+          improvement_theme_ids: improvementThemeIds,
+        },
+        isEdit: isEditing,
       });
       if (withNote) {
         router.replace({

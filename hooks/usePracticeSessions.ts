@@ -1,3 +1,4 @@
+import type { PracticeSessionInput } from "../types/practice";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   deletePracticeSession,
@@ -6,6 +7,7 @@ import {
   getPracticeSessions,
   upsertPracticeSession,
 } from "../services/practiceSessionService";
+import { trackPracticeRecordCreated } from "@utils/analytics";
 
 export const usePracticeSessions = (params?: {
   from?: string;
@@ -53,9 +55,19 @@ export const usePracticeSessionMutations = () => {
     queryClient.invalidateQueries({ queryKey: ["streak"] });
   };
 
+  // 保存は日付キーの upsert なので、呼び出し側から新規・編集を受け取って計測に渡す。
+  // レスポンスからは判別できず、イベント件数を「作成数」として読めなくなるため。
   const upsert = useMutation({
-    mutationFn: upsertPracticeSession,
-    onSuccess: invalidate,
+    mutationFn: ({ input }: { input: PracticeSessionInput; isEdit: boolean }) =>
+      upsertPracticeSession(input),
+    onSuccess: (_data, { input, isEdit }) => {
+      invalidate();
+      trackPracticeRecordCreated({
+        menu_count: input.items.length,
+        has_condition: input.condition != null,
+        is_edit: isEdit,
+      });
+    },
   });
   const remove = useMutation({
     mutationFn: deletePracticeSession,

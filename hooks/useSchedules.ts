@@ -6,6 +6,7 @@ import {
   getSchedules,
   updateSchedule,
 } from "../services/scheduleService";
+import { trackPracticeScheduleCreated } from "@utils/analytics";
 
 export const useSchedules = () => {
   const { data, isLoading, isError, refetch, isSuccess } = useQuery({
@@ -27,7 +28,13 @@ export const useScheduleMutations = () => {
 
   const create = useMutation({
     mutationFn: createSchedule,
-    onSuccess: invalidate,
+    onSuccess: (_data, input) => {
+      invalidate();
+      trackPracticeScheduleCreated({
+        event_type: input.event_type ?? "self_practice",
+        recurring: Boolean(input.days_of_week),
+      });
+    },
   });
   const update = useMutation({
     mutationFn: ({ id, input }: { id: number; input: ScheduleInput }) =>

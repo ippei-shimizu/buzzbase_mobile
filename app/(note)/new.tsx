@@ -7,6 +7,7 @@ import { NoteForm } from "@components/note/NoteForm";
 import { PaywallModal } from "@components/pro/PaywallModal";
 import { useMediaAttachmentUpload } from "@hooks/useMediaAttachmentUpload";
 import { useNoteMutations } from "@hooks/useNotes";
+import { trackFreeLimitReached } from "@utils/analytics";
 import { FREE_MEDIA_MONTHLY_LIMIT } from "@utils/mediaLimits";
 
 export default function NoteNewScreen() {
@@ -119,6 +120,7 @@ export default function NoteNewScreen() {
           // 上限到達時はPro訴求モーダルを優先表示し、閉じたタイミングで遷移する
           // （ノート本体は既に保存済みのため、モーダルを閉じるだけで完了扱いにする）。
           if (limitReachedCountThisRun > 0) {
+            trackFreeLimitReached("unlimited_media_uploads");
             setLimitReachedCount(limitReachedCountThisRun);
             setPaywallOpen(true);
             return;

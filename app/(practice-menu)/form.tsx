@@ -25,6 +25,7 @@ import {
   usePracticeMenuMutations,
   usePracticeMenus,
 } from "@hooks/usePracticeMenus";
+import { trackFreeLimitReached, trackProFeatureTapped } from "@utils/analytics";
 
 export default function PracticeMenuFormScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -84,12 +85,22 @@ function MenuForm({ menu }: { menu?: PracticeMenu }) {
       router.back();
     } catch (error) {
       if (isAxiosError(error) && error.response?.status === 403) {
+        trackFreeLimitReached("unlimited_practice_menus");
         Alert.alert(
           "無料プランの上限",
           "練習メニューは無料で3つまでです。Pro で無制限に登録できます。",
           [
             { text: "閉じる", style: "cancel" },
-            { text: "Pro を見る", onPress: () => router.push("/pro") },
+            {
+              text: "Pro を見る",
+              onPress: () => {
+                trackProFeatureTapped("unlimited_practice_menus");
+                router.push({
+                  pathname: "/pro",
+                  params: { trigger: "unlimited_practice_menus" },
+                });
+              },
+            },
           ],
         );
       } else {

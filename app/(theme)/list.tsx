@@ -19,6 +19,7 @@ import { SwipeableTabPages } from "@components/ui/SwipeableTabPages";
 import { themeCategoryLabel } from "@constants/improvementTheme";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useImprovementThemes } from "@hooks/useImprovementThemes";
+import { trackFreeLimitReached } from "@utils/analytics";
 
 const TABS: { key: ImprovementThemeStatus; label: string }[] = [
   { key: "open", label: "取組中" },
@@ -57,6 +58,7 @@ export default function ThemeListScreen() {
       !hasEntitlement("unlimited_improvement_themes") &&
       themesByStatus.open.length >= 2
     ) {
+      trackFreeLimitReached("unlimited_improvement_themes");
       setPaywallOpen(true);
       return;
     }

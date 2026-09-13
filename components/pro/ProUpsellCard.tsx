@@ -9,6 +9,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { Icon } from "@components/icon/Icon";
+import { trackProFeatureTapped } from "@utils/analytics";
 import { PRO_PAYWALL_COPY } from "./PaywallModal";
 
 interface ProUpsellCardProps {
@@ -33,6 +34,11 @@ const DEFAULT_CTA_LABEL = "Pro プランを見る";
 /**
  * Pro専用機能の訴求カード（見出し + 使いたくなるメリット説明 + CTAボタン）。
  * 単独カードとしても、ProUpsellOverlay の中で実UI/ダミーUIの上に重ねる形でも使う。
+ *
+ * CTA タップの計測はこのコンポーネントに集約する。呼び出し側で個別に送ると
+ * 入れ忘れ・キー表記ゆれが起きて機能別の課金意向が比較できなくなるため。
+ * `feature` を持たないカード（entitlement キーの無い未実装機能）は "general" で送り、
+ * カードを足しただけで計測が無言で落ちることがないようにする。
  */
 export function ProUpsellCard({
   feature,
@@ -64,7 +70,10 @@ export function ProUpsellCard({
       ) : null}
       <TouchableOpacity
         style={styles.button}
-        onPress={onPressCta}
+        onPress={() => {
+          trackProFeatureTapped(feature ?? "general");
+          onPressCta();
+        }}
         accessibilityRole="button"
         accessibilityLabel={ctaLabel}
       >
