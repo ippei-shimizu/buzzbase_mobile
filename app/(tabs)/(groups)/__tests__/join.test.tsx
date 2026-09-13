@@ -127,6 +127,8 @@ describe("JoinGroupScreen", () => {
     expect(acceptCalled).toBe(false);
     expect(mockCapture).toHaveBeenCalledWith("free limit reached", {
       feature: "unlimited_groups",
+      source: "group_join_link",
+      detection: "client",
     });
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });
@@ -194,6 +196,8 @@ describe("JoinGroupScreen", () => {
     );
     expect(mockCapture).toHaveBeenCalledWith("free limit reached", {
       feature: "unlimited_groups",
+      source: "group_join_link",
+      detection: "server",
     });
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });

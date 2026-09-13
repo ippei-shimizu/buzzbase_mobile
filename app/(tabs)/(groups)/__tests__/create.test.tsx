@@ -118,6 +118,8 @@ describe("GroupCreateScreen", () => {
     expect(createCalled).toBe(false);
     expect(mockCapture).toHaveBeenCalledWith("free limit reached", {
       feature: "unlimited_groups",
+      source: "group_create",
+      detection: "client",
     });
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });
@@ -150,6 +152,8 @@ describe("GroupCreateScreen", () => {
     );
     expect(mockCapture).toHaveBeenCalledWith("free limit reached", {
       feature: "unlimited_groups",
+      source: "group_create",
+      detection: "server",
     });
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });

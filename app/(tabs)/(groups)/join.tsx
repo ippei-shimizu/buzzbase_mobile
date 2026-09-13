@@ -52,9 +52,16 @@ export default function JoinGroupScreen() {
   };
 
   // クライアント判定とサーバー 403 のどちらで弾かれても同じ 1 イベントになるよう、
-  // 上限到達の計測と Paywall 表示はここに集約する。
-  const showGroupLimitPaywall = (message: string) => {
-    trackFreeLimitReached("unlimited_groups");
+  // 上限到達の計測と Paywall 表示はここに集約する。detection で「事前判定で弾いた」と
+  // 「すり抜けてサーバーに当たった」を分け、クライアント判定の取りこぼしを監視できるようにする。
+  const showGroupLimitPaywall = (
+    message: string,
+    detection: "client" | "server",
+  ) => {
+    trackFreeLimitReached("unlimited_groups", {
+      source: "group_join_link",
+      detection,
+    });
     setPaywallMessage(message);
   };
 
@@ -67,7 +74,7 @@ export default function JoinGroupScreen() {
       !hasEntitlement("unlimited_groups") &&
       groups.length >= GROUP_FREE_LIMIT
     ) {
-      showGroupLimitPaywall(GROUP_LIMIT_MESSAGE);
+      showGroupLimitPaywall(GROUP_LIMIT_MESSAGE, "client");
       return;
     }
 
@@ -80,6 +87,7 @@ export default function JoinGroupScreen() {
       if (isGroupLimitError(error)) {
         showGroupLimitPaywall(
           groupLimitErrorMessage(error) ?? GROUP_LIMIT_MESSAGE,
+          "server",
         );
         return;
       }
