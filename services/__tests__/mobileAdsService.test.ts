@@ -70,6 +70,34 @@ describe("initializeMobileAds", () => {
     expect(getMobileAdsInitialized()).toBe(true);
   });
 
+  it("ネイティブ呼び出しが同期的に落ちても完了扱いにしてSentryへ送る", async () => {
+    const { initializeMobileAds, getMobileAdsInitialized, initialize } =
+      loadService();
+    initialize.mockImplementationOnce(() => {
+      throw new Error("native module unavailable");
+    });
+
+    await expect(initializeMobileAds()).resolves.toBeUndefined();
+
+    expect(getMobileAdsInitialized()).toBe(true);
+  });
+
+  it("初期化が応答しないままでも一定時間で描画を許可する", async () => {
+    jest.useFakeTimers();
+    const { initializeMobileAds, getMobileAdsInitialized, initialize } =
+      loadService();
+    initialize.mockReturnValueOnce(new Promise(() => {}));
+
+    const pending = initializeMobileAds();
+    expect(getMobileAdsInitialized()).toBe(false);
+
+    await jest.advanceTimersByTimeAsync(5_000);
+    await pending;
+
+    expect(getMobileAdsInitialized()).toBe(true);
+    jest.useRealTimers();
+  });
+
   it("初期化が失敗しても例外を投げずSentryへ送る", async () => {
     const { initializeMobileAds, initialize, captureException } = loadService();
     initialize.mockRejectedValueOnce(new Error("init failed"));

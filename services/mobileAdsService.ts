@@ -12,6 +12,23 @@ const markInitialized = (): void => {
   initializedListeners.forEach((listener) => listener());
 };
 
+/**
+ * 初期化が応答しないまま広告が永久に出ない状態を避けるための上限。
+ * この時間を超えたら初期化を待たずにバナーの描画を許可する(このPR以前と同じ挙動)。
+ */
+const INITIALIZE_TIMEOUT_MS = 5_000;
+
+const withTimeout = (promise: Promise<unknown>): Promise<unknown> =>
+  Promise.race([
+    promise,
+    new Promise((_resolve, reject) =>
+      setTimeout(
+        () => reject(new Error("mobileAds().initialize() timed out")),
+        INITIALIZE_TIMEOUT_MS,
+      ),
+    ),
+  ]);
+
 /** useSyncExternalStore 用のスナップショット。 */
 export const getMobileAdsInitialized = (): boolean => isInitialized;
 
@@ -35,8 +52,10 @@ export const initializeMobileAds = (): Promise<void> => {
   // 広告を配信しないプラットフォームではSDKを起動しない。
   if (!isAdsEnabledPlatform()) return Promise.resolve();
 
-  initialization ??= mobileAds()
-    .initialize()
+  // 初期化が確定しない限りバナーを描画しないため、完了通知に至らない経路を残さない。
+  // ネイティブモジュールの呼び出しが同期的に throw した場合も catch に流す。
+  initialization ??= Promise.resolve()
+    .then(() => withTimeout(mobileAds().initialize()))
     .then(() => {
       markInitialized();
     })
