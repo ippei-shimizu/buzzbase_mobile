@@ -656,9 +656,15 @@ export function PaywallModal({
 
             <View style={styles.highlightCard}>
               <Text style={styles.highlightTitle}>{copy.title}</Text>
-              <Text style={styles.highlightDescription}>
-                {copy.description}
-              </Text>
+              {copy.benefits?.length ? (
+                <Text style={styles.highlightDescription}>
+                  {copy.benefits.map((benefit) => `・${benefit}`).join("\n")}
+                </Text>
+              ) : (
+                <Text style={styles.highlightDescription}>
+                  {copy.description}
+                </Text>
+              )}
             </View>
 
             <Text style={styles.subtitle}>
