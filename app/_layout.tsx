@@ -64,10 +64,13 @@ if (revenueCatApiKey) configureRevenueCat(revenueCatApiKey);
  */
 function ScreenTracker() {
   const segments = useSegments();
-  const screenName = `/${segments.join("/")}`;
+  // ナビゲーション状態の初期化・復元中は segments が空になる。実在しないルート
+  // （`app/index.tsx` は無くホームは `(tabs)` 配下）の `/` を送らないよう、
+  // 確定するまで送信しない。
+  const screenName = segments.length > 0 ? `/${segments.join("/")}` : null;
 
   useEffect(() => {
-    posthog?.screen(screenName);
+    if (screenName) posthog?.screen(screenName);
   }, [screenName]);
 
   return null;
