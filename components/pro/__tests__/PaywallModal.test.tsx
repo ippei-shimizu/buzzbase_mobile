@@ -30,6 +30,7 @@ import {
   filterFeatureGroups,
   isTrialPurchase,
   PaywallModal,
+  PRO_PAYWALL_COPY,
 } from "../PaywallModal";
 
 jest.mock("expo-router", () => {
@@ -139,6 +140,36 @@ describe("PaywallModal", () => {
     );
 
     expect(getByText("シーズンを跨いだ成長を可視化")).toBeOnTheScreen();
+  });
+
+  it("benefits を持つ機能では description ではなく箇条書きを表示する", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getByText, queryByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="unlimited_groups" />,
+    );
+
+    const { benefits, description } = PRO_PAYWALL_COPY.unlimited_groups;
+    for (const benefit of benefits ?? []) {
+      expect(getByText(new RegExp(benefit))).toBeOnTheScreen();
+    }
+    expect(queryByText(description)).not.toBeOnTheScreen();
+  });
+
+  it("benefits を持たない機能では description を表示する", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getByText } = renderWithProviders(
+      <PaywallModal
+        isOpen
+        onClose={mockOnClose}
+        feature="season_transition_graph"
+      />,
+    );
+
+    expect(
+      getByText(PRO_PAYWALL_COPY.season_transition_graph.description),
+    ).toBeOnTheScreen();
   });
 
   it("contextMessageを渡すと、なぜ表示されているかの状況説明が汎用コピーと併せて表示される", () => {

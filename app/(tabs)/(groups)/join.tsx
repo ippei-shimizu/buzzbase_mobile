@@ -51,17 +51,37 @@ export default function JoinGroupScreen() {
     }
   };
 
+  // クライアント判定とサーバー 403 のどちらで弾かれても同じ 1 イベントになるよう、
+  // 上限到達の計測と Paywall 表示はここに集約する。detection で「事前判定で弾いた」と
+  // 「すり抜けてサーバーに当たった」を分け、クライアント判定の取りこぼしを監視できるようにする。
+  const showGroupLimitPaywall = (
+    message: string,
+    detection: "client" | "server",
+  ) => {
+    trackFreeLimitReached("unlimited_groups", {
+      source: "group_join_link",
+      detection,
+    });
+    setPaywallMessage(message);
+  };
+
   const handleJoin = async () => {
+    // 所属済みグループの招待コードを入れ直しただけのケースは上限到達ではない。
+    // 無料1件所属は標準状態のため、踏み直しを数えると計測が上振れする。
+    const isAlreadyJoined = groups.some(
+      (group) => group.id === inviteInfo?.group.id,
+    );
+
     // pro/status と所属グループの取得完了後にのみ上限判定する。
     // 判定確定前は誤ってPaywallを出さず、サーバー側の上限チェックに委ねる。
     if (
       !isProLoading &&
       !isGroupsLoading &&
       !hasEntitlement("unlimited_groups") &&
-      groups.length >= GROUP_FREE_LIMIT
+      groups.length >= GROUP_FREE_LIMIT &&
+      !isAlreadyJoined
     ) {
-      trackFreeLimitReached("unlimited_groups");
-      setPaywallMessage(GROUP_LIMIT_MESSAGE);
+      showGroupLimitPaywall(GROUP_LIMIT_MESSAGE, "client");
       return;
     }
 
@@ -72,8 +92,10 @@ export default function JoinGroupScreen() {
       // サーバー側の上限チェックによる 403 は障害ではないため、
       // 汎用エラーに潰さず Pro への導線を出す。
       if (isGroupLimitError(error)) {
-        trackFreeLimitReached("unlimited_groups");
-        setPaywallMessage(groupLimitErrorMessage(error) ?? GROUP_LIMIT_MESSAGE);
+        showGroupLimitPaywall(
+          groupLimitErrorMessage(error) ?? GROUP_LIMIT_MESSAGE,
+          "server",
+        );
         return;
       }
       Alert.alert("エラー", "グループへの参加に失敗しました");

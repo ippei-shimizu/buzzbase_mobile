@@ -19,7 +19,14 @@ jest.mock("expo-router", () => {
   } = require("../../../../__tests__/test-utils/mockExpoRouter");
   return buildExpoRouterMock();
 });
+
 /* eslint-enable @typescript-eslint/no-require-imports */
+
+const mockCapture = jest.fn();
+jest.mock("@utils/posthog", () => ({
+  isPostHogEnabled: true,
+  posthog: { capture: (...args: unknown[]) => mockCapture(...args) },
+}));
 
 interface RouterSpies {
   push: jest.Mock;
@@ -40,10 +47,13 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-const inviteLinkInfo = {
-  group: { id: 1, name: "招待先グループ", icon: null, member_count: 3 },
+// 所属済みグループ（id は 1 から採番）と衝突しない id を既定にする。
+const INVITED_GROUP_ID = 99;
+
+const buildInviteLinkInfo = (groupId: number = INVITED_GROUP_ID) => ({
+  group: { id: groupId, name: "招待先グループ", icon: null, member_count: 3 },
   inviter: { name: "招待者", image: { url: null } },
-};
+});
 
 const respondFree = () => {
   server.use(
@@ -70,10 +80,13 @@ const respondPro = () => {
   );
 };
 
-const setupCommonHandlers = (groupCount: number) => {
+const setupCommonHandlers = (
+  groupCount: number,
+  invitedGroupId: number = INVITED_GROUP_ID,
+) => {
   server.use(
     http.get(apiUrl("/invite_links/ABC12345"), () =>
-      HttpResponse.json(inviteLinkInfo),
+      HttpResponse.json(buildInviteLinkInfo(invitedGroupId)),
     ),
     http.get(apiUrl("/groups"), () =>
       HttpResponse.json(
@@ -118,7 +131,43 @@ describe("JoinGroupScreen", () => {
       expect(screen.getByText("BUZZ BASE")).toBeOnTheScreen(),
     );
     expect(acceptCalled).toBe(false);
+    expect(
+      mockCapture.mock.calls.filter(
+        ([event]) => event === "free limit reached",
+      ),
+    ).toEqual([
+      [
+        "free limit reached",
+        {
+          feature: "unlimited_groups",
+          source: "group_join_link",
+          detection: "client",
+        },
+      ],
+    ]);
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
+  });
+
+  it("所属済みグループの招待コードを入れ直したときは上限到達にせず参加処理へ進む", async () => {
+    respondFree();
+    // 招待先グループ（id: 1）に既に所属している無料ユーザー
+    setupCommonHandlers(1, 1);
+    server.use(
+      http.post(apiUrl("/invite_links/ABC12345/accept"), () =>
+        HttpResponse.json({ success: true, group_id: 1 }),
+      ),
+    );
+
+    renderWithProviders(<JoinGroupScreen />);
+    await lookupAndPressJoin();
+
+    await waitFor(() =>
+      expect(getRouterSpies().replace).toHaveBeenCalledWith("/(groups)/1"),
+    );
+    expect(mockCapture).not.toHaveBeenCalledWith(
+      "free limit reached",
+      expect.anything(),
+    );
   });
 
   it("無料ユーザーが0グループなら通常通り参加できる", async () => {
@@ -138,7 +187,7 @@ describe("JoinGroupScreen", () => {
     );
   });
 
-  it("Proユーザーは複数グループ所属していても制限なく参加できる", async () => {
+  it("Proユーザーは複数グループ所属していても制限なく参加でき、上限到達は計測しない", async () => {
     respondPro();
     setupCommonHandlers(3);
     server.use(
@@ -153,9 +202,13 @@ describe("JoinGroupScreen", () => {
     await waitFor(() =>
       expect(getRouterSpies().replace).toHaveBeenCalledWith("/(groups)/1"),
     );
+    expect(mockCapture).not.toHaveBeenCalledWith(
+      "free limit reached",
+      expect.anything(),
+    );
   });
 
-  it("サーバー側の上限エラー（403）では汎用エラーではなくPaywallとサーバーの文言を表示する", async () => {
+  it("サーバー側の上限エラー（403）では汎用エラーではなくPaywallとサーバーの文言を表示し、上限到達を計測する", async () => {
     respondFree();
     setupCommonHandlers(0);
     server.use(
@@ -178,6 +231,20 @@ describe("JoinGroupScreen", () => {
         screen.getByText("Pro プランでグループを無制限に作成・参加できます"),
       ).toBeOnTheScreen(),
     );
+    expect(
+      mockCapture.mock.calls.filter(
+        ([event]) => event === "free limit reached",
+      ),
+    ).toEqual([
+      [
+        "free limit reached",
+        {
+          feature: "unlimited_groups",
+          source: "group_join_link",
+          detection: "server",
+        },
+      ],
+    ]);
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
   });
 

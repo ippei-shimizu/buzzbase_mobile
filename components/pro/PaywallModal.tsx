@@ -189,6 +189,11 @@ export const PRO_PAYWALL_COPY: Record<ProFeature, PaywallCopy> = {
     title: "グループを無制限に作成・参加",
     description:
       "Pro プランなら2つ目以降のグループも自由に作成・参加できます。チームを掛け持ちしているメンバーも安心です。",
+    benefits: [
+      "所属チームと学年・代のグループを分けて成績を共有",
+      "習い事や別チームの仲間とも、それぞれのグループでつながれる",
+      "新チームのグループを作っても、前の代のグループはそのまま残せる",
+    ],
   },
   hit_direction_average: {
     title: "方向別の打率",
@@ -735,9 +740,15 @@ export function PaywallModal({
 
             <View style={styles.highlightCard}>
               <Text style={styles.highlightTitle}>{copy.title}</Text>
-              <Text style={styles.highlightDescription}>
-                {copy.description}
-              </Text>
+              {copy.benefits?.length ? (
+                <Text style={styles.highlightDescription}>
+                  {copy.benefits.map((benefit) => `・${benefit}`).join("\n")}
+                </Text>
+              ) : (
+                <Text style={styles.highlightDescription}>
+                  {copy.description}
+                </Text>
+              )}
             </View>
 
             <Text style={styles.subtitle}>

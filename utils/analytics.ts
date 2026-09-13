@@ -166,6 +166,14 @@ export const trackPurchaseFailed = (props: {
   plan_type: PlanType | null;
 }) => capture("purchase failed", props);
 
-/** 無料枠の上限に到達した瞬間。最も課金に近いシグナルとして計測する。 */
-export const trackFreeLimitReached = (feature: ProFeature) =>
-  capture("free limit reached", { feature });
+/**
+ * 無料枠の上限に到達した瞬間。最も課金に近いシグナルとして計測する。
+ *
+ * @param feature - 上限に当たった Pro 機能の正式キー（`PRO_FEATURES`）
+ * @param props.source - 上限に当たった導線（例: `group_create` / `group_join_link`）
+ * @param props.detection - クライアント事前判定で弾いたか、サーバーの 403 に当たったか
+ */
+export const trackFreeLimitReached = (
+  feature: ProFeature,
+  props?: { source?: string; detection?: "client" | "server" },
+) => capture("free limit reached", { feature, ...props });
