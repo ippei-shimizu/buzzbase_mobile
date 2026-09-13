@@ -241,6 +241,12 @@ jest.mock("react-native-google-mobile-ads", () => {
   const { View } = require("react-native");
   // initialize は呼び出し回数を assert するため、mobileAds() を呼ぶたびに
   // 作り直さず同じ jest.fn を返す。
+  // jest.config.js に clearMocks が無く、この jest.fn はファイル内で共有される。
+  // 呼び出し回数を assert するテストは jest.resetModules() でファクトリごと
+  // 作り直す前提で書くこと(services/__tests__/mobileAdsService.test.ts を参照)。
+  // ここでグローバルに mockClear する beforeEach は置けない。このモジュールを
+  // default 無しでローカルモックしているテスト(interstitialAdService.test.ts)で
+  // mobileAds() が呼べず落ちるため。
   const initialize = jest.fn().mockResolvedValue([]);
   return {
     __esModule: true,
