@@ -109,9 +109,13 @@ const SHARED_EVENT_CASES: {
   },
   {
     event: "practice record created",
-    properties: { menu_count: 3, has_condition: true },
+    properties: { menu_count: 3, has_condition: true, is_edit: false },
     run: (a) =>
-      a.trackPracticeRecordCreated({ menu_count: 3, has_condition: true }),
+      a.trackPracticeRecordCreated({
+        menu_count: 3,
+        has_condition: true,
+        is_edit: false,
+      }),
   },
   {
     event: "note created",

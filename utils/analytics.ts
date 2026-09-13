@@ -106,11 +106,14 @@ export const trackGoalCreated = (props: {
 
 /**
  * 練習記録（日次）の保存完了。サーバー側は日付キーの upsert のため、同じ日を
- * 編集し直すと再送される。集計はユニークユーザー数で見る前提。
+ * 編集し直すと再送される。件数を「作成された記録数」として読めるよう、既存記録の
+ * 編集かどうかを `is_edit` で区別する。
+ * `menu_count` は量の入力有無に関わらず選択されたメニュー数。
  */
 export const trackPracticeRecordCreated = (props: {
   menu_count: number;
   has_condition: boolean;
+  is_edit: boolean;
 }) => capture("practice record created", props);
 
 export const trackNoteCreated = (props: { has_reflection: boolean }) =>
