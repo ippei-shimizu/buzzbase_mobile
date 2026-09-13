@@ -19,6 +19,7 @@ import { useEntitlement } from "@hooks/useEntitlement";
 import { useCreateGroup, useInviteMembers } from "@hooks/useGroupMutations";
 import { useFollowingUsers, useGroups } from "@hooks/useGroups";
 import { useProfile } from "@hooks/useProfile";
+import { trackFreeLimitReached } from "@utils/analytics";
 import { groupLimitErrorMessage, isGroupLimitError } from "@utils/axiosError";
 
 const GROUP_LIMIT_MESSAGE = `無料プランで参加できるグループは${GROUP_FREE_LIMIT}件までのため、作成できませんでした。`;
@@ -110,6 +111,7 @@ export default function GroupCreateScreen() {
       // サーバー側の上限チェックによる 403 は障害ではないため、
       // 汎用エラーに潰さず Pro への導線を出す。
       if (isGroupLimitError(error)) {
+        trackFreeLimitReached("unlimited_groups");
         setPaywallMessage(groupLimitErrorMessage(error) ?? GROUP_LIMIT_MESSAGE);
         return;
       }

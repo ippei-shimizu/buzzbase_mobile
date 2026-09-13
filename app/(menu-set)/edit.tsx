@@ -16,6 +16,7 @@ import { Icon } from "@components/icon/Icon";
 import { KeyboardAwareScreen } from "@components/ui/KeyboardAwareScreen";
 import { useMenuSets, useMenuSetMutations } from "@hooks/useMenuSets";
 import { usePracticeMenus } from "@hooks/usePracticeMenus";
+import { trackFreeLimitReached, trackProFeatureTapped } from "@utils/analytics";
 import { serverErrorMessage } from "@utils/axiosError";
 import { formatAmount } from "@utils/formatAmount";
 
@@ -80,12 +81,22 @@ export default function MenuSetEditScreen() {
       router.back();
     } catch (error) {
       if (isAxiosError(error) && error.response?.status === 403) {
+        trackFreeLimitReached("unlimited_menu_sets");
         Alert.alert(
           "無料プランの上限",
           "メニューセットは無料で2つまでです。Pro で無制限に登録できます。",
           [
             { text: "閉じる", style: "cancel" },
-            { text: "Pro を見る", onPress: () => router.push("/pro") },
+            {
+              text: "Pro を見る",
+              onPress: () => {
+                trackProFeatureTapped("unlimited_menu_sets");
+                router.push({
+                  pathname: "/pro",
+                  params: { trigger: "unlimited_menu_sets" },
+                });
+              },
+            },
           ],
         );
       } else {

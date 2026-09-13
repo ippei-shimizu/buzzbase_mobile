@@ -5,6 +5,7 @@ import {
   getShadowSwingTrend,
   startShadowSwingSession,
 } from "../services/shadowSwingService";
+import { trackShadowSwingCompleted } from "@utils/analytics";
 
 export const useShadowSwingStats = () => {
   const { data, isLoading } = useQuery({
@@ -30,12 +31,13 @@ export const useShadowSwingMutations = () => {
   const complete = useMutation({
     mutationFn: ({ id, swingCount }: { id: number; swingCount: number }) =>
       completeShadowSwingSession(id, swingCount),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       // 素振り完了は当日の活動集計（草・Streak）に波及する。
       queryClient.invalidateQueries({ queryKey: ["shadowSwingStats"] });
       queryClient.invalidateQueries({ queryKey: ["practiceLogs"] });
       queryClient.invalidateQueries({ queryKey: ["activityLogs"] });
       queryClient.invalidateQueries({ queryKey: ["streak"] });
+      trackShadowSwingCompleted({ swing_count: variables.swingCount });
     },
   });
 

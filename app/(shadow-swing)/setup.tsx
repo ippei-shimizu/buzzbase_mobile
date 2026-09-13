@@ -17,6 +17,7 @@ import {
   useShadowSwingMutations,
   useShadowSwingStats,
 } from "@hooks/useShadowSwing";
+import { trackProFeatureTapped } from "@utils/analytics";
 import { serverErrorMessage } from "@utils/axiosError";
 
 const INTERVALS = [
@@ -119,6 +120,7 @@ export default function ShadowSwingSetupScreen() {
                 ]}
                 onPress={() => {
                   if (locked) {
+                    trackProFeatureTapped("shadow_swing_custom_interval");
                     setIntervalPaywallOpen(true);
                     return;
                   }
@@ -225,6 +227,7 @@ export default function ShadowSwingSetupScreen() {
                 ]}
                 onPress={() => {
                   if (locked) {
+                    trackProFeatureTapped("shadow_swing_vibration");
                     setVibrationPaywallOpen(true);
                     return;
                   }

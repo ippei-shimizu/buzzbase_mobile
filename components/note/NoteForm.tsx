@@ -24,6 +24,7 @@ import { ProUpsellOverlay } from "@components/pro/ProUpsellOverlay";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useFilteredGameResults } from "@hooks/useGameResults";
 import { usePracticeSessions } from "@hooks/usePracticeSessions";
+import { trackFreeLimitReached } from "@utils/analytics";
 import { formatJaFullDate } from "@utils/formatDate";
 import { buildMemoJson, buildReflectionMemoText } from "../../types/note";
 import { MediaAttachmentList } from "./MediaAttachmentList";
@@ -200,6 +201,7 @@ export function NoteForm({
       gameResultIds.length >= 1 &&
       !hasEntitlement("multi_game_result_notes")
     ) {
+      trackFreeLimitReached("multi_game_result_notes");
       setGamePaywallOpen(true);
       return;
     }
