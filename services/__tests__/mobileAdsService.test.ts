@@ -11,11 +11,15 @@
  */
 const loadService = () => {
   jest.resetModules();
-  const { initializeMobileAds } = require("../mobileAdsService");
+  const service = require("../mobileAdsService");
   const mobileAds = require("react-native-google-mobile-ads").default;
   const Sentry = require("@sentry/react-native");
   return {
-    initializeMobileAds: initializeMobileAds as () => Promise<void>,
+    initializeMobileAds: service.initializeMobileAds as () => Promise<void>,
+    getMobileAdsInitialized: service.getMobileAdsInitialized as () => boolean,
+    subscribeMobileAdsInitialized: service.subscribeMobileAdsInitialized as (
+      listener: () => void,
+    ) => () => void,
     initialize: mobileAds().initialize as jest.Mock,
     captureException: Sentry.captureException as jest.Mock,
   };
@@ -37,6 +41,33 @@ describe("initializeMobileAds", () => {
     await initializeMobileAds();
 
     expect(initialize).toHaveBeenCalledTimes(1);
+  });
+
+  it("初期化完了まで未完了を返し、完了後に購読者へ通知する", async () => {
+    const {
+      initializeMobileAds,
+      getMobileAdsInitialized,
+      subscribeMobileAdsInitialized,
+    } = loadService();
+    const listener = jest.fn();
+    subscribeMobileAdsInitialized(listener);
+
+    expect(getMobileAdsInitialized()).toBe(false);
+
+    await initializeMobileAds();
+
+    expect(getMobileAdsInitialized()).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("初期化が失敗しても描画を止めないよう完了扱いにする", async () => {
+    const { initializeMobileAds, getMobileAdsInitialized, initialize } =
+      loadService();
+    initialize.mockRejectedValueOnce(new Error("init failed"));
+
+    await initializeMobileAds();
+
+    expect(getMobileAdsInitialized()).toBe(true);
   });
 
   it("初期化が失敗しても例外を投げずSentryへ送る", async () => {

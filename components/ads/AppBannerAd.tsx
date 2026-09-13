@@ -1,6 +1,11 @@
+import { useSyncExternalStore } from "react";
 import { BannerAd, BannerAdSize } from "react-native-google-mobile-ads";
 import { bottomNavBannerAdUnitId } from "@constants/admob";
 import { useEntitlement } from "@hooks/useEntitlement";
+import {
+  getMobileAdsInitialized,
+  subscribeMobileAdsInitialized,
+} from "@services/mobileAdsService";
 
 /**
  * ボトムナビの5タブ(Home/試合結果/成績/グループ/マイページ)のルート画面
@@ -13,9 +18,15 @@ import { useEntitlement } from "@hooks/useEntitlement";
  */
 export function AppBannerAd() {
   const { hasEntitlement, isLoading } = useEntitlement();
+  // BannerAd は失敗しても再ロードしないため、SDK初期化前にマウントされると
+  // その画面が生きている間ずっと空枠のままになる。初期化完了まで描画を待つ。
+  const isAdsInitialized = useSyncExternalStore(
+    subscribeMobileAdsInitialized,
+    getMobileAdsInitialized,
+  );
   // Pro状態確定前はhasEntitlementが常にfalse(無料扱い)になるため、
   // isLoading中も広告を出さないことでPro加入者への一瞬の広告フラッシュを防ぐ。
-  if (isLoading || hasEntitlement("no_ads")) return null;
+  if (isLoading || hasEntitlement("no_ads") || !isAdsInitialized) return null;
 
   // ユニットIDの取得はPro判定の後に行う。未設定時のSentry警告がPro加入者の
   // 表示されない枠にまで出るのを避けるため。
