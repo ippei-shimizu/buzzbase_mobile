@@ -37,6 +37,8 @@ const DEFAULT_CTA_LABEL = "Pro プランを見る";
  *
  * CTA タップの計測はこのコンポーネントに集約する。呼び出し側で個別に送ると
  * 入れ忘れ・キー表記ゆれが起きて機能別の課金意向が比較できなくなるため。
+ * `feature` を持たないカード（entitlement キーの無い未実装機能）は "general" で送り、
+ * カードを足しただけで計測が無言で落ちることがないようにする。
  */
 export function ProUpsellCard({
   feature,
@@ -69,7 +71,7 @@ export function ProUpsellCard({
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-          if (feature) trackProFeatureTapped(feature);
+          trackProFeatureTapped(feature ?? "general");
           onPressCta();
         }}
         accessibilityRole="button"
