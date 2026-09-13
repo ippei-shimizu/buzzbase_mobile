@@ -53,6 +53,7 @@ export function WeeklyPlanView() {
 
   const handleCopyToNextWeek = () => {
     if (!hasEntitlement("schedule_copy_next_week")) {
+      trackProFeatureTapped("schedule_copy_next_week");
       setPaywallOpen(true);
       return;
     }
@@ -70,6 +71,7 @@ export function WeeklyPlanView() {
       setWeekStart((prev) => addDays(prev, 7));
     } catch (error) {
       if (isAxiosError(error) && error.response?.status === 403) {
+        // entitlement のキャッシュが古く事前チェックを通過した場合の保険。
         trackProFeatureTapped("schedule_copy_next_week");
         setPaywallOpen(true);
       } else {
