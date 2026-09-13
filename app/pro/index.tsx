@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -24,6 +24,9 @@ import {
   isUserCancelled,
   PLAN_LABELS,
   PRO_PAYWALL_COPY,
+  purchaseFailureReason,
+  toPlanType,
+  toProTrigger,
 } from "@components/pro/PaywallModal";
 import { useProStatus } from "@hooks/useProStatus";
 import { syncProStatus } from "@services/proService";
@@ -33,9 +36,20 @@ import {
   restorePurchases,
 } from "@services/revenueCatService";
 import { useSnackbarStore } from "@stores/snackbarStore";
+import {
+  trackPaywallViewed,
+  trackPurchaseCompleted,
+  trackPurchaseFailed,
+  trackUpgradeStarted,
+} from "@utils/analytics";
 
 export default function ProScreen() {
   const router = useRouter();
+  // 遷移元が Pro 訴求のどの機能だったかを課金ファネルの trigger として引き継ぐ。
+  const { trigger: triggerParam } = useLocalSearchParams<{
+    trigger?: string;
+  }>();
+  const trigger = toProTrigger(triggerParam);
   const storeLabel = Platform.OS === "android" ? "Google Play" : "App Store";
   const notices = [
     "アプリを削除しても支払い情報は残ります。",
@@ -53,6 +67,10 @@ export default function ProScreen() {
   const { proStatus, isLoading: isProStatusLoading } = useProStatus();
   const isTrialEligible =
     !isProStatusLoading && !proStatus.subscription.has_used_trial;
+
+  useEffect(() => {
+    trackPaywallViewed(trigger);
+  }, [trigger]);
 
   const [offering, setOffering] = useState<PurchasesOffering | null>(null);
   const [loadingOfferings, setLoadingOfferings] = useState(true);
@@ -122,13 +140,25 @@ export default function ProScreen() {
   const handlePurchase = async () => {
     // disabled プロパティだけに頼らず、連打による purchasePackage の多重起動を関数側でも防ぐ。
     if (!selectedPackage || purchasingRef.current) return;
+    const planType = toPlanType(selectedPackage.packageType);
     setPurchasing(true);
+    trackUpgradeStarted({ plan_type: planType, trigger });
     try {
       await purchasePackage(selectedPackage);
     } catch (error: unknown) {
       setPurchasing(false);
-      if (isUserCancelled(error)) return;
+      if (isUserCancelled(error)) {
+        trackPurchaseFailed({
+          reason: "user_cancelled",
+          plan_type: planType,
+        });
+        return;
+      }
       const code = (error as { code?: PURCHASES_ERROR_CODE })?.code;
+      trackPurchaseFailed({
+        reason: purchaseFailureReason(code),
+        plan_type: planType,
+      });
       if (code === PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR) {
         showSnackbar({
           type: "info",
@@ -166,6 +196,12 @@ export default function ProScreen() {
       });
       return;
     }
+
+    trackPurchaseCompleted({
+      plan_type: planType,
+      platform: Platform.OS === "android" ? "android" : "ios",
+      is_trial: isTrialEligible,
+    });
 
     // ここから先は Apple への課金が既に成功している。バックエンドへの同期失敗を
     // 「購入失敗」と誤表示すると二重購入を誘発するため、Sentry への記録に留めて
