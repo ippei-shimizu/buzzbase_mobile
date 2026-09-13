@@ -175,5 +175,5 @@ export const trackPurchaseFailed = (props: {
  */
 export const trackFreeLimitReached = (
   feature: ProFeature,
-  props?: { source: string; detection: "client" | "server" },
+  props?: { source?: string; detection?: "client" | "server" },
 ) => capture("free limit reached", { feature, ...props });
