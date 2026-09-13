@@ -66,13 +66,20 @@ export default function JoinGroupScreen() {
   };
 
   const handleJoin = async () => {
+    // 所属済みグループの招待コードを入れ直しただけのケースは上限到達ではない。
+    // 無料1件所属は標準状態のため、踏み直しを数えると計測が上振れする。
+    const isAlreadyJoined = groups.some(
+      (group) => group.id === inviteInfo?.group.id,
+    );
+
     // pro/status と所属グループの取得完了後にのみ上限判定する。
     // 判定確定前は誤ってPaywallを出さず、サーバー側の上限チェックに委ねる。
     if (
       !isProLoading &&
       !isGroupsLoading &&
       !hasEntitlement("unlimited_groups") &&
-      groups.length >= GROUP_FREE_LIMIT
+      groups.length >= GROUP_FREE_LIMIT &&
+      !isAlreadyJoined
     ) {
       showGroupLimitPaywall(GROUP_LIMIT_MESSAGE, "client");
       return;

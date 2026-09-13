@@ -47,10 +47,13 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-const inviteLinkInfo = {
-  group: { id: 1, name: "招待先グループ", icon: null, member_count: 3 },
+// 所属済みグループ（id は 1 から採番）と衝突しない id を既定にする。
+const INVITED_GROUP_ID = 99;
+
+const buildInviteLinkInfo = (groupId: number = INVITED_GROUP_ID) => ({
+  group: { id: groupId, name: "招待先グループ", icon: null, member_count: 3 },
   inviter: { name: "招待者", image: { url: null } },
-};
+});
 
 const respondFree = () => {
   server.use(
@@ -77,10 +80,13 @@ const respondPro = () => {
   );
 };
 
-const setupCommonHandlers = (groupCount: number) => {
+const setupCommonHandlers = (
+  groupCount: number,
+  invitedGroupId: number = INVITED_GROUP_ID,
+) => {
   server.use(
     http.get(apiUrl("/invite_links/ABC12345"), () =>
-      HttpResponse.json(inviteLinkInfo),
+      HttpResponse.json(buildInviteLinkInfo(invitedGroupId)),
     ),
     http.get(apiUrl("/groups"), () =>
       HttpResponse.json(
@@ -131,6 +137,28 @@ describe("JoinGroupScreen", () => {
       detection: "client",
     });
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
+  });
+
+  it("所属済みグループの招待コードを入れ直したときは上限到達にせず参加処理へ進む", async () => {
+    respondFree();
+    // 招待先グループ（id: 1）に既に所属している無料ユーザー
+    setupCommonHandlers(1, 1);
+    server.use(
+      http.post(apiUrl("/invite_links/ABC12345/accept"), () =>
+        HttpResponse.json({ success: true, group_id: 1 }),
+      ),
+    );
+
+    renderWithProviders(<JoinGroupScreen />);
+    await lookupAndPressJoin();
+
+    await waitFor(() =>
+      expect(getRouterSpies().replace).toHaveBeenCalledWith("/(groups)/1"),
+    );
+    expect(mockCapture).not.toHaveBeenCalledWith(
+      "free limit reached",
+      expect.anything(),
+    );
   });
 
   it("無料ユーザーが0グループなら通常通り参加できる", async () => {
