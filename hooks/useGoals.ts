@@ -10,6 +10,7 @@ import {
   unachieveGoal,
   updateGoal,
 } from "../services/goalService";
+import { trackGoalCreated } from "@utils/analytics";
 
 /** 達成バッジ一覧。FinalizeGoalsJobが目標達成時に付与したバッジを新しい順に返す。 */
 export const useGoalBadges = () => {
@@ -44,7 +45,13 @@ export const useGoalMutations = () => {
     queryClient.invalidateQueries({ queryKey: ["goalHistory"] });
   };
 
-  const create = useMutation({ mutationFn: createGoal, onSuccess: invalidate });
+  const create = useMutation({
+    mutationFn: createGoal,
+    onSuccess: (_data, input) => {
+      invalidate();
+      trackGoalCreated({ period_type: input.period_type, kind: input.kind });
+    },
+  });
   const update = useMutation({
     mutationFn: ({ id, input }: { id: number; input: GoalInput }) =>
       updateGoal(id, input),

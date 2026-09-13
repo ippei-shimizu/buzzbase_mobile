@@ -9,6 +9,7 @@ import {
   getImprovementThemes,
   updateImprovementTheme,
 } from "../services/improvementThemeService";
+import { trackThemeCreated } from "@utils/analytics";
 
 export const useImprovementThemes = (params?: {
   status?: ImprovementThemeStatus;
@@ -36,7 +37,10 @@ export const useImprovementThemeMutations = () => {
 
   const create = useMutation({
     mutationFn: createImprovementTheme,
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      trackThemeCreated();
+    },
   });
   const update = useMutation({
     mutationFn: ({ id, input }: { id: number; input: ImprovementThemeInput }) =>

@@ -6,6 +6,7 @@ import {
   getPracticeSessions,
   upsertPracticeSession,
 } from "../services/practiceSessionService";
+import { trackPracticeRecordCreated } from "@utils/analytics";
 
 export const usePracticeSessions = (params?: {
   from?: string;
@@ -55,7 +56,13 @@ export const usePracticeSessionMutations = () => {
 
   const upsert = useMutation({
     mutationFn: upsertPracticeSession,
-    onSuccess: invalidate,
+    onSuccess: (_data, input) => {
+      invalidate();
+      trackPracticeRecordCreated({
+        menu_count: input.items.length,
+        has_condition: input.condition != null,
+      });
+    },
   });
   const remove = useMutation({
     mutationFn: deletePracticeSession,
