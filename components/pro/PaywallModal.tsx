@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import {
   PURCHASES_ERROR_CODE,
+  type CustomerInfo,
   type PACKAGE_TYPE,
   type PurchasesOffering,
 } from "react-native-purchases";
@@ -399,6 +400,21 @@ export const toPlanType = (packageType: PACKAGE_TYPE): PlanType | null => {
 };
 
 /**
+ * 購入結果がトライアル開始だったか。`has_used_trial` から導く「トライアル権利の有無」は
+ * 判定確定前に false へ倒れるうえ、権利があってもトライアル無しで買った場合に true に
+ * なるため、購入後の CustomerInfo の periodType を見る。
+ *
+ * 引数はネイティブ Module 由来のため、欠けていても false を返して落とさない。
+ * ここで例外を投げると課金済みのユーザーが同期・成功画面に到達できなくなる。
+ */
+export const isTrialPurchase = (
+  customerInfo: CustomerInfo | null | undefined,
+): boolean =>
+  Object.values(customerInfo?.entitlements?.active ?? {}).some(
+    (entitlement) => entitlement.periodType === "TRIAL",
+  );
+
+/**
  * 購入失敗の理由を計測用の短い識別子にする。未知のコードも数値のまま残して
  * PostHog 側で内訳を追えるようにする。
  */
@@ -553,8 +569,9 @@ export function PaywallModal({
     const planType = toPlanType(selectedPackage.packageType);
     setPurchasing(true);
     trackUpgradeStarted({ plan_type: planType, trigger });
+    let customerInfo;
     try {
-      await purchasePackage(selectedPackage);
+      customerInfo = await purchasePackage(selectedPackage);
     } catch (error: unknown) {
       setPurchasing(false);
       if (isUserCancelled(error)) {
@@ -610,7 +627,7 @@ export function PaywallModal({
     trackPurchaseCompleted({
       plan_type: planType,
       platform: Platform.OS === "android" ? "android" : "ios",
-      is_trial: isTrialEligible,
+      is_trial: isTrialPurchase(customerInfo),
     });
 
     // ここから先は Apple への課金が既に成功している。バックエンドへの同期失敗を
