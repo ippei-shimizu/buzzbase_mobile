@@ -140,9 +140,15 @@ function RootLayoutInner() {
   // 集める前に許可を求める必要があり、未ログインのまま離脱するユーザーにも出すため。
   // 広告 SDK の初期化は ATT の結果が確定してから行う。ATT が失敗しても広告自体は
   // 出したいので、拒否・例外いずれの場合も初期化まで進める。
+  // ATT の失敗は IDFA が取れず配信が非パーソナライズに落ちることを意味するため、
+  // 握り潰さず Sentry へ送る。
   useEffect(() => {
     void requestTrackingPermissionOnce()
-      .catch(() => undefined)
+      .catch((error: unknown) => {
+        Sentry.captureException(error, {
+          tags: { source: "tracking_transparency_request" },
+        });
+      })
       .then(initializeMobileAds);
   }, []);
 
