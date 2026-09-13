@@ -16,7 +16,7 @@ import { SkeletonList, Skeleton } from "@components/ui/Skeleton";
 import { eventTypeMeta, scheduleTimeLabel } from "@constants/schedule";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useCalendar } from "@hooks/usePlans";
-import { trackProFeatureTapped } from "@utils/analytics";
+import { trackFreeLimitReached } from "@utils/analytics";
 import { buildTimelineLayout, minutesFromMidnight } from "@utils/dayTimeline";
 import { formatJaFullDate } from "@utils/formatDate";
 import {
@@ -178,7 +178,9 @@ export function CalendarView({ swipeEnabled = true }: CalendarViewProps) {
         : addDays(cursor, direction * (mode === "week" ? 7 : 1));
 
     if (!canViewFullHistory && isOutsideFreeWindow(nextCursor)) {
-      trackProFeatureTapped("schedule_calendar_full_history");
+      // 前後の矢印タップは Pro の CTA ではなく「無料の表示範囲に当たった」操作なので、
+      // 課金意向シグナルではなく上限到達として数える。
+      trackFreeLimitReached("schedule_calendar_full_history");
       setPaywallOpen(true);
       return;
     }
