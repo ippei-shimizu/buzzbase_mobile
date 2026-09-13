@@ -116,6 +116,10 @@ export const trackPracticeRecordCreated = (props: {
   is_edit: boolean;
 }) => capture("practice record created", props);
 
+/**
+ * 野球ノートの作成完了。メディア添付に失敗してノートごとロールバックされた場合も
+ * 送信済みのため、件数はごく僅かに上振れする（集計はユニークユーザー数で見る前提）。
+ */
 export const trackNoteCreated = (props: { has_reflection: boolean }) =>
   capture("note created", props);
 
@@ -126,7 +130,10 @@ export const trackPracticeScheduleCreated = (props: {
   recurring: boolean;
 }) => capture("practice schedule created", props);
 
-/** 振り返りテンプレに回答したノートの保存完了（`note created` と同時に発火する）。 */
+/**
+ * 振り返りテンプレに回答したノートの保存完了（`note created` と同時に発火する）。
+ * 計測するのは新規作成時のみで、保存後の編集でテンプレ回答を足した場合は含まない。
+ */
 export const trackReviewCompleted = (props: { answer_count: number }) =>
   capture("review completed", props);
 
