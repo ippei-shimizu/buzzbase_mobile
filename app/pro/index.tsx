@@ -24,6 +24,7 @@ import {
   isUserCancelled,
   PLAN_LABELS,
   PRO_PAYWALL_COPY,
+  isTrialPurchase,
   purchaseFailureReason,
   toPlanType,
   toProTrigger,
@@ -69,8 +70,11 @@ export default function ProScreen() {
     !isProStatusLoading && !proStatus.subscription.has_used_trial;
 
   useEffect(() => {
+    // この画面は設定などから加入済みユーザーも開けるため、課金ファネルの分母に
+    // 加入済みを混ぜない（判定確定前も送らない）。
+    if (isProStatusLoading || proStatus.subscription.pro_active) return;
     trackPaywallViewed(trigger);
-  }, [trigger]);
+  }, [isProStatusLoading, proStatus.subscription.pro_active, trigger]);
 
   const [offering, setOffering] = useState<PurchasesOffering | null>(null);
   const [loadingOfferings, setLoadingOfferings] = useState(true);
@@ -143,8 +147,9 @@ export default function ProScreen() {
     const planType = toPlanType(selectedPackage.packageType);
     setPurchasing(true);
     trackUpgradeStarted({ plan_type: planType, trigger });
+    let purchasedCustomerInfo;
     try {
-      await purchasePackage(selectedPackage);
+      purchasedCustomerInfo = await purchasePackage(selectedPackage);
     } catch (error: unknown) {
       setPurchasing(false);
       if (isUserCancelled(error)) {
@@ -200,7 +205,7 @@ export default function ProScreen() {
     trackPurchaseCompleted({
       plan_type: planType,
       platform: Platform.OS === "android" ? "android" : "ios",
-      is_trial: isTrialEligible,
+      is_trial: isTrialPurchase(purchasedCustomerInfo),
     });
 
     // ここから先は Apple への課金が既に成功している。バックエンドへの同期失敗を
