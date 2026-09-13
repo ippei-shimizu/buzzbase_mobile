@@ -17,6 +17,7 @@ import {
 import { usePushNotifications } from "@hooks/usePushNotifications";
 import { useStoreReview } from "@hooks/useStoreReview";
 import { configureGoogleSignIn } from "@services/googleAuthService";
+import { initializeMobileAds } from "@services/mobileAdsService";
 import {
   addCustomerInfoUpdateListener,
   configureRevenueCat,
@@ -137,8 +138,18 @@ function RootLayoutInner() {
 
   // ATT はログイン前も含めた起動直後に要求する。トラッキングされうるデータを
   // 集める前に許可を求める必要があり、未ログインのまま離脱するユーザーにも出すため。
+  // 広告 SDK の初期化は ATT の結果が確定してから行う。ATT が失敗しても広告自体は
+  // 出したいので、拒否・例外いずれの場合も初期化まで進める。
+  // ATT の失敗は IDFA が取れず配信が非パーソナライズに落ちることを意味するため、
+  // 握り潰さず Sentry へ送る。
   useEffect(() => {
-    void requestTrackingPermissionOnce();
+    void requestTrackingPermissionOnce()
+      .catch((error: unknown) => {
+        Sentry.captureException(error, {
+          tags: { source: "tracking_transparency_request" },
+        });
+      })
+      .then(initializeMobileAds);
   }, []);
 
   // RevenueCat 側の顧客情報更新（更新・解約・返金・別端末購入など）を検知して
