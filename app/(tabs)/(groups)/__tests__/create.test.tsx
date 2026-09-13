@@ -3,6 +3,7 @@
  * 上限に当たった瞬間が課金ファネルの起点になるため、Paywall 表示と計測を両方検証する。
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { delay } from "msw";
 import {
   apiUrl,
   http,
@@ -174,6 +175,67 @@ describe("GroupCreateScreen", () => {
       ],
     ]);
     expect(getRouterSpies().replace).not.toHaveBeenCalled();
+  });
+
+  it("Pro判定の確定前は事前判定せず、サーバーの上限チェックに委ねる", async () => {
+    // 所属件数は上限に達しているが pro/status が未確定。ここで事前判定すると
+    // Proユーザーにも Paywall が出て free limit reached が飛ぶ。
+    let createCalled = false;
+    server.use(
+      http.get(apiUrl("/pro/status"), async () => {
+        await delay(2000);
+        return HttpResponse.json(DEFAULT_PRO_STATUS);
+      }),
+      http.get(apiUrl("/user"), () =>
+        HttpResponse.json({ id: 1, name: "本人" }),
+      ),
+      http.get(apiUrl("/users/1/following_users"), () => HttpResponse.json([])),
+      http.get(apiUrl("/groups"), () =>
+        HttpResponse.json([
+          { id: 1, name: "グループ1", icon: null, group_users: [] },
+        ]),
+      ),
+      http.post(apiUrl("/groups"), () => {
+        createCalled = true;
+        return HttpResponse.json({ id: 2 });
+      }),
+    );
+
+    renderWithProviders(<GroupCreateScreen />);
+    await waitFor(() =>
+      expect(screen.getByPlaceholderText("グループ名")).toBeOnTheScreen(),
+    );
+    await fillNameAndSave();
+
+    await waitFor(() => expect(createCalled).toBe(true));
+    expect(mockCapture).not.toHaveBeenCalledWith(
+      "free limit reached",
+      expect.anything(),
+    );
+  });
+
+  it("無料ユーザーが0グループなら作成でき、上限到達は計測しない", async () => {
+    respondFree();
+    setupCommonHandlers(0);
+    server.use(
+      http.post(apiUrl("/groups"), () => HttpResponse.json({ id: 7 })),
+    );
+
+    renderWithProviders(<GroupCreateScreen />);
+    await waitFor(() =>
+      expect(screen.getByPlaceholderText("グループ名")).toBeOnTheScreen(),
+    );
+    await fillNameAndSave();
+
+    await waitFor(() =>
+      expect(getRouterSpies().replace).toHaveBeenCalledWith(
+        "/(groups)/share-invite?id=7",
+      ),
+    );
+    expect(mockCapture).not.toHaveBeenCalledWith(
+      "free limit reached",
+      expect.anything(),
+    );
   });
 
   it("Proユーザーは複数グループ所属していても作成でき、上限到達は計測しない", async () => {
