@@ -15,7 +15,8 @@ interface Props {
 }
 
 // 「走本塁打」はラベルが 4 文字で他より長く 1 行 5 列に収まらないため、
-// 本塁打系だけ 2 行目に分ける。
+// 本塁打系だけ 2 行目に分ける。1 行に並べられるのは 3 件までなので、
+// 非本塁打のヒット種別が増えるときはこの行分けを見直すこと。
 const BASE_HIT_OPTIONS = HIT_TYPE_OPTIONS.filter(
   (option) => option.hit_type !== "home_run",
 );
