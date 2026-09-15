@@ -36,6 +36,9 @@ const HIT_TYPE_LABELS: Record<string, string> = {
   home_run: "本塁打",
 };
 
+// 走本塁打は plate_result / hit_type としては本塁打なので、ヒット種別の表示だけを差し替える。
+const INSIDE_THE_PARK_HIT_TYPE_LABEL = "本塁打（走本塁打）";
+
 const SWING_TYPE_LABELS: Record<string, string> = {
   swinging: "空振り",
   looking: "見逃し",
@@ -106,7 +109,11 @@ export function PlateAppearanceDetailView({
           {pa.hit_type !== null ? (
             <DetailRow
               label="ヒット種別"
-              value={HIT_TYPE_LABELS[pa.hit_type]}
+              value={
+                pa.home_run_type === "inside_the_park"
+                  ? INSIDE_THE_PARK_HIT_TYPE_LABEL
+                  : HIT_TYPE_LABELS[pa.hit_type]
+              }
             />
           ) : null}
         </DetailSection>
