@@ -185,6 +185,8 @@ export interface HeadlineStats {
   batting_average: number;
   hit: number;
   home_run: number;
+  /** 走本塁打（ランニング本塁打）の本数。home_run の内数。 */
+  inside_the_park_home_run: number;
   runs_batted_in: number;
   on_base_percentage: number;
   slugging_percentage: number;

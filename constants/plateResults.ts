@@ -9,12 +9,18 @@
  *
  * 「アウト」「ヒット」はそれぞれサブ選択モーダル経由で `plate_result_id` をサブ種別 ID に確定する。
  *   - アウト: ゴロ=1 / フライ=2 / ファールフライ=3 / ライナー=4 / 併殺打=19 と `out_type` を併送
- *   - ヒット: 単打=7 / 二塁打=8 / 三塁打=9 / 本塁打=10 と `hit_type` を併送
+ *   - ヒット: 単打=7 / 二塁打=8 / 三塁打=9 / 本塁打=10 と `hit_type` を併送。
+ *     本塁打は柵越え / 走本塁打の内訳を `home_run_type` で併送する（どちらも id=10）
  *
  * 走塁妨害 (id=18) は新仕様の UI では非表示（既存データのみ残す）。
  */
 
-import type { HitType, OutType, SwingType } from "../types/plateAppearance";
+import type {
+  HitType,
+  HomeRunType,
+  OutType,
+  SwingType,
+} from "../types/plateAppearance";
 
 export const PLATE_RESULT_IDS = {
   GROUND_OUT: 1,
@@ -104,11 +110,16 @@ export const OUT_TYPE_OPTIONS: readonly OutTypeOption[] = [
   },
 ] as const;
 
-/** ヒット種別サブ選択。`plate_result_id` と `hit_type` を併送する。 */
+/**
+ * ヒット種別サブ選択。`plate_result_id` と `hit_type` を併送する。
+ * 走本塁打は柵越えと同じ `plate_result_id` / `hit_type` で `home_run_type` だけが異なる
+ * （記録上どちらも本塁打なので、集計が参照する `plate_result_id` は分けない）。
+ */
 export interface HitTypeOption {
   label: string;
   plate_result_id: PlateResultId;
   hit_type: HitType;
+  home_run_type?: HomeRunType;
 }
 
 export const HIT_TYPE_OPTIONS: readonly HitTypeOption[] = [
@@ -131,6 +142,13 @@ export const HIT_TYPE_OPTIONS: readonly HitTypeOption[] = [
     label: "本塁打",
     plate_result_id: PLATE_RESULT_IDS.HOME_RUN,
     hit_type: "home_run",
+    home_run_type: "over_fence",
+  },
+  {
+    label: "走本塁打",
+    plate_result_id: PLATE_RESULT_IDS.HOME_RUN,
+    hit_type: "home_run",
+    home_run_type: "inside_the_park",
   },
 ] as const;
 
