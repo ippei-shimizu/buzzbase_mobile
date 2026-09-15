@@ -213,6 +213,7 @@ export function PlateAppearanceWizard({
       outType?: OutTypeOption["out_type"];
       hitType?: HitTypeOption["hit_type"];
       swingType?: SwingType;
+      homeRunType?: HitTypeOption["home_run_type"];
     },
   ) => {
     setPlateResult(resultId, options);
@@ -498,6 +499,7 @@ export function PlateAppearanceWizard({
           setHitModalVisible(false);
           proceedToCounter(option.plate_result_id, {
             hitType: option.hit_type,
+            homeRunType: option.home_run_type,
           });
         }}
         onCancel={() => setHitModalVisible(false)}

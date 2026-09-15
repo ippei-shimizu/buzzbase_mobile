@@ -21,6 +21,7 @@ const buildPlateAppearance = (
   out_type: null,
   hit_type: "single",
   swing_type: null,
+  home_run_type: null,
   hit_location_x: "0.5000",
   hit_location_y: "0.3000",
   rbi: 1,

@@ -39,9 +39,10 @@ interface Props {
 const OUT_PLATE_RESULT_IDS: readonly PlateResultId[] = OUT_TYPE_OPTIONS.map(
   (option) => option.plate_result_id,
 );
-const HIT_PLATE_RESULT_IDS: readonly PlateResultId[] = HIT_TYPE_OPTIONS.map(
-  (option) => option.plate_result_id,
-);
+// 柵越え本塁打と走本塁打が同じ plate_result_id を持つため、重複を潰してから照合する。
+const HIT_PLATE_RESULT_IDS: readonly PlateResultId[] = [
+  ...new Set(HIT_TYPE_OPTIONS.map((option) => option.plate_result_id)),
+];
 
 const PRIMARY_COLOR = "#d08000";
 const OUT_COLOR = "#ef4444";

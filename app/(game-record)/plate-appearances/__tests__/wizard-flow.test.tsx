@@ -45,6 +45,7 @@ const buildCreatedResponse = (
   out_type: null,
   hit_type: "single",
   swing_type: null,
+  home_run_type: null,
   hit_location_x: "0.5000",
   hit_location_y: "0.3000",
   rbi: 1,
@@ -187,6 +188,87 @@ describe("打席ステップ式ウィザードのフロー", () => {
       timing_id: null,
       pitch_type_id: null,
       self_analysis_memo: null,
+    });
+  });
+
+  it("「走本塁打」を選ぶと plate_result_id は本塁打のまま home_run_type が POST される", async () => {
+    let capturedPayload: {
+      plate_appearance: Record<string, unknown>;
+    } | null = null;
+    server.use(
+      http.post(baseUrl("/api/v2/plate_appearances"), async ({ request }) => {
+        capturedPayload = (await request.json()) as typeof capturedPayload;
+        return HttpResponse.json(
+          buildCreatedResponse({
+            plate_result_id: 10,
+            hit_type: "home_run",
+            home_run_type: "inside_the_park",
+            batting_result: "中走本",
+          }),
+          { status: 201 },
+        );
+      }),
+    );
+
+    const view = renderWithProviders(<NewPlateAppearanceScreen />);
+    const ground = await view.findByLabelText("グラウンド");
+
+    fireEvent(ground, "press", {
+      nativeEvent: { locationX: 420 * 0.5, locationY: 340 * 0.3 },
+    });
+    fireEvent.press(view.getByRole("button", { name: "ヒット" }));
+    fireEvent.press(view.getByRole("button", { name: "走本塁打" }));
+
+    await view.findByLabelText("詳細を入力する");
+    fireEvent.press(view.getByLabelText("詳細入力をスキップして完了"));
+
+    await waitFor(() => {
+      expect(capturedPayload).not.toBeNull();
+    });
+    expect(capturedPayload!.plate_appearance).toMatchObject({
+      plate_result_id: 10,
+      hit_type: "home_run",
+      home_run_type: "inside_the_park",
+    });
+  });
+
+  it("「本塁打」を選ぶと home_run_type は柵越えとして POST される", async () => {
+    let capturedPayload: {
+      plate_appearance: Record<string, unknown>;
+    } | null = null;
+    server.use(
+      http.post(baseUrl("/api/v2/plate_appearances"), async ({ request }) => {
+        capturedPayload = (await request.json()) as typeof capturedPayload;
+        return HttpResponse.json(
+          buildCreatedResponse({
+            plate_result_id: 10,
+            hit_type: "home_run",
+            home_run_type: "over_fence",
+          }),
+          { status: 201 },
+        );
+      }),
+    );
+
+    const view = renderWithProviders(<NewPlateAppearanceScreen />);
+    const ground = await view.findByLabelText("グラウンド");
+
+    fireEvent(ground, "press", {
+      nativeEvent: { locationX: 420 * 0.5, locationY: 340 * 0.3 },
+    });
+    fireEvent.press(view.getByRole("button", { name: "ヒット" }));
+    fireEvent.press(view.getByRole("button", { name: "本塁打" }));
+
+    await view.findByLabelText("詳細を入力する");
+    fireEvent.press(view.getByLabelText("詳細入力をスキップして完了"));
+
+    await waitFor(() => {
+      expect(capturedPayload).not.toBeNull();
+    });
+    expect(capturedPayload!.plate_appearance).toMatchObject({
+      plate_result_id: 10,
+      hit_type: "home_run",
+      home_run_type: "over_fence",
     });
   });
 
