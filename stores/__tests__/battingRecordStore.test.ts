@@ -183,6 +183,69 @@ describe("useBattingRecordStore - 詳細項目", () => {
   });
 });
 
+describe("useBattingRecordStore - home_run_type", () => {
+  it("initializeFromExisting で home_run_type が復元される", () => {
+    useBattingRecordStore.getState().initializeFromExisting(
+      buildPlateAppearance({
+        plate_result_id: 10,
+        hit_type: "home_run",
+        home_run_type: "inside_the_park",
+      }),
+    );
+
+    const payload = useBattingRecordStore.getState().toCreatePayload(100);
+    expect(payload.plate_appearance.home_run_type).toBe("inside_the_park");
+  });
+
+  it("setPlateResult(10, { homeRunType: 'inside_the_park' }) → toCreatePayload に乗る", () => {
+    const store = useBattingRecordStore.getState();
+    store.initializeForNew(1);
+    store.setPlateResult(10, {
+      hitType: "home_run",
+      homeRunType: "inside_the_park",
+    });
+
+    const payload = useBattingRecordStore.getState().toCreatePayload(100);
+    expect(payload.plate_appearance).toMatchObject({
+      plate_result_id: 10,
+      hit_type: "home_run",
+      home_run_type: "inside_the_park",
+    });
+  });
+
+  it("走本塁打から二塁打に選び直すと home_run_type が残らない", () => {
+    const store = useBattingRecordStore.getState();
+    store.initializeForNew(1);
+    store.setPlateResult(10, {
+      hitType: "home_run",
+      homeRunType: "inside_the_park",
+    });
+
+    store.setPlateResult(8, { hitType: "double" });
+
+    const payload = useBattingRecordStore.getState().toCreatePayload(100);
+    expect(payload.plate_appearance).toMatchObject({
+      plate_result_id: 8,
+      hit_type: "double",
+      home_run_type: null,
+    });
+  });
+
+  it("打球方向なしの結果（四球）を選ぶと home_run_type がリセットされる", () => {
+    const store = useBattingRecordStore.getState();
+    store.initializeForNew(1);
+    store.setPlateResult(10, {
+      hitType: "home_run",
+      homeRunType: "inside_the_park",
+    });
+
+    store.setPlateResult(15);
+
+    const payload = useBattingRecordStore.getState().toCreatePayload(100);
+    expect(payload.plate_appearance.home_run_type).toBeNull();
+  });
+});
+
 describe("useBattingRecordStore - swing_type", () => {
   it("initializeFromExisting で swing_type が store に反映される", () => {
     useBattingRecordStore
