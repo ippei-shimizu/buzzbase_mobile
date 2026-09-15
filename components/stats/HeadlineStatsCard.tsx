@@ -9,6 +9,8 @@ interface HeadlineStatsCardProps {
 interface MetricItem {
   label: string;
   value: string;
+  /** 値の下に小さく添える内訳（該当が 0 件のときは undefined にして行ごと出さない）。 */
+  note?: string;
 }
 
 /** 打率 / OBP / SLG / OPS は小数 3 桁、先頭の 0 を省略して ".XXX" で表示する。 */
@@ -30,7 +32,15 @@ const buildMetrics = (
   ],
   secondary: [
     { label: "安打", value: formatCount(data.hit) },
-    { label: "本塁打", value: formatCount(data.home_run) },
+    {
+      label: "本塁打",
+      value: formatCount(data.home_run),
+      // 走本塁打も本塁打に含めて数えているので、総数の内数として添える。
+      note:
+        data.inside_the_park_home_run > 0
+          ? `うち走本 ${data.inside_the_park_home_run}`
+          : undefined,
+    },
     { label: "打点", value: formatCount(data.runs_batted_in) },
   ],
 });
@@ -38,6 +48,7 @@ const buildMetrics = (
 /**
  * stats タブ打撃セクションの最上部に置く主要スタッツカード。
  * 上段: 率指標（打率 / 出塁率 / 長打率 / OPS）、下段: 累計指標（安打 / 本塁打 / 打点）。
+ * 本塁打には走本塁打も含まれるため、走本塁打があるときだけ内数を添える。
  * 母数 0 のときも 0.000 / 0 を表示するが、見出し直下の at_bats が「0 打数」になるので
  * カードヘッダのサブタイトルとして表示する。
  */
@@ -66,6 +77,9 @@ export function HeadlineStatsCard({ data }: HeadlineStatsCardProps) {
           <View key={metric.label} style={styles.metricCell}>
             <Text style={styles.secondaryValue}>{metric.value}</Text>
             <Text style={styles.metricLabel}>{metric.label}</Text>
+            {metric.note ? (
+              <Text style={styles.metricNote}>{metric.note}</Text>
+            ) : null}
           </View>
         ))}
       </View>
@@ -122,6 +136,11 @@ const styles = StyleSheet.create({
   metricLabel: {
     color: "#A1A1AA",
     fontSize: 11,
+    marginTop: 2,
+  },
+  metricNote: {
+    color: "#A1A1AA",
+    fontSize: 10,
     marginTop: 2,
   },
 });
