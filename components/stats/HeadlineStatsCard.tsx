@@ -37,7 +37,7 @@ const buildMetrics = (
       value: formatCount(data.home_run),
       // 走本塁打も本塁打に含めて数えているので、総数の内数として添える。
       note:
-        data.inside_the_park_home_run > 0
+        (data.inside_the_park_home_run ?? 0) > 0
           ? `うち走本 ${data.inside_the_park_home_run}`
           : undefined,
     },
