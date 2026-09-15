@@ -1,4 +1,7 @@
-import type { PlateAppearanceV2 } from "../../types/plateAppearance";
+import type {
+  HomeRunType,
+  PlateAppearanceV2,
+} from "../../types/plateAppearance";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { BSOBoard } from "@components/baseball/BSOBoard";
@@ -37,7 +40,11 @@ const HIT_TYPE_LABELS: Record<string, string> = {
 };
 
 // 走本塁打は plate_result / hit_type としては本塁打なので、ヒット種別の表示だけを差し替える。
-const INSIDE_THE_PARK_HIT_TYPE_LABEL = "本塁打（走本塁打）";
+// HomeRunType で型付けして、enum に値が増えたときのラベル追加漏れを検出できるようにする。
+const HOME_RUN_TYPE_LABELS: Record<HomeRunType, string> = {
+  over_fence: "本塁打",
+  inside_the_park: "本塁打（走本塁打）",
+};
 
 const SWING_TYPE_LABELS: Record<string, string> = {
   swinging: "空振り",
@@ -110,8 +117,8 @@ export function PlateAppearanceDetailView({
             <DetailRow
               label="ヒット種別"
               value={
-                pa.home_run_type === "inside_the_park"
-                  ? INSIDE_THE_PARK_HIT_TYPE_LABEL
+                pa.hit_type === "home_run" && pa.home_run_type !== null
+                  ? HOME_RUN_TYPE_LABELS[pa.home_run_type]
                   : HIT_TYPE_LABELS[pa.hit_type]
               }
             />
