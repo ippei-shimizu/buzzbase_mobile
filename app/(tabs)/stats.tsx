@@ -54,7 +54,7 @@ import { SprayChart } from "@components/stats/SprayChart";
 import { StatsFilters } from "@components/stats/StatsFilters";
 import {
   StatsTable,
-  BATTING_COLUMNS,
+  getBattingColumns,
   PITCHING_COLUMNS,
 } from "@components/stats/StatsTable";
 import { TimingCard } from "@components/stats/TimingCard";
@@ -1119,7 +1119,7 @@ export default function StatsScreen() {
             <FetchingOverlay isFetching={battingTable.isFetching}>
               <StatsTable
                 rows={battingTable.data}
-                columns={BATTING_COLUMNS}
+                columns={getBattingColumns(battingTable.data)}
                 labelKey="label"
               />
             </FetchingOverlay>

@@ -209,6 +209,47 @@ describe("DashboardContent: 既存ユーザーへの CTA 誤表示防止", () =>
   });
 });
 
+describe("DashboardContent: 打撃成績表の本塁打", () => {
+  it("走本塁打があるときは本塁打の値に内数を添える", async () => {
+    const data: DashboardData = {
+      ...existingUserData,
+      batting_stats: {
+        ...existingUserData.batting_stats,
+        aggregate: {
+          ...existingUserData.batting_stats.aggregate!,
+          home_run: 4,
+          inside_the_park_home_run: 1,
+        },
+      },
+    };
+    const { getByText } = renderDashboard(data);
+
+    await waitFor(() => {
+      expect(getByText("4（走1）")).toBeTruthy();
+    });
+  });
+
+  it("走本塁打が 0 のときは本塁打の数だけを表示する", async () => {
+    const data: DashboardData = {
+      ...existingUserData,
+      batting_stats: {
+        ...existingUserData.batting_stats,
+        aggregate: {
+          ...existingUserData.batting_stats.aggregate!,
+          home_run: 4,
+          inside_the_park_home_run: 0,
+        },
+      },
+    };
+    const { getByText, queryByText } = renderDashboard(data);
+
+    await waitFor(() => {
+      expect(getByText("4")).toBeTruthy();
+    });
+    expect(queryByText(/走/)).toBeNull();
+  });
+});
+
 describe("DashboardContent: ウェルカムカード（段階的オンボーディング）", () => {
   const header = <Text>試合結果を記録する</Text>;
 

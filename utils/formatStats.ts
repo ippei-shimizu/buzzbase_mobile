@@ -47,3 +47,21 @@ export function formatStatRate(value: number, denominator: number): string {
   if (denominator <= 0) return ".---";
   return value.toFixed(3).replace(/^0\./, ".");
 }
+
+/**
+ * 本塁打数に走本塁打（ランニング本塁打）の内数を添えてフォーマットする。
+ * 本塁打は走本塁打を含んだ総数のままで、走本塁打があるときだけ内数を付ける。
+ *
+ * @example
+ *   formatHomeRunWithInsideThePark(4, 1)  // "4（走1）"
+ *   formatHomeRunWithInsideThePark(4, 0)  // "4"
+ */
+export function formatHomeRunWithInsideThePark(
+  homeRun: number,
+  insideTheParkHomeRun: number | undefined,
+): string {
+  if (!insideTheParkHomeRun || insideTheParkHomeRun <= 0) {
+    return String(homeRun);
+  }
+  return `${homeRun}（走${insideTheParkHomeRun}）`;
+}

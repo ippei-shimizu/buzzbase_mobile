@@ -2,7 +2,11 @@ import type { BattingStats, PitchingStats } from "../../types/dashboard";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { SummaryStatsTable } from "@components/stats/SummaryStatsTable";
-import { formatRate, formatEra } from "@utils/formatStats";
+import {
+  formatRate,
+  formatEra,
+  formatHomeRunWithInsideThePark,
+} from "@utils/formatStats";
 import { EmptyState } from "../dashboard/EmptyState";
 
 interface ProfileStatsTabProps {
@@ -82,7 +86,12 @@ export const ProfileStatsTab = ({
                 "三塁打",
                 agg?.three_base_hit ?? "-",
                 "本塁打",
-                agg?.home_run ?? "-",
+                agg?.home_run == null
+                  ? "-"
+                  : formatHomeRunWithInsideThePark(
+                      agg.home_run,
+                      agg.inside_the_park_home_run,
+                    ),
               ],
               [
                 "塁打",

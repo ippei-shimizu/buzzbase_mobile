@@ -1,4 +1,9 @@
-import { formatRate, formatRate2, formatEra } from "../formatStats";
+import {
+  formatRate,
+  formatRate2,
+  formatEra,
+  formatHomeRunWithInsideThePark,
+} from "../formatStats";
 
 describe("formatRate（小数3桁・1未満は先頭0除去）", () => {
   it("0 はそのまま 0.000 を返す（先頭0は除去しない）", () => {
@@ -59,5 +64,19 @@ describe("formatEra（小数2桁・先頭0は除去しない）", () => {
   it("通常の防御率レンジを 2 桁で返す", () => {
     expect(formatEra(3.45)).toBe("3.45");
     expect(formatEra(9.999)).toBe("10.00");
+  });
+});
+
+describe("formatHomeRunWithInsideThePark（本塁打に走本塁打の内数を添える）", () => {
+  it("走本塁打があるときは本塁打の総数に内数を添える", () => {
+    expect(formatHomeRunWithInsideThePark(4, 1)).toBe("4（走1）");
+  });
+
+  it("走本塁打が 0 のときは本塁打の数だけを返す", () => {
+    expect(formatHomeRunWithInsideThePark(4, 0)).toBe("4");
+  });
+
+  it("古いバックエンドで内数が返らないときも本塁打の数だけを返す", () => {
+    expect(formatHomeRunWithInsideThePark(4, undefined)).toBe("4");
   });
 });
