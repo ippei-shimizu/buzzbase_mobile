@@ -49,6 +49,7 @@ const buildDetailPlateAppearance = (
   out_type: null,
   hit_type: "single",
   swing_type: null,
+  home_run_type: null,
   hit_location_x: "0.500",
   hit_location_y: "0.300",
   rbi: 0,
@@ -153,6 +154,46 @@ describe("PlateAppearanceDetailScreen", () => {
     expect(getByText("打点")).toBeTruthy();
     expect(getByText("0")).toBeTruthy();
     expect(getByText("低めを我慢できた")).toBeTruthy();
+  });
+
+  it("走本塁打はヒット種別が「本塁打（走本塁打）」で表示される", async () => {
+    mockProfile(1);
+    mockPlateAppearance(
+      buildDetailPlateAppearance({
+        plate_result_id: 10,
+        hit_type: "home_run",
+        home_run_type: "inside_the_park",
+        batting_result: "中走本",
+      }),
+    );
+
+    const { findByText, getByText, queryByText } = renderWithProviders(
+      <PlateAppearanceDetailScreen />,
+    );
+
+    expect(await findByText("中走本")).toBeTruthy();
+    expect(getByText("本塁打（走本塁打）")).toBeTruthy();
+    expect(queryByText("単打")).toBeNull();
+  });
+
+  it("柵越え本塁打はヒット種別が「本塁打」で表示される", async () => {
+    mockProfile(1);
+    mockPlateAppearance(
+      buildDetailPlateAppearance({
+        plate_result_id: 10,
+        hit_type: "home_run",
+        home_run_type: "over_fence",
+        batting_result: "中本",
+      }),
+    );
+
+    const { findByText, getByText, queryByText } = renderWithProviders(
+      <PlateAppearanceDetailScreen />,
+    );
+
+    expect(await findByText("中本")).toBeTruthy();
+    expect(getByText("本塁打")).toBeTruthy();
+    expect(queryByText("本塁打（走本塁打）")).toBeNull();
   });
 
   it("全 null の打席は未記録が表示され、条件付き行は出ない", async () => {
