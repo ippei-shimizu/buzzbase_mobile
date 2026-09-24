@@ -136,17 +136,26 @@ interface PhoneMockProps {
   y: number;
   width: number;
   height: number;
+  /** 画面下端がキャンバス外に出る配置では、ホームインジケータを描かない。 */
+  showHomeIndicator?: boolean;
   /** 画面内に描く中身。画面領域の座標系でそのまま置ける。 */
   children?: React.ReactNode;
 }
 
 /**
- * スマートフォンのモック。ベゼル・ダイナミックアイランド・サイドボタン・
- * ホームインジケータまで描いて、ひと目で端末だと分かる形にする。
+ * スマートフォンのモック。ベゼル・ステータスバー・ダイナミックアイランド・
+ * サイドボタン・ホームインジケータまで描いて、ひと目で端末だと分かる形にする。
  *
  * @returns 画面領域は x+bezel, y+bezel から (width-2*bezel, height-2*bezel)
  */
-function PhoneMock({ x, y, width, height, children }: PhoneMockProps) {
+function PhoneMock({
+  x,
+  y,
+  width,
+  height,
+  showHomeIndicator = true,
+  children,
+}: PhoneMockProps) {
   const bodyRadius = width * 0.19;
   const bezel = width * 0.045;
   const screenX = x + bezel;
@@ -154,7 +163,12 @@ function PhoneMock({ x, y, width, height, children }: PhoneMockProps) {
   const screenWidth = width - bezel * 2;
   const screenHeight = height - bezel * 2;
   const islandWidth = width * 0.3;
+  const islandHeight = width * 0.075;
+  const islandTop = screenY + bezel * 0.9;
+  const statusCenterY = islandTop + islandHeight / 2;
   const buttonWidth = Math.max(1.6, width * 0.02);
+  // 小さい端末では時刻やアンテナが潰れて汚れに見えるため、幅がある場合だけ描く。
+  const showStatusBar = width >= 110;
   return (
     <G>
       {/* サイドボタン（本体より先に描いて端から生えているように見せる） */}
@@ -203,25 +217,71 @@ function PhoneMock({ x, y, width, height, children }: PhoneMockProps) {
         fill="#1B1B1E"
       />
       {children}
+      {/* ステータスバー（時刻・電波・バッテリー） */}
+      {showStatusBar ? (
+        <G>
+          <SvgText
+            x={screenX + width * 0.075}
+            y={statusCenterY + width * 0.024}
+            fill={INK}
+            fontSize={width * 0.062}
+            fontWeight="bold"
+          >
+            9:41
+          </SvgText>
+          {[0, 1, 2].map((index) => (
+            <Rect
+              key={index}
+              x={screenX + screenWidth - width * 0.235 + index * width * 0.028}
+              y={statusCenterY - width * 0.012 - index * width * 0.012}
+              width={width * 0.018}
+              height={width * 0.026 + index * width * 0.012}
+              rx={width * 0.007}
+              fill={INK}
+            />
+          ))}
+          <Rect
+            x={screenX + screenWidth - width * 0.118}
+            y={statusCenterY - width * 0.026}
+            width={width * 0.078}
+            height={width * 0.052}
+            rx={width * 0.016}
+            fill="none"
+            stroke={INK}
+            strokeWidth={width * 0.008}
+            opacity={0.85}
+          />
+          <Rect
+            x={screenX + screenWidth - width * 0.109}
+            y={statusCenterY - width * 0.017}
+            width={width * 0.046}
+            height={width * 0.034}
+            rx={width * 0.009}
+            fill={INK}
+          />
+        </G>
+      ) : null}
       {/* ダイナミックアイランド */}
       <Rect
         x={x + (width - islandWidth) / 2}
-        y={screenY + bezel * 0.9}
+        y={islandTop}
         width={islandWidth}
-        height={width * 0.075}
-        rx={width * 0.038}
+        height={islandHeight}
+        rx={islandHeight / 2}
         fill="#101012"
       />
       {/* ホームインジケータ */}
-      <Rect
-        x={x + width * 0.32}
-        y={y + height - bezel * 2.4}
-        width={width * 0.36}
-        height={width * 0.028}
-        rx={width * 0.014}
-        fill={SUB_INK}
-        opacity={0.7}
-      />
+      {showHomeIndicator ? (
+        <Rect
+          x={x + width * 0.32}
+          y={y + height - bezel * 2.4}
+          width={width * 0.36}
+          height={width * 0.028}
+          rx={width * 0.014}
+          fill={SUB_INK}
+          opacity={0.7}
+        />
+      ) : null}
     </G>
   );
 }
@@ -340,60 +400,84 @@ function BallparkField() {
 
 /**
  * 方向別の打率。
- * 構図: 中央に球場のカード、左右に円形の吹き出しを重ねる（みてねの「公開範囲」型）。
+ * 構図: 下端で見切れる端末の画面に球場図を映し、左右に円形の吹き出しを重ねる
+ * （みてねの「公開範囲」型）。
  */
 export function HitDirectionArt() {
-  // 球場図（GROUND_* 座標）をカードの中央に収める倍率と位置。
-  const scale = 0.34;
-  const card = { x: 66, y: 26, width: 148, height: 140 };
-  const fieldCenterX = (LEFT_END.x + RIGHT_END.x) / 2;
-  const fieldCenterY = (HOME.y - GROUND_OUTFIELD_RY + HOME.y) / 2;
-  const translateX = card.x + card.width / 2 - fieldCenterX * scale;
-  const translateY = card.y + card.height / 2 - fieldCenterY * scale;
+  const phone = { x: 60, y: 12, width: 160, height: 250 };
+  const bezel = phone.width * 0.045;
+  const screenX = phone.x + bezel;
+  // 球場図（GROUND_* 座標）を画面の幅いっぱいに収める倍率と位置。
+  const scale = 0.375;
+  const fieldTop = 58;
+  const translateX = phone.x + phone.width / 2 - HOME.x * scale;
+  const translateY = fieldTop - (HOME.y - GROUND_OUTFIELD_RY) * scale;
   // 打球方向のヒート。DIRECTION_LABEL_POSITIONS と同じ並び（左 / 中 / 右 / 二 / 遊）。
+  // 打率はイラスト用のダミー値で、濃さと高低を対応させる。
   const zones = [
-    { cx: 100, cy: 120, r: 36, opacity: 0.95 },
-    { cx: 210, cy: 78, r: 30, opacity: 0.5 },
-    { cx: 315, cy: 118, r: 33, opacity: 0.72 },
-    { cx: 252, cy: 182, r: 24, opacity: 0.4 },
-    { cx: 168, cy: 182, r: 24, opacity: 0.55 },
+    { cx: 100, cy: 122, r: 37, opacity: 0.95, average: ".412", fontSize: 26 },
+    { cx: 210, cy: 80, r: 31, opacity: 0.5, average: ".286", fontSize: 23 },
+    { cx: 316, cy: 120, r: 34, opacity: 0.72, average: ".333", fontSize: 24 },
+    { cx: 252, cy: 186, r: 29, opacity: 0.4, average: ".250", fontSize: 22 },
+    { cx: 168, cy: 186, r: 29, opacity: 0.58, average: ".300", fontSize: 22 },
   ];
   return (
     <ArtCanvas>
       <Confetti
         items={[
-          { cx: 256, cy: 30, r: 8, fill: "#5B8DEF", opacity: 0.25 },
-          { cx: 20, cy: 152, r: 10, fill: "#4F9E6B", opacity: 0.25 },
+          { cx: 262, cy: 32, r: 8, fill: "#5B8DEF", opacity: 0.25 },
+          { cx: 18, cy: 160, r: 10, fill: "#4F9E6B", opacity: 0.25 },
         ]}
       />
-      <Card {...card} />
-      <G transform={`translate(${translateX} ${translateY}) scale(${scale})`}>
-        <BallparkField />
-        {zones.map((zone) => (
-          <Circle
-            key={`${zone.cx}-${zone.cy}`}
-            cx={zone.cx}
-            cy={zone.cy}
-            r={zone.r}
-            fill={BRAND}
-            opacity={zone.opacity}
-          />
-        ))}
-      </G>
+      <PhoneMock {...phone} showHomeIndicator={false}>
+        {/* 画面内のヘッダー */}
+        <Rect
+          x={screenX + 12}
+          y={44}
+          width={46}
+          height={6}
+          rx={3}
+          fill={MUTED}
+        />
+        <G transform={`translate(${translateX} ${translateY}) scale(${scale})`}>
+          <BallparkField />
+          {zones.map((zone) => (
+            <G key={`${zone.cx}-${zone.cy}`}>
+              <Circle
+                cx={zone.cx}
+                cy={zone.cy}
+                r={zone.r}
+                fill={BRAND}
+                opacity={zone.opacity}
+              />
+              <SvgText
+                x={zone.cx}
+                y={zone.cy + zone.fontSize * 0.36}
+                fill={INK}
+                fontSize={zone.fontSize}
+                fontWeight="bold"
+                textAnchor="middle"
+              >
+                {zone.average}
+              </SvgText>
+            </G>
+          ))}
+        </G>
+      </PhoneMock>
 
       {/* 円形の吹き出し。左は引っ張り、右は流しの傾向を示す */}
       <G>
         <Circle
-          cx={48}
-          cy={64}
-          r={32}
+          cx={44}
+          cy={70}
+          r={31}
           fill={BODY}
           stroke={MUTED}
           strokeWidth={2}
         />
         <SvgText
-          x={48}
-          y={60}
+          x={44}
+          y={66}
           fill={INK}
           fontSize={12}
           fontWeight="bold"
@@ -401,21 +485,21 @@ export function HitDirectionArt() {
         >
           引っ張り
         </SvgText>
-        <Rect x={32} y={68} width={32} height={6} rx={3} fill={MUTED} />
-        <Rect x={32} y={68} width={26} height={6} rx={3} fill={BRAND} />
+        <Rect x={28} y={74} width={32} height={6} rx={3} fill={MUTED} />
+        <Rect x={28} y={74} width={26} height={6} rx={3} fill={BRAND} />
       </G>
       <G>
         <Circle
-          cx={234}
-          cy={130}
+          cx={240}
+          cy={140}
           r={28}
           fill={BODY}
           stroke={MUTED}
           strokeWidth={2}
         />
         <SvgText
-          x={234}
-          y={126}
+          x={240}
+          y={136}
           fill={INK}
           fontSize={12}
           fontWeight="bold"
@@ -423,10 +507,10 @@ export function HitDirectionArt() {
         >
           流し
         </SvgText>
-        <Rect x={221} y={134} width={26} height={6} rx={3} fill={MUTED} />
-        <Rect x={221} y={134} width={11} height={6} rx={3} fill={BRAND} />
+        <Rect x={227} y={144} width={26} height={6} rx={3} fill={MUTED} />
+        <Rect x={227} y={144} width={11} height={6} rx={3} fill={BRAND} />
       </G>
-      <Sparkle x={214} y={28} size={8} />
+      <Sparkle x={236} y={30} size={9} />
     </ArtCanvas>
   );
 }
