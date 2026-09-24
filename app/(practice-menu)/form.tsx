@@ -26,6 +26,7 @@ import {
   usePracticeMenus,
 } from "@hooks/usePracticeMenus";
 import { trackFreeLimitReached, trackProFeatureTapped } from "@utils/analytics";
+import { serverErrorMessage } from "@utils/axiosError";
 
 export default function PracticeMenuFormScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -104,7 +105,9 @@ function MenuForm({ menu }: { menu?: PracticeMenu }) {
           ],
         );
       } else {
-        Alert.alert("保存に失敗しました");
+        // 素振りメニューの重複（422 / 競合時は 409）は back が理由の分かる文言を返すため、
+        // 汎用文言だけだとユーザーが原因を掴めず保存を繰り返してしまう。
+        Alert.alert("保存に失敗しました", serverErrorMessage(error));
       }
     }
   };
