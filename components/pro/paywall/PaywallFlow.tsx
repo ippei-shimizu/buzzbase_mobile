@@ -28,7 +28,7 @@ import {
   toPlanType,
   valueBlocksFor,
 } from "./paywallContent";
-import { PaywallSlides } from "./PaywallSlides";
+import { hasSlideForTrigger, PaywallSlides } from "./PaywallSlides";
 
 // 単年の記録しか無いユーザーにシーズン跨ぎ比較を訴求しても空のグラフしか見せられないため、
 // 文言を「来シーズンから使える」に差し替えて、いま効果が出る分析へ誘導する。
@@ -78,6 +78,9 @@ export function PaywallFlow({
     ? ((PRO_PAYWALL_COPY as Record<string, typeof DEFAULT_COPY>)[feature] ??
       DEFAULT_COPY)
     : DEFAULT_COPY;
+  // 先頭スライドがトリガー機能そのものを説明するときは、同じ内容の見出しを重ねない。
+  // 単年ユーザーだけは差し替えの理由を伝える必要があるため例外的に出す。
+  const showTriggerCopy = isSingleSeason || !hasSlideForTrigger(trigger);
   const valueBlocks = isSingleSeason
     ? valueBlocksFor("hit_direction_average")
     : valueBlocksFor(trigger);
@@ -108,12 +111,6 @@ export function PaywallFlow({
         </View>
       </View>
 
-      {/* 単年ユーザーにはシーズン跨ぎの図が作れないため、代わりにいま効果が出る方向別を先頭にする。 */}
-      <PaywallSlides
-        trigger={trigger}
-        leadSlide={isSingleSeason ? "hit_direction" : undefined}
-      />
-
       {contextMessage ? (
         <View style={styles.contextBanner}>
           <Icon name="information-circle" size={16} color="#D4D4D4" />
@@ -121,17 +118,27 @@ export function PaywallFlow({
         </View>
       ) : null}
 
-      <Text style={styles.heroTitle}>{copy.title}</Text>
+      {/* 単年ユーザーにはシーズン跨ぎの図が作れないため、代わりにいま効果が出る方向別を先頭にする。 */}
+      <PaywallSlides
+        trigger={trigger}
+        leadSlide={isSingleSeason ? "hit_direction" : undefined}
+      />
 
-      {isSingleSeason ? (
-        <Text style={styles.heroDescription}>{SINGLE_SEASON_NOTE}</Text>
-      ) : copy.benefits?.length ? (
-        <Text style={styles.heroDescription}>
-          {copy.benefits.map((benefit) => `・${benefit}`).join("\n")}
-        </Text>
-      ) : (
-        <Text style={styles.heroDescription}>{copy.description}</Text>
-      )}
+      {/* 先頭スライドが同じことを言う場合は重複するため、スライドを持たないトリガーだけ補足する。 */}
+      {showTriggerCopy ? (
+        <>
+          <Text style={styles.heroTitle}>{copy.title}</Text>
+          {isSingleSeason ? (
+            <Text style={styles.heroDescription}>{SINGLE_SEASON_NOTE}</Text>
+          ) : copy.benefits?.length ? (
+            <Text style={styles.heroDescription}>
+              {copy.benefits.map((benefit) => `・${benefit}`).join("\n")}
+            </Text>
+          ) : (
+            <Text style={styles.heroDescription}>{copy.description}</Text>
+          )}
+        </>
+      ) : null}
 
       <Text style={styles.sectionTitle}>Pro でできること</Text>
       <View style={styles.valueBlockList}>

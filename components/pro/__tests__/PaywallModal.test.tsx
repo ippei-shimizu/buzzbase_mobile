@@ -173,11 +173,29 @@ describe("PaywallModal", () => {
   it("benefits を持たない機能では description を表示する", () => {
     getOfferingsMock.mockResolvedValueOnce(null);
 
+    // 紹介スライドを持つ機能は先頭スライドが同じことを説明するため、
+    // 補足コピーはスライドを持たない機能でのみ出る。
     const { getByText } = renderWithProviders(
+      <PaywallModal
+        isOpen
+        onClose={mockOnClose}
+        feature="grass_full_history"
+      />,
+    );
+
+    expect(
+      getByText(PRO_PAYWALL_COPY.grass_full_history.description),
+    ).toBeOnTheScreen();
+  });
+
+  it("紹介スライドを持つ機能では、同じ内容の見出しを重ねて出さない", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { queryByText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
 
-    expect(getByText(PRO_PAYWALL_COPY.no_ads.description)).toBeOnTheScreen();
+    expect(queryByText(PRO_PAYWALL_COPY.no_ads.title)).not.toBeOnTheScreen();
   });
 
   it("記録が1シーズン分しかないと、シーズン跨ぎ比較ではなく来季からの案内を出す", async () => {

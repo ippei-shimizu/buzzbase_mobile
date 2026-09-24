@@ -31,11 +31,10 @@ import {
 // 試合・打席の作成/更新時は invalidateGameResultRelated が明示的に失効させる。
 const STATS_STALE_TIME = 60_000;
 
-export const useHitDirections = (filters: StatsFilters, enabled = true) =>
+export const useHitDirections = (filters: StatsFilters) =>
   useQuery({
     queryKey: ["hitDirections", filters],
     queryFn: () => getHitDirections(filters),
-    enabled,
     staleTime: STATS_STALE_TIME,
     placeholderData: keepPreviousData,
   });

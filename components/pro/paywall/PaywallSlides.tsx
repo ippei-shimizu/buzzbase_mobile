@@ -8,16 +8,13 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { HitDirectionTable } from "@components/stats/HitDirectionTable";
-import { PitchCourseCard } from "@components/stats/PitchCourseCard";
 import {
-  CountSituationDummy,
-  DUMMY_PITCH_COURSES,
-} from "@components/stats/proComingSoonDummies";
-import { ProComingSoonHitDirectionField } from "@components/stats/ProComingSoonHitDirectionField";
-import { useHitDirections } from "@hooks/useStats";
-import { SampleDataLabel } from "../SampleDataLabel";
-import { NoAdsArt, SeasonTrendArt } from "./PaywallSlideArt";
+  CountSituationArt,
+  HitDirectionArt,
+  NoAdsArt,
+  PitchCourseArt,
+  SeasonTrendArt,
+} from "./PaywallSlideArt";
 
 /** スライドの識別子。トリガーに対応するスライドを先頭に並べ替えるために使う。 */
 export type PaywallSlideKey =
@@ -37,31 +34,31 @@ interface SlideCopy {
 const SLIDES: readonly SlideCopy[] = [
   {
     key: "hit_direction",
-    title: "打球の方向ごとに打率がわかる",
+    title: "打球の方向ごとに\n打率がわかる",
     description:
-      "どこへ打ったときに結果が出ているかを球場図のヒートマップで確認できます。",
+      "どこへ打ったときに結果が出ているかを、球場図のヒートマップで確認できます。",
   },
   {
     key: "count_situation",
-    title: "カウント別の強さが見える",
+    title: "カウント別の\n強さが見える",
     description:
       "初球・有利カウント・追い込みで打率がどう変わるかを比べられます。",
   },
   {
     key: "pitch_course",
-    title: "コース別の得意・苦手がわかる",
+    title: "コース別の\n得意・苦手がわかる",
     description:
-      "5×5 のゾーン別ヒートマップで、狙い球と苦手コースをはっきりさせます。",
+      "ゾーンごとのヒートマップで、狙い球と苦手コースがはっきりします。",
   },
   {
     key: "season_trend",
-    title: "シーズンを跨いだ成長を比較",
+    title: "シーズンを跨いだ\n成長を比較",
     description:
       "昨シーズンと今シーズンの成績を重ねて、伸びをそのまま確認できます。",
   },
   {
     key: "no_ads",
-    title: "広告なしで記録に集中",
+    title: "広告なしで\n記録に集中",
     description: "アプリ内の広告がすべて非表示になり、入力の手が止まりません。",
   },
 ];
@@ -92,7 +89,22 @@ export function orderSlides(
   return [leadSlide, ...SLIDES.filter((slide) => slide.key !== lead)];
 }
 
+/**
+ * トリガーに対応する紹介スライドがあるか。
+ * ある場合は先頭スライドが機能を説明するため、同じ内容の見出しを重ねない。
+ */
+export const hasSlideForTrigger = (trigger: ProTrigger): boolean =>
+  SLIDE_KEY_BY_TRIGGER[trigger] !== undefined;
+
 const AUTO_ADVANCE_INTERVAL = 5000;
+
+const ART_BY_KEY: Record<PaywallSlideKey, () => React.JSX.Element> = {
+  hit_direction: HitDirectionArt,
+  count_situation: CountSituationArt,
+  pitch_course: PitchCourseArt,
+  season_trend: SeasonTrendArt,
+  no_ads: NoAdsArt,
+};
 
 interface PaywallSlidesProps {
   trigger: ProTrigger;
@@ -106,8 +118,9 @@ interface PaywallSlidesProps {
 /**
  * Pro でできることを紹介する横スクロールのスライドショー。
  * 自動送りはユーザーがスワイプした時点で止め、見たいスライドから動かさない。
- * 方向別だけは無料でも同じ集計 API を参照できるため、本人の打球データがあれば
- * それを見せ、無ければサンプルに切り替える。
+ *
+ * 図はすべて作り物のイラストで、ユーザー本人の成績は一切描かない。
+ * 未加入のまま Paywall で本物の分析が見えてしまうことを防ぐため。
  */
 export function PaywallSlides({ trigger, leadSlide }: PaywallSlidesProps) {
   const { width } = useWindowDimensions();
@@ -118,11 +131,6 @@ export function PaywallSlides({ trigger, leadSlide }: PaywallSlidesProps) {
   const indexRef = useRef(0);
   const swipedRef = useRef(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const hitDirections = useHitDirections({});
-  const ownDirections = hitDirections.data?.directions ?? [];
-  const hasOwnDirections = ownDirections.some(
-    (direction) => direction.at_bats > 0,
-  );
 
   useEffect(() => {
     if (slides.length < 2) return;
@@ -144,43 +152,6 @@ export function PaywallSlides({ trigger, leadSlide }: PaywallSlidesProps) {
     setActiveIndex(next);
   };
 
-  const renderArt = (key: PaywallSlideKey) => {
-    switch (key) {
-      case "hit_direction":
-        return hasOwnDirections ? (
-          <>
-            <Text style={styles.ownDataNote}>
-              あなたのこれまでの打球から集計しています
-            </Text>
-            <HitDirectionTable directions={ownDirections} />
-          </>
-        ) : (
-          <>
-            <SampleDataLabel />
-            <ProComingSoonHitDirectionField />
-          </>
-        );
-      case "count_situation":
-        return (
-          <>
-            <SampleDataLabel />
-            <CountSituationDummy />
-          </>
-        );
-      case "pitch_course":
-        return (
-          <>
-            <SampleDataLabel />
-            <PitchCourseCard data={DUMMY_PITCH_COURSES} />
-          </>
-        );
-      case "season_trend":
-        return <SeasonTrendArt />;
-      case "no_ads":
-        return <NoAdsArt />;
-    }
-  };
-
   return (
     <View style={styles.container}>
       <ScrollView
@@ -194,19 +165,20 @@ export function PaywallSlides({ trigger, leadSlide }: PaywallSlidesProps) {
         onMomentumScrollEnd={handleMomentumEnd}
         style={{ width: slideWidth }}
       >
-        {slides.map((slide) => (
-          <View
-            key={slide.key}
-            style={[styles.slide, { width: slideWidth }]}
-            accessibilityLabel={slide.title}
-          >
-            <View pointerEvents="none" style={styles.art}>
-              {renderArt(slide.key)}
+        {slides.map((slide) => {
+          const Art = ART_BY_KEY[slide.key];
+          return (
+            <View
+              key={slide.key}
+              style={[styles.slide, { width: slideWidth }]}
+              accessibilityLabel={slide.title.replace("\n", "")}
+            >
+              <Art />
+              <Text style={styles.slideTitle}>{slide.title}</Text>
+              <Text style={styles.slideDescription}>{slide.description}</Text>
             </View>
-            <Text style={styles.slideTitle}>{slide.title}</Text>
-            <Text style={styles.slideDescription}>{slide.description}</Text>
-          </View>
-        ))}
+          );
+        })}
       </ScrollView>
 
       <View style={styles.dots}>
@@ -229,35 +201,24 @@ const styles = StyleSheet.create({
   slide: {
     paddingRight: 4,
   },
-  art: {
-    width: "100%",
-    minHeight: 180,
-    justifyContent: "center",
-  },
   slideTitle: {
     color: "#F4F4F4",
-    fontSize: 17,
+    fontSize: 22,
     fontWeight: "800",
-    marginTop: 14,
+    lineHeight: 32,
+    marginTop: 12,
   },
   slideDescription: {
     color: "#D4D4D4",
     fontSize: 13,
     lineHeight: 20,
-    marginTop: 6,
-  },
-  ownDataNote: {
-    color: "#d08000",
-    fontSize: 12,
-    fontWeight: "700",
-    marginTop: 4,
-    marginBottom: 8,
+    marginTop: 8,
   },
   dots: {
     flexDirection: "row",
     alignSelf: "center",
     gap: 6,
-    marginTop: 14,
+    marginTop: 16,
   },
   dot: {
     width: 6,
