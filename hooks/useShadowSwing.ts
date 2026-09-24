@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { trackShadowSwingCompleted } from "@utils/analytics";
 import {
   completeShadowSwingSession,
   getShadowSwingStats,
   getShadowSwingTrend,
   startShadowSwingSession,
 } from "../services/shadowSwingService";
-import { trackShadowSwingCompleted } from "@utils/analytics";
 
 export const useShadowSwingStats = () => {
   const { data, isLoading } = useQuery({
@@ -33,6 +33,9 @@ export const useShadowSwingMutations = () => {
       completeShadowSwingSession(id, swingCount),
     onSuccess: (_data, variables) => {
       // 素振り完了は当日の活動集計（草・Streak）に波及する。
+      // back は初回完了時に「素振り」メニューを自動作成するため、メニュー一覧も
+      // 取り直さないとユーザーには未登録に見えて同名メニューを作ってしまう。
+      queryClient.invalidateQueries({ queryKey: ["practiceMenus"] });
       queryClient.invalidateQueries({ queryKey: ["shadowSwingStats"] });
       queryClient.invalidateQueries({ queryKey: ["practiceLogs"] });
       queryClient.invalidateQueries({ queryKey: ["activityLogs"] });
