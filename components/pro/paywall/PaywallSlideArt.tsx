@@ -4,6 +4,7 @@ import Svg, {
   Circle,
   ClipPath,
   Defs,
+  Ellipse,
   G,
   Line,
   Path,
@@ -986,61 +987,99 @@ export function CountSituationArt() {
 
 /**
  * 捕手目線の右打者。ストライクゾーンの左（三塁側）に構える。
- * 打席記録のコース選択画面と同じ向き・同じ構えにし、バットはゾーンの左上へ抜ける。
+ *
+ * 野球のピクトグラムに倣い、単色のシルエットで描く。手前に重なる腕・脚・バットは
+ * 背景色の縁取りを一段太く敷いて、単色でも前後が分かるようにする。
  */
 function RightHandedBatter() {
-  const uniform = "#5A6275";
-  const shade = "#474D5C";
+  const silhouette = "#5A6275";
+  // 背景と同じ色で縁取り、重なった部位の境目を作る。
+  const gap = "#2E2E2E";
   return (
     <G>
       {/* バット（グリッドの左上に重なる） */}
-      <Polygon points="82,60 116,14 123,20 89,66" fill="#b07840" />
-      <Circle cx={83} cy={63} r={4.5} fill={shade} />
-      {/* 後ろ脚 */}
-      <Path
-        d="M 40,94 L 58,94 L 50,136 L 40,166 L 25,164 L 34,130 Z"
-        fill={uniform}
+      <Line
+        x1={92}
+        y1={58}
+        x2={126}
+        y2={12}
+        stroke={gap}
+        strokeWidth={15}
+        strokeLinecap="round"
       />
-      {/* 前脚 */}
-      <Path
-        d="M 56,94 L 74,96 L 78,134 L 85,164 L 70,168 L 62,134 Z"
-        fill={uniform}
+      <Line
+        x1={92}
+        y1={58}
+        x2={126}
+        y2={12}
+        stroke={silhouette}
+        strokeWidth={10}
+        strokeLinecap="round"
       />
-      {/* スパイク */}
-      <Path d="M 21,162 L 43,162 L 45,173 L 19,173 Z" fill={shade} />
-      <Path d="M 66,164 L 88,162 L 92,173 L 66,175 Z" fill={shade} />
       {/* 胴体 */}
       <Path
-        d="M 36,56 C 44,47 64,47 70,58 L 75,92 C 60,100 43,100 32,92 Z"
-        fill={uniform}
+        d="M 40,58 Q 54,49 70,58 L 76,94 Q 56,107 36,94 Z"
+        fill={silhouette}
       />
-      {/* ベルト */}
-      <Path
-        d="M 33,89 C 47,96 62,96 75,89 L 75,95 C 62,102 47,102 32,95 Z"
-        fill={shade}
+      {/* 奥の腕と奥の脚 */}
+      <Polyline
+        points="46,64 70,60 88,56"
+        fill="none"
+        stroke={silhouette}
+        strokeWidth={12}
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      {/* 腕（後ろ手・前手ともグリップへ） */}
-      <Line
-        x1={44}
-        y1={60}
-        x2={82}
-        y2={56}
-        stroke={uniform}
+      <Polyline
+        points="48,100 36,132 30,162"
+        fill="none"
+        stroke={silhouette}
+        strokeWidth={15}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* 手前の脚（縁取りで奥と分ける） */}
+      <Polyline
+        points="64,102 80,132 86,160"
+        fill="none"
+        stroke={gap}
+        strokeWidth={19}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Polyline
+        points="64,102 80,132 86,160"
+        fill="none"
+        stroke={silhouette}
+        strokeWidth={15}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* 手前の腕（同じく縁取りで分ける） */}
+      <Polyline
+        points="50,80 72,74 88,62"
+        fill="none"
+        stroke={gap}
+        strokeWidth={15}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Polyline
+        points="50,80 72,74 88,62"
+        fill="none"
+        stroke={silhouette}
         strokeWidth={11}
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <Line
-        x1={64}
-        y1={72}
-        x2={84}
-        y2={60}
-        stroke={uniform}
-        strokeWidth={9.5}
-        strokeLinecap="round"
-      />
-      {/* ヘルメット（つばは短く、先を尖らせる） */}
-      <Circle cx={50} cy={38} r={14.5} fill={shade} />
-      <Path d="M 61,33 L 74,39 L 61,44 Z" fill={shade} />
+      {/* グリップを握る手 */}
+      <Circle cx={90} cy={58} r={8} fill={silhouette} />
+      {/* スパイク */}
+      <Ellipse cx={30} cy={168} rx={12} ry={6} fill={silhouette} />
+      <Ellipse cx={88} cy={166} rx={12} ry={6} fill={silhouette} />
+      {/* ヘルメット（つばは短い三角） */}
+      <Circle cx={52} cy={40} r={15} fill={silhouette} />
+      <Path d="M 39,35 L 24,41 L 39,47 Z" fill={silhouette} />
     </G>
   );
 }
