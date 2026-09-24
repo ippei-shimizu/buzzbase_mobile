@@ -120,10 +120,11 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   groupTitle: {
-    color: "#A1A1AA",
-    fontSize: 13,
-    fontWeight: "700",
-    marginBottom: 10,
+    color: "#F4F4F4",
+    fontSize: 18,
+    fontWeight: "800",
+    lineHeight: 26,
+    marginBottom: 12,
   },
   card: {
     backgroundColor: "#27272A",
