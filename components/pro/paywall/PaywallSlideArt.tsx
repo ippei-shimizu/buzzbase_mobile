@@ -1024,7 +1024,7 @@ function RightHandedBatter() {
       />
       {/* 両脚。打席では前後に大きく開くため、膝を曲げて左右へ広げる */}
       <Polyline
-        points="42,102 31,132 22,161"
+        points="42,102 35,132 30,161"
         fill="none"
         stroke={silhouette}
         strokeWidth={15}
@@ -1033,7 +1033,7 @@ function RightHandedBatter() {
       />
       {/* 手前（投手側）の脚は少し太くして前後を出す */}
       <Polyline
-        points="60,102 74,130 84,159"
+        points="60,102 70,130 77,159"
         fill="none"
         stroke={silhouette}
         strokeWidth={16}
@@ -1042,20 +1042,20 @@ function RightHandedBatter() {
       />
       {/* スパイク。つま先は投手側へ向く */}
       <Ellipse
-        cx={25}
+        cx={32}
         cy={166}
-        rx={12}
+        rx={11.5}
         ry={5.5}
         fill={silhouette}
-        transform="rotate(12 25 166)"
+        transform="rotate(12 32 166)"
       />
       <Ellipse
-        cx={86}
+        cx={79}
         cy={164}
-        rx={12}
+        rx={11.5}
         ry={5.5}
         fill={silhouette}
-        transform="rotate(-8 86 164)"
+        transform="rotate(-8 79 164)"
       />
       {/* 奥の腕（右肩からグリップへ） */}
       <Polyline
