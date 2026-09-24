@@ -858,8 +858,8 @@ function PitchBall({ cx, cy, r, ringColor, seamRotation }: PitchBallProps) {
  */
 export function PitchTypeArt() {
   // seamRotation は球種の握り・回転の向きに合わせる。
-  // ストレートは縦回転で縫い目が立ち、カーブは横回転で寝る。
-  // スライダー・フォークは斜めに握るため互いに逆向きへ傾ける。
+  // ストレートは縦、フォークは指を割って握るため横。
+  // スライダーとカーブは斜めに握るので、互いに逆向きへ傾ける。
   const pitches = [
     {
       cx: 42,
@@ -889,7 +889,7 @@ export function PitchTypeArt() {
       name: "カーブ",
       average: 0.188,
       detail: "16打数 3安打",
-      seamRotation: 90,
+      seamRotation: -35,
     },
     {
       cx: 176,
@@ -899,7 +899,7 @@ export function PitchTypeArt() {
       name: "フォーク",
       average: 0.143,
       detail: "14打数 2安打",
-      seamRotation: -35,
+      seamRotation: 90,
     },
   ];
   // 色分けは他の成績スライドと同じ固定閾値のスケールに揃える。
