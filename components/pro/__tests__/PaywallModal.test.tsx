@@ -237,10 +237,12 @@ describe("PaywallModal", () => {
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
 
-    expect(await findByText("月額と年額から選べます")).toBeOnTheScreen();
+    expect(await findByText("選べる 2 つのプラン")).toBeOnTheScreen();
     // 月額980円×12=11,760円 に対し年額9,800円 → 1,960円お得。
-    expect(getByText("年額なら 1 年で ￥1,960 お得です")).toBeOnTheScreen();
-    expect(getByText("月あたり ￥817")).toBeOnTheScreen();
+    expect(getByText("月あたり ￥817・1 年で ￥1,960 お得")).toBeOnTheScreen();
+    expect(
+      getByText("まずは 1 ヶ月から。いつでも解約できます"),
+    ).toBeOnTheScreen();
   });
 
   it("Pro でできることが機能ごとのイラスト付きで並ぶ", () => {

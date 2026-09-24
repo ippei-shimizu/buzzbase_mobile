@@ -96,9 +96,9 @@ const FEATURE_BLOCKS: readonly FeatureBlock[] = [
   },
   {
     key: "correlation",
-    title: "練習と成績のつながりが見える",
+    title: "練習と成績の関係が読み解かれて届く",
     description:
-      "練習量やコンディションと打率の関係を自動で分析します。やってきた練習が結果に出ているのかを、感覚ではなく数字で確かめられます。",
+      "「素振りが多い週は打率が高い」「睡眠が短い週は疲労が残る」といった傾向を、週ごとの記録から自動で分析してカードで届けます。見たい組み合わせは自分で 20 件まで作れます。",
     Art: CorrelationArt,
     triggers: ["correlation_insights"],
   },

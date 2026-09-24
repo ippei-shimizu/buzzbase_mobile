@@ -141,7 +141,9 @@ export function PaywallFlow({
       {/* 価格を先に示してから機能を読ませる。金額を知らないまま読み進めさせない。 */}
       {purchase.packages.length > 0 ? (
         <View style={styles.planSummary}>
-          <Text style={styles.planSummaryTitle}>月額と年額から選べます</Text>
+          <Text style={styles.planSummaryTitle}>
+            {`選べる ${purchase.packages.length} つのプラン`}
+          </Text>
           {purchase.packages.map((pkg) => {
             const label = PLAN_LABELS[pkg.packageType] ?? {
               name: pkg.product.title,
@@ -151,29 +153,62 @@ export function PaywallFlow({
               pkg.packageType,
               pkg.product.price,
             );
+            const isAnnual = pkg.packageType === "ANNUAL";
+            const savings =
+              isAnnual && purchase.annualSavingsAmount != null
+                ? formatCurrency(
+                    purchase.annualSavingsAmount,
+                    pkg.product.currencyCode,
+                  )
+                : null;
+            const description =
+              perMonth != null
+                ? [
+                    `月あたり ${formatCurrency(perMonth, pkg.product.currencyCode)}`,
+                    savings ? `1 年で ${savings} お得` : null,
+                  ]
+                    .filter(Boolean)
+                    .join("・")
+                : "まずは 1 ヶ月から。いつでも解約できます";
             return (
-              <View key={pkg.identifier} style={styles.planSummaryRow}>
-                <Text style={styles.planSummaryName}>{label.name}</Text>
-                <View style={styles.planSummaryRight}>
-                  <Text style={styles.planSummaryPrice}>
-                    {pkg.product.priceString}
-                    {label.period}
-                  </Text>
-                  {perMonth != null ? (
-                    <Text style={styles.planSummaryNote}>
-                      {`月あたり ${formatCurrency(perMonth, pkg.product.currencyCode)}`}
+              <View
+                key={pkg.identifier}
+                style={[
+                  styles.planSummaryCard,
+                  isAnnual && styles.planSummaryCardAccent,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.planSummaryIcon,
+                    isAnnual && styles.planSummaryIconAccent,
+                  ]}
+                >
+                  <Icon
+                    name={isAnnual ? "star" : "star-outline"}
+                    size={18}
+                    color={isAnnual ? "#FFFFFF" : "#A1A1AA"}
+                  />
+                </View>
+                <View
+                  style={[
+                    styles.planSummaryDivider,
+                    isAnnual && styles.planSummaryDividerAccent,
+                  ]}
+                />
+                <View style={styles.planSummaryBody}>
+                  <View style={styles.planSummaryNameRow}>
+                    <Text style={styles.planSummaryName}>{label.name}</Text>
+                    <Text style={styles.planSummaryPrice}>
+                      {pkg.product.priceString}
+                      {label.period}
                     </Text>
-                  ) : null}
+                  </View>
+                  <Text style={styles.planSummaryNote}>{description}</Text>
                 </View>
               </View>
             );
           })}
-          {purchase.annualSavingsAmount != null &&
-          purchase.annualCurrencyCode != null ? (
-            <Text style={styles.planSummarySavings}>
-              {`年額なら 1 年で ${formatCurrency(purchase.annualSavingsAmount, purchase.annualCurrencyCode)} お得です`}
-            </Text>
-          ) : null}
           {isTrialEligible ? (
             <Text style={styles.planSummaryTrial}>
               どちらのプランも 7 日間は無料で試せます
@@ -494,51 +529,79 @@ const styles = StyleSheet.create({
   },
   planSummary: {
     width: "100%",
-    backgroundColor: "#27272A",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#3F3F46",
-    padding: 16,
     marginTop: 8,
     marginBottom: 32,
     gap: 12,
   },
   planSummaryTitle: {
     color: "#F4F4F4",
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: 20,
+    fontWeight: "800",
+    marginBottom: 4,
   },
-  planSummaryRow: {
+  planSummaryCard: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 12,
+    borderWidth: 1.5,
+    borderColor: "#3F3F46",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+  },
+  planSummaryCardAccent: {
+    borderColor: "#d08000",
+  },
+  planSummaryIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#3F3F46",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  planSummaryIconAccent: {
+    backgroundColor: "#d08000",
+  },
+  planSummaryDivider: {
+    width: 2,
+    alignSelf: "stretch",
+    borderRadius: 1,
+    backgroundColor: "#3F3F46",
+  },
+  planSummaryDividerAccent: {
+    backgroundColor: "#d08000",
+  },
+  planSummaryBody: {
+    flex: 1,
+    gap: 4,
+  },
+  planSummaryNameRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
     justifyContent: "space-between",
+    gap: 8,
   },
   planSummaryName: {
-    color: "#D4D4D4",
-    fontSize: 14,
-  },
-  planSummaryRight: {
-    alignItems: "flex-end",
+    color: "#F4F4F4",
+    fontSize: 16,
+    fontWeight: "800",
   },
   planSummaryPrice: {
     color: "#F4F4F4",
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "800",
   },
   planSummaryNote: {
     color: "#A1A1AA",
     fontSize: 12,
-    marginTop: 2,
-  },
-  planSummarySavings: {
-    color: "#d08000",
-    fontSize: 13,
-    fontWeight: "700",
+    lineHeight: 18,
   },
   planSummaryTrial: {
     color: "#A1A1AA",
     fontSize: 12,
     lineHeight: 18,
+    marginTop: 2,
   },
   sectionTitle: {
     alignSelf: "flex-start",
