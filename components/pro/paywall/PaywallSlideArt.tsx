@@ -487,31 +487,28 @@ export function HitDirectionArt() {
   );
 }
 
-interface CountCardProps {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+interface CountPhoneProps {
+  phone: { x: number; y: number; width: number; height: number };
   label: string;
   average: string;
   /** バーの充填率（0〜1）。打率の高低を図でも伝える。 */
   ratio: number;
-  /** 打数・安打の内訳。カードを実物らしく見せるための添え書き。 */
+  /** 打数・安打の内訳。画面を実物らしく見せるための添え書き。 */
   detail: string;
   /** ボールカウント（0〜3）。 */
   balls: number;
   /** ストライクカウント（0〜2）。 */
   strikes: number;
-  /** 手前に置く主役カードは文字と色を強める。 */
+  /** 手前に置く主役の端末は文字と色を強める。 */
   emphasized?: boolean;
 }
 
-/** カウント別スライドの 1 枚。B/S のカウント表示 + 打率 + バーで構成する。 */
-function CountCard({
-  x,
-  y,
-  width,
-  height,
+/**
+ * カウント別スライドの 1 台。端末の画面に B/S のカウント・打率・バーを映す。
+ * 位置は端末の寸法から導くので、大きさを変えても中身が崩れない。
+ */
+function CountPhone({
+  phone,
   label,
   average,
   ratio,
@@ -519,26 +516,27 @@ function CountCard({
   balls,
   strikes,
   emphasized = false,
-}: CountCardProps) {
-  const centerX = x + width / 2;
-  const dotY = y + (emphasized ? 46 : 40);
-  const barWidth = width - 24;
-  const barY = y + (emphasized ? 86 : 74);
+}: CountPhoneProps) {
+  const bezel = phone.width * 0.045;
+  const screenWidth = phone.width - bezel * 2;
+  const centerX = phone.x + phone.width / 2;
+  // ダイナミックアイランドの下端から順に積む。
+  const islandBottom = phone.y + bezel * 1.9 + phone.width * 0.075;
+  const labelY = islandBottom + (emphasized ? 20 : 17);
+  const dotY = labelY + (emphasized ? 14 : 12);
+  const dotRadius = emphasized ? 3 : 2.6;
+  const averageY = dotY + (emphasized ? 30 : 25);
+  const barY = averageY + (emphasized ? 10 : 8);
+  const barWidth = screenWidth - 16;
+  const barHeight = emphasized ? 8 : 6;
+  const detailY = barY + (emphasized ? 22 : 18);
   return (
-    <G>
-      <Card
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        fill={emphasized ? "#2E2E30" : CARD_BG}
-        opacity={emphasized ? 1 : 0.8}
-      />
+    <PhoneMock {...phone}>
       <SvgText
         x={centerX}
-        y={y + (emphasized ? 26 : 22)}
+        y={labelY}
         fill={emphasized ? INK : SUB_INK}
-        fontSize={emphasized ? 11 : 10}
+        fontSize={emphasized ? 11 : 9.5}
         fontWeight="bold"
         textAnchor="middle"
       >
@@ -550,7 +548,7 @@ function CountCard({
           key={`ball-${index}`}
           cx={centerX - 20 + index * 9}
           cy={dotY}
-          r={3}
+          r={dotRadius}
           fill={index < balls ? "#4f9e6b" : "none"}
           stroke={MUTED}
           strokeWidth={1}
@@ -561,7 +559,7 @@ function CountCard({
           key={`strike-${index}`}
           cx={centerX + 9 + index * 9}
           cy={dotY}
-          r={3}
+          r={dotRadius}
           fill={index < strikes ? "#d64545" : "none"}
           stroke={MUTED}
           strokeWidth={1}
@@ -569,9 +567,9 @@ function CountCard({
       ))}
       <SvgText
         x={centerX}
-        y={y + (emphasized ? 76 : 64)}
+        y={averageY}
         fill={emphasized ? INK : SUB_INK}
-        fontSize={emphasized ? 26 : 19}
+        fontSize={emphasized ? 24 : 18}
         fontWeight="bold"
         textAnchor="middle"
       >
@@ -581,8 +579,8 @@ function CountCard({
         x={centerX - barWidth / 2}
         y={barY}
         width={barWidth}
-        height={emphasized ? 8 : 6}
-        rx={4}
+        height={barHeight}
+        rx={barHeight / 2}
         fill={MUTED}
         opacity={0.6}
       />
@@ -590,94 +588,73 @@ function CountCard({
         x={centerX - barWidth / 2}
         y={barY}
         width={barWidth * ratio}
-        height={emphasized ? 8 : 6}
-        rx={4}
+        height={barHeight}
+        rx={barHeight / 2}
         fill={BRAND}
         opacity={emphasized ? 1 : 0.55}
       />
       <SvgText
         x={centerX}
-        y={barY + (emphasized ? 24 : 20)}
+        y={detailY}
         fill={SUB_INK}
         fontSize={emphasized ? 8 : 7}
         textAnchor="middle"
       >
         {detail}
       </SvgText>
-    </G>
+    </PhoneMock>
   );
 }
 
 /**
  * カウント別の打率。
- * 構図: 端末の画面に 3 枚の縦カードを扇状に並べ、真ん中を大きく前に出す
- * （みてねの「1秒動画」型）。各カードに B/S のカウントと打率を載せる。
+ * 構図: 端末そのものを 3 台、扇状に並べて真ん中を大きく前に出す
+ * （みてねの「1秒動画」型）。各画面に B/S のカウントと打率を映す。
  */
 export function CountSituationArt() {
-  const bezel = PHONE.width * 0.045;
-  const screenX = PHONE.x + bezel;
   return (
     <ArtCanvas>
       <Confetti
         items={[
-          { cx: 22, cy: 32, r: 9, fill: BRAND, opacity: 0.22 },
-          { cx: 258, cy: 158, r: 11, fill: "#5B8DEF", opacity: 0.2 },
+          { cx: 20, cy: 30, r: 9, fill: BRAND, opacity: 0.22 },
+          { cx: 260, cy: 160, r: 11, fill: "#5B8DEF", opacity: 0.2 },
         ]}
       />
-      <PhoneMock {...PHONE} showHomeIndicator={false}>
-        <Rect
-          x={screenX + 12}
-          y={46}
-          width={46}
-          height={6}
-          rx={3}
-          fill={MUTED}
-        />
-        {/* 左右のカードは奥に、中央は手前に重ねる */}
-        <G transform="rotate(-9 96 122)">
-          <CountCard
-            x={62}
-            y={70}
-            width={68}
-            height={104}
-            label="初球"
-            average=".333"
-            ratio={0.66}
-            detail="9打数 3安打"
-            balls={0}
-            strikes={0}
-          />
-        </G>
-        <G transform="rotate(9 184 122)">
-          <CountCard
-            x={150}
-            y={70}
-            width={68}
-            height={104}
-            label="追い込み"
-            average=".208"
-            ratio={0.4}
-            detail="24打数 5安打"
-            balls={0}
-            strikes={2}
-          />
-        </G>
-        <CountCard
-          x={100}
-          y={56}
-          width={80}
-          height={126}
-          label="有利カウント"
-          average=".412"
-          ratio={0.86}
-          detail="17打数 7安打"
-          balls={2}
+      {/* 左右の端末は奥に、中央は手前に重ねる */}
+      <G transform="rotate(-9 82 105)">
+        <CountPhone
+          phone={{ x: 48, y: 40, width: 68, height: 130 }}
+          label="初球"
+          average=".333"
+          ratio={0.66}
+          detail="9打数 3安打"
+          balls={0}
           strikes={0}
-          emphasized
         />
-      </PhoneMock>
-      <Sparkle x={244} y={44} size={8} />
-      <Sparkle x={30} y={152} size={7} color="#5B8DEF" />
+      </G>
+      <G transform="rotate(9 198 105)">
+        <CountPhone
+          phone={{ x: 164, y: 40, width: 68, height: 130 }}
+          label="追い込み"
+          average=".208"
+          ratio={0.4}
+          detail="24打数 5安打"
+          balls={0}
+          strikes={2}
+        />
+      </G>
+      <CountPhone
+        phone={{ x: 101, y: 20, width: 78, height: 150 }}
+        label="有利カウント"
+        average=".412"
+        ratio={0.86}
+        detail="17打数 7安打"
+        balls={2}
+        strikes={0}
+        emphasized
+      />
+      <Sparkle x={246} y={46} size={8} />
+      <Sparkle x={28} y={154} size={7} color="#5B8DEF" />
     </ArtCanvas>
   );
 }
