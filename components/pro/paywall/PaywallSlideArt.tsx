@@ -488,125 +488,6 @@ export function HitDirectionArt() {
   );
 }
 
-interface CountPhoneProps {
-  phone: { x: number; y: number; width: number; height: number };
-  label: string;
-  average: string;
-  /** バーの充填率（0〜1）。打率の高低を図でも伝える。 */
-  ratio: number;
-  /** 打数・安打の内訳。画面を実物らしく見せるための添え書き。 */
-  detail: string;
-  /** ボールカウント（0〜3）。 */
-  balls: number;
-  /** ストライクカウント（0〜2）。 */
-  strikes: number;
-  /** 手前に置く主役の端末は文字と色を強める。 */
-  emphasized?: boolean;
-}
-
-/**
- * カウント別スライドの 1 台。端末の画面に B/S のカウント・打率・バーを映す。
- * 位置は端末の寸法から導くので、大きさを変えても中身が崩れない。
- */
-function CountPhone({
-  phone,
-  label,
-  average,
-  ratio,
-  detail,
-  balls,
-  strikes,
-  emphasized = false,
-}: CountPhoneProps) {
-  const bezel = phone.width * 0.045;
-  const screenWidth = phone.width - bezel * 2;
-  const centerX = phone.x + phone.width / 2;
-  // ダイナミックアイランドの下端から順に積む。
-  const islandBottom = phone.y + bezel * 1.9 + phone.width * 0.075;
-  const labelY = islandBottom + (emphasized ? 20 : 17);
-  const dotY = labelY + (emphasized ? 14 : 12);
-  const dotRadius = emphasized ? 3 : 2.6;
-  const averageY = dotY + (emphasized ? 30 : 25);
-  const barY = averageY + (emphasized ? 10 : 8);
-  const barWidth = screenWidth - 16;
-  const barHeight = emphasized ? 8 : 6;
-  const detailY = barY + (emphasized ? 22 : 18);
-  return (
-    <PhoneMock {...phone}>
-      <SvgText
-        x={centerX}
-        y={labelY}
-        fill={emphasized ? INK : SUB_INK}
-        fontSize={emphasized ? 11 : 9.5}
-        fontWeight="bold"
-        textAnchor="middle"
-      >
-        {label}
-      </SvgText>
-      {/* ボール / ストライクのカウント表示 */}
-      {[0, 1, 2].map((index) => (
-        <Circle
-          key={`ball-${index}`}
-          cx={centerX - 20 + index * 9}
-          cy={dotY}
-          r={dotRadius}
-          fill={index < balls ? "#4f9e6b" : "none"}
-          stroke={MUTED}
-          strokeWidth={1}
-        />
-      ))}
-      {[0, 1].map((index) => (
-        <Circle
-          key={`strike-${index}`}
-          cx={centerX + 9 + index * 9}
-          cy={dotY}
-          r={dotRadius}
-          fill={index < strikes ? "#d64545" : "none"}
-          stroke={MUTED}
-          strokeWidth={1}
-        />
-      ))}
-      <SvgText
-        x={centerX}
-        y={averageY}
-        fill={emphasized ? INK : SUB_INK}
-        fontSize={emphasized ? 24 : 18}
-        fontWeight="bold"
-        textAnchor="middle"
-      >
-        {average}
-      </SvgText>
-      <Rect
-        x={centerX - barWidth / 2}
-        y={barY}
-        width={barWidth}
-        height={barHeight}
-        rx={barHeight / 2}
-        fill={MUTED}
-        opacity={0.6}
-      />
-      <Rect
-        x={centerX - barWidth / 2}
-        y={barY}
-        width={barWidth * ratio}
-        height={barHeight}
-        rx={barHeight / 2}
-        fill={BRAND}
-        opacity={emphasized ? 1 : 0.55}
-      />
-      <SvgText
-        x={centerX}
-        y={detailY}
-        fill={SUB_INK}
-        fontSize={emphasized ? 8 : 7}
-        textAnchor="middle"
-      >
-        {detail}
-      </SvgText>
-    </PhoneMock>
-  );
-}
-
 /**
  * 投手のシルエット。踏み出して腕を振り出す瞬間の、脚を大きく割った投球フォーム。
  * 打者と同じく単色で描き、手前に重なる腕と脚は背景色の縁取りで前後を出す。
@@ -967,55 +848,148 @@ export function PitchTypeArt() {
   );
 }
 
+interface CountRowProps {
+  y: number;
+  label: string;
+  detail: string;
+  /** 点灯するボールカウント（0〜3）。 */
+  balls: number;
+  /** 点灯するストライクカウント（0〜2）。 */
+  strikes: number;
+  average: number;
+  averageColor: string;
+  /** 主役の行はブランド色で囲って目線を集める。 */
+  highlighted?: boolean;
+}
+
+/** スコアボード風の 1 行。カウントのランプと打率を横に並べる。 */
+function CountRow({
+  y,
+  label,
+  detail,
+  balls,
+  strikes,
+  average,
+  averageColor,
+  highlighted = false,
+}: CountRowProps) {
+  const lampY = y + 24;
+  const formatted = average.toFixed(3).replace(/^0\./, ".");
+  return (
+    <G>
+      <Rect
+        x={22}
+        y={y}
+        width={236}
+        height={46}
+        rx={10}
+        fill={highlighted ? "rgba(208, 128, 0, 0.14)" : CARD_BG}
+        stroke={highlighted ? BRAND : CARD_EDGE}
+        strokeWidth={highlighted ? 1.5 : 1}
+      />
+      <SvgText x={36} y={y + 21} fill={INK} fontSize={12} fontWeight="bold">
+        {label}
+      </SvgText>
+      <SvgText x={36} y={y + 37} fill={SUB_INK} fontSize={9}>
+        {detail}
+      </SvgText>
+      {/* ボールカウントのランプ */}
+      <SvgText x={106} y={lampY + 4} fill={SUB_INK} fontSize={10}>
+        B
+      </SvgText>
+      {[0, 1, 2].map((index) => (
+        <Circle
+          key={`ball-${index}`}
+          cx={124 + index * 13}
+          cy={lampY}
+          r={5.5}
+          fill={index < balls ? "#4f9e6b" : "#1B1B1E"}
+          stroke={MUTED}
+          strokeWidth={1}
+        />
+      ))}
+      {/* ストライクカウントのランプ */}
+      <SvgText x={156} y={lampY + 4} fill={SUB_INK} fontSize={10}>
+        S
+      </SvgText>
+      {[0, 1].map((index) => (
+        <Circle
+          key={`strike-${index}`}
+          cx={174 + index * 13}
+          cy={lampY}
+          r={5.5}
+          fill={index < strikes ? "#d64545" : "#1B1B1E"}
+          stroke={MUTED}
+          strokeWidth={1}
+        />
+      ))}
+      <SvgText
+        x={252}
+        y={y + 32}
+        fill={averageColor}
+        fontSize={26}
+        fontWeight="bold"
+        textAnchor="end"
+      >
+        {formatted}
+      </SvgText>
+    </G>
+  );
+}
+
 /**
  * カウント別の打率。
- * 構図: 端末そのものを 3 台、扇状に並べて真ん中を大きく前に出す
- * （みてねの「1秒動画」型）。各画面に B/S のカウントと打率を映す。
+ * 構図: スコアボードのカウント表示をそのまま 3 段並べ、B/S のランプごとに打率を置く。
+ * ランプを見れば「どのカウントの成績か」が説明なしで伝わる。
  */
 export function CountSituationArt() {
   return (
     <ArtCanvas>
       <Confetti
         items={[
-          { cx: 20, cy: 30, r: 9, fill: BRAND, opacity: 0.22 },
-          { cx: 260, cy: 160, r: 11, fill: "#5B8DEF", opacity: 0.2 },
+          { cx: 266, cy: 12, r: 9, fill: BRAND, opacity: 0.2 },
+          { cx: 14, cy: 178, r: 10, fill: "#5B8DEF", opacity: 0.18 },
         ]}
       />
-      {/* 左右の端末は奥に、中央は手前に重ねる */}
-      <G transform="rotate(-9 82 105)">
-        <CountPhone
-          phone={{ x: 48, y: 40, width: 68, height: 130 }}
-          label="初球"
-          average=".333"
-          ratio={0.66}
-          detail="9打数 3安打"
-          balls={0}
-          strikes={0}
-        />
-      </G>
-      <G transform="rotate(9 198 105)">
-        <CountPhone
-          phone={{ x: 164, y: 40, width: 68, height: 130 }}
-          label="追い込み"
-          average=".208"
-          ratio={0.4}
-          detail="24打数 5安打"
-          balls={0}
-          strikes={2}
-        />
-      </G>
-      <CountPhone
-        phone={{ x: 101, y: 20, width: 78, height: 150 }}
+      {/* スコアボードの盤面 */}
+      <Rect
+        x={12}
+        y={14}
+        width={256}
+        height={164}
+        rx={14}
+        fill="#1B1B1E"
+        stroke={CARD_EDGE}
+        strokeWidth={1.5}
+      />
+      <CountRow
+        y={24}
+        label="初球"
+        detail="9打数 3安打"
+        balls={0}
+        strikes={0}
+        average={0.333}
+        averageColor="#c9a227"
+      />
+      <CountRow
+        y={76}
         label="有利カウント"
-        average=".412"
-        ratio={0.86}
         detail="17打数 7安打"
         balls={2}
         strikes={0}
-        emphasized
+        average={0.412}
+        averageColor="#d98236"
+        highlighted
       />
-      <Sparkle x={246} y={46} size={8} />
-      <Sparkle x={28} y={154} size={7} color="#5B8DEF" />
+      <CountRow
+        y={128}
+        label="追い込み"
+        detail="24打数 5安打"
+        balls={0}
+        strikes={2}
+        average={0.208}
+        averageColor="#4f9e6b"
+      />
     </ArtCanvas>
   );
 }
