@@ -1259,176 +1259,220 @@ export function PitchCourseArt() {
 
 /**
  * シーズン跨ぎの成績推移。
- * 構図: 左に端末が見切れ、右からグラフのカードが浮かび上がる（みてねの「バックグラウンド」型）。
+ * 構図: 端末を使わず折れ線を大きく描き、2 シーズンを重ねて伸びを見せる。
+ * 右上に伸び幅のバッジを置き、下の凡例に各シーズンの打率を添える。
  */
 export function SeasonTrendArt() {
-  const lastSeason = "124,120 146,112 168,116 190,104 212,106";
-  const thisSeason = "124,110 146,92 168,84 190,70 212,54";
+  const chart = { left: 50, right: 252, top: 28, bottom: 128 };
+  const minAverage = 0.2;
+  const maxAverage = 0.4;
+  const xFor = (index: number, count: number) =>
+    chart.left + ((chart.right - chart.left) / (count - 1)) * index;
+  const yFor = (average: number) =>
+    chart.bottom -
+    ((average - minAverage) / (maxAverage - minAverage)) *
+      (chart.bottom - chart.top);
+  const lastSeason = [0.24, 0.262, 0.255, 0.275, 0.268];
+  const thisSeason = [0.285, 0.31, 0.322, 0.335, 0.341];
+  const toPoints = (values: number[]) =>
+    values
+      .map(
+        (value, index) =>
+          `${xFor(index, values.length).toFixed(1)},${yFor(value).toFixed(1)}`,
+      )
+      .join(" ");
+
   return (
     <ArtCanvas>
       <Confetti
         items={[
-          { cx: 246, cy: 158, r: 10, fill: "#5B8DEF", opacity: 0.22 },
-          { cx: 34, cy: 28, r: 7, fill: BRAND, opacity: 0.22 },
+          { cx: 20, cy: 24, r: 9, fill: "#5B8DEF", opacity: 0.2 },
+          { cx: 264, cy: 168, r: 10, fill: BRAND, opacity: 0.18 },
         ]}
       />
-      {/* 左で見切れる端末 */}
-      <PhoneMock x={12} y={24} width={88} height={150}>
-        <Rect x={26} y={46} width={38} height={6} rx={3} fill={MUTED} />
-        <Rect x={26} y={58} width={24} height={5} rx={2.5} fill={MUTED} />
-        {[76, 96, 116, 136].map((y) => (
-          <Rect
-            key={y}
-            x={26}
-            y={y}
-            width={54}
-            height={10}
-            rx={5}
-            fill={BRAND}
-            opacity={0.18}
-          />
-        ))}
-      </PhoneMock>
-
-      {/* 奥に昨シーズンのカード、手前に今シーズンのカード */}
-      <G transform="rotate(-7 176 104)">
-        <Card
-          x={98}
-          y={44}
-          width={150}
-          height={112}
-          fill={BODY}
-          opacity={0.55}
-        />
-      </G>
-      <G transform="rotate(5 176 100)">
-        <Card x={106} y={32} width={148} height={116} />
-        {[60, 90, 120].map((y) => (
+      {/* 目盛り */}
+      {[0.4, 0.3, 0.2].map((tick) => (
+        <G key={tick}>
           <Line
-            key={y}
-            x1={118}
-            y1={y}
-            x2={242}
-            y2={y}
+            x1={chart.left}
+            y1={yFor(tick)}
+            x2={chart.right}
+            y2={yFor(tick)}
             stroke={MUTED}
             strokeWidth={1}
             opacity={0.55}
           />
-        ))}
-        <Polyline
-          points={lastSeason}
-          fill="none"
-          stroke={MUTED}
-          strokeWidth={2.5}
-          strokeDasharray="5 4"
-          strokeLinecap="round"
+          <SvgText
+            x={chart.left - 8}
+            y={yFor(tick) + 3.5}
+            fill={SUB_INK}
+            fontSize={9}
+            textAnchor="end"
+          >
+            {tick.toFixed(3).replace(/^0\./, ".")}
+          </SvgText>
+        </G>
+      ))}
+
+      {/* 昨シーズン（破線） */}
+      <Polyline
+        points={toPoints(lastSeason)}
+        fill="none"
+        stroke={MUTED}
+        strokeWidth={3}
+        strokeDasharray="6 5"
+        strokeLinecap="round"
+      />
+      {/* 今シーズン（実線） */}
+      <Polyline
+        points={toPoints(thisSeason)}
+        fill="none"
+        stroke={BRAND}
+        strokeWidth={4}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {thisSeason.map((value, index) => (
+        <Circle
+          key={value}
+          cx={xFor(index, thisSeason.length)}
+          cy={yFor(value)}
+          r={4.5}
+          fill={BRAND}
         />
-        <Polyline
-          points={thisSeason}
-          fill="none"
+      ))}
+
+      {/* 伸び幅のバッジ */}
+      <G>
+        <Rect
+          x={196}
+          y={20}
+          width={60}
+          height={26}
+          rx={13}
+          fill="rgba(208, 128, 0, 0.18)"
           stroke={BRAND}
-          strokeWidth={3.2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeWidth={1.5}
         />
-        {thisSeason.split(" ").map((point) => {
-          const [cx, cy] = point.split(",");
-          return (
-            <Circle
-              key={point}
-              cx={Number(cx)}
-              cy={Number(cy)}
-              r={3.2}
-              fill={BRAND}
-            />
-          );
-        })}
-        <SvgText x={118} y={140} fill={SUB_INK} fontSize={10}>
-          昨シーズン
-        </SvgText>
-        <SvgText x={180} y={140} fill={BRAND} fontSize={10} fontWeight="bold">
-          今シーズン
+        <Polygon points="210,31 215,24 220,31" fill={BRAND} />
+        <SvgText
+          x={248}
+          y={39}
+          fill={BRAND}
+          fontSize={14}
+          fontWeight="bold"
+          textAnchor="end"
+        >
+          +.073
         </SvgText>
       </G>
-      <Sparkle x={232} y={28} size={9} />
+
+      {/* 凡例 */}
+      <Line
+        x1={24}
+        y1={156}
+        x2={46}
+        y2={156}
+        stroke={MUTED}
+        strokeWidth={3}
+        strokeDasharray="6 5"
+        strokeLinecap="round"
+      />
+      <SvgText x={52} y={160} fill={SUB_INK} fontSize={11}>
+        昨シーズン .268
+      </SvgText>
+      <Line
+        x1={150}
+        y1={156}
+        x2={172}
+        y2={156}
+        stroke={BRAND}
+        strokeWidth={4}
+        strokeLinecap="round"
+      />
+      <SvgText x={178} y={160} fill={INK} fontSize={11} fontWeight="bold">
+        今シーズン .341
+      </SvgText>
     </ArtCanvas>
   );
 }
 
 /**
  * 広告非表示。
- * 構図: 端末を中央に置き、右上から大きな禁止記号を重ねる（みてねの「広告なし」型）。
+ * 構図: 端末の画面から広告枠が消えることを、大きな禁止記号で示す。
+ * 枠の下には記録が続き、加入後は入力の手が止まらないことを表す。
  */
 export function NoAdsArt() {
-  const phone = { x: 96, y: 8, width: 92, height: 174 };
-  const contentX = phone.x + 12;
-  const contentWidth = phone.width - 24;
+  const bezel = PHONE.width * 0.045;
+  const screenX = PHONE.x + bezel;
+  const contentX = screenX + 12;
+  const contentWidth = PHONE.width - bezel * 2 - 24;
   return (
     <ArtCanvas>
       <Confetti
         items={[
-          { cx: 30, cy: 56, r: 11, fill: "#4F9E6B", opacity: 0.22 },
-          { cx: 42, cy: 150, r: 7, fill: "#5B8DEF", opacity: 0.25 },
+          { cx: 24, cy: 46, r: 11, fill: "#4F9E6B", opacity: 0.22 },
+          { cx: 34, cy: 158, r: 8, fill: "#5B8DEF", opacity: 0.25 },
         ]}
       />
-      <PhoneMock {...phone}>
-        <Rect x={contentX} y={38} width={36} height={6} rx={3} fill={MUTED} />
+      <PhoneMock {...PHONE} showHomeIndicator={false}>
+        <Rect x={contentX} y={44} width={46} height={6} rx={3} fill={MUTED} />
         {/* 消える広告枠 */}
         <Rect
           x={contentX}
-          y={54}
+          y={58}
           width={contentWidth}
-          height={32}
-          rx={6}
+          height={44}
+          rx={8}
           fill={MUTED}
-          opacity={0.4}
+          opacity={0.35}
         />
         <SvgText
-          x={phone.x + phone.width / 2}
-          y={75}
+          x={PHONE.x + PHONE.width / 2}
+          y={88}
           fill={SUB_INK}
-          fontSize={13}
+          fontSize={22}
           fontWeight="bold"
           textAnchor="middle"
         >
           広告
         </SvgText>
         {/* 広告が消えた先に記録が続く */}
-        {[100, 118, 136, 154].map((y, index) => (
+        {[120, 140, 160].map((y, index) => (
           <Rect
             key={y}
             x={contentX}
             y={y}
-            width={index === 1 ? 40 : contentWidth}
-            height={8}
-            rx={4}
+            width={index === 1 ? 52 : contentWidth}
+            height={10}
+            rx={5}
             fill={BRAND}
             opacity={index === 1 ? 0.55 : 0.26}
           />
         ))}
       </PhoneMock>
-      {/* 禁止記号 */}
+      {/* 禁止記号。端末からはみ出させて主役にする */}
       <G>
         <Circle
-          cx={198}
-          cy={58}
-          r={30}
-          fill="#2E2E2E"
+          cx={202}
+          cy={80}
+          r={40}
+          fill="none"
           stroke={BRAND}
-          strokeWidth={3.5}
+          strokeWidth={5}
         />
         <Line
-          x1={177}
-          y1={79}
-          x2={219}
-          y2={37}
+          x1={174}
+          y1={108}
+          x2={230}
+          y2={52}
           stroke={BRAND}
-          strokeWidth={3.5}
+          strokeWidth={5}
           strokeLinecap="round"
         />
       </G>
-      <Sparkle x={242} y={116} size={10} />
-      <Sparkle x={224} y={150} size={7} color="#5B8DEF" />
+      <Sparkle x={40} y={104} size={10} />
+      <Sparkle x={252} y={150} size={8} color="#5B8DEF" />
     </ArtCanvas>
   );
 }
