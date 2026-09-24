@@ -607,6 +607,161 @@ function CountPhone({
 }
 
 /**
+ * 対戦投手別の打撃成績。
+ * 構図: 端末の画面に投手の一覧を映し、左に得意な投手のカードを飛び出させる
+ * （みてねの「2分以上の動画」型）。
+ */
+export function PitcherFaceoffArt() {
+  const bezel = PHONE.width * 0.045;
+  const screenX = PHONE.x + bezel;
+  const rowX = 72;
+  const rowWidth = 136;
+  const rows = [
+    { y: 58, average: 0.421, hand: "右", highlighted: true },
+    { y: 92, average: 0.286, hand: "左", highlighted: false },
+    { y: 126, average: 0.15, hand: "右", highlighted: false },
+  ];
+  // 色分けは他の成績スライドと同じ固定閾値のスケールに揃える。
+  const colorForAverage = (average: number): string => {
+    if (average >= 0.45) return "#d64545";
+    if (average >= 0.35) return "#d98236";
+    if (average >= 0.25) return "#c9a227";
+    if (average >= 0.15) return "#4f9e6b";
+    return "#4173b3";
+  };
+  const formatAverage = (average: number): string =>
+    average.toFixed(3).replace(/^0\./, ".");
+  /** 投手のアイコン（頭と肩だけの簡略図）。 */
+  const pitcherGlyph = (cx: number, cy: number, scale: number) => (
+    <G>
+      <Circle cx={cx} cy={cy - 3.4 * scale} r={3.2 * scale} fill={SUB_INK} />
+      <Path
+        d={`M ${cx - 6 * scale},${cy + 6 * scale} a ${6 * scale},${6 * scale} 0 0 1 ${12 * scale},0 Z`}
+        fill={SUB_INK}
+      />
+    </G>
+  );
+
+  return (
+    <ArtCanvas>
+      <Confetti
+        items={[
+          { cx: 256, cy: 36, r: 9, fill: "#4F9E6B", opacity: 0.22 },
+          { cx: 240, cy: 166, r: 11, fill: BRAND, opacity: 0.18 },
+        ]}
+      />
+      <PhoneMock {...PHONE} showHomeIndicator={false}>
+        <Rect
+          x={screenX + 12}
+          y={42}
+          width={46}
+          height={6}
+          rx={3}
+          fill={MUTED}
+        />
+        {rows.map((row) => (
+          <G key={row.y}>
+            <Rect
+              x={rowX}
+              y={row.y}
+              width={rowWidth}
+              height={30}
+              rx={8}
+              fill={row.highlighted ? "rgba(208, 128, 0, 0.16)" : CARD_BG}
+              stroke={row.highlighted ? BRAND : CARD_EDGE}
+              strokeWidth={row.highlighted ? 1.5 : 1}
+            />
+            <Circle cx={rowX + 17} cy={row.y + 15} r={10} fill={BODY} />
+            {pitcherGlyph(rowX + 17, row.y + 15, 1)}
+            <Rect
+              x={rowX + 33}
+              y={row.y + 8}
+              width={40}
+              height={6}
+              rx={3}
+              fill={MUTED}
+            />
+            <Rect
+              x={rowX + 33}
+              y={row.y + 18}
+              width={24}
+              height={4}
+              rx={2}
+              fill={MUTED}
+              opacity={0.7}
+            />
+            <Rect
+              x={rowX + 80}
+              y={row.y + 10}
+              width={13}
+              height={11}
+              rx={3}
+              fill={BODY}
+            />
+            <SvgText
+              x={rowX + 86.5}
+              y={row.y + 18.5}
+              fill={SUB_INK}
+              fontSize={7.5}
+              textAnchor="middle"
+            >
+              {row.hand}
+            </SvgText>
+            <SvgText
+              x={rowX + rowWidth - 10}
+              y={row.y + 20}
+              fill={colorForAverage(row.average)}
+              fontSize={14}
+              fontWeight="bold"
+              textAnchor="end"
+            >
+              {formatAverage(row.average)}
+            </SvgText>
+          </G>
+        ))}
+        {/* 続きがあることを示す 4 行目 */}
+        <Rect
+          x={rowX}
+          y={160}
+          width={rowWidth}
+          height={30}
+          rx={8}
+          fill={CARD_BG}
+          opacity={0.45}
+        />
+      </PhoneMock>
+
+      {/* 得意な投手を飛び出させたカード */}
+      <G transform="rotate(-6 37 102)">
+        <Card x={6} y={74} width={62} height={58} fill="#2E2E30" />
+        <Circle cx={22} cy={96} r={10} fill={BODY} />
+        {pitcherGlyph(22, 96, 1)}
+        <SvgText
+          x={48}
+          y={101}
+          fill={BRAND}
+          fontSize={15}
+          fontWeight="bold"
+          textAnchor="middle"
+        >
+          .421
+        </SvgText>
+        <SvgText
+          x={37}
+          y={122}
+          fill={SUB_INK}
+          fontSize={7.5}
+          textAnchor="middle"
+        >
+          右投げ・14打数
+        </SvgText>
+      </G>
+      <Sparkle x={236} y={92} size={9} />
+    </ArtCanvas>
+  );
+}
+
+/**
  * カウント別の打率。
  * 構図: 端末そのものを 3 台、扇状に並べて真ん中を大きく前に出す
  * （みてねの「1秒動画」型）。各画面に B/S のカウントと打率を映す。

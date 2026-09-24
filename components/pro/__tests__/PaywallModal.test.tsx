@@ -807,7 +807,7 @@ describe("orderSlides", () => {
     const slides = orderSlides("count_situation_average");
 
     expect(slides[0].key).toBe("count_situation");
-    expect(slides).toHaveLength(5);
+    expect(slides).toHaveLength(6);
   });
 
   it("球種別は同じカードで見せるコース別のスライドを先頭にする", () => {
@@ -826,6 +826,7 @@ describe("orderSlides", () => {
     expect(slides.map((slide) => slide.key)).toEqual([
       "hit_direction",
       "pitch_course",
+      "pitcher_faceoff",
       "count_situation",
       "season_trend",
       "no_ads",

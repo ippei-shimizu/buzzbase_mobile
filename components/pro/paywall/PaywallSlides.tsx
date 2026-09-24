@@ -13,14 +13,16 @@ import {
   HitDirectionArt,
   NoAdsArt,
   PitchCourseArt,
+  PitcherFaceoffArt,
   SeasonTrendArt,
 } from "./PaywallSlideArt";
 
 /** スライドの識別子。トリガーに対応するスライドを先頭に並べ替えるために使う。 */
 export type PaywallSlideKey =
   | "hit_direction"
-  | "count_situation"
   | "pitch_course"
+  | "pitcher_faceoff"
+  | "count_situation"
   | "season_trend"
   | "no_ads";
 
@@ -44,6 +46,12 @@ const SLIDES: readonly SlideCopy[] = [
     title: "コース別の\n得意・苦手がわかる",
     description:
       "ゾーンごとのヒートマップで、狙い球と苦手コースがはっきりします。",
+  },
+  {
+    key: "pitcher_faceoff",
+    title: "対戦した投手ごとに\n成績がわかる",
+    description:
+      "同じ投手との通算成績を積み上げて、次の対戦の狙いを立てられます。",
   },
   {
     key: "count_situation",
@@ -70,6 +78,7 @@ const SLIDE_KEY_BY_TRIGGER: Partial<Record<ProTrigger, PaywallSlideKey>> = {
   count_situation_average: "count_situation",
   pitch_type_average: "pitch_course",
   pitch_course_average: "pitch_course",
+  pitcher_faceoff_average: "pitcher_faceoff",
   season_transition_graph: "season_trend",
   no_ads: "no_ads",
 };
@@ -103,6 +112,7 @@ const ART_BY_KEY: Record<PaywallSlideKey, () => React.JSX.Element> = {
   hit_direction: HitDirectionArt,
   count_situation: CountSituationArt,
   pitch_course: PitchCourseArt,
+  pitcher_faceoff: PitcherFaceoffArt,
   season_trend: SeasonTrendArt,
   no_ads: NoAdsArt,
 };
