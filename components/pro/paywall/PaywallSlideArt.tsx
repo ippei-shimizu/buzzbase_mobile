@@ -608,7 +608,7 @@ function CountPhone({
 }
 
 /**
- * 投手のシルエット。足を上げて腕を後ろへ引いた投球フォームで、打者と向かい合う向き。
+ * 投手のシルエット。踏み出して腕を振り出す瞬間の、脚を大きく割った投球フォーム。
  * 打者と同じく単色で描き、手前に重なる腕と脚は背景色の縁取りで前後を出す。
  */
 function PitcherSilhouette() {
@@ -616,84 +616,84 @@ function PitcherSilhouette() {
   const gap = "#2E2E2E";
   return (
     <G>
-      {/* 軸足 */}
+      {/* 後ろ足（蹴り出した側） */}
       <Polyline
-        points="44,92 38,124 36,156"
+        points="48,106 32,128 17,148"
         fill="none"
         stroke={silhouette}
-        strokeWidth={15}
+        strokeWidth={14}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <Ellipse
-        cx={40}
-        cy={160}
-        rx={12}
-        ry={5.5}
+        cx={13}
+        cy={152}
+        rx={10}
+        ry={5}
         fill={silhouette}
-        transform="rotate(-8 40 160)"
+        transform="rotate(-25 13 152)"
       />
       {/* 胴体 */}
       <Path
-        d="M 38,56 Q 52,47 66,56 L 62,94 Q 50,100 36,93 Z"
+        d="M 43,68 Q 54,60 66,68 L 63,106 Q 53,112 41,105 Z"
         fill={silhouette}
       />
-      {/* 上げた前脚（腿を上げて膝から下を垂らす） */}
+      {/* 踏み出した前脚 */}
       <Polyline
-        points="58,90 86,80 90,112"
+        points="60,106 78,126 94,148"
         fill="none"
         stroke={gap}
-        strokeWidth={19}
+        strokeWidth={18}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <Polyline
-        points="58,90 86,80 90,112"
+        points="60,106 78,126 94,148"
         fill="none"
         stroke={silhouette}
-        strokeWidth={15}
+        strokeWidth={14}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <Ellipse
-        cx={95}
-        cy={116}
-        rx={11}
-        ry={5.5}
+        cx={99}
+        cy={152}
+        rx={10}
+        ry={5}
         fill={silhouette}
-        transform="rotate(20 95 116)"
+        transform="rotate(30 99 152)"
       />
-      {/* 後ろへ引いた投げ手とボール */}
+      {/* 振りかぶった投げ手とボール */}
       <Polyline
-        points="42,60 26,48 18,30"
+        points="45,72 29,63 23,45"
         fill="none"
         stroke={silhouette}
-        strokeWidth={11}
+        strokeWidth={10}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <Circle cx={16} cy={25} r={5.5} fill="#F1F1F0" />
-      {/* 前へ出したグラブ側の腕 */}
+      <Circle cx={21} cy={40} r={5.5} fill="#F1F1F0" />
+      {/* 前へ伸ばしたグラブ側の腕 */}
       <Polyline
-        points="62,60 80,54 90,46"
+        points="65,72 79,70 90,68"
         fill="none"
         stroke={gap}
-        strokeWidth={15}
+        strokeWidth={14}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <Polyline
-        points="62,60 80,54 90,46"
+        points="65,72 79,70 90,68"
         fill="none"
         stroke={silhouette}
-        strokeWidth={11}
+        strokeWidth={10}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <Circle cx={95} cy={43} r={9} fill={silhouette} />
-      {/* 帽子をかぶった頭（つばは投手の向く方向＝右へ） */}
-      <Circle cx={52} cy={38} r={13} fill={silhouette} />
-      <Path d="M 62,33 L 76,38 L 62,43 Z" fill={silhouette} />
+      <Circle cx={94} cy={67} r={8} fill={silhouette} />
+      {/* 帽子をかぶった頭（つばは打者の方＝右へ） */}
+      <Circle cx={54} cy={54} r={12} fill={silhouette} />
+      <Path d="M 63,49.5 L 75,54 L 63,58.5 Z" fill={silhouette} />
     </G>
   );
 }
@@ -715,24 +715,24 @@ export function PitcherFaceoffArt() {
   const formatAverage = (average: number): string =>
     average.toFixed(3).replace(/^0\./, ".");
   const others = [
-    { y: 114, name: "投手 B", meta: "△△高校・左投げ", average: 0.286 },
-    { y: 150, name: "投手 C", meta: "□□高校・右投げ", average: 0.15 },
+    { y: 116, name: "投手 B", meta: "△△高校・左投げ", average: 0.286 },
+    { y: 154, name: "投手 C", meta: "□□高校・右投げ", average: 0.15 },
   ];
 
   return (
     <ArtCanvas>
       <Confetti
         items={[
-          { cx: 22, cy: 150, r: 10, fill: "#4F9E6B", opacity: 0.2 },
-          { cx: 262, cy: 22, r: 8, fill: BRAND, opacity: 0.22 },
+          { cx: 20, cy: 168, r: 10, fill: "#4F9E6B", opacity: 0.2 },
+          { cx: 264, cy: 16, r: 8, fill: BRAND, opacity: 0.22 },
         ]}
       />
       <PitcherSilhouette />
       <SvgText
         x={112}
-        y={64}
+        y={72}
         fill={SUB_INK}
-        fontSize={12}
+        fontSize={14}
         fontWeight="bold"
         textAnchor="middle"
       >
@@ -740,53 +740,51 @@ export function PitcherFaceoffArt() {
       </SvgText>
 
       {/* その投手との通算成績 */}
-      <Card x={126} y={20} width={146} height={80} fill="#2E2E30" />
-      <SvgText x={138} y={38} fill={INK} fontSize={9} fontWeight="bold">
+      <Card x={126} y={16} width={146} height={90} fill="#2E2E30" />
+      <SvgText x={138} y={38} fill={INK} fontSize={12} fontWeight="bold">
         投手 A
       </SvgText>
-      <SvgText x={138} y={50} fill={SUB_INK} fontSize={7.5}>
+      <SvgText x={138} y={54} fill={SUB_INK} fontSize={9}>
         〇〇高校・右投げ・パワー
       </SvgText>
       <SvgText
         x={138}
-        y={82}
+        y={90}
         fill={colorForAverage(0.421)}
-        fontSize={30}
+        fontSize={32}
         fontWeight="bold"
       >
         .421
       </SvgText>
-      <SvgText x={262} y={82} fill={SUB_INK} fontSize={8} textAnchor="end">
+      <SvgText x={264} y={90} fill={SUB_INK} fontSize={9} textAnchor="end">
         19打数 8安打
       </SvgText>
 
       {/* 他の投手との成績も積み上がる */}
       {others.map((row) => (
         <G key={row.y}>
-          <Card x={126} y={row.y} width={146} height={30} fill={CARD_BG} />
-          <Circle cx={144} cy={row.y + 15} r={9} fill={BODY} />
-          <Circle cx={144} cy={row.y + 13} r={4.5} fill={SUB_INK} />
-          <Path
-            d={`M 150,${row.y + 10} L 158,${row.y + 13} L 150,${row.y + 16} Z`}
-            fill={SUB_INK}
-          />
+          <Card x={126} y={row.y} width={146} height={34} fill={CARD_BG} />
+          {/* 人アイコン */}
+          <Circle cx={145} cy={row.y + 17} r={11} fill={BODY} />
+          <Circle cx={145} cy={row.y + 13.5} r={4} fill={SUB_INK} />
+          <Path d={`M 138,${row.y + 24} a 7,7 0 0 1 14,0 Z`} fill={SUB_INK} />
           <SvgText
-            x={160}
-            y={row.y + 14}
+            x={162}
+            y={row.y + 16}
             fill={INK}
-            fontSize={8}
+            fontSize={10.5}
             fontWeight="bold"
           >
             {row.name}
           </SvgText>
-          <SvgText x={160} y={row.y + 24} fill={SUB_INK} fontSize={6.5}>
+          <SvgText x={162} y={row.y + 28} fill={SUB_INK} fontSize={8}>
             {row.meta}
           </SvgText>
           <SvgText
-            x={262}
-            y={row.y + 20}
+            x={264}
+            y={row.y + 23}
             fill={colorForAverage(row.average)}
-            fontSize={15}
+            fontSize={18}
             fontWeight="bold"
             textAnchor="end"
           >
