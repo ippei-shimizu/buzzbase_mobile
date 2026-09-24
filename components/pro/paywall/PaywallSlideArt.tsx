@@ -144,8 +144,8 @@ interface PhoneMockProps {
 }
 
 /**
- * スマートフォンのモック。ベゼル・ステータスバー・ダイナミックアイランド・
- * サイドボタン・ホームインジケータまで描いて、ひと目で端末だと分かる形にする。
+ * スマートフォンのモック。ベゼル・ダイナミックアイランド・サイドボタン・
+ * ホームインジケータまで描いて、ひと目で端末だと分かる形にする。
  *
  * @returns 画面領域は x+bezel, y+bezel から (width-2*bezel, height-2*bezel)
  */
@@ -166,10 +166,7 @@ function PhoneMock({
   const islandWidth = width * 0.3;
   const islandHeight = width * 0.075;
   const islandTop = screenY + bezel * 0.9;
-  const statusCenterY = islandTop + islandHeight / 2;
   const buttonWidth = Math.max(1.6, width * 0.02);
-  // 小さい端末では時刻やアンテナが潰れて汚れに見えるため、幅がある場合だけ描く。
-  const showStatusBar = width >= 110;
   return (
     <G>
       {/* サイドボタン（本体より先に描いて端から生えているように見せる） */}
@@ -218,50 +215,6 @@ function PhoneMock({
         fill="#1B1B1E"
       />
       {children}
-      {/* ステータスバー（時刻・電波・バッテリー） */}
-      {showStatusBar ? (
-        <G>
-          <SvgText
-            x={screenX + width * 0.075}
-            y={statusCenterY + width * 0.024}
-            fill={INK}
-            fontSize={width * 0.062}
-            fontWeight="bold"
-          >
-            9:41
-          </SvgText>
-          {[0, 1, 2].map((index) => (
-            <Rect
-              key={index}
-              x={screenX + screenWidth - width * 0.235 + index * width * 0.028}
-              y={statusCenterY - width * 0.012 - index * width * 0.012}
-              width={width * 0.018}
-              height={width * 0.026 + index * width * 0.012}
-              rx={width * 0.007}
-              fill={INK}
-            />
-          ))}
-          <Rect
-            x={screenX + screenWidth - width * 0.118}
-            y={statusCenterY - width * 0.026}
-            width={width * 0.078}
-            height={width * 0.052}
-            rx={width * 0.016}
-            fill="none"
-            stroke={INK}
-            strokeWidth={width * 0.008}
-            opacity={0.85}
-          />
-          <Rect
-            x={screenX + screenWidth - width * 0.109}
-            y={statusCenterY - width * 0.017}
-            width={width * 0.046}
-            height={width * 0.034}
-            rx={width * 0.009}
-            fill={INK}
-          />
-        </G>
-      ) : null}
       {/* ダイナミックアイランド */}
       <Rect
         x={x + (width - islandWidth) / 2}
