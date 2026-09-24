@@ -37,7 +37,13 @@ import { PITCH_COURSE_TRACK_FRACTIONS } from "@constants/pitchCourse";
 
 const CANVAS_WIDTH = 280;
 const CANVAS_HEIGHT = 190;
-export const SLIDE_ART_HEIGHT = 190;
+// 描画は 280x190 のまま、表示領域だけ縦に広げて図をスライドの幅いっぱいまで拡大する
+// （preserveAspectRatio の既定が meet のため、高さを増やすと倍率が上がる）。
+export const SLIDE_ART_HEIGHT = 226;
+
+// 端末を映す3枚（方向別 / コース別 / カウント別）で同じ大きさ・位置を使う。
+// 下端はキャンバスの外に出し、画面の続きがあるように見せる。
+const PHONE = { x: 56, y: 10, width: 168, height: 250 } as const;
 
 const BRAND = "#d08000";
 const CARD_BG = "#27272A";
@@ -167,6 +173,8 @@ function PhoneMock({
   const islandHeight = width * 0.075;
   const islandTop = screenY + bezel * 0.9;
   const buttonWidth = Math.max(1.6, width * 0.02);
+  // 画面外へ出た中身がベゼルに乗らないよう、画面の角丸でクリップする。
+  const clipId = `phoneScreen-${Math.round(x)}-${Math.round(y)}-${Math.round(width)}`;
   return (
     <G>
       {/* サイドボタン（本体より先に描いて端から生えているように見せる） */}
@@ -206,6 +214,17 @@ function PhoneMock({
         strokeWidth={1.2}
       />
       {/* 画面 */}
+      <Defs>
+        <ClipPath id={clipId}>
+          <Rect
+            x={screenX}
+            y={screenY}
+            width={screenWidth}
+            height={screenHeight}
+            rx={bodyRadius - bezel}
+          />
+        </ClipPath>
+      </Defs>
       <Rect
         x={screenX}
         y={screenY}
@@ -214,7 +233,7 @@ function PhoneMock({
         rx={bodyRadius - bezel}
         fill="#1B1B1E"
       />
-      {children}
+      <G clipPath={`url(#${clipId})`}>{children}</G>
       {/* ダイナミックアイランド */}
       <Rect
         x={x + (width - islandWidth) / 2}
@@ -358,13 +377,12 @@ function BallparkField() {
  * （みてねの「公開範囲」型）。
  */
 export function HitDirectionArt() {
-  const phone = { x: 60, y: 12, width: 160, height: 250 };
-  const bezel = phone.width * 0.045;
-  const screenX = phone.x + bezel;
+  const bezel = PHONE.width * 0.045;
+  const screenX = PHONE.x + bezel;
   // 球場図（GROUND_* 座標）を画面の幅いっぱいに収める倍率と位置。
-  const scale = 0.375;
+  const scale = 0.4;
   const fieldTop = 58;
-  const translateX = phone.x + phone.width / 2 - HOME.x * scale;
+  const translateX = PHONE.x + PHONE.width / 2 - HOME.x * scale;
   const translateY = fieldTop - (HOME.y - GROUND_OUTFIELD_RY) * scale;
   // 打球方向のヒート。DIRECTION_LABEL_POSITIONS と同じ並び（左 / 中 / 右 / 二 / 遊）。
   // 打率はイラスト用のダミー値で、濃さと高低を対応させる。
@@ -383,7 +401,7 @@ export function HitDirectionArt() {
           { cx: 18, cy: 160, r: 10, fill: "#4F9E6B", opacity: 0.25 },
         ]}
       />
-      <PhoneMock {...phone} showHomeIndicator={false}>
+      <PhoneMock {...PHONE} showHomeIndicator={false}>
         {/* 画面内のヘッダー */}
         <Rect
           x={screenX + 12}
@@ -422,47 +440,47 @@ export function HitDirectionArt() {
       {/* 円形の吹き出し。端末に重ならないよう画面の外側に置く */}
       <G>
         <Circle
-          cx={30}
+          cx={27}
           cy={72}
-          r={28}
+          r={26}
           fill={BODY}
           stroke={MUTED}
           strokeWidth={2}
         />
         <SvgText
-          x={30}
+          x={27}
           y={69}
           fill={INK}
-          fontSize={11}
+          fontSize={10}
           fontWeight="bold"
           textAnchor="middle"
         >
           引っ張り
         </SvgText>
-        <Rect x={16} y={76} width={28} height={6} rx={3} fill={MUTED} />
-        <Rect x={16} y={76} width={23} height={6} rx={3} fill={BRAND} />
+        <Rect x={14} y={76} width={26} height={6} rx={3} fill={MUTED} />
+        <Rect x={14} y={76} width={21} height={6} rx={3} fill={BRAND} />
       </G>
       <G>
         <Circle
-          cx={250}
-          cy={138}
-          r={27}
+          cx={253}
+          cy={140}
+          r={25}
           fill={BODY}
           stroke={MUTED}
           strokeWidth={2}
         />
         <SvgText
-          x={250}
-          y={135}
+          x={253}
+          y={137}
           fill={INK}
-          fontSize={11}
+          fontSize={10}
           fontWeight="bold"
           textAnchor="middle"
         >
           流し
         </SvgText>
-        <Rect x={237} y={142} width={26} height={6} rx={3} fill={MUTED} />
-        <Rect x={237} y={142} width={11} height={6} rx={3} fill={BRAND} />
+        <Rect x={241} y={144} width={24} height={6} rx={3} fill={MUTED} />
+        <Rect x={241} y={144} width={10} height={6} rx={3} fill={BRAND} />
       </G>
       <Sparkle x={236} y={30} size={9} />
     </ArtCanvas>
@@ -592,10 +610,12 @@ function CountCard({
 
 /**
  * カウント別の打率。
- * 構図: 3 枚の縦カードを扇状に並べ、真ん中を大きく前に出す（みてねの「1秒動画」型）。
- * 各カードに B/S のカウントと打率を載せ、状況ごとの差が数字で伝わるようにする。
+ * 構図: 端末の画面に 3 枚の縦カードを扇状に並べ、真ん中を大きく前に出す
+ * （みてねの「1秒動画」型）。各カードに B/S のカウントと打率を載せる。
  */
 export function CountSituationArt() {
+  const bezel = PHONE.width * 0.045;
+  const screenX = PHONE.x + bezel;
   return (
     <ArtCanvas>
       <Confetti
@@ -604,50 +624,60 @@ export function CountSituationArt() {
           { cx: 258, cy: 158, r: 11, fill: "#5B8DEF", opacity: 0.2 },
         ]}
       />
-      {/* 左右のカードは奥に、中央は手前に重ねる */}
-      <G transform="rotate(-9 74 104)">
+      <PhoneMock {...PHONE} showHomeIndicator={false}>
+        <Rect
+          x={screenX + 12}
+          y={46}
+          width={46}
+          height={6}
+          rx={3}
+          fill={MUTED}
+        />
+        {/* 左右のカードは奥に、中央は手前に重ねる */}
+        <G transform="rotate(-9 96 122)">
+          <CountCard
+            x={62}
+            y={70}
+            width={68}
+            height={104}
+            label="初球"
+            average=".333"
+            ratio={0.66}
+            detail="9打数 3安打"
+            balls={0}
+            strikes={0}
+          />
+        </G>
+        <G transform="rotate(9 184 122)">
+          <CountCard
+            x={150}
+            y={70}
+            width={68}
+            height={104}
+            label="追い込み"
+            average=".208"
+            ratio={0.4}
+            detail="24打数 5安打"
+            balls={0}
+            strikes={2}
+          />
+        </G>
         <CountCard
-          x={38}
-          y={48}
-          width={72}
-          height={112}
-          label="初球"
-          average=".333"
-          ratio={0.66}
-          detail="9打数 3安打"
-          balls={0}
+          x={100}
+          y={56}
+          width={80}
+          height={126}
+          label="有利カウント"
+          average=".412"
+          ratio={0.86}
+          detail="17打数 7安打"
+          balls={2}
           strikes={0}
+          emphasized
         />
-      </G>
-      <G transform="rotate(9 206 104)">
-        <CountCard
-          x={170}
-          y={48}
-          width={72}
-          height={112}
-          label="追い込み"
-          average=".208"
-          ratio={0.4}
-          detail="24打数 5安打"
-          balls={0}
-          strikes={2}
-        />
-      </G>
-      <CountCard
-        x={100}
-        y={26}
-        width={80}
-        height={140}
-        label="有利カウント"
-        average=".412"
-        ratio={0.86}
-        detail="17打数 7安打"
-        balls={2}
-        strikes={0}
-        emphasized
-      />
-      <Sparkle x={246} y={44} size={8} />
-      <Sparkle x={32} y={150} size={7} color="#5B8DEF" />
+      </PhoneMock>
+      <Sparkle x={244} y={44} size={8} />
+      <Sparkle x={30} y={152} size={7} color="#5B8DEF" />
     </ArtCanvas>
   );
 }
@@ -658,12 +688,12 @@ export function CountSituationArt() {
  * 中央 3x3（ストライクゾーン）には打率を載せ、外周のボールゾーンは沈ませる。
  */
 export function PitchCourseArt() {
-  const phone = { x: 60, y: 12, width: 160, height: 250 };
-  const bezel = phone.width * 0.045;
-  const screenX = phone.x + bezel;
-  const gridSize = 112;
-  const gridX = phone.x + (phone.width - gridSize) / 2;
-  const gridY = 54;
+  const bezel = PHONE.width * 0.045;
+  const screenX = PHONE.x + bezel;
+  const gridSize = 120;
+  const gridX = PHONE.x + (PHONE.width - gridSize) / 2;
+  const gridY = 50;
+  const plateTop = gridY + gridSize + 3;
   // トラック比は実際のコース図（PITCH_COURSE_TRACK_FRACTIONS）と同じで、
   // 外周のボールゾーンだけ細くなる。
   const total = PITCH_COURSE_TRACK_FRACTIONS.reduce(
@@ -706,10 +736,10 @@ export function PitchCourseArt() {
           { cx: 254, cy: 152, r: 9, fill: BRAND, opacity: 0.22 },
         ]}
       />
-      <PhoneMock {...phone} showHomeIndicator={false}>
+      <PhoneMock {...PHONE} showHomeIndicator={false}>
         <Rect
           x={screenX + 12}
-          y={44}
+          y={42}
           width={46}
           height={6}
           rx={3}
@@ -767,7 +797,7 @@ export function PitchCourseArt() {
         />
         {/* ホームベース（捕手目線） */}
         <Polygon
-          points="127,171 153,171 153,179 140,187 127,179"
+          points={`127,${plateTop} 153,${plateTop} 153,${plateTop + 7} 140,${plateTop + 14} 127,${plateTop + 7}`}
           fill={INK}
           opacity={0.85}
         />
