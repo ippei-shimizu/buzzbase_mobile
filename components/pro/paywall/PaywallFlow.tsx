@@ -518,7 +518,8 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: "800",
     lineHeight: 30,
-    marginBottom: 4,
+    marginTop: 20,
+    marginBottom: 6,
   },
   heroDescription: {
     alignSelf: "flex-start",
@@ -527,10 +528,16 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 32,
   },
+  // 機能一覧の帯と区切るため、背景色を変えた帯にして画面端まで届かせる。
   planSummary: {
-    width: "100%",
-    marginTop: 8,
-    marginBottom: 32,
+    alignSelf: "stretch",
+    marginHorizontal: -20,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 28,
+    marginTop: 12,
+    marginBottom: 28,
+    backgroundColor: "#232326",
     gap: 12,
   },
   planSummaryTitle: {
