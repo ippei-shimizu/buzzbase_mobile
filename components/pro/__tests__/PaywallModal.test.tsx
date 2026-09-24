@@ -81,8 +81,9 @@ const mockOffering = {
       product: {
         title: "月額プラン",
         description: "毎月課金されるプラン",
-        priceString: "¥980",
+        priceString: "￥980",
         price: 980,
+        currencyCode: "JPY",
       },
     },
     {
@@ -91,8 +92,9 @@ const mockOffering = {
       product: {
         title: "年額プラン",
         description: "年1回課金されるプラン",
-        priceString: "¥9,800",
+        priceString: "￥9,800",
         price: 9800,
+        currencyCode: "JPY",
       },
     },
   ],
@@ -237,8 +239,8 @@ describe("PaywallModal", () => {
 
     expect(await findByText("月額と年額から選べます")).toBeOnTheScreen();
     // 月額980円×12=11,760円 に対し年額9,800円 → 1,960円お得。
-    expect(getByText("年額なら 1 年で ¥1,960 お得です")).toBeOnTheScreen();
-    expect(getByText("月あたり ¥817")).toBeOnTheScreen();
+    expect(getByText("年額なら 1 年で ￥1,960 お得です")).toBeOnTheScreen();
+    expect(getByText("月あたり ￥817")).toBeOnTheScreen();
   });
 
   it("Pro でできることが機能ごとのイラスト付きで並ぶ", () => {
@@ -354,9 +356,9 @@ describe("PaywallModal", () => {
     await goToPlanStep(findByLabelText);
 
     // 月額980円×12=11,760円 に対し年額9,800円 → 1,960円お得。
-    expect(await findByText("年間¥1,960お得")).toBeTruthy();
+    expect(await findByText("年間￥1,960お得")).toBeTruthy();
     // 年額9,800円 ÷ 12 = 816.7 → 実際より安く見せないよう切り上げて817円。
-    expect(await findByText("月あたり ¥817")).toBeTruthy();
+    expect(await findByText("月あたり ￥817")).toBeTruthy();
   });
 
   it("プラン画面から戻ると価値画面に戻れる", async () => {

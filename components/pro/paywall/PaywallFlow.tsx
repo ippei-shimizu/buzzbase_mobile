@@ -18,6 +18,7 @@ import { trackPaywallPlanSelected } from "@utils/analytics";
 import {
   DEFAULT_COPY,
   FEATURE_COMPARISONS,
+  formatCurrency,
   filterFeatureGroups,
   FEATURE_GROUPS,
   monthlyEquivalent,
@@ -160,16 +161,17 @@ export function PaywallFlow({
                   </Text>
                   {perMonth != null ? (
                     <Text style={styles.planSummaryNote}>
-                      月あたり ¥{perMonth.toLocaleString()}
+                      {`月あたり ${formatCurrency(perMonth, pkg.product.currencyCode)}`}
                     </Text>
                   ) : null}
                 </View>
               </View>
             );
           })}
-          {purchase.annualSavingsAmount != null ? (
+          {purchase.annualSavingsAmount != null &&
+          purchase.annualCurrencyCode != null ? (
             <Text style={styles.planSummarySavings}>
-              {`年額なら 1 年で ¥${purchase.annualSavingsAmount.toLocaleString()} お得です`}
+              {`年額なら 1 年で ${formatCurrency(purchase.annualSavingsAmount, purchase.annualCurrencyCode)} お得です`}
             </Text>
           ) : null}
           {isTrialEligible ? (
@@ -309,7 +311,7 @@ export function PaywallFlow({
                 {showSavingsBadge && purchase.annualSavingsAmount != null ? (
                   <View style={styles.savingsBadge}>
                     <Text style={styles.savingsBadgeText}>
-                      年間¥{purchase.annualSavingsAmount.toLocaleString()}お得
+                      {`年間${formatCurrency(purchase.annualSavingsAmount, pkg.product.currencyCode)}お得`}
                     </Text>
                   </View>
                 ) : null}
@@ -320,7 +322,7 @@ export function PaywallFlow({
                 </Text>
                 {perMonth != null ? (
                   <Text style={styles.planPerMonth}>
-                    月あたり ¥{perMonth.toLocaleString()}
+                    {`月あたり ${formatCurrency(perMonth, pkg.product.currencyCode)}`}
                   </Text>
                 ) : null}
               </TouchableOpacity>
@@ -488,7 +490,7 @@ const styles = StyleSheet.create({
     color: "#D4D4D4",
     fontSize: 14,
     lineHeight: 22,
-    marginBottom: 24,
+    marginBottom: 32,
   },
   planSummary: {
     width: "100%",
@@ -497,8 +499,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#3F3F46",
     padding: 16,
-    marginBottom: 24,
-    gap: 10,
+    marginTop: 8,
+    marginBottom: 32,
+    gap: 12,
   },
   planSummaryTitle: {
     color: "#F4F4F4",
@@ -543,8 +546,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "800",
     lineHeight: 28,
-    marginBottom: 16,
-    marginTop: 8,
+    marginBottom: 20,
+    marginTop: 12,
   },
   disclosureRow: {
     width: "100%",

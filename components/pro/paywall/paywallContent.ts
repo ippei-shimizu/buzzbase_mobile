@@ -457,10 +457,33 @@ export const PAYWALL_FAQ: readonly { question: string; answer: string }[] = [
 
 /**
  * 年額プランの月あたり金額。「¥4,800/年」だけでは月額との比較ができないため、
- * プラン画面で月換算を併記する。端数は切り上げて実際より安く見せない。
- * @returns 月あたりの金額（円）。年額プランでないときは null
+ * プラン画面で月換算を併記する。表示は formatCurrency に通して通貨を揃える。
+ * @returns 月あたりの金額。年額プランでないときは null
  */
 export const monthlyEquivalent = (
   packageType: PACKAGE_TYPE,
   price: number,
-): number | null => (packageType === "ANNUAL" ? Math.ceil(price / 12) : null);
+): number | null => (packageType === "ANNUAL" ? price / 12 : null);
+
+/**
+ * ストアの通貨で金額を整形する。RevenueCat の priceString はストアのロケールで
+ * 返るため、月あたり・お得額のような自前の派生値も同じ通貨で出さないと
+ * 「$29.99/年」の隣に「¥3」が並ぶような食い違いが起きる。
+ *
+ * @param amount 金額（product.price と同じ通貨単位）
+ * @param currencyCode product.currencyCode
+ */
+export const formatCurrency = (
+  amount: number,
+  currencyCode: string,
+): string => {
+  try {
+    return new Intl.NumberFormat("ja-JP", {
+      style: "currency",
+      currency: currencyCode,
+    }).format(amount);
+  } catch {
+    // 端末の Intl が通貨コードを解決できない場合は記号を足さず、数値と通貨コードを出す。
+    return `${Math.round(amount).toLocaleString()} ${currencyCode}`;
+  }
+};

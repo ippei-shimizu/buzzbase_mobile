@@ -188,14 +188,13 @@ export function PaywallFeatureBlocks({ trigger }: PaywallFeatureBlocksProps) {
 }
 
 const styles = StyleSheet.create({
+  // 帯を画面端まで届かせるため、Paywall 本体の左右パディング（20）を一覧全体で打ち消す。
   list: {
-    width: "100%",
+    alignSelf: "stretch",
+    marginHorizontal: -20,
     marginBottom: 24,
   },
-  // 帯を画面端まで届かせるため、Paywall 本体の左右パディング（20）を打ち消す。
   block: {
-    width: "100%",
-    marginHorizontal: -20,
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 26,

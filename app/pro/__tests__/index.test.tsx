@@ -63,8 +63,9 @@ const mockOffering = {
       product: {
         title: "月額プラン",
         description: "毎月課金されるプラン",
-        priceString: "¥980",
+        priceString: "￥980",
         price: 980,
+        currencyCode: "JPY",
       },
     },
     {
@@ -73,8 +74,9 @@ const mockOffering = {
       product: {
         title: "年額プラン",
         description: "年1回課金されるプラン",
-        priceString: "¥9,800",
+        priceString: "￥9,800",
         price: 9800,
+        currencyCode: "JPY",
       },
     },
   ],
@@ -137,7 +139,7 @@ describe("ProScreen", () => {
     await goToPlanStep(findByLabelText);
 
     expect(await findByText("月額プラン")).toBeTruthy();
-    expect(await findByText("¥980/月")).toBeTruthy();
+    expect(await findByText("￥980/月")).toBeTruthy();
   });
 
   it("年額プランに月額換算比のお得金額バッジが表示される", async () => {
@@ -149,7 +151,7 @@ describe("ProScreen", () => {
     await goToPlanStep(findByLabelText);
 
     // 月額980円×12=11,760円 に対し年額9,800円 → 1,960円お得。
-    expect(await findByText("年間¥1,960お得")).toBeTruthy();
+    expect(await findByText("年間￥1,960お得")).toBeTruthy();
   });
 
   it("プランを選択して PROを始めるを押すと購入し、成功後 success 画面へ遷移する", async () => {
@@ -188,7 +190,7 @@ describe("ProScreen", () => {
     const { findByLabelText } = renderWithProviders(<ProScreen />);
 
     await goToPlanStep(findByLabelText);
-    fireEvent.press(await findByLabelText("月額プラン ¥980"));
+    fireEvent.press(await findByLabelText("月額プラン ￥980"));
     fireEvent.press(await findByLabelText("このプランで7日間無料で試す"));
 
     await waitFor(() => {

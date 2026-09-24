@@ -116,6 +116,8 @@ export function usePaywallPurchase({
     annualIsDiscounted && monthlyPackage && annualPackage
       ? monthlyPackage.product.price * 12 - annualPackage.product.price
       : null;
+  // お得額はストアの通貨で出す必要があるため、算出元の通貨コードも一緒に返す。
+  const annualCurrencyCode = annualPackage?.product.currencyCode ?? null;
 
   const handlePurchase = async () => {
     // disabled プロパティだけに頼らず、連打による purchasePackage の多重起動を関数側でも防ぐ。
@@ -248,6 +250,7 @@ export function usePaywallPurchase({
     setSelectedPackageId,
     annualIsDiscounted,
     annualSavingsAmount,
+    annualCurrencyCode,
     purchasing,
     restoring,
     handlePurchase,
