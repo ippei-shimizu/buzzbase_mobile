@@ -744,25 +744,25 @@ export function PitcherFaceoffArt() {
       </PhoneMock>
 
       {/* 得意な投手を飛び出させたカード */}
-      <G transform="rotate(-6 36 104)">
-        <Card x={5} y={76} width={62} height={58} fill="#2E2E30" />
-        <Circle cx={21} cy={98} r={10} fill={BODY} />
-        {pitcherGlyph(21, 98)}
+      <G transform="rotate(-6 41 104)">
+        <Card x={2} y={72} width={78} height={64} fill="#2E2E30" />
+        <Circle cx={22} cy={98} r={12} fill={BODY} />
+        {pitcherGlyph(22, 98)}
         <SvgText
-          x={47}
-          y={103}
+          x={55}
+          y={104}
           fill={BRAND}
-          fontSize={15}
+          fontSize={20}
           fontWeight="bold"
           textAnchor="middle"
         >
           .421
         </SvgText>
         <SvgText
-          x={36}
-          y={124}
+          x={41}
+          y={126}
           fill={SUB_INK}
-          fontSize={6.5}
+          fontSize={8.5}
           textAnchor="middle"
         >
           〇〇高校・右投げ
@@ -985,54 +985,62 @@ export function CountSituationArt() {
 }
 
 /**
- * 捕手目線の右打者。ストライクゾーンの左側（三塁側）に立つ。
- * バットを構えたシルエットだけで、顔や背番号は描かない。
+ * 捕手目線の右打者。ストライクゾーンの左（三塁側）に構える。
+ * 打席記録のコース選択画面と同じ向き・同じ構えにし、バットはゾーンの左上へ抜ける。
  */
 function RightHandedBatter() {
-  const body = "#52525B";
+  const uniform = "#5A6275";
+  const shade = "#474D5C";
   return (
     <G>
-      {/* ヘルメット */}
-      <Circle cx={54} cy={46} r={12} fill={body} />
-      <Path d="M 62,42 L 78,44 L 78,50 L 62,52 Z" fill={body} />
+      {/* バット（グリッドの左上に重なる） */}
+      <Polygon points="82,60 116,14 123,20 89,66" fill="#b07840" />
+      <Circle cx={83} cy={63} r={4.5} fill={shade} />
+      {/* 後ろ脚 */}
+      <Path
+        d="M 40,94 L 58,94 L 50,136 L 40,166 L 25,164 L 34,130 Z"
+        fill={uniform}
+      />
+      {/* 前脚 */}
+      <Path
+        d="M 56,94 L 74,96 L 78,134 L 85,164 L 70,168 L 62,134 Z"
+        fill={uniform}
+      />
+      {/* スパイク */}
+      <Path d="M 21,162 L 43,162 L 45,173 L 19,173 Z" fill={shade} />
+      <Path d="M 66,164 L 88,162 L 92,173 L 66,175 Z" fill={shade} />
       {/* 胴体 */}
-      <Path d="M 40,60 Q 54,55 68,60 L 72,106 Q 54,112 36,106 Z" fill={body} />
-      {/* 腕（グリップまで） */}
+      <Path
+        d="M 36,56 C 44,47 64,47 70,58 L 75,92 C 60,100 43,100 32,92 Z"
+        fill={uniform}
+      />
+      {/* ベルト */}
+      <Path
+        d="M 33,89 C 47,96 62,96 75,89 L 75,95 C 62,102 47,102 32,95 Z"
+        fill={shade}
+      />
+      {/* 腕（後ろ手・前手ともグリップへ） */}
+      <Line
+        x1={44}
+        y1={60}
+        x2={82}
+        y2={56}
+        stroke={uniform}
+        strokeWidth={11}
+        strokeLinecap="round"
+      />
       <Line
         x1={64}
-        y1={68}
-        x2={88}
-        y2={78}
-        stroke={body}
-        strokeWidth={8}
+        y1={72}
+        x2={84}
+        y2={60}
+        stroke={uniform}
+        strokeWidth={9.5}
         strokeLinecap="round"
       />
-      <Line
-        x1={60}
-        y1={78}
-        x2={88}
-        y2={80}
-        stroke={body}
-        strokeWidth={7}
-        strokeLinecap="round"
-      />
-      {/* バット */}
-      <Line
-        x1={86}
-        y1={80}
-        x2={110}
-        y2={34}
-        stroke="#b07840"
-        strokeWidth={7}
-        strokeLinecap="round"
-      />
-      <Circle cx={85} cy={82} r={4} fill="#8A6A44" />
-      {/* 脚 */}
-      <Path d="M 40,104 L 54,104 L 50,168 L 36,168 Z" fill={body} />
-      <Path d="M 58,104 L 72,104 L 80,166 L 66,168 Z" fill={body} />
-      {/* スパイク */}
-      <Rect x={32} y={166} width={22} height={7} rx={3} fill="#3F3F46" />
-      <Rect x={64} y={164} width={22} height={7} rx={3} fill="#3F3F46" />
+      {/* ヘルメット */}
+      <Circle cx={50} cy={38} r={14.5} fill={shade} />
+      <Path d="M 60,31 L 82,36 L 82,44 L 60,46 Z" fill={shade} />
     </G>
   );
 }
@@ -1090,7 +1098,6 @@ export function PitchCourseArt() {
           { cx: 258, cy: 42, r: 8, fill: BRAND, opacity: 0.25 },
         ]}
       />
-      <RightHandedBatter />
       {/* ボールゾーンを含む 5x5 */}
       {sizes.map((cellHeight, row) =>
         sizes.map((cellWidth, col) => {
@@ -1145,21 +1152,23 @@ export function PitchCourseArt() {
         fill={INK}
         opacity={0.85}
       />
+      {/* 打者はグリッドの後に描き、バットをゾーンの左上へ重ねる */}
+      <RightHandedBatter />
 
       {/* 得意ゾーンを飛び出させたカード */}
-      <G transform="rotate(-5 232 166)">
-        <Card x={192} y={145} width={80} height={42} fill="#2E2E30" />
+      <G transform="rotate(-5 226 164)">
+        <Card x={180} y={138} width={92} height={52} fill="#2E2E30" />
         {[0, 1, 2].map((row) =>
           [0, 1, 2].map((col) => {
             const isCenter = row === 1 && col === 1;
             return (
               <Rect
                 key={`${row}-${col}`}
-                x={200 + col * 8}
-                y={153 + row * 8}
-                width={6.5}
-                height={6.5}
-                rx={1.5}
+                x={190 + col * 9}
+                y={150 + row * 9}
+                width={7.5}
+                height={7.5}
+                rx={2}
                 fill={isCenter ? "#d64545" : MUTED}
                 opacity={isCenter ? 1 : 0.5}
               />
@@ -1167,20 +1176,20 @@ export function PitchCourseArt() {
           }),
         )}
         <SvgText
-          x={248}
-          y={170}
+          x={240}
+          y={166}
           fill="#d64545"
-          fontSize={15}
+          fontSize={20}
           fontWeight="bold"
           textAnchor="middle"
         >
           .476
         </SvgText>
         <SvgText
-          x={248}
-          y={181}
+          x={226}
+          y={183}
           fill={SUB_INK}
-          fontSize={6.5}
+          fontSize={8.5}
           textAnchor="middle"
         >
           真ん中・ストライク
