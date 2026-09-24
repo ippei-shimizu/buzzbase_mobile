@@ -1,10 +1,10 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Icon } from "@components/icon/Icon";
 import { toProTrigger } from "@components/pro/paywall/paywallContent";
 import { PaywallFlow } from "@components/pro/paywall/PaywallFlow";
+import { PaywallHeader } from "@components/pro/paywall/PaywallHeader";
 import { usePaywallPurchase } from "@components/pro/paywall/usePaywallPurchase";
 import { usePaywallSteps } from "@components/pro/paywall/usePaywallSteps";
 import { useProStatus } from "@hooks/useProStatus";
@@ -59,26 +59,11 @@ export default function ProScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {step === "plan" ? (
-        <TouchableOpacity
-          onPress={goToValue}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="戻る"
-          hitSlop={8}
-        >
-          <Icon name="chevron-back" size={22} color="#F4F4F4" />
-        </TouchableOpacity>
-      ) : null}
-      <TouchableOpacity
-        onPress={handleDismiss}
-        style={styles.closeButton}
-        accessibilityRole="button"
-        accessibilityLabel="閉じる"
-        hitSlop={8}
-      >
-        <Icon name="close" size={22} color="#F4F4F4" />
-      </TouchableOpacity>
+      <PaywallHeader
+        showBack={step === "plan"}
+        onBack={goToValue}
+        onClose={handleDismiss}
+      />
 
       <PaywallFlow
         trigger={trigger}
@@ -98,19 +83,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#2E2E2E",
-  },
-  closeButton: {
-    position: "absolute",
-    top: 12,
-    right: 16,
-    zIndex: 1,
-    padding: 4,
-  },
-  backButton: {
-    position: "absolute",
-    top: 12,
-    left: 16,
-    zIndex: 1,
-    padding: 4,
   },
 });

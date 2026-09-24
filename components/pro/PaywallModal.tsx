@@ -1,18 +1,13 @@
 import type { Feature } from "../../types/pro";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
-import {
-  Modal,
-  Pressable,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { Icon } from "@components/icon/Icon";
+import { Modal, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useProStatus } from "@hooks/useProStatus";
 import { trackPaywallViewed } from "@utils/analytics";
 import { toProTrigger } from "./paywall/paywallContent";
 import { PaywallFlow } from "./paywall/PaywallFlow";
+import { PaywallHeader } from "./paywall/PaywallHeader";
 import { usePaywallPurchase } from "./paywall/usePaywallPurchase";
 import { usePaywallSteps } from "./paywall/usePaywallSteps";
 
@@ -38,8 +33,8 @@ interface PaywallModalProps {
 }
 
 /**
- * Pro 機能への加入を促す下からせり出すシート型モーダル。
- * 価値訴求（トリガー機能の図と説明）と価格提示を別ステップに分け、
+ * Pro 機能への加入を促す全画面モーダル。
+ * 価値訴求（機能紹介のスライドショー）と価格提示を別ステップに分け、
  * 支払いを求める前に「何ができるようになるか」だけを見せる。
  */
 export function PaywallModal({
@@ -49,6 +44,8 @@ export function PaywallModal({
   contextMessage,
 }: PaywallModalProps) {
   const router = useRouter();
+  // 全画面表示のため、ヘッダーと CTA がノッチ・ホームバーに被らないよう inset を直接当てる。
+  const insets = useSafeAreaInsets();
   // 既に使い切ったユーザーに「7日間無料」と誤案内しないため、CTAまわりの文言はここで出し分ける。
   // 判定確定前（isLoading）は DEFAULT_PRO_STATUS（has_used_trial: false）にフォールバックし
   // isTrialEligible が常に true になるため、確定するまではトライアル訴求を一切出さない。
@@ -84,86 +81,40 @@ export function PaywallModal({
   return (
     <Modal
       visible={isOpen}
-      transparent
       animationType="slide"
+      presentationStyle="fullScreen"
       statusBarTranslucent
       onRequestClose={handleDismiss}
     >
-      <View style={styles.overlay}>
-        <Pressable
-          style={StyleSheet.absoluteFill}
-          onPress={handleDismiss}
-          accessibilityLabel="ペイウォールを閉じる"
+      <View
+        style={[styles.container, { paddingTop: Math.max(insets.top, 12) }]}
+        accessibilityViewIsModal
+      >
+        <PaywallHeader
+          showBack={step === "plan"}
+          onBack={goToValue}
+          onClose={handleDismiss}
         />
-        <View style={styles.sheet} accessibilityViewIsModal>
-          {step === "plan" ? (
-            <TouchableOpacity
-              onPress={goToValue}
-              style={styles.backButton}
-              accessibilityRole="button"
-              accessibilityLabel="戻る"
-              hitSlop={8}
-            >
-              <Icon name="chevron-back" size={22} color="#F4F4F4" />
-            </TouchableOpacity>
-          ) : null}
-          <TouchableOpacity
-            onPress={handleDismiss}
-            style={styles.closeButton}
-            accessibilityRole="button"
-            accessibilityLabel="閉じる"
-            hitSlop={8}
-          >
-            <Icon name="close" size={22} color="#F4F4F4" />
-          </TouchableOpacity>
-
-          <PaywallFlow
-            feature={feature}
-            contextMessage={contextMessage}
-            trigger={trigger}
-            step={step}
-            goToPlan={goToPlan}
-            purchase={purchase}
-            isTrialEligible={isTrialEligible}
-            isProStatusLoading={isProStatusLoading}
-            onNavigateAway={onClose}
-          />
-        </View>
+        <PaywallFlow
+          feature={feature}
+          contextMessage={contextMessage}
+          trigger={trigger}
+          step={step}
+          goToPlan={goToPlan}
+          purchase={purchase}
+          isTrialEligible={isTrialEligible}
+          isProStatusLoading={isProStatusLoading}
+          onNavigateAway={onClose}
+          bottomInset={Math.max(insets.bottom, 24)}
+        />
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  container: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.55)",
-    justifyContent: "flex-end",
-  },
-  sheet: {
-    maxHeight: "88%",
     backgroundColor: "#2E2E2E",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 12,
-  },
-  closeButton: {
-    position: "absolute",
-    top: 12,
-    right: 16,
-    zIndex: 1,
-    padding: 4,
-  },
-  backButton: {
-    position: "absolute",
-    top: 12,
-    left: 16,
-    zIndex: 1,
-    padding: 4,
   },
 });

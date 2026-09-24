@@ -28,7 +28,7 @@ import {
   toPlanType,
   valueBlocksFor,
 } from "./paywallContent";
-import { heroKindFor, PaywallHeroVisual } from "./PaywallHeroVisual";
+import { PaywallSlides } from "./PaywallSlides";
 
 // 単年の記録しか無いユーザーにシーズン跨ぎ比較を訴求しても空のグラフしか見せられないため、
 // 文言を「来シーズンから使える」に差し替えて、いま効果が出る分析へ誘導する。
@@ -78,10 +78,6 @@ export function PaywallFlow({
     ? ((PRO_PAYWALL_COPY as Record<string, typeof DEFAULT_COPY>)[feature] ??
       DEFAULT_COPY)
     : DEFAULT_COPY;
-  // 単年ユーザーにはシーズン跨ぎの図が作れないため、代わりにいま効果が出る方向別の図を見せる。
-  const heroKind = isSingleSeason
-    ? heroKindFor("hit_direction_average")
-    : heroKindFor(trigger);
   const valueBlocks = isSingleSeason
     ? valueBlocksFor("hit_direction_average")
     : valueBlocksFor(trigger);
@@ -112,6 +108,12 @@ export function PaywallFlow({
         </View>
       </View>
 
+      {/* 単年ユーザーにはシーズン跨ぎの図が作れないため、代わりにいま効果が出る方向別を先頭にする。 */}
+      <PaywallSlides
+        trigger={trigger}
+        leadSlide={isSingleSeason ? "hit_direction" : undefined}
+      />
+
       {contextMessage ? (
         <View style={styles.contextBanner}>
           <Icon name="information-circle" size={16} color="#D4D4D4" />
@@ -120,7 +122,6 @@ export function PaywallFlow({
       ) : null}
 
       <Text style={styles.heroTitle}>{copy.title}</Text>
-      <PaywallHeroVisual kind={heroKind} />
 
       {isSingleSeason ? (
         <Text style={styles.heroDescription}>{SINGLE_SEASON_NOTE}</Text>

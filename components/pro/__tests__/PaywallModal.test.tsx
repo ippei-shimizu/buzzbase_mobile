@@ -1,8 +1,8 @@
 /**
- * PaywallModal（下からせり出すシート型ペイウォール）の結合テスト。
+ * PaywallModal（全画面ペイウォール）の結合テスト。
  *
  * 方針:
- * - feature ごとのハイライトコピー表示、閉じる、feature_flag gate を確認する。
+ * - 価値画面の紹介スライド・コピー表示、プラン画面への遷移、閉じるを確認する。
  * - getOfferings/purchasePackage/restorePurchases はネイティブ Module 境界のため
  *   services を jest.mock する（app/pro/index.test.tsx と同じ例外パターン）。
  * - 購入成功時の syncProStatus は /pro/sync への実リクエストを MSW で観測する。
@@ -25,6 +25,7 @@ import {
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
 import { server } from "../../../jest-setup-msw";
 import { DEFAULT_PRO_STATUS, PRO_FEATURES } from "../../../types/pro";
+import { orderSlides } from "../paywall/PaywallSlides";
 import {
   FEATURE_GROUPS,
   filterFeatureGroups,
@@ -194,6 +195,18 @@ describe("PaywallModal", () => {
     expect(
       queryByText(PRO_PAYWALL_COPY.season_transition_graph.description),
     ).not.toBeOnTheScreen();
+  });
+
+  it("価値画面に Pro でできることの紹介スライドが並ぶ", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    expect(getByLabelText("広告なしで記録に集中")).toBeOnTheScreen();
+    expect(getByLabelText("打球の方向ごとに打率がわかる")).toBeOnTheScreen();
+    expect(getByLabelText("シーズンを跨いだ成長を比較")).toBeOnTheScreen();
   });
 
   it("価値画面によくある質問が並び、解約してもデータが残ることを示す", () => {
@@ -768,5 +781,42 @@ describe("isTrialPurchase", () => {
 
   it("CustomerInfo が取れなくても例外を投げず false を返す", () => {
     expect(isTrialPurchase(undefined)).toBe(false);
+  });
+});
+
+describe("orderSlides", () => {
+  it("トリガーに対応するスライドを先頭に並べる", () => {
+    const slides = orderSlides("count_situation_average");
+
+    expect(slides[0].key).toBe("count_situation");
+    expect(slides).toHaveLength(5);
+  });
+
+  it("球種別は同じカードで見せるコース別のスライドを先頭にする", () => {
+    expect(orderSlides("pitch_type_average")[0].key).toBe("pitch_course");
+  });
+
+  it("先頭指定はトリガー由来の既定より優先される", () => {
+    const slides = orderSlides("season_transition_graph", "hit_direction");
+
+    expect(slides[0].key).toBe("hit_direction");
+  });
+
+  it("対応するスライドが無いトリガーは既定の順序を保つ", () => {
+    const slides = orderSlides("general");
+
+    expect(slides.map((slide) => slide.key)).toEqual([
+      "hit_direction",
+      "count_situation",
+      "pitch_course",
+      "season_trend",
+      "no_ads",
+    ]);
+  });
+
+  it("並べ替えてもスライドは重複しない", () => {
+    const keys = orderSlides("no_ads").map((slide) => slide.key);
+
+    expect(new Set(keys).size).toBe(keys.length);
   });
 });
