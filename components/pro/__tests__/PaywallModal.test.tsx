@@ -348,7 +348,7 @@ describe("PaywallModal", () => {
     expect(await findByText("年額プラン")).toBeTruthy();
   });
 
-  it("年額プランに月額換算比のお得金額バッジと月あたり金額が表示される", async () => {
+  it("年額プランに月あたり金額と月額換算比のお得額が表示される", async () => {
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
 
     const { findByLabelText, findByText } = renderWithProviders(
@@ -357,10 +357,49 @@ describe("PaywallModal", () => {
 
     await goToPlanStep(findByLabelText);
 
-    // 月額980円×12=11,760円 に対し年額9,800円 → 1,960円お得。
-    expect(await findByText("年間￥1,960お得")).toBeTruthy();
     // 年額9,800円 ÷ 12 = 816.7 → 実際より安く見せないよう切り上げて817円。
-    expect(await findByText("月あたり ￥817")).toBeTruthy();
+    // 月額980円×12=11,760円 に対し年額9,800円 → 1,960円お得。
+    expect(
+      await findByText("月あたり ￥817・1 年で ￥1,960 お得"),
+    ).toBeTruthy();
+  });
+
+  it("選択中のプランだけがチェックアイコンで示される", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+
+    const { findByLabelText, getByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    await goToPlanStep(findByLabelText);
+
+    // 年額プランがあるので初期選択は年額プランになる。
+    const annualCard = await findByLabelText("年額プラン ￥9,800");
+    const monthlyCard = getByLabelText("月額プラン ￥980");
+    expect(annualCard).toBeSelected();
+    expect(monthlyCard).not.toBeSelected();
+
+    fireEvent.press(monthlyCard);
+
+    await waitFor(() => {
+      expect(monthlyCard).toBeSelected();
+      expect(annualCard).not.toBeSelected();
+    });
+  });
+
+  it("プラン画面にプラン共通の機能ハイライトが並ぶ", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+
+    const { findByLabelText, getByLabelText, getByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    await goToPlanStep(findByLabelText);
+
+    expect(await findByLabelText("広告なし")).toBeOnTheScreen();
+    expect(getByLabelText("方向別打率")).toBeOnTheScreen();
+    expect(getByLabelText("グループが無制限")).toBeOnTheScreen();
+    expect(getByText("どちらのプランでも使えます")).toBeOnTheScreen();
   });
 
   it("プラン欄のボタンからもプラン画面へ進める", async () => {

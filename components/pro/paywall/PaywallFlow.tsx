@@ -27,6 +27,7 @@ import {
   toPlanType,
 } from "./paywallContent";
 import { PaywallFeatureBlocks } from "./PaywallFeatureBlocks";
+import { PaywallPlanHighlights } from "./PaywallPlanHighlights";
 import { hasSlideForTrigger, PaywallSlides } from "./PaywallSlides";
 
 // 単年の記録しか無いユーザーにシーズン跨ぎ比較を訴求しても空のグラフしか見せられないため、
@@ -257,7 +258,7 @@ export function PaywallFlow({
           style={styles.plansLoading}
         />
       ) : purchase.packages.length > 0 ? (
-        <View style={styles.planRow}>
+        <View style={styles.planList}>
           {purchase.packages.map((pkg) => {
             const label = PLAN_LABELS[pkg.packageType] ?? {
               name: pkg.product.title,
@@ -268,8 +269,24 @@ export function PaywallFlow({
               pkg.packageType,
               pkg.product.price,
             );
-            const showSavingsBadge =
-              pkg.packageType === "ANNUAL" && purchase.annualIsDiscounted;
+            const savings =
+              pkg.packageType === "ANNUAL" &&
+              purchase.annualIsDiscounted &&
+              purchase.annualSavingsAmount != null
+                ? formatCurrency(
+                    purchase.annualSavingsAmount,
+                    pkg.product.currencyCode,
+                  )
+                : null;
+            const note =
+              perMonth != null
+                ? [
+                    `月あたり ${formatCurrency(perMonth, pkg.product.currencyCode)}`,
+                    savings ? `1 年で ${savings} お得` : null,
+                  ]
+                    .filter(Boolean)
+                    .join("・")
+                : "まずは 1 ヶ月から。いつでも解約できます";
             return (
               <TouchableOpacity
                 key={pkg.identifier}
@@ -285,23 +302,34 @@ export function PaywallFlow({
                 accessibilityState={{ selected: isSelected }}
                 accessibilityLabel={`${label.name} ${pkg.product.priceString}`}
               >
-                {showSavingsBadge && purchase.annualSavingsAmount != null ? (
-                  <View style={styles.savingsBadge}>
-                    <Text style={styles.savingsBadgeText}>
-                      {`年間${formatCurrency(purchase.annualSavingsAmount, pkg.product.currencyCode)}お得`}
+                <View
+                  style={[
+                    styles.planCardIcon,
+                    isSelected && styles.planCardIconSelected,
+                  ]}
+                >
+                  <Icon
+                    name={isSelected ? "checkmark" : "star"}
+                    size={18}
+                    color={isSelected ? "#FFFFFF" : "#71717A"}
+                  />
+                </View>
+                <View
+                  style={[
+                    styles.planCardDivider,
+                    isSelected && styles.planCardDividerSelected,
+                  ]}
+                />
+                <View style={styles.planCardBody}>
+                  <View style={styles.planCardNameRow}>
+                    <Text style={styles.planName}>{label.name}</Text>
+                    <Text style={styles.planPrice}>
+                      {pkg.product.priceString}
+                      {label.period}
                     </Text>
                   </View>
-                ) : null}
-                <Text style={styles.planName}>{label.name}</Text>
-                <Text style={styles.planPrice}>
-                  {pkg.product.priceString}
-                  {label.period}
-                </Text>
-                {perMonth != null ? (
-                  <Text style={styles.planPerMonth}>
-                    {`月あたり ${formatCurrency(perMonth, pkg.product.currencyCode)}`}
-                  </Text>
-                ) : null}
+                  <Text style={styles.planNote}>{note}</Text>
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -311,6 +339,8 @@ export function PaywallFlow({
           プラン情報を取得できませんでした。時間を置いて再度お試しください。
         </Text>
       )}
+
+      <PaywallPlanHighlights />
 
       <TouchableOpacity
         onPress={purchase.handleRestore}
@@ -632,55 +662,69 @@ const styles = StyleSheet.create({
   plansLoading: {
     marginBottom: 20,
   },
-  planRow: {
+  planList: {
     width: "100%",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
+    gap: 12,
     marginBottom: 16,
   },
   planCard: {
-    flexGrow: 1,
-    flexBasis: 0,
-    minWidth: 140,
+    flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    backgroundColor: "#424242",
+    gap: 12,
+    borderWidth: 1.5,
+    borderColor: "#3F3F46",
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "transparent",
-    paddingVertical: 18,
-    paddingHorizontal: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
   },
   planCardSelected: {
     borderColor: "#d08000",
-    backgroundColor: "rgba(208, 128, 0, 0.1)",
+    backgroundColor: "rgba(208, 128, 0, 0.08)",
+  },
+  planCardIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#3F3F46",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  planCardIconSelected: {
+    backgroundColor: "#d08000",
+  },
+  planCardDivider: {
+    width: 2,
+    alignSelf: "stretch",
+    borderRadius: 1,
+    backgroundColor: "#3F3F46",
+  },
+  planCardDividerSelected: {
+    backgroundColor: "#d08000",
+  },
+  planCardBody: {
+    flex: 1,
+    gap: 4,
+  },
+  planCardNameRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    gap: 8,
   },
   planName: {
     color: "#F4F4F4",
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "800",
   },
   planPrice: {
     color: "#F4F4F4",
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: "800",
   },
-  planPerMonth: {
+  planNote: {
     color: "#A1A1AA",
     fontSize: 12,
-  },
-  savingsBadge: {
-    backgroundColor: "#d08000",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-    marginBottom: 2,
-  },
-  savingsBadgeText: {
-    color: "#F4F4F4",
-    fontSize: 12,
-    fontWeight: "700",
+    lineHeight: 18,
   },
   emptyText: {
     color: "#A1A1AA",
