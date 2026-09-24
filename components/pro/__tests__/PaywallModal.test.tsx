@@ -1,8 +1,8 @@
 /**
- * PaywallModal（下からせり出すシート型ペイウォール）の結合テスト。
+ * PaywallModal（全画面ペイウォール）の結合テスト。
  *
  * 方針:
- * - feature ごとのハイライトコピー表示、閉じる、feature_flag gate を確認する。
+ * - 価値画面の紹介スライド・コピー表示、プラン画面への遷移、閉じるを確認する。
  * - getOfferings/purchasePackage/restorePurchases はネイティブ Module 境界のため
  *   services を jest.mock する（app/pro/index.test.tsx と同じ例外パターン）。
  * - 購入成功時の syncProStatus は /pro/sync への実リクエストを MSW で観測する。
@@ -25,6 +25,8 @@ import {
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
 import { server } from "../../../jest-setup-msw";
 import { DEFAULT_PRO_STATUS, PRO_FEATURES } from "../../../types/pro";
+import { orderFeatureBlocks } from "../paywall/PaywallFeatureBlocks";
+import { orderSlides } from "../paywall/PaywallSlides";
 import {
   FEATURE_GROUPS,
   filterFeatureGroups,
@@ -79,8 +81,9 @@ const mockOffering = {
       product: {
         title: "月額プラン",
         description: "毎月課金されるプラン",
-        priceString: "¥980",
+        priceString: "￥980",
         price: 980,
+        currencyCode: "JPY",
       },
     },
     {
@@ -89,8 +92,9 @@ const mockOffering = {
       product: {
         title: "年額プラン",
         description: "年1回課金されるプラン",
-        priceString: "¥9,800",
+        priceString: "￥9,800",
         price: 9800,
+        currencyCode: "JPY",
       },
     },
   ],
@@ -121,6 +125,19 @@ const setupSyncEndpoint = () => {
 };
 
 const mockOnClose = jest.fn();
+
+type FindByLabelText = ReturnType<
+  typeof renderWithProviders
+>["findByLabelText"];
+
+// 価値画面 → プラン画面へ進む。価格・購入・復元はプラン画面側にあるため、
+// 課金系のテストはこのヘルパーで 2 ステップ目まで進めてから操作する。
+const goToPlanStep = async (
+  findByLabelText: FindByLabelText,
+  label = "7日間無料で試す",
+) => {
+  fireEvent.press(await findByLabelText(label));
+};
 
 describe("PaywallModal", () => {
   beforeEach(() => {
@@ -159,7 +176,35 @@ describe("PaywallModal", () => {
   it("benefits を持たない機能では description を表示する", () => {
     getOfferingsMock.mockResolvedValueOnce(null);
 
+    // 紹介スライドを持つ機能は先頭スライドが同じことを説明するため、
+    // 補足コピーはスライドを持たない機能でのみ出る。
     const { getByText } = renderWithProviders(
+      <PaywallModal
+        isOpen
+        onClose={mockOnClose}
+        feature="grass_full_history"
+      />,
+    );
+
+    expect(
+      getByText(PRO_PAYWALL_COPY.grass_full_history.description),
+    ).toBeOnTheScreen();
+  });
+
+  it("紹介スライドを持つ機能では、同じ内容の見出しを重ねて出さない", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { queryByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    expect(queryByText(PRO_PAYWALL_COPY.no_ads.title)).not.toBeOnTheScreen();
+  });
+
+  it("記録が1シーズン分しかないと、シーズン跨ぎ比較ではなく来季からの案内を出す", async () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+    // 既定ハンドラの /seasons は空配列を返すため、単年ユーザー扱いになる。
+    const { findByText, queryByText } = renderWithProviders(
       <PaywallModal
         isOpen
         onClose={mockOnClose}
@@ -167,9 +212,66 @@ describe("PaywallModal", () => {
       />,
     );
 
+    expect(await findByText(/来シーズンの記録が増えると/)).toBeOnTheScreen();
     expect(
-      getByText(PRO_PAYWALL_COPY.season_transition_graph.description),
+      queryByText(PRO_PAYWALL_COPY.season_transition_graph.description),
+    ).not.toBeOnTheScreen();
+  });
+
+  it("価値画面に Pro でできることの紹介スライドが並ぶ", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    expect(getByLabelText("広告なしで記録に集中")).toBeOnTheScreen();
+    expect(getByLabelText("打球の方向ごとに打率がわかる")).toBeOnTheScreen();
+    expect(getByLabelText("シーズンを跨いだ成長を比較")).toBeOnTheScreen();
+  });
+
+  it("機能一覧の前に月額・年額の金額とお得額を示す", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+
+    const { findByText, getByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    expect(await findByText("選べる 2 つのプラン")).toBeOnTheScreen();
+    // 月額980円×12=11,760円 に対し年額9,800円 → 1,960円お得。
+    expect(getByText("月あたり ￥817・1 年で ￥1,960 お得")).toBeOnTheScreen();
+    expect(
+      getByText("まずは 1 ヶ月から。いつでも解約できます"),
     ).toBeOnTheScreen();
+  });
+
+  it("Pro でできることが機能ごとのイラスト付きで並ぶ", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getByText, getByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    expect(getByText("Pro でできること")).toBeOnTheScreen();
+    expect(getByLabelText("広告がすべて消える")).toBeOnTheScreen();
+    expect(getByLabelText("動画と画像を無制限に残せる")).toBeOnTheScreen();
+    expect(getByLabelText("グループをいくつでも作れる")).toBeOnTheScreen();
+  });
+
+  it("価値画面によくある質問が並び、解約してもデータが残ることを示す", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getByText, getByLabelText, queryByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    const question = "解約すると記録したデータは消えますか？";
+    expect(getByText(question)).toBeOnTheScreen();
+    expect(queryByText(/Pro 限定の分析表示だけがロック/)).not.toBeOnTheScreen();
+
+    fireEvent.press(getByLabelText(question));
+
+    expect(getByText(/Pro 限定の分析表示だけがロック/)).toBeOnTheScreen();
   });
 
   it("contextMessageを渡すと、なぜ表示されているかの状況説明が汎用コピーと併せて表示される", () => {
@@ -230,26 +332,103 @@ describe("PaywallModal", () => {
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
-  it("開くと getOfferings を呼び、取得したプランを一覧表示する", async () => {
+  it("CTA を押すとプラン画面に切り替わり、両プランを選べる", async () => {
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
 
-    const { findByText } = renderWithProviders(
+    const { findByLabelText, findByText, queryByText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
 
-    expect(await findByText("月額プラン")).toBeTruthy();
-    expect(await findByText("年額プラン")).toBeTruthy();
+    await findByLabelText("7日間無料で試す");
+    expect(queryByText("プランを選ぶ")).not.toBeOnTheScreen();
+
+    await goToPlanStep(findByLabelText);
+
+    expect(await findByText("プランを選ぶ")).toBeOnTheScreen();
+    expect(await findByLabelText("月額プラン ￥980")).toBeOnTheScreen();
+    expect(await findByLabelText("年額プラン ￥9,800")).toBeOnTheScreen();
   });
 
-  it("年額プランに月額換算比のお得金額バッジが表示される", async () => {
+  it("年額プランに月あたり金額と月額換算比のお得額が表示される", async () => {
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
 
-    const { findByText } = renderWithProviders(
+    const { findByLabelText, findByText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
 
+    await goToPlanStep(findByLabelText);
+
+    // 年額9,800円 ÷ 12 = 816.7 → 実際より安く見せないよう切り上げて817円。
     // 月額980円×12=11,760円 に対し年額9,800円 → 1,960円お得。
-    expect(await findByText("年間¥1,960お得")).toBeTruthy();
+    expect(
+      await findByText("月あたり ￥817・1 年で ￥1,960 お得"),
+    ).toBeTruthy();
+  });
+
+  it("選択中のプランだけがチェックアイコンで示される", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+
+    const { findByLabelText, getByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    await goToPlanStep(findByLabelText);
+
+    // 年額プランがあるので初期選択は年額プランになる。
+    const annualCard = await findByLabelText("年額プラン ￥9,800");
+    const monthlyCard = getByLabelText("月額プラン ￥980");
+    expect(annualCard).toBeSelected();
+    expect(monthlyCard).not.toBeSelected();
+
+    fireEvent.press(monthlyCard);
+
+    await waitFor(() => {
+      expect(monthlyCard).toBeSelected();
+      expect(annualCard).not.toBeSelected();
+    });
+  });
+
+  it("プラン画面にプラン共通の機能ハイライトが並ぶ", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+
+    const { findByLabelText, getByLabelText, getByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    await goToPlanStep(findByLabelText);
+
+    expect(await findByLabelText("広告なし")).toBeOnTheScreen();
+    expect(getByLabelText("方向別打率")).toBeOnTheScreen();
+    expect(getByLabelText("グループが無制限")).toBeOnTheScreen();
+    expect(getByText("どちらのプランでも使えます")).toBeOnTheScreen();
+  });
+
+  it("プラン欄のボタンからもプラン画面へ進める", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+
+    const { findByLabelText, findByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    fireEvent.press(await findByLabelText("プランを選択する"));
+
+    expect(await findByText("プランを選ぶ")).toBeOnTheScreen();
+  });
+
+  it("プラン画面から戻ると価値画面に戻れる", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+
+    const { findByLabelText, findByText, queryByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    await goToPlanStep(findByLabelText);
+    await findByText("プランを選ぶ");
+
+    fireEvent.press(await findByLabelText("戻る"));
+
+    expect(await findByLabelText("広告なしで記録に集中")).toBeOnTheScreen();
+    expect(queryByText("プランを選ぶ")).not.toBeOnTheScreen();
   });
 
   it("Pro状態の判定確定前は、実際はトライアル利用済みでもCTAボタンに中立文言を表示する", async () => {
@@ -283,11 +462,11 @@ describe("PaywallModal", () => {
       }),
     );
 
-    const { findByText, queryByText } = renderWithProviders(
+    const { findByLabelText, queryByText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
 
-    await findByText("月額プラン");
+    await findByLabelText("PROを始める");
     expect(
       queryByText("7 日間の無料トライアル期間中に解約すれば料金はかかりません"),
     ).not.toBeOnTheScreen();
@@ -296,9 +475,11 @@ describe("PaywallModal", () => {
   it("getOfferings が失敗してもシートは表示され、プラン欄が空状態になる", async () => {
     getOfferingsMock.mockRejectedValueOnce(new Error("offerings unavailable"));
 
-    const { findByText } = renderWithProviders(
+    const { findByLabelText, findByText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
+
+    await goToPlanStep(findByLabelText);
 
     expect(
       await findByText(
@@ -318,7 +499,8 @@ describe("PaywallModal", () => {
 
     // 年額プランがあるので初期選択は年額プランになる。
     await waitFor(() => expect(getOfferingsMock).toHaveBeenCalledTimes(1));
-    const ctaButton = await findByLabelText("7日間無料で試す");
+    await goToPlanStep(findByLabelText);
+    const ctaButton = await findByLabelText("このプランで7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
@@ -344,7 +526,8 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
-    const ctaButton = await findByLabelText("7日間無料で試す");
+    await goToPlanStep(findByLabelText);
+    const ctaButton = await findByLabelText("このプランで7日間無料で試す");
     fireEvent.press(ctaButton);
     fireEvent.press(ctaButton);
     fireEvent.press(ctaButton);
@@ -362,6 +545,7 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
+    await goToPlanStep(findByLabelText);
     const restoreLink = await findByLabelText("購入を復元");
     fireEvent.press(restoreLink);
     fireEvent.press(restoreLink);
@@ -383,7 +567,8 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
-    const ctaButton = await findByLabelText("7日間無料で試す");
+    await goToPlanStep(findByLabelText);
+    const ctaButton = await findByLabelText("このプランで7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
@@ -402,7 +587,8 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
-    const ctaButton = await findByLabelText("7日間無料で試す");
+    await goToPlanStep(findByLabelText);
+    const ctaButton = await findByLabelText("このプランで7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
@@ -426,7 +612,8 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
-    const ctaButton = await findByLabelText("7日間無料で試す");
+    await goToPlanStep(findByLabelText);
+    const ctaButton = await findByLabelText("このプランで7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
@@ -450,7 +637,8 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
-    fireEvent.press(await findByLabelText("7日間無料で試す"));
+    await goToPlanStep(findByLabelText);
+    fireEvent.press(await findByLabelText("このプランで7日間無料で試す"));
 
     await waitFor(() => {
       expect(showMock).toHaveBeenCalledWith(
@@ -475,7 +663,8 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
-    fireEvent.press(await findByLabelText("7日間無料で試す"));
+    await goToPlanStep(findByLabelText);
+    fireEvent.press(await findByLabelText("このプランで7日間無料で試す"));
 
     await waitFor(() => {
       expect(showMock).toHaveBeenCalledWith(
@@ -500,7 +689,8 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
-    fireEvent.press(await findByLabelText("7日間無料で試す"));
+    await goToPlanStep(findByLabelText);
+    fireEvent.press(await findByLabelText("このプランで7日間無料で試す"));
 
     await waitFor(() => {
       expect(showMock).toHaveBeenCalledWith(
@@ -530,6 +720,7 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
+    await goToPlanStep(findByLabelText);
     const restoreLink = await findByLabelText("購入を復元");
     fireEvent.press(restoreLink);
 
@@ -559,6 +750,7 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
+    await goToPlanStep(findByLabelText);
     fireEvent.press(await findByLabelText("購入を復元"));
 
     await waitFor(() => {
@@ -583,6 +775,7 @@ describe("PaywallModal", () => {
     const { findByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
+    await goToPlanStep(findByLabelText);
     fireEvent.press(await findByLabelText("購入を復元"));
 
     await waitFor(() => {
@@ -596,27 +789,49 @@ describe("PaywallModal", () => {
     expect(mockOnClose).not.toHaveBeenCalled();
   });
 
-  it("ハイライトカードで表示中の機能は「PRO でできること」表に重複表示されない", () => {
+  it("ハイライトで表示中の機能は全機能画面に重複表示されない", () => {
     getOfferingsMock.mockResolvedValueOnce(null);
 
-    const { getAllByText } = renderWithProviders(
+    const { queryByLabelText, getByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="note_tags" />,
     );
 
-    expect(getAllByText("野球ノートにタグを付けて整理")).toHaveLength(1);
+    fireEvent.press(getByLabelText("Pro の全機能を見る"));
+
+    expect(queryByLabelText("野球ノートにタグを付けて整理")).toBeNull();
   });
 
-  it("グループ見出しと無料/PROの比較値が表示される", () => {
+  it("全機能画面へ進むとグループごとのカードが並び、開くと無料/PROの差が出る", () => {
     getOfferingsMock.mockResolvedValueOnce(null);
 
-    const { getByText, getByLabelText } = renderWithProviders(
+    const { getByText, getByLabelText, queryByText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
     );
 
+    expect(queryByText("野球ノート")).not.toBeOnTheScreen();
+
+    fireEvent.press(getByLabelText("Pro の全機能を見る"));
+
+    expect(getByText("Pro の全機能")).toBeOnTheScreen();
     expect(getByText("野球ノート")).toBeOnTheScreen();
-    expect(
-      getByLabelText("1つのノートに複数の試合を紐付け。無料は1件、PROは複数件"),
-    ).toBeOnTheScreen();
+
+    fireEvent.press(getByLabelText("1つのノートに複数の試合を紐付け"));
+
+    expect(getByText("複数件")).toBeOnTheScreen();
+  });
+
+  it("全機能画面からは戻るで価値画面へ戻れる", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getByLabelText, queryByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    fireEvent.press(getByLabelText("Pro の全機能を見る"));
+    fireEvent.press(getByLabelText("戻る"));
+
+    expect(queryByText("Pro の全機能")).not.toBeOnTheScreen();
+    expect(queryByText("Pro でできること")).toBeOnTheScreen();
   });
 });
 
@@ -683,5 +898,68 @@ describe("isTrialPurchase", () => {
 
   it("CustomerInfo が取れなくても例外を投げず false を返す", () => {
     expect(isTrialPurchase(undefined)).toBe(false);
+  });
+});
+
+describe("orderSlides", () => {
+  it("トリガーに対応するスライドを先頭に並べる", () => {
+    const slides = orderSlides("count_situation_average");
+
+    expect(slides[0].key).toBe("count_situation");
+    expect(slides).toHaveLength(7);
+  });
+
+  it("球種別は球種別のスライドを先頭にする", () => {
+    expect(orderSlides("pitch_type_average")[0].key).toBe("pitch_type");
+  });
+
+  it("先頭指定はトリガー由来の既定より優先される", () => {
+    const slides = orderSlides("season_transition_graph", "hit_direction");
+
+    expect(slides[0].key).toBe("hit_direction");
+  });
+
+  it("対応するスライドが無いトリガーは既定の順序を保つ", () => {
+    const slides = orderSlides("general");
+
+    expect(slides.map((slide) => slide.key)).toEqual([
+      "hit_direction",
+      "pitch_course",
+      "pitcher_faceoff",
+      "pitch_type",
+      "count_situation",
+      "season_trend",
+      "no_ads",
+    ]);
+  });
+
+  it("並べ替えてもスライドは重複しない", () => {
+    const keys = orderSlides("no_ads").map((slide) => slide.key);
+
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+});
+
+describe("orderFeatureBlocks", () => {
+  it("トリガーになった機能を先頭に並べる", () => {
+    expect(orderFeatureBlocks("unlimited_groups")[0].key).toBe("groups");
+  });
+
+  it("目標系はどのトリガーでも目標のブロックを先頭にする", () => {
+    expect(orderFeatureBlocks("tournament_goals")[0].key).toBe("goals");
+    expect(orderFeatureBlocks("manual_metric_goals")[0].key).toBe("goals");
+  });
+
+  it("対応が無いトリガーは既定の順序を保つ", () => {
+    const keys = orderFeatureBlocks("general").map((block) => block.key);
+
+    expect(keys[0]).toBe("hit_direction");
+    expect(keys[keys.length - 1]).toBe("no_ads");
+  });
+
+  it("並べ替えてもブロックは重複しない", () => {
+    const keys = orderFeatureBlocks("no_ads").map((block) => block.key);
+
+    expect(new Set(keys).size).toBe(keys.length);
   });
 });
