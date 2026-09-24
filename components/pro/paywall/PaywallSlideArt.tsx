@@ -516,90 +516,185 @@ export function HitDirectionArt() {
   );
 }
 
+interface CountCardProps {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  label: string;
+  average: string;
+  /** バーの充填率（0〜1）。打率の高低を図でも伝える。 */
+  ratio: number;
+  /** 打数・安打の内訳。カードを実物らしく見せるための添え書き。 */
+  detail: string;
+  /** ボールカウント（0〜3）。 */
+  balls: number;
+  /** ストライクカウント（0〜2）。 */
+  strikes: number;
+  /** 手前に置く主役カードは文字と色を強める。 */
+  emphasized?: boolean;
+}
+
+/** カウント別スライドの 1 枚。B/S のカウント表示 + 打率 + バーで構成する。 */
+function CountCard({
+  x,
+  y,
+  width,
+  height,
+  label,
+  average,
+  ratio,
+  detail,
+  balls,
+  strikes,
+  emphasized = false,
+}: CountCardProps) {
+  const centerX = x + width / 2;
+  const dotY = y + (emphasized ? 46 : 40);
+  const barWidth = width - 24;
+  const barY = y + (emphasized ? 86 : 74);
+  return (
+    <G>
+      <Card
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill={emphasized ? "#2E2E30" : CARD_BG}
+        opacity={emphasized ? 1 : 0.8}
+      />
+      <SvgText
+        x={centerX}
+        y={y + (emphasized ? 26 : 22)}
+        fill={emphasized ? INK : SUB_INK}
+        fontSize={emphasized ? 11 : 10}
+        fontWeight="bold"
+        textAnchor="middle"
+      >
+        {label}
+      </SvgText>
+      {/* ボール / ストライクのカウント表示 */}
+      {[0, 1, 2].map((index) => (
+        <Circle
+          key={`ball-${index}`}
+          cx={centerX - 20 + index * 9}
+          cy={dotY}
+          r={3}
+          fill={index < balls ? "#4f9e6b" : "none"}
+          stroke={MUTED}
+          strokeWidth={1}
+        />
+      ))}
+      {[0, 1].map((index) => (
+        <Circle
+          key={`strike-${index}`}
+          cx={centerX + 9 + index * 9}
+          cy={dotY}
+          r={3}
+          fill={index < strikes ? "#d64545" : "none"}
+          stroke={MUTED}
+          strokeWidth={1}
+        />
+      ))}
+      <SvgText
+        x={centerX}
+        y={y + (emphasized ? 76 : 64)}
+        fill={emphasized ? INK : SUB_INK}
+        fontSize={emphasized ? 26 : 19}
+        fontWeight="bold"
+        textAnchor="middle"
+      >
+        {average}
+      </SvgText>
+      <Rect
+        x={centerX - barWidth / 2}
+        y={barY}
+        width={barWidth}
+        height={emphasized ? 8 : 6}
+        rx={4}
+        fill={MUTED}
+        opacity={0.6}
+      />
+      <Rect
+        x={centerX - barWidth / 2}
+        y={barY}
+        width={barWidth * ratio}
+        height={emphasized ? 8 : 6}
+        rx={4}
+        fill={BRAND}
+        opacity={emphasized ? 1 : 0.55}
+      />
+      <SvgText
+        x={centerX}
+        y={barY + (emphasized ? 24 : 20)}
+        fill={SUB_INK}
+        fontSize={emphasized ? 8 : 7}
+        textAnchor="middle"
+      >
+        {detail}
+      </SvgText>
+    </G>
+  );
+}
+
 /**
  * カウント別の打率。
  * 構図: 3 枚の縦カードを扇状に並べ、真ん中を大きく前に出す（みてねの「1秒動画」型）。
+ * 各カードに B/S のカウントと打率を載せ、状況ごとの差が数字で伝わるようにする。
  */
 export function CountSituationArt() {
-  const sideBars = [0.5, 0.75, 0.35];
-  const centerBars = [0.85, 0.6, 1];
   return (
     <ArtCanvas>
       <Confetti
         items={[
-          { cx: 26, cy: 36, r: 9, fill: BRAND, opacity: 0.22 },
-          { cx: 256, cy: 158, r: 11, fill: "#5B8DEF", opacity: 0.2 },
+          { cx: 22, cy: 32, r: 9, fill: BRAND, opacity: 0.22 },
+          { cx: 258, cy: 158, r: 11, fill: "#5B8DEF", opacity: 0.2 },
         ]}
       />
       {/* 左右のカードは奥に、中央は手前に重ねる */}
-      <G transform="rotate(-8 90 106)">
-        <Card x={48} y={54} width={72} height={104} opacity={0.75} />
-        <SvgText x={84} y={76} fill={SUB_INK} fontSize={11} textAnchor="middle">
-          初球
-        </SvgText>
-        {sideBars.map((ratio, index) => (
-          <Rect
-            key={index}
-            x={60}
-            y={90 + index * 16}
-            width={48 * ratio}
-            height={8}
-            rx={4}
-            fill={BRAND}
-            opacity={0.45}
-          />
-        ))}
+      <G transform="rotate(-9 74 104)">
+        <CountCard
+          x={38}
+          y={48}
+          width={72}
+          height={112}
+          label="初球"
+          average=".333"
+          ratio={0.66}
+          detail="9打数 3安打"
+          balls={0}
+          strikes={0}
+        />
       </G>
-      <G transform="rotate(8 190 106)">
-        <Card x={160} y={54} width={72} height={104} opacity={0.75} />
-        <SvgText
-          x={196}
-          y={76}
-          fill={SUB_INK}
-          fontSize={11}
-          textAnchor="middle"
-        >
-          追い込み
-        </SvgText>
-        {sideBars.map((ratio, index) => (
-          <Rect
-            key={index}
-            x={172}
-            y={90 + index * 16}
-            width={48 * (1 - ratio * 0.6)}
-            height={8}
-            rx={4}
-            fill={MUTED}
-          />
-        ))}
+      <G transform="rotate(9 206 104)">
+        <CountCard
+          x={170}
+          y={48}
+          width={72}
+          height={112}
+          label="追い込み"
+          average=".208"
+          ratio={0.4}
+          detail="24打数 5安打"
+          balls={0}
+          strikes={2}
+        />
       </G>
-      <G>
-        <Card x={102} y={32} width={76} height={132} fill="#2E2E30" />
-        <SvgText
-          x={140}
-          y={56}
-          fill={INK}
-          fontSize={12}
-          fontWeight="bold"
-          textAnchor="middle"
-        >
-          有利
-        </SvgText>
-        {centerBars.map((ratio, index) => (
-          <Rect
-            key={index}
-            x={114}
-            y={72 + index * 22}
-            width={52 * ratio}
-            height={12}
-            rx={6}
-            fill={BRAND}
-          />
-        ))}
-        <Rect x={114} y={140} width={30} height={6} rx={3} fill={MUTED} />
-      </G>
-      <Sparkle x={236} y={44} size={8} />
-      <Sparkle x={40} y={152} size={7} />
+      <CountCard
+        x={100}
+        y={26}
+        width={80}
+        height={140}
+        label="有利カウント"
+        average=".412"
+        ratio={0.86}
+        detail="17打数 7安打"
+        balls={2}
+        strikes={0}
+        emphasized
+      />
+      <Sparkle x={246} y={44} size={8} />
+      <Sparkle x={32} y={150} size={7} color="#5B8DEF" />
     </ArtCanvas>
   );
 }
