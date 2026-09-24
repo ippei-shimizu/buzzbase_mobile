@@ -985,17 +985,69 @@ export function CountSituationArt() {
 }
 
 /**
+ * 捕手目線の右打者。ストライクゾーンの左側（三塁側）に立つ。
+ * バットを構えたシルエットだけで、顔や背番号は描かない。
+ */
+function RightHandedBatter() {
+  const body = "#52525B";
+  return (
+    <G>
+      {/* ヘルメット */}
+      <Circle cx={54} cy={46} r={12} fill={body} />
+      <Path d="M 62,42 L 78,44 L 78,50 L 62,52 Z" fill={body} />
+      {/* 胴体 */}
+      <Path d="M 40,60 Q 54,55 68,60 L 72,106 Q 54,112 36,106 Z" fill={body} />
+      {/* 腕（グリップまで） */}
+      <Line
+        x1={64}
+        y1={68}
+        x2={88}
+        y2={78}
+        stroke={body}
+        strokeWidth={8}
+        strokeLinecap="round"
+      />
+      <Line
+        x1={60}
+        y1={78}
+        x2={88}
+        y2={80}
+        stroke={body}
+        strokeWidth={7}
+        strokeLinecap="round"
+      />
+      {/* バット */}
+      <Line
+        x1={86}
+        y1={80}
+        x2={110}
+        y2={34}
+        stroke="#b07840"
+        strokeWidth={7}
+        strokeLinecap="round"
+      />
+      <Circle cx={85} cy={82} r={4} fill="#8A6A44" />
+      {/* 脚 */}
+      <Path d="M 40,104 L 54,104 L 50,168 L 36,168 Z" fill={body} />
+      <Path d="M 58,104 L 72,104 L 80,166 L 66,168 Z" fill={body} />
+      {/* スパイク */}
+      <Rect x={32} y={166} width={22} height={7} rx={3} fill="#3F3F46" />
+      <Rect x={64} y={164} width={22} height={7} rx={3} fill="#3F3F46" />
+    </G>
+  );
+}
+
+/**
  * コース別の打率。
- * 構図: 端末の画面に 5x5 のコース別ヒートマップを映し、下にホームベースを置く。
- * 中央 3x3（ストライクゾーン）には打率を載せ、外周のボールゾーンは沈ませる。
+ * 構図: 捕手目線で右打者の前に 5x5 のヒートマップを置き、下にホームベース、
+ * 右下に得意ゾーンのカードを飛び出させる。端末は使わない。
  */
 export function PitchCourseArt() {
-  const bezel = PHONE.width * 0.045;
-  const screenX = PHONE.x + bezel;
-  const gridSize = 120;
-  const gridX = PHONE.x + (PHONE.width - gridSize) / 2;
-  const gridY = 50;
-  const plateTop = gridY + gridSize + 3;
+  const gridSize = 112;
+  const gridX = 100;
+  const gridY = 22;
+  const plateTop = gridY + gridSize + 6;
+  const plateCenterX = gridX + gridSize / 2;
   // トラック比は実際のコース図（PITCH_COURSE_TRACK_FRACTIONS）と同じで、
   // 外周のボールゾーンだけ細くなる。
   const total = PITCH_COURSE_TRACK_FRACTIONS.reduce(
@@ -1034,78 +1086,107 @@ export function PitchCourseArt() {
     <ArtCanvas>
       <Confetti
         items={[
-          { cx: 30, cy: 44, r: 10, fill: "#4F9E6B", opacity: 0.22 },
-          { cx: 254, cy: 152, r: 9, fill: BRAND, opacity: 0.22 },
+          { cx: 24, cy: 28, r: 10, fill: "#4F9E6B", opacity: 0.22 },
+          { cx: 258, cy: 42, r: 8, fill: BRAND, opacity: 0.25 },
         ]}
       />
-      <PhoneMock {...PHONE} showHomeIndicator={false}>
-        <Rect
-          x={screenX + 12}
-          y={42}
-          width={46}
-          height={6}
-          rx={3}
-          fill={MUTED}
-        />
-        {/* ボールゾーンを含む 5x5 */}
-        {sizes.map((cellHeight, row) =>
-          sizes.map((cellWidth, col) => {
-            const isStrike = row >= 1 && row <= 3 && col >= 1 && col <= 3;
-            const average = isStrike
-              ? strikeAverages[row - 1][col - 1]
-              : undefined;
-            const x = gridX + offsets[col];
-            const y = gridY + offsets[row];
+      <RightHandedBatter />
+      {/* ボールゾーンを含む 5x5 */}
+      {sizes.map((cellHeight, row) =>
+        sizes.map((cellWidth, col) => {
+          const isStrike = row >= 1 && row <= 3 && col >= 1 && col <= 3;
+          const average = isStrike
+            ? strikeAverages[row - 1][col - 1]
+            : undefined;
+          const x = gridX + offsets[col];
+          const y = gridY + offsets[row];
+          return (
+            <G key={`${row}-${col}`}>
+              <Rect
+                x={x + 1}
+                y={y + 1}
+                width={cellWidth - 2}
+                height={cellHeight - 2}
+                rx={3}
+                fill={average === undefined ? MUTED : colorForAverage(average)}
+                opacity={average === undefined ? 0.35 : 0.92}
+              />
+              {average === undefined ? null : (
+                <SvgText
+                  x={x + cellWidth / 2}
+                  y={y + cellHeight / 2 + 3.2}
+                  fill={INK}
+                  fontSize={9}
+                  fontWeight="bold"
+                  textAnchor="middle"
+                >
+                  {formatAverage(average)}
+                </SvgText>
+              )}
+            </G>
+          );
+        }),
+      )}
+      {/* ストライクゾーンの枠 */}
+      <Rect
+        x={zoneX}
+        y={zoneY}
+        width={zoneSize}
+        height={zoneSize}
+        rx={4}
+        fill="none"
+        stroke={INK}
+        strokeWidth={2}
+        opacity={0.85}
+      />
+      {/* ホームベース（捕手目線） */}
+      <Polygon
+        points={`${plateCenterX - 13},${plateTop} ${plateCenterX + 13},${plateTop} ${plateCenterX + 13},${plateTop + 7} ${plateCenterX},${plateTop + 14} ${plateCenterX - 13},${plateTop + 7}`}
+        fill={INK}
+        opacity={0.85}
+      />
+
+      {/* 得意ゾーンを飛び出させたカード */}
+      <G transform="rotate(-5 232 166)">
+        <Card x={192} y={145} width={80} height={42} fill="#2E2E30" />
+        {[0, 1, 2].map((row) =>
+          [0, 1, 2].map((col) => {
+            const isCenter = row === 1 && col === 1;
             return (
-              <G key={`${row}-${col}`}>
-                <Rect
-                  x={x + 1}
-                  y={y + 1}
-                  width={cellWidth - 2}
-                  height={cellHeight - 2}
-                  rx={3}
-                  fill={
-                    average === undefined ? MUTED : colorForAverage(average)
-                  }
-                  opacity={average === undefined ? 0.35 : 0.92}
-                />
-                {average === undefined ? null : (
-                  <SvgText
-                    x={x + cellWidth / 2}
-                    y={y + cellHeight / 2 + 3.2}
-                    fill={INK}
-                    fontSize={9}
-                    fontWeight="bold"
-                    textAnchor="middle"
-                  >
-                    {formatAverage(average)}
-                  </SvgText>
-                )}
-              </G>
+              <Rect
+                key={`${row}-${col}`}
+                x={200 + col * 8}
+                y={153 + row * 8}
+                width={6.5}
+                height={6.5}
+                rx={1.5}
+                fill={isCenter ? "#d64545" : MUTED}
+                opacity={isCenter ? 1 : 0.5}
+              />
             );
           }),
         )}
-        {/* ストライクゾーンの枠 */}
-        <Rect
-          x={zoneX}
-          y={zoneY}
-          width={zoneSize}
-          height={zoneSize}
-          rx={4}
-          fill="none"
-          stroke={INK}
-          strokeWidth={2}
-          opacity={0.85}
-        />
-        {/* ホームベース（捕手目線） */}
-        <Polygon
-          points={`127,${plateTop} 153,${plateTop} 153,${plateTop + 7} 140,${plateTop + 14} 127,${plateTop + 7}`}
-          fill={INK}
-          opacity={0.85}
-        />
-      </PhoneMock>
-      <Sparkle x={42} y={118} size={9} />
-      <Sparkle x={244} y={50} size={8} color="#5B8DEF" />
+        <SvgText
+          x={248}
+          y={170}
+          fill="#d64545"
+          fontSize={15}
+          fontWeight="bold"
+          textAnchor="middle"
+        >
+          .476
+        </SvgText>
+        <SvgText
+          x={248}
+          y={181}
+          fill={SUB_INK}
+          fontSize={6.5}
+          textAnchor="middle"
+        >
+          真ん中・ストライク
+        </SvgText>
+      </G>
+      <Sparkle x={126} y={172} size={8} />
     </ArtCanvas>
   );
 }
