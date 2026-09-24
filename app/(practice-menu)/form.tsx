@@ -26,6 +26,11 @@ import {
   usePracticeMenus,
 } from "@hooks/usePracticeMenus";
 import { trackFreeLimitReached, trackProFeatureTapped } from "@utils/analytics";
+import {
+  isRateLimitError,
+  rateLimitErrorMessage,
+  serverErrorMessage,
+} from "@utils/axiosError";
 
 export default function PracticeMenuFormScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -104,7 +109,17 @@ function MenuForm({ menu }: { menu?: PracticeMenu }) {
           ],
         );
       } else {
-        Alert.alert("保存に失敗しました");
+        // 素振りメニューの重複（422 / 競合時は 409）は back が理由の分かる文言を返すため、
+        // 汎用文言だけだとユーザーが原因を掴めず保存を繰り返してしまう。
+        // 429 の error は機械可読コードなので message を使い、通信断で理由が取れない
+        // ときも無言にならないようフォールバックを置く。
+        Alert.alert(
+          "保存に失敗しました",
+          isRateLimitError(error)
+            ? rateLimitErrorMessage(error)
+            : (serverErrorMessage(error) ??
+                "通信状況を確認してもう一度お試しください"),
+        );
       }
     }
   };
