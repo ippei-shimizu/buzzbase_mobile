@@ -154,6 +154,7 @@ export function PaywallFlow({
               pkg.product.price,
             );
             const isAnnual = pkg.packageType === "ANNUAL";
+            // ここは選択の場ではないため、どちらのプランも同じ配色で並べる。
             const savings =
               isAnnual && purchase.annualSavingsAmount != null
                 ? formatCurrency(
@@ -171,31 +172,11 @@ export function PaywallFlow({
                     .join("・")
                 : "まずは 1 ヶ月から。いつでも解約できます";
             return (
-              <View
-                key={pkg.identifier}
-                style={[
-                  styles.planSummaryCard,
-                  isAnnual && styles.planSummaryCardAccent,
-                ]}
-              >
-                <View
-                  style={[
-                    styles.planSummaryIcon,
-                    isAnnual && styles.planSummaryIconAccent,
-                  ]}
-                >
-                  <Icon
-                    name={isAnnual ? "star" : "star-outline"}
-                    size={18}
-                    color={isAnnual ? "#FFFFFF" : "#A1A1AA"}
-                  />
+              <View key={pkg.identifier} style={styles.planSummaryCard}>
+                <View style={styles.planSummaryIcon}>
+                  <Icon name="star" size={18} color="#FFFFFF" />
                 </View>
-                <View
-                  style={[
-                    styles.planSummaryDivider,
-                    isAnnual && styles.planSummaryDividerAccent,
-                  ]}
-                />
+                <View style={styles.planSummaryDivider} />
                 <View style={styles.planSummaryBody}>
                   <View style={styles.planSummaryNameRow}>
                     <Text style={styles.planSummaryName}>{label.name}</Text>
@@ -214,6 +195,14 @@ export function PaywallFlow({
               どちらのプランも 7 日間は無料で試せます
             </Text>
           ) : null}
+          <TouchableOpacity
+            onPress={goToPlan}
+            style={styles.planSummaryButton}
+            accessibilityRole="button"
+            accessibilityLabel="プランを選択する"
+          >
+            <Text style={styles.planSummaryButtonText}>プランを選択する</Text>
+          </TouchableOpacity>
         </View>
       ) : null}
 
@@ -515,17 +504,17 @@ const styles = StyleSheet.create({
   heroTitle: {
     alignSelf: "flex-start",
     color: "#F4F4F4",
-    fontSize: 21,
+    fontSize: 24,
     fontWeight: "800",
-    lineHeight: 30,
+    lineHeight: 34,
     marginTop: 20,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   heroDescription: {
     alignSelf: "flex-start",
     color: "#D4D4D4",
-    fontSize: 14,
-    lineHeight: 22,
+    fontSize: 15,
+    lineHeight: 24,
     marginBottom: 32,
   },
   // 機能一覧の帯と区切るため、背景色を変えた帯にして画面端まで届かせる。
@@ -551,32 +540,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
     borderWidth: 1.5,
-    borderColor: "#3F3F46",
+    borderColor: "#d08000",
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 14,
   },
-  planSummaryCardAccent: {
+  planSummaryButton: {
+    borderWidth: 1.5,
     borderColor: "#d08000",
+    borderRadius: 10,
+    paddingVertical: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 6,
+  },
+  planSummaryButtonText: {
+    color: "#d08000",
+    fontSize: 15,
+    fontWeight: "700",
   },
   planSummaryIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#3F3F46",
+    backgroundColor: "#d08000",
     alignItems: "center",
     justifyContent: "center",
-  },
-  planSummaryIconAccent: {
-    backgroundColor: "#d08000",
   },
   planSummaryDivider: {
     width: 2,
     alignSelf: "stretch",
     borderRadius: 1,
-    backgroundColor: "#3F3F46",
-  },
-  planSummaryDividerAccent: {
     backgroundColor: "#d08000",
   },
   planSummaryBody: {

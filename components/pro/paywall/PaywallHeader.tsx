@@ -31,7 +31,7 @@ export function PaywallHeader({
           <Icon name="chevron-back" size={24} color="#F4F4F4" />
         </TouchableOpacity>
       ) : (
-        <View style={styles.button} />
+        <View style={styles.buttonPlaceholder} />
       )}
       <TouchableOpacity
         onPress={onClose}
@@ -54,9 +54,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 44,
   },
+  buttonPlaceholder: {
+    width: 36,
+    height: 36,
+  },
+  // 図の上に重なっても押せる場所が分かるよう、丸背景を敷く。
   button: {
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(63, 63, 70, 0.92)",
     alignItems: "center",
     justifyContent: "center",
   },

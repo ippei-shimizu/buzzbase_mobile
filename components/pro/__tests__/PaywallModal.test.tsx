@@ -363,6 +363,18 @@ describe("PaywallModal", () => {
     expect(await findByText("月あたり ￥817")).toBeTruthy();
   });
 
+  it("プラン欄のボタンからもプラン画面へ進める", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+
+    const { findByLabelText, findByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    fireEvent.press(await findByLabelText("プランを選択する"));
+
+    expect(await findByText("プランを選ぶ")).toBeOnTheScreen();
+  });
+
   it("プラン画面から戻ると価値画面に戻れる", async () => {
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
 
