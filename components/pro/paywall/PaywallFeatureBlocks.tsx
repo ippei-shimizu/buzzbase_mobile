@@ -40,81 +40,81 @@ interface FeatureBlock {
 const FEATURE_BLOCKS: readonly FeatureBlock[] = [
   {
     key: "hit_direction",
-    title: "どこへ打つと結果が出るか",
+    title: "打った方向ごとの打率がわかる",
     description:
-      "打球の方向ごとの打率を球場図のヒートマップにします。引っ張りと流し、どちらで結果が出ているかが一目でわかります。",
+      "13 方向すべての打率が球場図のヒートマップになります。引っ張りと流し、どちらで結果が出ているかを見て、次の打席の狙いを決められます。",
     Art: HitDirectionArt,
     triggers: ["hit_direction_average"],
   },
   {
     key: "pitch_course",
-    title: "得意なコース、苦手なコース",
+    title: "コース別の打率を 25 分割で見られる",
     description:
-      "ストライクゾーンを 9 分割して打率を色分けします。狙い球を絞るコースと、見送るべきコースがはっきりします。",
+      "ストライクゾーンとボールゾーンを合わせた 25 コースの打率がわかります。球種とのクロス集計もできるので、狙い球を絞り込めます。",
     Art: PitchCourseArt,
     triggers: ["pitch_course_average"],
   },
   {
     key: "pitcher_faceoff",
-    title: "あの投手との通算成績",
+    title: "対戦した投手ごとの成績が残る",
     description:
-      "対戦した投手ごとに成績が積み上がります。次に同じ相手と当たるとき、過去の結果を見てから打席に入れます。",
+      "同じ投手との通算打率や OPS が積み上がります。チーム名・投げる手・球速帯まで残るので、次の対戦前に相手を思い出せます。",
     Art: PitcherFaceoffArt,
     triggers: ["pitcher_faceoff_average"],
   },
   {
     key: "pitch_type",
-    title: "変化球に強いか、弱いか",
+    title: "球種別の打率を比べられる",
     description:
-      "ストレートと変化球で打率がどう変わるかを球種ごとに比べられます。苦手な球種が、そのまま練習のテーマになります。",
+      "ストレートと変化球で打率がどう変わるかがわかります。打席ごとに記録した決着球種から自動で集計するので、入力は増えません。",
     Art: PitchTypeArt,
     triggers: ["pitch_type_average"],
   },
   {
     key: "count_situation",
-    title: "追い込まれてからの一本",
+    title: "カウント別の打率がわかる",
     description:
-      "初球・有利カウント・追い込みで打率がどう変わるかがわかります。カウントごとの戦い方を組み立てられます。",
+      "初球・有利カウント・追い込みの 3 つに分けて打率が出ます。追い込まれてからどれだけ粘れているかが数字で見えます。",
     Art: CountSituationArt,
     triggers: ["count_situation_average"],
   },
   {
     key: "season_trend",
-    title: "去年の自分と比べる",
+    title: "シーズンを跨いで比べられる",
     description:
-      "シーズンを跨いで成績を重ねられます。1 年でどれだけ伸びたのかを、数字で確かめられます。",
+      "無料では単年までのグラフに、複数シーズンを重ねて表示できるようになります。去年の自分と今年の自分を並べて、伸びを確かめられます。",
     Art: SeasonTrendArt,
     triggers: ["season_transition_graph"],
   },
   {
     key: "media",
-    title: "フォームを動画で残す",
+    title: "動画と画像を無制限に残せる",
     description:
-      "野球ノートに動画と画像を無制限に付けられます。調子が良かった日のフォームを残して、崩れたときに見返せます。",
+      "無料では月 3 件までのアップロードが無制限になります。フォームの動画を何本でも野球ノートに付けて、崩れたときに見返せます。",
     Art: MediaUploadArt,
     triggers: ["unlimited_media_uploads"],
   },
   {
     key: "correlation",
-    title: "練習は結果につながっているか",
+    title: "練習と成績のつながりが見える",
     description:
-      "練習量やコンディションと成績の関係を読み解きます。やってきたことが数字に出ているかを確かめられます。",
+      "練習量やコンディションと打率の関係を自動で分析します。やってきた練習が結果に出ているのかを、感覚ではなく数字で確かめられます。",
     Art: CorrelationArt,
     triggers: ["correlation_insights"],
   },
   {
     key: "periodic_review",
-    title: "週末に届く、今週のまとめ",
+    title: "週次・月次のレポートが届く",
     description:
-      "1 週間・1 ヶ月の練習量と成績の変化が自動でまとまります。振り返りの時間を取らなくても続けられます。",
+      "1 週間と 1 ヶ月の練習量・成績の変化、課題ごとの取り組み、前週比までが自動でまとまります。振り返りの時間を取らなくても続きます。",
     Art: PeriodicReviewArt,
     triggers: ["advanced_periodic_review"],
   },
   {
     key: "goals",
-    title: "目標までの距離が見える",
+    title: "目標をいくつでも立てられる",
     description:
-      "シーズン目標・大会目標を立てて、達成度を自動で追えます。期間を自分で決めた目標や、球速など手入力の指標も設定できます。",
+      "無料では 2 件までの期間目標が無制限になり、シーズン目標・大会目標・自由な期間の目標も設定できます。球速や体重など手入力の指標も追えます。",
     Art: GoalArt,
     triggers: [
       "season_goals",
@@ -126,25 +126,25 @@ const FEATURE_BLOCKS: readonly FeatureBlock[] = [
   },
   {
     key: "improvement_themes",
-    title: "課題を並行して潰していく",
+    title: "課題を同時にいくつでも持てる",
     description:
-      "取り組む課題をいくつでも持てます。練習記録やノートを課題に紐付けて、何をどれだけやったかを残せます。",
+      "無料では取り組み中 2 件までの課題が無制限になります。練習記録や野球ノートに複数の課題を紐付けて、何をどれだけやったかを残せます。",
     Art: ImprovementThemeArt,
     triggers: ["unlimited_improvement_themes", "multi_improvement_theme_links"],
   },
   {
     key: "groups",
-    title: "チームや仲間と競い合う",
+    title: "グループをいくつでも作れる",
     description:
-      "グループをいくつでも作れて、参加もできます。学年やチームを分けて、それぞれのランキングで競えます。",
+      "無料では所属 1 件までのグループが無制限になります。チーム・学年・仲間内で分けて、それぞれのランキングで競えます。",
     Art: GroupArt,
     triggers: ["unlimited_groups"],
   },
   {
     key: "no_ads",
-    title: "広告に邪魔されない",
+    title: "広告がすべて消える",
     description:
-      "アプリ内の広告がすべて消えます。試合中のあわただしい入力でも、手が止まりません。",
+      "アプリ内の広告がすべて非表示になります。試合中のあわただしい入力でも、広告に邪魔されず記録に集中できます。",
     Art: NoAdsArt,
     triggers: ["no_ads"],
   },
@@ -172,8 +172,12 @@ export function PaywallFeatureBlocks({ trigger }: PaywallFeatureBlocksProps) {
   const blocks = orderFeatureBlocks(trigger);
   return (
     <View style={styles.list}>
-      {blocks.map(({ key, title, description, Art }) => (
-        <View key={key} style={styles.block} accessibilityLabel={title}>
+      {blocks.map(({ key, title, description, Art }, index) => (
+        <View
+          key={key}
+          style={[styles.block, index % 2 === 1 && styles.blockAlternate]}
+          accessibilityLabel={title}
+        >
           <Art height={BLOCK_ART_HEIGHT} />
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.description}>{description}</Text>
@@ -186,11 +190,18 @@ export function PaywallFeatureBlocks({ trigger }: PaywallFeatureBlocksProps) {
 const styles = StyleSheet.create({
   list: {
     width: "100%",
-    gap: 28,
     marginBottom: 24,
   },
+  // 帯を画面端まで届かせるため、Paywall 本体の左右パディング（20）を打ち消す。
   block: {
     width: "100%",
+    marginHorizontal: -20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 26,
+  },
+  blockAlternate: {
+    backgroundColor: "#262629",
   },
   title: {
     color: "#F4F4F4",

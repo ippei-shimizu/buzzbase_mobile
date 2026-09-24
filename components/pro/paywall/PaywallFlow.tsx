@@ -137,6 +137,49 @@ export function PaywallFlow({
         </>
       ) : null}
 
+      {/* 価格を先に示してから機能を読ませる。金額を知らないまま読み進めさせない。 */}
+      {purchase.packages.length > 0 ? (
+        <View style={styles.planSummary}>
+          <Text style={styles.planSummaryTitle}>月額と年額から選べます</Text>
+          {purchase.packages.map((pkg) => {
+            const label = PLAN_LABELS[pkg.packageType] ?? {
+              name: pkg.product.title,
+              period: "",
+            };
+            const perMonth = monthlyEquivalent(
+              pkg.packageType,
+              pkg.product.price,
+            );
+            return (
+              <View key={pkg.identifier} style={styles.planSummaryRow}>
+                <Text style={styles.planSummaryName}>{label.name}</Text>
+                <View style={styles.planSummaryRight}>
+                  <Text style={styles.planSummaryPrice}>
+                    {pkg.product.priceString}
+                    {label.period}
+                  </Text>
+                  {perMonth != null ? (
+                    <Text style={styles.planSummaryNote}>
+                      月あたり ¥{perMonth.toLocaleString()}
+                    </Text>
+                  ) : null}
+                </View>
+              </View>
+            );
+          })}
+          {purchase.annualSavingsAmount != null ? (
+            <Text style={styles.planSummarySavings}>
+              {`年額なら 1 年で ¥${purchase.annualSavingsAmount.toLocaleString()} お得です`}
+            </Text>
+          ) : null}
+          {isTrialEligible ? (
+            <Text style={styles.planSummaryTrial}>
+              どちらのプランも 7 日間は無料で試せます
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+
       <Text style={styles.sectionTitle}>Pro でできること</Text>
       <PaywallFeatureBlocks trigger={trigger} />
 
@@ -446,6 +489,53 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 24,
+  },
+  planSummary: {
+    width: "100%",
+    backgroundColor: "#27272A",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#3F3F46",
+    padding: 16,
+    marginBottom: 24,
+    gap: 10,
+  },
+  planSummaryTitle: {
+    color: "#F4F4F4",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  planSummaryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  planSummaryName: {
+    color: "#D4D4D4",
+    fontSize: 14,
+  },
+  planSummaryRight: {
+    alignItems: "flex-end",
+  },
+  planSummaryPrice: {
+    color: "#F4F4F4",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  planSummaryNote: {
+    color: "#A1A1AA",
+    fontSize: 12,
+    marginTop: 2,
+  },
+  planSummarySavings: {
+    color: "#d08000",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  planSummaryTrial: {
+    color: "#A1A1AA",
+    fontSize: 12,
+    lineHeight: 18,
   },
   sectionTitle: {
     alignSelf: "flex-start",

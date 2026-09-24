@@ -228,6 +228,19 @@ describe("PaywallModal", () => {
     expect(getByLabelText("シーズンを跨いだ成長を比較")).toBeOnTheScreen();
   });
 
+  it("機能一覧の前に月額・年額の金額とお得額を示す", async () => {
+    getOfferingsMock.mockResolvedValueOnce(mockOffering);
+
+    const { findByText, getByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    expect(await findByText("月額と年額から選べます")).toBeOnTheScreen();
+    // 月額980円×12=11,760円 に対し年額9,800円 → 1,960円お得。
+    expect(getByText("年額なら 1 年で ¥1,960 お得です")).toBeOnTheScreen();
+    expect(getByText("月あたり ¥817")).toBeOnTheScreen();
+  });
+
   it("Pro でできることが機能ごとのイラスト付きで並ぶ", () => {
     getOfferingsMock.mockResolvedValueOnce(null);
 
