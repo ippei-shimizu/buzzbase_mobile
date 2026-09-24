@@ -773,6 +773,164 @@ export function PitcherFaceoffArt() {
   );
 }
 
+interface PitchBallProps {
+  cx: number;
+  cy: number;
+  r: number;
+  /** 打率に応じた縁の色。 */
+  ringColor: string;
+}
+
+/** 球のイラスト。白い円に赤い縫い目を 2 本入れる。 */
+function PitchBall({ cx, cy, r, ringColor }: PitchBallProps) {
+  const seamOffset = r * 0.58;
+  const seamReach = r * 0.78;
+  const stitchYs = [-0.42, 0, 0.42];
+  return (
+    <G>
+      <Circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="#F1F1F0"
+        stroke={ringColor}
+        strokeWidth={3}
+      />
+      {[-1, 1].map((side) => (
+        <G key={side}>
+          <Path
+            d={`M ${cx + side * seamOffset},${cy - seamReach} Q ${cx + side * r * 0.12},${cy} ${cx + side * seamOffset},${cy + seamReach}`}
+            fill="none"
+            stroke="#d64545"
+            strokeWidth={1.6}
+            strokeLinecap="round"
+          />
+          {stitchYs.map((ratio) => (
+            <Line
+              key={ratio}
+              x1={cx + side * (seamOffset - r * 0.16)}
+              y1={cy + r * ratio - r * 0.06}
+              x2={cx + side * (seamOffset + r * 0.14)}
+              y2={cy + r * ratio + r * 0.06}
+              stroke="#d64545"
+              strokeWidth={1.2}
+              strokeLinecap="round"
+            />
+          ))}
+        </G>
+      ))}
+    </G>
+  );
+}
+
+/**
+ * 球種別の打率。
+ * 構図: 球種ごとのボールを 2x2 に並べ、それぞれに打率と打数安打を添える。
+ * 端末を使わない唯一のスライドで、球種の並びが一目で比べられる。
+ */
+export function PitchTypeArt() {
+  const pitches = [
+    {
+      cx: 44,
+      cy: 50,
+      r: 26,
+      textX: 80,
+      name: "ストレート",
+      average: 0.368,
+      detail: "38打数 14安打",
+    },
+    {
+      cx: 179,
+      cy: 50,
+      r: 23,
+      textX: 212,
+      name: "スライダー",
+      average: 0.25,
+      detail: "24打数 6安打",
+    },
+    {
+      cx: 44,
+      cy: 136,
+      r: 23,
+      textX: 80,
+      name: "カーブ",
+      average: 0.188,
+      detail: "16打数 3安打",
+    },
+    {
+      cx: 179,
+      cy: 136,
+      r: 23,
+      textX: 212,
+      name: "フォーク",
+      average: 0.143,
+      detail: "14打数 2安打",
+    },
+  ];
+  // 色分けは他の成績スライドと同じ固定閾値のスケールに揃える。
+  const colorForAverage = (average: number): string => {
+    if (average >= 0.45) return "#d64545";
+    if (average >= 0.35) return "#d98236";
+    if (average >= 0.25) return "#c9a227";
+    if (average >= 0.15) return "#4f9e6b";
+    return "#4173b3";
+  };
+  const formatAverage = (average: number): string =>
+    average.toFixed(3).replace(/^0\./, ".");
+
+  return (
+    <ArtCanvas>
+      <Confetti
+        items={[
+          { cx: 140, cy: 24, r: 8, fill: BRAND, opacity: 0.2 },
+          { cx: 136, cy: 168, r: 10, fill: "#5B8DEF", opacity: 0.2 },
+        ]}
+      />
+      {pitches.map((pitch) => {
+        const color = colorForAverage(pitch.average);
+        return (
+          <G key={pitch.name}>
+            <PitchBall
+              cx={pitch.cx}
+              cy={pitch.cy}
+              r={pitch.r}
+              ringColor={color}
+            />
+            <SvgText
+              x={pitch.textX}
+              y={pitch.cy - 8}
+              fill={INK}
+              fontSize={10}
+              fontWeight="bold"
+            >
+              {pitch.name}
+            </SvgText>
+            <SvgText
+              x={pitch.textX}
+              y={pitch.cy + 13}
+              fill={color}
+              fontSize={17}
+              fontWeight="bold"
+            >
+              {formatAverage(pitch.average)}
+            </SvgText>
+            <SvgText
+              x={pitch.textX}
+              y={pitch.cy + 25}
+              fill={SUB_INK}
+              fontSize={6.5}
+            >
+              {pitch.detail}
+            </SvgText>
+          </G>
+        );
+      })}
+      <Sparkle x={112} y={98} size={9} />
+      <Sparkle x={250} y={104} size={7} color="#5B8DEF" />
+    </ArtCanvas>
+  );
+}
+
 /**
  * カウント別の打率。
  * 構図: 端末そのものを 3 台、扇状に並べて真ん中を大きく前に出す

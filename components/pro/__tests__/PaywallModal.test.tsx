@@ -807,11 +807,11 @@ describe("orderSlides", () => {
     const slides = orderSlides("count_situation_average");
 
     expect(slides[0].key).toBe("count_situation");
-    expect(slides).toHaveLength(6);
+    expect(slides).toHaveLength(7);
   });
 
-  it("球種別は同じカードで見せるコース別のスライドを先頭にする", () => {
-    expect(orderSlides("pitch_type_average")[0].key).toBe("pitch_course");
+  it("球種別は球種別のスライドを先頭にする", () => {
+    expect(orderSlides("pitch_type_average")[0].key).toBe("pitch_type");
   });
 
   it("先頭指定はトリガー由来の既定より優先される", () => {
@@ -827,6 +827,7 @@ describe("orderSlides", () => {
       "hit_direction",
       "pitch_course",
       "pitcher_faceoff",
+      "pitch_type",
       "count_situation",
       "season_trend",
       "no_ads",

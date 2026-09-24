@@ -14,6 +14,7 @@ import {
   NoAdsArt,
   PitchCourseArt,
   PitcherFaceoffArt,
+  PitchTypeArt,
   SeasonTrendArt,
 } from "./PaywallSlideArt";
 
@@ -22,6 +23,7 @@ export type PaywallSlideKey =
   | "hit_direction"
   | "pitch_course"
   | "pitcher_faceoff"
+  | "pitch_type"
   | "count_situation"
   | "season_trend"
   | "no_ads";
@@ -54,6 +56,12 @@ const SLIDES: readonly SlideCopy[] = [
       "同じ投手との通算成績を積み上げて、次の対戦の狙いを立てられます。",
   },
   {
+    key: "pitch_type",
+    title: "球種ごとの\n打ち分けが見える",
+    description:
+      "ストレートと変化球で結果がどう変わるかを、球種ごとの打率で比べられます。",
+  },
+  {
     key: "count_situation",
     title: "カウント別の\n強さが見える",
     description:
@@ -76,7 +84,7 @@ const SLIDES: readonly SlideCopy[] = [
 const SLIDE_KEY_BY_TRIGGER: Partial<Record<ProTrigger, PaywallSlideKey>> = {
   hit_direction_average: "hit_direction",
   count_situation_average: "count_situation",
-  pitch_type_average: "pitch_course",
+  pitch_type_average: "pitch_type",
   pitch_course_average: "pitch_course",
   pitcher_faceoff_average: "pitcher_faceoff",
   season_transition_graph: "season_trend",
@@ -113,6 +121,7 @@ const ART_BY_KEY: Record<PaywallSlideKey, () => React.JSX.Element> = {
   count_situation: CountSituationArt,
   pitch_course: PitchCourseArt,
   pitcher_faceoff: PitcherFaceoffArt,
+  pitch_type: PitchTypeArt,
   season_trend: SeasonTrendArt,
   no_ads: NoAdsArt,
 };
