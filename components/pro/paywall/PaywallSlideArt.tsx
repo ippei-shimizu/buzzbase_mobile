@@ -608,46 +608,102 @@ function CountPhone({
 }
 
 /**
+ * 投手のシルエット。足を上げて腕を後ろへ引いた投球フォームで、打者と向かい合う向き。
+ * 打者と同じく単色で描き、手前に重なる腕と脚は背景色の縁取りで前後を出す。
+ */
+function PitcherSilhouette() {
+  const silhouette = "#5A6275";
+  const gap = "#2E2E2E";
+  return (
+    <G>
+      {/* 軸足 */}
+      <Polyline
+        points="44,92 38,124 36,156"
+        fill="none"
+        stroke={silhouette}
+        strokeWidth={15}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Ellipse
+        cx={40}
+        cy={160}
+        rx={12}
+        ry={5.5}
+        fill={silhouette}
+        transform="rotate(-8 40 160)"
+      />
+      {/* 胴体 */}
+      <Path
+        d="M 38,56 Q 52,47 66,56 L 62,94 Q 50,100 36,93 Z"
+        fill={silhouette}
+      />
+      {/* 上げた前脚（腿を上げて膝から下を垂らす） */}
+      <Polyline
+        points="58,90 86,80 90,112"
+        fill="none"
+        stroke={gap}
+        strokeWidth={19}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Polyline
+        points="58,90 86,80 90,112"
+        fill="none"
+        stroke={silhouette}
+        strokeWidth={15}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Ellipse
+        cx={95}
+        cy={116}
+        rx={11}
+        ry={5.5}
+        fill={silhouette}
+        transform="rotate(20 95 116)"
+      />
+      {/* 後ろへ引いた投げ手とボール */}
+      <Polyline
+        points="42,60 26,48 18,30"
+        fill="none"
+        stroke={silhouette}
+        strokeWidth={11}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Circle cx={16} cy={25} r={5.5} fill="#F1F1F0" />
+      {/* 前へ出したグラブ側の腕 */}
+      <Polyline
+        points="62,60 80,54 90,46"
+        fill="none"
+        stroke={gap}
+        strokeWidth={15}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Polyline
+        points="62,60 80,54 90,46"
+        fill="none"
+        stroke={silhouette}
+        strokeWidth={11}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Circle cx={95} cy={43} r={9} fill={silhouette} />
+      {/* 帽子をかぶった頭（つばは投手の向く方向＝右へ） */}
+      <Circle cx={52} cy={38} r={13} fill={silhouette} />
+      <Path d="M 62,33 L 76,38 L 62,43 Z" fill={silhouette} />
+    </G>
+  );
+}
+
+/**
  * 対戦投手別の打撃成績。
- * 構図: 端末の画面に投手の一覧を映し、左に得意な投手のカードを飛び出させる
- * （みてねの「2分以上の動画」型）。
- * 行の項目は実際の一覧（PitcherFaceoffList）に揃え、投手名・チーム名・投げる手・
- * タイプ・対戦数・打率・打数安打を並べる。
+ * 構図: 左に投手のシルエット、右に「その投手との通算成績」を大きく置く。
+ * 下に他の投手を並べ、投手ごとに成績が積み上がることを示す。
  */
 export function PitcherFaceoffArt() {
-  const bezel = PHONE.width * 0.045;
-  const screenX = PHONE.x + bezel;
-  const rowX = 70;
-  const rowWidth = 140;
-  const rows = [
-    {
-      y: 54,
-      name: "投手 A",
-      attributes: "〇〇高校・右投げ・パワー",
-      faced: "21対戦",
-      average: 0.421,
-      atBats: "19-8",
-      highlighted: true,
-    },
-    {
-      y: 94,
-      name: "投手 B",
-      attributes: "△△高校・左投げ・技巧派",
-      faced: "16対戦",
-      average: 0.286,
-      atBats: "14-4",
-      highlighted: false,
-    },
-    {
-      y: 134,
-      name: "投手 C",
-      attributes: "□□高校・右投げ・130km/h台",
-      faced: "22対戦",
-      average: 0.15,
-      atBats: "20-3",
-      highlighted: false,
-    },
-  ];
   // 色分けは他の成績スライドと同じ固定閾値のスケールに揃える。
   const colorForAverage = (average: number): string => {
     if (average >= 0.45) return "#d64545";
@@ -658,118 +714,87 @@ export function PitcherFaceoffArt() {
   };
   const formatAverage = (average: number): string =>
     average.toFixed(3).replace(/^0\./, ".");
-  /** 投手のアイコン（頭と肩だけの簡略図）。飛び出すカードにだけ使う。 */
-  const pitcherGlyph = (cx: number, cy: number) => (
-    <G>
-      <Circle cx={cx} cy={cy - 3.4} r={3.2} fill={SUB_INK} />
-      <Path d={`M ${cx - 6},${cy + 6} a 6,6 0 0 1 12,0 Z`} fill={SUB_INK} />
-    </G>
-  );
+  const others = [
+    { y: 114, name: "投手 B", meta: "△△高校・左投げ", average: 0.286 },
+    { y: 150, name: "投手 C", meta: "□□高校・右投げ", average: 0.15 },
+  ];
 
   return (
     <ArtCanvas>
       <Confetti
         items={[
-          { cx: 256, cy: 36, r: 9, fill: "#4F9E6B", opacity: 0.22 },
-          { cx: 240, cy: 168, r: 11, fill: BRAND, opacity: 0.18 },
+          { cx: 22, cy: 150, r: 10, fill: "#4F9E6B", opacity: 0.2 },
+          { cx: 262, cy: 22, r: 8, fill: BRAND, opacity: 0.22 },
         ]}
       />
-      <PhoneMock {...PHONE} showHomeIndicator={false}>
-        <SvgText
-          x={screenX + 12}
-          y={46}
-          fill={INK}
-          fontSize={9}
-          fontWeight="bold"
-        >
-          対戦投手別
-        </SvgText>
-        {rows.map((row) => (
-          <G key={row.y}>
-            <Rect
-              x={rowX}
-              y={row.y}
-              width={rowWidth}
-              height={36}
-              rx={8}
-              fill={row.highlighted ? "rgba(208, 128, 0, 0.16)" : CARD_BG}
-              stroke={row.highlighted ? BRAND : CARD_EDGE}
-              strokeWidth={row.highlighted ? 1.5 : 1}
-            />
-            <SvgText
-              x={rowX + 8}
-              y={row.y + 13}
-              fill={INK}
-              fontSize={8.5}
-              fontWeight="bold"
-            >
-              {`▶ ${row.name}`}
-            </SvgText>
-            <SvgText x={rowX + 8} y={row.y + 23} fill={SUB_INK} fontSize={6.2}>
-              {row.attributes}
-            </SvgText>
-            <SvgText x={rowX + 8} y={row.y + 32} fill={SUB_INK} fontSize={6.2}>
-              {row.faced}
-            </SvgText>
-            <SvgText
-              x={rowX + rowWidth - 8}
-              y={row.y + 18}
-              fill={colorForAverage(row.average)}
-              fontSize={14}
-              fontWeight="bold"
-              textAnchor="end"
-            >
-              {formatAverage(row.average)}
-            </SvgText>
-            <SvgText
-              x={rowX + rowWidth - 8}
-              y={row.y + 29}
-              fill={SUB_INK}
-              fontSize={6.2}
-              textAnchor="end"
-            >
-              {row.atBats}
-            </SvgText>
-          </G>
-        ))}
-        {/* 続きがあることを示す 4 行目 */}
-        <Rect
-          x={rowX}
-          y={174}
-          width={rowWidth}
-          height={36}
-          rx={8}
-          fill={CARD_BG}
-          opacity={0.45}
-        />
-      </PhoneMock>
+      <PitcherSilhouette />
+      <SvgText
+        x={112}
+        y={64}
+        fill={SUB_INK}
+        fontSize={12}
+        fontWeight="bold"
+        textAnchor="middle"
+      >
+        VS
+      </SvgText>
 
-      {/* 得意な投手を飛び出させたカード */}
-      <G transform="rotate(-6 41 104)">
-        <Card x={2} y={72} width={78} height={64} fill="#2E2E30" />
-        <Circle cx={22} cy={98} r={12} fill={BODY} />
-        {pitcherGlyph(22, 98)}
-        <SvgText
-          x={55}
-          y={104}
-          fill={BRAND}
-          fontSize={20}
-          fontWeight="bold"
-          textAnchor="middle"
-        >
-          .421
-        </SvgText>
-        <SvgText
-          x={41}
-          y={126}
-          fill={SUB_INK}
-          fontSize={8.5}
-          textAnchor="middle"
-        >
-          〇〇高校・右投げ
-        </SvgText>
-      </G>
-      <Sparkle x={238} y={94} size={9} />
+      {/* その投手との通算成績 */}
+      <Card x={126} y={20} width={146} height={80} fill="#2E2E30" />
+      <SvgText x={138} y={38} fill={INK} fontSize={9} fontWeight="bold">
+        投手 A
+      </SvgText>
+      <SvgText x={138} y={50} fill={SUB_INK} fontSize={7.5}>
+        〇〇高校・右投げ・パワー
+      </SvgText>
+      <SvgText
+        x={138}
+        y={82}
+        fill={colorForAverage(0.421)}
+        fontSize={30}
+        fontWeight="bold"
+      >
+        .421
+      </SvgText>
+      <SvgText x={262} y={82} fill={SUB_INK} fontSize={8} textAnchor="end">
+        19打数 8安打
+      </SvgText>
+
+      {/* 他の投手との成績も積み上がる */}
+      {others.map((row) => (
+        <G key={row.y}>
+          <Card x={126} y={row.y} width={146} height={30} fill={CARD_BG} />
+          <Circle cx={144} cy={row.y + 15} r={9} fill={BODY} />
+          <Circle cx={144} cy={row.y + 13} r={4.5} fill={SUB_INK} />
+          <Path
+            d={`M 150,${row.y + 10} L 158,${row.y + 13} L 150,${row.y + 16} Z`}
+            fill={SUB_INK}
+          />
+          <SvgText
+            x={160}
+            y={row.y + 14}
+            fill={INK}
+            fontSize={8}
+            fontWeight="bold"
+          >
+            {row.name}
+          </SvgText>
+          <SvgText x={160} y={row.y + 24} fill={SUB_INK} fontSize={6.5}>
+            {row.meta}
+          </SvgText>
+          <SvgText
+            x={262}
+            y={row.y + 20}
+            fill={colorForAverage(row.average)}
+            fontSize={15}
+            fontWeight="bold"
+            textAnchor="end"
+          >
+            {formatAverage(row.average)}
+          </SvgText>
+        </G>
+      ))}
+      <Sparkle x={112} y={128} size={8} />
     </ArtCanvas>
   );
 }
