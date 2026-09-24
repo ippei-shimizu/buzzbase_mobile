@@ -1,6 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
-import Svg, {
+import {
   Circle,
   ClipPath,
   Defs,
@@ -24,6 +23,22 @@ import {
   GROUND_THIRD,
 } from "@constants/groundCanvas";
 import { PITCH_COURSE_TRACK_FRACTIONS } from "@constants/pitchCourse";
+import {
+  type ArtProps,
+  ArtCanvas,
+  BODY,
+  BRAND,
+  Card,
+  CARD_BG,
+  CARD_EDGE,
+  Confetti,
+  INK,
+  MUTED,
+  PHONE,
+  PhoneMock,
+  Sparkle,
+  SUB_INK,
+} from "./artPrimitives";
 
 /**
  * Paywall スライドの機能紹介イラスト。
@@ -36,243 +51,12 @@ import { PITCH_COURSE_TRACK_FRACTIONS } from "@constants/pitchCourse";
  * カード / 端末 / 吹き出しといった部品は共有し、配置と主役だけを入れ替える。
  */
 
-const CANVAS_WIDTH = 280;
-const CANVAS_HEIGHT = 190;
-// 描画は 280x190 のまま、表示領域だけ縦に広げて図をスライドの幅いっぱいまで拡大する
-// （preserveAspectRatio の既定が meet のため、高さを増やすと倍率が上がる）。
-export const SLIDE_ART_HEIGHT = 226;
-
-// 端末を映す3枚（方向別 / コース別 / カウント別）で同じ大きさ・位置を使う。
-// 下端はキャンバスの外に出し、画面の続きがあるように見せる。
-const PHONE = { x: 56, y: 10, width: 168, height: 250 } as const;
-
-const BRAND = "#d08000";
-const CARD_BG = "#27272A";
-const CARD_EDGE = "#3F3F46";
-const BODY = "#3F3F46";
-const MUTED = "#52525B";
-const INK = "#F4F4F4";
-const SUB_INK = "#A1A1AA";
-
 // 球場の配色は打席記録・成績画面のグラウンド図と揃える。
 const GRASS = "#4a8e32";
 const GRASS_STRIPE = "#56a03c";
 const GRASS_EDGE = "#3a7a28";
 const DIRT = "#b07840";
 const CHALK = "rgba(255,255,255,0.7)";
-
-interface ConfettiItem {
-  cx: number;
-  cy: number;
-  r: number;
-  fill: string;
-  opacity: number;
-}
-
-/** 背景の飾り。スライドごとに配置と色を変えて、並べたときの印象を散らす。 */
-function Confetti({ items }: { items: readonly ConfettiItem[] }) {
-  return (
-    <G>
-      {items.map((item) => (
-        <Circle
-          key={`${item.cx}-${item.cy}`}
-          cx={item.cx}
-          cy={item.cy}
-          r={item.r}
-          fill={item.fill}
-          opacity={item.opacity}
-        />
-      ))}
-    </G>
-  );
-}
-
-/** 四方に光る装飾。加入後の体験が特別に見えるようにする。 */
-function Sparkle({
-  x,
-  y,
-  size,
-  color = BRAND,
-}: {
-  x: number;
-  y: number;
-  size: number;
-  color?: string;
-}) {
-  const points = [
-    `${x},${y - size}`,
-    `${x + size * 0.26},${y - size * 0.26}`,
-    `${x + size},${y}`,
-    `${x + size * 0.26},${y + size * 0.26}`,
-    `${x},${y + size}`,
-    `${x - size * 0.26},${y + size * 0.26}`,
-    `${x - size},${y}`,
-    `${x - size * 0.26},${y - size * 0.26}`,
-  ].join(" ");
-  return <Polygon points={points} fill={color} opacity={0.9} />;
-}
-
-interface CardProps {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  fill?: string;
-  opacity?: number;
-}
-
-/** 角丸のカード。傾けて重ねる用途が多いので G の transform と組み合わせて使う。 */
-function Card({ x, y, width, height, fill = CARD_BG, opacity = 1 }: CardProps) {
-  return (
-    <G opacity={opacity}>
-      <Rect
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        rx={12}
-        fill={fill}
-        stroke={CARD_EDGE}
-        strokeWidth={1.5}
-      />
-    </G>
-  );
-}
-
-interface PhoneMockProps {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  /** 画面下端がキャンバス外に出る配置では、ホームインジケータを描かない。 */
-  showHomeIndicator?: boolean;
-  /** 画面内に描く中身。画面領域の座標系でそのまま置ける。 */
-  children?: React.ReactNode;
-}
-
-/**
- * スマートフォンのモック。ベゼル・ダイナミックアイランド・サイドボタン・
- * ホームインジケータまで描いて、ひと目で端末だと分かる形にする。
- *
- * @returns 画面領域は x+bezel, y+bezel から (width-2*bezel, height-2*bezel)
- */
-function PhoneMock({
-  x,
-  y,
-  width,
-  height,
-  showHomeIndicator = true,
-  children,
-}: PhoneMockProps) {
-  const bodyRadius = width * 0.19;
-  const bezel = width * 0.045;
-  const screenX = x + bezel;
-  const screenY = y + bezel;
-  const screenWidth = width - bezel * 2;
-  const screenHeight = height - bezel * 2;
-  const islandWidth = width * 0.3;
-  const islandHeight = width * 0.075;
-  const islandTop = screenY + bezel * 0.9;
-  const buttonWidth = Math.max(1.6, width * 0.02);
-  // 画面外へ出た中身がベゼルに乗らないよう、画面の角丸でクリップする。
-  const clipId = `phoneScreen-${Math.round(x)}-${Math.round(y)}-${Math.round(width)}`;
-  return (
-    <G>
-      {/* サイドボタン（本体より先に描いて端から生えているように見せる） */}
-      <Rect
-        x={x - buttonWidth}
-        y={y + height * 0.2}
-        width={buttonWidth * 2}
-        height={height * 0.05}
-        rx={buttonWidth}
-        fill={MUTED}
-      />
-      <Rect
-        x={x - buttonWidth}
-        y={y + height * 0.29}
-        width={buttonWidth * 2}
-        height={height * 0.08}
-        rx={buttonWidth}
-        fill={MUTED}
-      />
-      <Rect
-        x={x + width - buttonWidth}
-        y={y + height * 0.26}
-        width={buttonWidth * 2}
-        height={height * 0.1}
-        rx={buttonWidth}
-        fill={MUTED}
-      />
-      {/* 本体 */}
-      <Rect
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        rx={bodyRadius}
-        fill={BODY}
-        stroke={MUTED}
-        strokeWidth={1.2}
-      />
-      {/* 画面 */}
-      <Defs>
-        <ClipPath id={clipId}>
-          <Rect
-            x={screenX}
-            y={screenY}
-            width={screenWidth}
-            height={screenHeight}
-            rx={bodyRadius - bezel}
-          />
-        </ClipPath>
-      </Defs>
-      <Rect
-        x={screenX}
-        y={screenY}
-        width={screenWidth}
-        height={screenHeight}
-        rx={bodyRadius - bezel}
-        fill="#1B1B1E"
-      />
-      <G clipPath={`url(#${clipId})`}>{children}</G>
-      {/* ダイナミックアイランド */}
-      <Rect
-        x={x + (width - islandWidth) / 2}
-        y={islandTop}
-        width={islandWidth}
-        height={islandHeight}
-        rx={islandHeight / 2}
-        fill="#101012"
-      />
-      {/* ホームインジケータ */}
-      {showHomeIndicator ? (
-        <Rect
-          x={x + width * 0.32}
-          y={y + height - bezel * 2.4}
-          width={width * 0.36}
-          height={width * 0.028}
-          rx={width * 0.014}
-          fill={SUB_INK}
-          opacity={0.7}
-        />
-      ) : null}
-    </G>
-  );
-}
-
-function ArtCanvas({ children }: { children: React.ReactNode }) {
-  return (
-    <View style={styles.canvas}>
-      <Svg
-        width="100%"
-        height={CANVAS_HEIGHT}
-        viewBox={`0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`}
-      >
-        {children}
-      </Svg>
-    </View>
-  );
-}
 
 // 球場図は打席記録 UI と同じ幾何（constants/groundCanvas）で描き、
 // ダイヤモンドの比率や外野の膨らみが実際のイラストとずれないようにする。
@@ -377,7 +161,7 @@ function BallparkField() {
  * 構図: 下端で見切れる端末の画面に球場図を映し、左右に円形の吹き出しを重ねる
  * （みてねの「公開範囲」型）。
  */
-export function HitDirectionArt() {
+export function HitDirectionArt({ height }: ArtProps) {
   const bezel = PHONE.width * 0.045;
   const screenX = PHONE.x + bezel;
   // 球場図（GROUND_* 座標）を画面の幅いっぱいに収める倍率と位置。
@@ -395,7 +179,7 @@ export function HitDirectionArt() {
     { cx: 168, cy: 186, r: 29, opacity: 0.58, average: ".300", fontSize: 22 },
   ];
   return (
-    <ArtCanvas>
+    <ArtCanvas height={height}>
       <Confetti
         items={[
           { cx: 262, cy: 32, r: 8, fill: "#5B8DEF", opacity: 0.25 },
@@ -584,7 +368,7 @@ function PitcherSilhouette() {
  * 構図: 左に投手のシルエット、右に「その投手との通算成績」を大きく置く。
  * 下に他の投手を並べ、投手ごとに成績が積み上がることを示す。
  */
-export function PitcherFaceoffArt() {
+export function PitcherFaceoffArt({ height }: ArtProps) {
   // 色分けは他の成績スライドと同じ固定閾値のスケールに揃える。
   const colorForAverage = (average: number): string => {
     if (average >= 0.45) return "#d64545";
@@ -601,7 +385,7 @@ export function PitcherFaceoffArt() {
   ];
 
   return (
-    <ArtCanvas>
+    <ArtCanvas height={height}>
       <Confetti
         items={[
           { cx: 20, cy: 168, r: 10, fill: "#4F9E6B", opacity: 0.2 },
@@ -737,7 +521,7 @@ function PitchBall({ cx, cy, r, ringColor, seamRotation }: PitchBallProps) {
  * 構図: 球種ごとのボールを 2x2 に並べ、それぞれに打率と打数安打を添える。
  * 端末を使わない唯一のスライドで、球種の並びが一目で比べられる。
  */
-export function PitchTypeArt() {
+export function PitchTypeArt({ height }: ArtProps) {
   // seamRotation は球種の握り・回転の向きに合わせる。
   // ストレートは縦、フォークは指を割って握るため横。
   // スライダーとカーブは斜めに握るので、互いに逆向きへ傾ける。
@@ -795,7 +579,7 @@ export function PitchTypeArt() {
     average.toFixed(3).replace(/^0\./, ".");
 
   return (
-    <ArtCanvas>
+    <ArtCanvas height={height}>
       <Confetti
         items={[
           { cx: 140, cy: 24, r: 8, fill: BRAND, opacity: 0.2 },
@@ -942,9 +726,9 @@ function CountRow({
  * 構図: スコアボードのカウント表示をそのまま 3 段並べ、B/S のランプごとに打率を置く。
  * ランプを見れば「どのカウントの成績か」が説明なしで伝わる。
  */
-export function CountSituationArt() {
+export function CountSituationArt({ height }: ArtProps) {
   return (
-    <ArtCanvas>
+    <ArtCanvas height={height}>
       <Confetti
         items={[
           { cx: 266, cy: 12, r: 9, fill: BRAND, opacity: 0.2 },
@@ -1107,7 +891,7 @@ function RightHandedBatter() {
  * 構図: 捕手目線で右打者の前に 5x5 のヒートマップを置き、下にホームベース、
  * 右下に得意ゾーンのカードを飛び出させる。端末は使わない。
  */
-export function PitchCourseArt() {
+export function PitchCourseArt({ height }: ArtProps) {
   const gridSize = 112;
   const gridX = 100;
   const gridY = 22;
@@ -1148,7 +932,7 @@ export function PitchCourseArt() {
   const zoneSize = offsets[4] - offsets[1];
 
   return (
-    <ArtCanvas>
+    <ArtCanvas height={height}>
       <Confetti
         items={[
           { cx: 24, cy: 28, r: 10, fill: "#4F9E6B", opacity: 0.22 },
@@ -1262,7 +1046,7 @@ export function PitchCourseArt() {
  * 構図: 端末を使わず折れ線を大きく描き、2 シーズンを重ねて伸びを見せる。
  * 右上に伸び幅のバッジを置き、下の凡例に各シーズンの打率を添える。
  */
-export function SeasonTrendArt() {
+export function SeasonTrendArt({ height }: ArtProps) {
   const chart = { left: 50, right: 252, top: 28, bottom: 128 };
   const minAverage = 0.2;
   const maxAverage = 0.4;
@@ -1283,7 +1067,7 @@ export function SeasonTrendArt() {
       .join(" ");
 
   return (
-    <ArtCanvas>
+    <ArtCanvas height={height}>
       <Confetti
         items={[
           { cx: 20, cy: 24, r: 9, fill: "#5B8DEF", opacity: 0.2 },
@@ -1403,13 +1187,13 @@ export function SeasonTrendArt() {
  * 構図: 端末の画面から広告枠が消えることを、大きな禁止記号で示す。
  * 枠の下には記録が続き、加入後は入力の手が止まらないことを表す。
  */
-export function NoAdsArt() {
+export function NoAdsArt({ height }: ArtProps) {
   const bezel = PHONE.width * 0.045;
   const screenX = PHONE.x + bezel;
   const contentX = screenX + 12;
   const contentWidth = PHONE.width - bezel * 2 - 24;
   return (
-    <ArtCanvas>
+    <ArtCanvas height={height}>
       <Confetti
         items={[
           { cx: 24, cy: 46, r: 11, fill: "#4F9E6B", opacity: 0.22 },
@@ -1477,12 +1261,3 @@ export function NoAdsArt() {
     </ArtCanvas>
   );
 }
-
-const styles = StyleSheet.create({
-  canvas: {
-    width: "100%",
-    height: SLIDE_ART_HEIGHT,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

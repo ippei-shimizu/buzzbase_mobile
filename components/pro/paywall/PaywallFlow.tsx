@@ -26,8 +26,8 @@ import {
   PRO_PAYWALL_COPY,
   STORE_LABEL,
   toPlanType,
-  valueBlocksFor,
 } from "./paywallContent";
+import { PaywallFeatureBlocks } from "./PaywallFeatureBlocks";
 import { hasSlideForTrigger, PaywallSlides } from "./PaywallSlides";
 
 // 単年の記録しか無いユーザーにシーズン跨ぎ比較を訴求しても空のグラフしか見せられないため、
@@ -81,9 +81,6 @@ export function PaywallFlow({
   // 先頭スライドがトリガー機能そのものを説明するときは、同じ内容の見出しを重ねない。
   // 単年ユーザーだけは差し替えの理由を伝える必要があるため例外的に出す。
   const showTriggerCopy = isSingleSeason || !hasSlideForTrigger(trigger);
-  const valueBlocks = isSingleSeason
-    ? valueBlocksFor("hit_direction_average")
-    : valueBlocksFor(trigger);
   const visibleGroups = filterFeatureGroups(FEATURE_GROUPS, feature);
 
   const ctaLabel = isProStatusLoading
@@ -141,23 +138,7 @@ export function PaywallFlow({
       ) : null}
 
       <Text style={styles.sectionTitle}>Pro でできること</Text>
-      <View style={styles.valueBlockList}>
-        {valueBlocks.map((key) => (
-          <View key={key} style={styles.valueBlock}>
-            <View style={styles.valueBlockIcon}>
-              <Icon name="checkmark-circle" size={18} color="#d08000" />
-            </View>
-            <View style={styles.valueBlockBody}>
-              <Text style={styles.valueBlockTitle}>
-                {PRO_PAYWALL_COPY[key].title}
-              </Text>
-              <Text style={styles.valueBlockDescription}>
-                {PRO_PAYWALL_COPY[key].description}
-              </Text>
-            </View>
-          </View>
-        ))}
-      </View>
+      <PaywallFeatureBlocks trigger={trigger} />
 
       <TouchableOpacity
         style={styles.disclosureRow}
@@ -468,43 +449,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     alignSelf: "flex-start",
-    color: "#A1A1AA",
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 10,
-    marginTop: 4,
-  },
-  valueBlockList: {
-    width: "100%",
-    gap: 12,
-    marginBottom: 20,
-  },
-  valueBlock: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-    backgroundColor: "#3A3A3A",
-    borderRadius: 12,
-    padding: 14,
-  },
-  valueBlockIcon: {
-    paddingTop: 1,
-  },
-  valueBlockBody: {
-    flex: 1,
-    gap: 4,
-  },
-  valueBlockTitle: {
     color: "#F4F4F4",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  valueBlockDescription: {
-    color: "#D4D4D4",
-    fontSize: 13,
-    lineHeight: 20,
+    fontSize: 20,
+    fontWeight: "800",
+    lineHeight: 28,
+    marginBottom: 16,
+    marginTop: 8,
   },
   disclosureRow: {
     width: "100%",

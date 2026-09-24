@@ -25,6 +25,7 @@ import {
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
 import { server } from "../../../jest-setup-msw";
 import { DEFAULT_PRO_STATUS, PRO_FEATURES } from "../../../types/pro";
+import { orderFeatureBlocks } from "../paywall/PaywallFeatureBlocks";
 import { orderSlides } from "../paywall/PaywallSlides";
 import {
   FEATURE_GROUPS,
@@ -225,6 +226,19 @@ describe("PaywallModal", () => {
     expect(getByLabelText("広告なしで記録に集中")).toBeOnTheScreen();
     expect(getByLabelText("打球の方向ごとに打率がわかる")).toBeOnTheScreen();
     expect(getByLabelText("シーズンを跨いだ成長を比較")).toBeOnTheScreen();
+  });
+
+  it("Pro でできることが機能ごとのイラスト付きで並ぶ", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getByText, getByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    expect(getByText("Pro でできること")).toBeOnTheScreen();
+    expect(getByLabelText("広告に邪魔されない")).toBeOnTheScreen();
+    expect(getByLabelText("フォームを動画で残す")).toBeOnTheScreen();
+    expect(getByLabelText("チームや仲間と競い合う")).toBeOnTheScreen();
   });
 
   it("価値画面によくある質問が並び、解約してもデータが残ることを示す", () => {
@@ -836,6 +850,30 @@ describe("orderSlides", () => {
 
   it("並べ替えてもスライドは重複しない", () => {
     const keys = orderSlides("no_ads").map((slide) => slide.key);
+
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+});
+
+describe("orderFeatureBlocks", () => {
+  it("トリガーになった機能を先頭に並べる", () => {
+    expect(orderFeatureBlocks("unlimited_groups")[0].key).toBe("groups");
+  });
+
+  it("目標系はどのトリガーでも目標のブロックを先頭にする", () => {
+    expect(orderFeatureBlocks("tournament_goals")[0].key).toBe("goals");
+    expect(orderFeatureBlocks("manual_metric_goals")[0].key).toBe("goals");
+  });
+
+  it("対応が無いトリガーは既定の順序を保つ", () => {
+    const keys = orderFeatureBlocks("general").map((block) => block.key);
+
+    expect(keys[0]).toBe("hit_direction");
+    expect(keys[keys.length - 1]).toBe("no_ads");
+  });
+
+  it("並べ替えてもブロックは重複しない", () => {
+    const keys = orderFeatureBlocks("no_ads").map((block) => block.key);
 
     expect(new Set(keys).size).toBe(keys.length);
   });

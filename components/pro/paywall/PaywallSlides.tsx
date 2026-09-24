@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { type ArtProps } from "./artPrimitives";
 import {
   CountSituationArt,
   HitDirectionArt,
@@ -116,7 +117,10 @@ export const hasSlideForTrigger = (trigger: ProTrigger): boolean =>
 
 const AUTO_ADVANCE_INTERVAL = 5000;
 
-const ART_BY_KEY: Record<PaywallSlideKey, () => React.JSX.Element> = {
+const ART_BY_KEY: Record<
+  PaywallSlideKey,
+  (props: ArtProps) => React.JSX.Element
+> = {
   hit_direction: HitDirectionArt,
   count_situation: CountSituationArt,
   pitch_course: PitchCourseArt,
