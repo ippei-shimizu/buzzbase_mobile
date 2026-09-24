@@ -1038,9 +1038,9 @@ function RightHandedBatter() {
         strokeWidth={9.5}
         strokeLinecap="round"
       />
-      {/* ヘルメット */}
+      {/* ヘルメット（つばは短く、先を尖らせる） */}
       <Circle cx={50} cy={38} r={14.5} fill={shade} />
-      <Path d="M 60,31 L 82,36 L 82,44 L 60,46 Z" fill={shade} />
+      <Path d="M 61,33 L 74,39 L 61,44 Z" fill={shade} />
     </G>
   );
 }
