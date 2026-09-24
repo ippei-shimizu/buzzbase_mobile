@@ -53,10 +53,11 @@ export function PaywallModal({
   const isTrialEligible =
     !isProStatusLoading && !proStatus.subscription.has_used_trial;
   const trigger = toProTrigger(feature);
-  const { step, goToPlan, goToValue, trackDismiss } = usePaywallSteps({
-    trigger,
-    active: isOpen,
-  });
+  const { step, goToPlan, goToFeatures, goToValue, trackDismiss } =
+    usePaywallSteps({
+      trigger,
+      active: isOpen,
+    });
 
   useEffect(() => {
     if (isOpen) trackPaywallViewed(trigger);
@@ -91,7 +92,7 @@ export function PaywallModal({
         accessibilityViewIsModal
       >
         <PaywallHeader
-          showBack={step === "plan"}
+          showBack={step !== "value"}
           onBack={goToValue}
           onClose={handleDismiss}
         />
@@ -101,6 +102,7 @@ export function PaywallModal({
           trigger={trigger}
           step={step}
           goToPlan={goToPlan}
+          goToFeatures={goToFeatures}
           purchase={purchase}
           isTrialEligible={isTrialEligible}
           isProStatusLoading={isProStatusLoading}

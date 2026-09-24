@@ -35,10 +35,11 @@ export default function ProScreen() {
   const countsAsFunnel =
     !isProStatusLoading && !proStatus.subscription.pro_active;
 
-  const { step, goToPlan, goToValue, trackDismiss } = usePaywallSteps({
-    trigger,
-    active: countsAsFunnel,
-  });
+  const { step, goToPlan, goToFeatures, goToValue, trackDismiss } =
+    usePaywallSteps({
+      trigger,
+      active: countsAsFunnel,
+    });
 
   useEffect(() => {
     if (countsAsFunnel) trackPaywallViewed(trigger);
@@ -60,7 +61,7 @@ export default function ProScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <PaywallHeader
-        showBack={step === "plan"}
+        showBack={step !== "value"}
         onBack={goToValue}
         onClose={handleDismiss}
       />
@@ -69,6 +70,7 @@ export default function ProScreen() {
         trigger={trigger}
         step={step}
         goToPlan={goToPlan}
+        goToFeatures={goToFeatures}
         purchase={purchase}
         isTrialEligible={isTrialEligible}
         isProStatusLoading={isProStatusLoading}

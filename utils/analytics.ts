@@ -144,8 +144,8 @@ export const trackShadowSwingCompleted = (props: { swing_count: number }) =>
 export const trackPaywallViewed = (trigger: ProTrigger) =>
   capture("paywall viewed", { trigger });
 
-/** Paywall のステップ。value = 価値訴求、plan = 価格とプラン選択。 */
-export type PaywallStepName = "value" | "plan";
+/** Paywall のステップ。value = 価値訴求、features = 全機能一覧、plan = 価格とプラン選択。 */
+export type PaywallStepName = "value" | "features" | "plan";
 
 /** Paywall の各ステップの表示。価値訴求からプラン提示への通過率を測る。 */
 export const trackPaywallStepViewed = (props: {

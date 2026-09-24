@@ -5,7 +5,7 @@ import {
   trackPaywallStepViewed,
 } from "@utils/analytics";
 
-/** Paywall のステップ。value = 価値訴求、plan = 価格とプラン選択。 */
+/** Paywall のステップ。value = 価値訴求、features = 全機能一覧、plan = 価格とプラン選択。 */
 export type PaywallStep = PaywallStepName;
 
 interface UsePaywallStepsOptions {
@@ -41,6 +41,7 @@ export function usePaywallSteps({ trigger, active }: UsePaywallStepsOptions) {
   }, [active, step, trigger]);
 
   const goToPlan = useCallback(() => setStep("plan"), [setStep]);
+  const goToFeatures = useCallback(() => setStep("features"), [setStep]);
   const goToValue = useCallback(() => setStep("value"), [setStep]);
 
   /** 購入に至らず閉じたときに呼ぶ。どのステップで離脱したかを計測する。 */
@@ -48,5 +49,5 @@ export function usePaywallSteps({ trigger, active }: UsePaywallStepsOptions) {
     trackPaywallDismissed({ step: stepRef.current, trigger });
   }, [trigger]);
 
-  return { step, goToPlan, goToValue, trackDismiss };
+  return { step, goToPlan, goToFeatures, goToValue, trackDismiss };
 }

@@ -749,19 +749,19 @@ describe("PaywallModal", () => {
     expect(mockOnClose).not.toHaveBeenCalled();
   });
 
-  it("ハイライトで表示中の機能は全機能一覧に重複表示されない", () => {
+  it("ハイライトで表示中の機能は全機能画面に重複表示されない", () => {
     getOfferingsMock.mockResolvedValueOnce(null);
 
-    const { getAllByText, getByLabelText } = renderWithProviders(
+    const { queryByLabelText, getByLabelText } = renderWithProviders(
       <PaywallModal isOpen onClose={mockOnClose} feature="note_tags" />,
     );
 
     fireEvent.press(getByLabelText("Pro の全機能を見る"));
 
-    expect(getAllByText("野球ノートにタグを付けて整理")).toHaveLength(1);
+    expect(queryByLabelText("野球ノートにタグを付けて整理")).toBeNull();
   });
 
-  it("全機能一覧は既定で畳まれ、開くとグループ見出しと無料/PROの比較値が出る", () => {
+  it("全機能画面へ進むとグループごとのカードが並び、開くと無料/PROの差が出る", () => {
     getOfferingsMock.mockResolvedValueOnce(null);
 
     const { getByText, getByLabelText, queryByText } = renderWithProviders(
@@ -772,10 +772,26 @@ describe("PaywallModal", () => {
 
     fireEvent.press(getByLabelText("Pro の全機能を見る"));
 
+    expect(getByText("Pro の全機能")).toBeOnTheScreen();
     expect(getByText("野球ノート")).toBeOnTheScreen();
-    expect(
-      getByLabelText("1つのノートに複数の試合を紐付け。無料は1件、PROは複数件"),
-    ).toBeOnTheScreen();
+
+    fireEvent.press(getByLabelText("1つのノートに複数の試合を紐付け"));
+
+    expect(getByText("複数件")).toBeOnTheScreen();
+  });
+
+  it("全機能画面からは戻るで価値画面へ戻れる", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getByLabelText, queryByText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="no_ads" />,
+    );
+
+    fireEvent.press(getByLabelText("Pro の全機能を見る"));
+    fireEvent.press(getByLabelText("戻る"));
+
+    expect(queryByText("Pro の全機能")).not.toBeOnTheScreen();
+    expect(queryByText("Pro でできること")).toBeOnTheScreen();
   });
 });
 

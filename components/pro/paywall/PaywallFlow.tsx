@@ -15,12 +15,10 @@ import {
 import { Icon } from "@components/icon/Icon";
 import { useMySeasons } from "@hooks/useSeasons";
 import { trackPaywallPlanSelected } from "@utils/analytics";
+import { PaywallAllFeatures } from "./PaywallAllFeatures";
 import {
   DEFAULT_COPY,
-  FEATURE_COMPARISONS,
   formatCurrency,
-  filterFeatureGroups,
-  FEATURE_GROUPS,
   monthlyEquivalent,
   PAYWALL_FAQ,
   PLAN_LABELS,
@@ -42,6 +40,7 @@ interface PaywallFlowProps {
   trigger: ProTrigger;
   step: PaywallStep;
   goToPlan: () => void;
+  goToFeatures: () => void;
   purchase: ReturnType<typeof usePaywallPurchase>;
   /** トライアル権利があるか。判定確定前は false を渡してトライアル訴求を出さない。 */
   isTrialEligible: boolean;
@@ -62,6 +61,7 @@ export function PaywallFlow({
   trigger,
   step,
   goToPlan,
+  goToFeatures,
   purchase,
   isTrialEligible,
   isProStatusLoading,
@@ -69,7 +69,6 @@ export function PaywallFlow({
   bottomInset = 24,
 }: PaywallFlowProps) {
   const router = useRouter();
-  const [allFeaturesOpen, setAllFeaturesOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const { seasons } = useMySeasons();
   const isSingleSeason =
@@ -82,7 +81,6 @@ export function PaywallFlow({
   // 先頭スライドがトリガー機能そのものを説明するときは、同じ内容の見出しを重ねない。
   // 単年ユーザーだけは差し替えの理由を伝える必要があるため例外的に出す。
   const showTriggerCopy = isSingleSeason || !hasSlideForTrigger(trigger);
-  const visibleGroups = filterFeatureGroups(FEATURE_GROUPS, feature);
 
   const ctaLabel = isProStatusLoading
     ? "PROを始める"
@@ -211,58 +209,13 @@ export function PaywallFlow({
 
       <TouchableOpacity
         style={styles.disclosureRow}
-        onPress={() => setAllFeaturesOpen((open) => !open)}
+        onPress={goToFeatures}
         accessibilityRole="button"
-        accessibilityState={{ expanded: allFeaturesOpen }}
         accessibilityLabel="Pro の全機能を見る"
       >
         <Text style={styles.disclosureLabel}>Pro の全機能を見る</Text>
-        <Icon
-          name={allFeaturesOpen ? "chevron-up" : "chevron-down"}
-          size={18}
-          color="#A1A1AA"
-        />
+        <Icon name="chevron-forward" size={18} color="#d08000" />
       </TouchableOpacity>
-
-      {allFeaturesOpen ? (
-        <View style={styles.groupList}>
-          {visibleGroups.map((group) => (
-            <View key={group.title} style={styles.group}>
-              <View style={styles.groupHeader}>
-                <Icon name={group.icon} size={16} color="#d08000" />
-                <Text style={styles.groupHeaderTitle}>{group.title}</Text>
-              </View>
-              <View style={styles.table}>
-                <View style={styles.tableHeaderRow}>
-                  <View style={styles.tableLabelCell} />
-                  <Text style={styles.tableHeaderFree}>無料</Text>
-                  <Text style={styles.tableHeaderPro}>PRO</Text>
-                </View>
-                {group.keys.map((key, index) => (
-                  <View
-                    key={key}
-                    style={[
-                      styles.tableRow,
-                      index === group.keys.length - 1 && styles.tableRowLast,
-                    ]}
-                    accessibilityLabel={`${PRO_PAYWALL_COPY[key].title}。無料は${FEATURE_COMPARISONS[key].free}、PROは${FEATURE_COMPARISONS[key].pro}`}
-                  >
-                    <Text style={styles.tableLabelCell} numberOfLines={2}>
-                      {PRO_PAYWALL_COPY[key].title}
-                    </Text>
-                    <Text style={styles.tableFreeCell}>
-                      {FEATURE_COMPARISONS[key].free}
-                    </Text>
-                    <Text style={styles.tableProCell}>
-                      {FEATURE_COMPARISONS[key].pro}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          ))}
-        </View>
-      ) : null}
 
       <Text style={styles.sectionTitle}>よくある質問</Text>
       <View style={styles.faqList}>
@@ -405,13 +358,21 @@ export function PaywallFlow({
 
   const isPlanStep = step === "plan";
 
+  const renderStep = () => {
+    if (isPlanStep) return renderPlanStep();
+    if (step === "features") {
+      return <PaywallAllFeatures highlightedFeature={feature} />;
+    }
+    return renderValueStep();
+  };
+
   return (
     <>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {isPlanStep ? renderPlanStep() : renderValueStep()}
+        {renderStep()}
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: bottomInset }]}>
@@ -618,93 +579,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: "#424242",
-    marginBottom: 20,
+    borderWidth: 1.5,
+    borderColor: "#d08000",
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 28,
   },
   disclosureLabel: {
-    color: "#F4F4F4",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  groupList: {
-    width: "100%",
-    gap: 16,
-    marginBottom: 20,
-  },
-  group: {
-    width: "100%",
-  },
-  groupHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 8,
-  },
-  groupHeaderTitle: {
-    color: "#F4F4F4",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  table: {
-    width: "100%",
-    backgroundColor: "#3A3A3A",
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  tableHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "#4A4A4A",
-  },
-  tableHeaderFree: {
-    flex: 0.65,
-    textAlign: "center",
-    color: "#A1A1AA",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  tableHeaderPro: {
-    flex: 0.75,
-    textAlign: "center",
     color: "#d08000",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  tableRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderBottomWidth: 1,
-    borderBottomColor: "#333333",
-  },
-  tableRowLast: {
-    borderBottomWidth: 0,
-  },
-  tableLabelCell: {
-    flex: 1.6,
-    color: "#D4D4D4",
-    fontSize: 13,
-    paddingRight: 6,
-  },
-  tableFreeCell: {
-    flex: 0.65,
-    textAlign: "center",
-    color: "#A1A1AA",
-    fontSize: 13,
-  },
-  tableProCell: {
-    flex: 0.75,
-    textAlign: "center",
-    color: "#d08000",
-    fontSize: 13.5,
+    fontSize: 15,
     fontWeight: "700",
   },
   faqList: {
