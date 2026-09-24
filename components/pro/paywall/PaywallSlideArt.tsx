@@ -1019,29 +1019,44 @@ function RightHandedBatter() {
       />
       {/* 背中側の胴体。肩幅が広く腰へ絞る */}
       <Path
-        d="M 30,62 Q 50,51 70,62 L 66,104 Q 50,111 34,104 Z"
+        d="M 30,62 Q 50,51 70,62 L 64,104 Q 49,111 33,103 Z"
         fill={silhouette}
       />
-      {/* 両脚（後ろから見るので左右に並ぶ） */}
+      {/* 両脚。打席では前後に大きく開くため、膝を曲げて左右へ広げる */}
       <Polyline
-        points="42,104 36,134 34,164"
+        points="42,102 31,132 22,161"
         fill="none"
         stroke={silhouette}
         strokeWidth={15}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+      {/* 手前（投手側）の脚は少し太くして前後を出す */}
       <Polyline
-        points="60,104 68,134 72,164"
+        points="60,102 74,130 84,159"
         fill="none"
         stroke={silhouette}
-        strokeWidth={15}
+        strokeWidth={16}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* スパイク */}
-      <Ellipse cx={34} cy={168} rx={11} ry={6} fill={silhouette} />
-      <Ellipse cx={72} cy={168} rx={11} ry={6} fill={silhouette} />
+      {/* スパイク。つま先は投手側へ向く */}
+      <Ellipse
+        cx={25}
+        cy={166}
+        rx={12}
+        ry={5.5}
+        fill={silhouette}
+        transform="rotate(12 25 166)"
+      />
+      <Ellipse
+        cx={86}
+        cy={164}
+        rx={12}
+        ry={5.5}
+        fill={silhouette}
+        transform="rotate(-8 86 164)"
+      />
       {/* 奥の腕（右肩からグリップへ） */}
       <Polyline
         points="68,66 80,58 88,54"
