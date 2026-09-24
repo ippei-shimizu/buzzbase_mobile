@@ -144,27 +144,6 @@ export const trackShadowSwingCompleted = (props: { swing_count: number }) =>
 export const trackPaywallViewed = (trigger: ProTrigger) =>
   capture("paywall viewed", { trigger });
 
-/** Paywall のステップ。value = 価値訴求、features = 全機能一覧、plan = 価格とプラン選択。 */
-export type PaywallStepName = "value" | "features" | "plan";
-
-/** Paywall の各ステップの表示。価値訴求からプラン提示への通過率を測る。 */
-export const trackPaywallStepViewed = (props: {
-  step: PaywallStepName;
-  trigger: ProTrigger;
-}) => capture("paywall step viewed", props);
-
-/** プランカードの選択。年額・月額のどちらが選ばれるかを測る。 */
-export const trackPaywallPlanSelected = (props: {
-  plan_type: PlanType | null;
-  trigger: ProTrigger;
-}) => capture("paywall plan selected", props);
-
-/** 購入に至らず Paywall を閉じた。`step` でどこまで進んで離脱したかを測る。 */
-export const trackPaywallDismissed = (props: {
-  step: PaywallStepName;
-  trigger: ProTrigger;
-}) => capture("paywall dismissed", props);
-
 /** Paywall の購入ボタン押下。ストアの購入シートを開く直前に送る。 */
 export const trackUpgradeStarted = (props: {
   plan_type: PlanType | null;
