@@ -69,6 +69,40 @@ export const BATTING_COLUMNS: Column<BattingStatsRow>[] = [
   { key: "babip", label: "BABIP", width: 50, format: fmt3 },
 ];
 
+// 本塁打の内数なので、走本塁打が 1 本も無いときは列ごと出さない（getBattingColumns で判定）。
+const INSIDE_THE_PARK_HOME_RUN_COLUMN: Column<BattingStatsRow> = {
+  key: "inside_the_park_home_run",
+  label: "走本",
+  width: 40,
+  format: fmtInt,
+  tooltip:
+    "本塁打の内数（ランニング本塁打）。本塁打の数には走本塁打も含まれます。",
+};
+
+/**
+ * 打撃成績テーブルの列定義を返す。
+ * 走本塁打が 1 本以上ある行があるときだけ「本塁打」の右隣に「走本」列を差し込む。
+ *
+ * @param rows 表示する行データ（通算行を含む）
+ */
+export function getBattingColumns(
+  rows: BattingStatsRow[],
+): Column<BattingStatsRow>[] {
+  const hasInsideThePark = rows.some(
+    (row) => (row.inside_the_park_home_run ?? 0) > 0,
+  );
+  if (!hasInsideThePark) return BATTING_COLUMNS;
+
+  const homeRunIndex = BATTING_COLUMNS.findIndex(
+    (column) => column.key === "home_run",
+  );
+  return [
+    ...BATTING_COLUMNS.slice(0, homeRunIndex + 1),
+    INSIDE_THE_PARK_HOME_RUN_COLUMN,
+    ...BATTING_COLUMNS.slice(homeRunIndex + 1),
+  ];
+}
+
 export const PITCHING_COLUMNS: Column<PitchingStatsRow>[] = [
   {
     key: "era",
@@ -228,7 +262,7 @@ export function StatsTable<T extends { label: string; opponent?: string }>({
                   ]}
                 >
                   {columns.map((col) => {
-                    const val = row[col.key] as number;
+                    const val = (row[col.key] as number | undefined) ?? 0;
                     const formatted = col.format
                       ? col.format(val)
                       : String(val);

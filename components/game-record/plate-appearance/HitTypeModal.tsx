@@ -14,12 +14,34 @@ interface Props {
   onCancel: () => void;
 }
 
+// 「走本塁打」はラベルが 4 文字で他より長く 1 行 5 列に収まらないため、
+// 本塁打系だけ 2 行目に分ける。1 行に並べられるのは 3 件までなので、
+// 非本塁打のヒット種別が増えるときはこの行分けを見直すこと。
+const BASE_HIT_OPTIONS = HIT_TYPE_OPTIONS.filter(
+  (option) => option.hit_type !== "home_run",
+);
+const HOME_RUN_OPTIONS = HIT_TYPE_OPTIONS.filter(
+  (option) => option.hit_type === "home_run",
+);
+
 /**
  * 「ヒット」ボタン押下時のサブ選択モーダル。
- * 単打 / 二塁打 / 三塁打 / 本塁打を 1 行 4 列のチップで提示し、
- * 選択結果は `plate_result_id` と `hit_type` のペアで親に返す。
+ * 1 行目に単打 / 二塁打 / 三塁打、2 行目に本塁打 / 走本塁打のチップを提示し、
+ * 選択結果は `plate_result_id` と `hit_type`（本塁打は `home_run_type` も）で親に返す。
  */
 export function HitTypeModal({ visible, onSelect, onCancel }: Props) {
+  const renderOption = (option: HitTypeOption) => (
+    <TouchableOpacity
+      key={option.label}
+      accessibilityRole="button"
+      accessibilityLabel={option.label}
+      style={styles.option}
+      onPress={() => onSelect(option)}
+    >
+      <Text style={styles.optionLabel}>{option.label}</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <Modal
       visible={visible}
@@ -34,18 +56,9 @@ export function HitTypeModal({ visible, onSelect, onCancel }: Props) {
           accessible={false}
         >
           <Text style={styles.title}>ヒット種別</Text>
-          <View style={styles.row}>
-            {HIT_TYPE_OPTIONS.map((option) => (
-              <TouchableOpacity
-                key={option.hit_type}
-                accessibilityRole="button"
-                accessibilityLabel={option.label}
-                style={styles.option}
-                onPress={() => onSelect(option)}
-              >
-                <Text style={styles.optionLabel}>{option.label}</Text>
-              </TouchableOpacity>
-            ))}
+          <View style={styles.row}>{BASE_HIT_OPTIONS.map(renderOption)}</View>
+          <View style={styles.secondRow}>
+            {HOME_RUN_OPTIONS.map(renderOption)}
           </View>
           <TouchableOpacity
             accessibilityRole="button"
@@ -85,6 +98,11 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     gap: 8,
+  },
+  secondRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 8,
   },
   option: {
     flex: 1,

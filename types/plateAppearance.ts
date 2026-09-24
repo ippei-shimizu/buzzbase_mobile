@@ -29,6 +29,13 @@ export type HitType = "single" | "double" | "triple" | "home_run";
  */
 export type SwingType = "swinging" | "looking";
 
+/**
+ * 本塁打の内訳（`plate_appearances.home_run_type` enum）。
+ * ランニング本塁打（走本塁打）も記録上は本塁打なので `plate_result_id` は本塁打のまま、
+ * この列だけで内訳を表す。`plate_result_id === 10`（本塁打）の場合のみ送信・保存される。
+ */
+export type HomeRunType = "over_fence" | "inside_the_park";
+
 /** ランナー状況（`plate_appearances.runners_state` enum）。 */
 export type RunnersState =
   | "no_runner"
@@ -56,6 +63,7 @@ export interface PlateAppearanceV2 {
   out_type: OutType | null;
   hit_type: HitType | null;
   swing_type: SwingType | null;
+  home_run_type: HomeRunType | null;
   hit_location_x: string | null;
   hit_location_y: string | null;
   rbi: number | null;
@@ -97,6 +105,7 @@ export interface PlateAppearanceV2Input {
   out_type?: OutType | null;
   hit_type?: HitType | null;
   swing_type?: SwingType | null;
+  home_run_type?: HomeRunType | null;
   hit_direction_id?: number | null;
   hit_location_x?: number | null;
   hit_location_y?: number | null;

@@ -2,6 +2,7 @@ import type { GameResult } from "../../types/gameResult";
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
+import { getBattingResultColor } from "@utils/battingResultColor";
 import { formatMatchTypeLabel } from "@utils/matchType";
 
 interface GameResultListItemProps {
@@ -12,54 +13,6 @@ interface GameResultListItemProps {
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
   return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-};
-
-const HIT_RESULTS = [
-  "左安",
-  "中安",
-  "右安",
-  "遊安",
-  "投安",
-  "一安",
-  "二安",
-  "三安",
-  "左線安",
-  "左中安",
-  "右中安",
-  "右線安",
-  "左二",
-  "中二",
-  "右二",
-  "左線二",
-  "左中二",
-  "右中二",
-  "右線二",
-  "左三",
-  "中三",
-  "右三",
-  "左線三",
-  "左中三",
-  "右中三",
-  "右線三",
-  "左本",
-  "中本",
-  "右本",
-  "左線本",
-  "左中本",
-  "右中本",
-  "右線本",
-  "本塁打",
-  "安打",
-  "二塁打",
-  "三塁打",
-];
-
-const SACRIFICE_RESULTS = ["犠打", "犠飛", "犠牲"];
-
-const getResultColor = (result: string): string => {
-  if (HIT_RESULTS.some((h) => result.includes(h))) return "#f31260";
-  if (SACRIFICE_RESULTS.some((s) => result.includes(s))) return "#006fee";
-  return "#F4F4F4";
 };
 
 export const GameResultListItem = ({
@@ -164,7 +117,7 @@ export const GameResultListItem = ({
                     {i > 0 && <Text style={{ color: "#A1A1AA" }}> </Text>}
                     <Text
                       style={{
-                        color: getResultColor(pa.batting_result),
+                        color: getBattingResultColor(pa.batting_result),
                         fontWeight: "700",
                       }}
                     >

@@ -1,5 +1,6 @@
 import type {
   HitType,
+  HomeRunType,
   OutType,
   PlateAppearanceV2,
   PlateAppearanceV2Input,
@@ -41,6 +42,7 @@ interface BattingRecordState {
   outType: OutType | null;
   hitType: HitType | null;
   swingType: SwingType | null;
+  homeRunType: HomeRunType | null;
   hitDirectionId: number | null;
   hitLocationX: number | null;
   hitLocationY: number | null;
@@ -75,6 +77,7 @@ interface BattingRecordState {
       outType?: OutType | null;
       hitType?: HitType | null;
       swingType?: SwingType | null;
+      homeRunType?: HomeRunType | null;
     },
   ) => void;
   setCounter: (key: CounterKey, value: number) => void;
@@ -98,6 +101,7 @@ const initialState = {
   outType: null as OutType | null,
   hitType: null as HitType | null,
   swingType: null as SwingType | null,
+  homeRunType: null as HomeRunType | null,
   hitDirectionId: null as number | null,
   hitLocationX: null as number | null,
   hitLocationY: null as number | null,
@@ -179,6 +183,7 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       outType: pa.out_type,
       hitType: pa.hit_type,
       swingType: pa.swing_type,
+      homeRunType: pa.home_run_type,
       hitDirectionId: pa.hit_direction_id,
       hitLocationX: parsedX ?? fallback?.x ?? null,
       hitLocationY: parsedY ?? fallback?.y ?? null,
@@ -224,6 +229,7 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       outType: options?.outType ?? null,
       hitType: options?.hitType ?? null,
       swingType: options?.swingType ?? null,
+      homeRunType: options?.homeRunType ?? null,
     }),
 
   setCounter: (key, value) => {
@@ -292,6 +298,7 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
       out_type: state.outType,
       hit_type: state.hitType,
       swing_type: state.swingType,
+      home_run_type: state.homeRunType,
       hit_direction_id: state.hitDirectionId,
       hit_location_x: roundLocation(state.hitLocationX),
       hit_location_y: roundLocation(state.hitLocationY),

@@ -26,6 +26,11 @@ export interface BattingStats {
     two_base_hit: number;
     three_base_hit: number;
     home_run: number;
+    /**
+     * 走本塁打（ランニング本塁打）の本数。home_run の内数。
+     * 古いバックエンドを向いているときはキー自体が返らない。
+     */
+    inside_the_park_home_run?: number;
     total_bases: number;
     runs_batted_in: number;
     run: number;

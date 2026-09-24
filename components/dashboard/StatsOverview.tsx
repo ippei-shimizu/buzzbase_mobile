@@ -12,7 +12,11 @@ import { useAvailableYears } from "@hooks/useAvailableYears";
 import { useProfileStats } from "@hooks/useProfileStats";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useTournaments } from "@hooks/useTournaments";
-import { formatRate, formatEra } from "@utils/formatStats";
+import {
+  formatRate,
+  formatEra,
+  formatHomeRunWithInsideThePark,
+} from "@utils/formatStats";
 import { monthOptionsFromRecorded } from "@utils/monthOptions";
 import {
   normalizeBattingStats,
@@ -102,7 +106,12 @@ const BattingSection = ({
                 "三塁打",
                 agg.three_base_hit ?? "-",
                 "本塁打",
-                agg.home_run ?? "-",
+                agg.home_run == null
+                  ? "-"
+                  : formatHomeRunWithInsideThePark(
+                      agg.home_run,
+                      agg.inside_the_park_home_run,
+                    ),
               ],
               [
                 "塁打",

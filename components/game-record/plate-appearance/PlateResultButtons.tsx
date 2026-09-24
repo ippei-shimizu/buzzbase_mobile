@@ -39,8 +39,9 @@ interface Props {
 const OUT_PLATE_RESULT_IDS: readonly PlateResultId[] = OUT_TYPE_OPTIONS.map(
   (option) => option.plate_result_id,
 );
-const HIT_PLATE_RESULT_IDS: readonly PlateResultId[] = HIT_TYPE_OPTIONS.map(
-  (option) => option.plate_result_id,
+// 柵越え本塁打と走本塁打が同じ plate_result_id を持つため、集合として照合する。
+const HIT_PLATE_RESULT_IDS: ReadonlySet<PlateResultId> = new Set(
+  HIT_TYPE_OPTIONS.map((option) => option.plate_result_id),
 );
 
 const PRIMARY_COLOR = "#d08000";
@@ -110,8 +111,8 @@ export function PlateResultButtons({
     selectedPlateResultId !== null &&
     OUT_PLATE_RESULT_IDS.includes(selectedPlateResultId);
   const isHitSelected =
-    selectedPlateResultId !== null &&
-    HIT_PLATE_RESULT_IDS.includes(selectedPlateResultId);
+    selectedPlateResultId != null &&
+    HIT_PLATE_RESULT_IDS.has(selectedPlateResultId);
   return (
     <View>
       <View style={styles.section}>
