@@ -465,50 +465,50 @@ export function HitDirectionArt() {
         </G>
       </PhoneMock>
 
-      {/* 円形の吹き出し。左は引っ張り、右は流しの傾向を示す */}
+      {/* 円形の吹き出し。端末に重ならないよう画面の外側に置く */}
       <G>
         <Circle
-          cx={44}
-          cy={70}
-          r={31}
-          fill={BODY}
-          stroke={MUTED}
-          strokeWidth={2}
-        />
-        <SvgText
-          x={44}
-          y={66}
-          fill={INK}
-          fontSize={12}
-          fontWeight="bold"
-          textAnchor="middle"
-        >
-          引っ張り
-        </SvgText>
-        <Rect x={28} y={74} width={32} height={6} rx={3} fill={MUTED} />
-        <Rect x={28} y={74} width={26} height={6} rx={3} fill={BRAND} />
-      </G>
-      <G>
-        <Circle
-          cx={240}
-          cy={140}
+          cx={30}
+          cy={72}
           r={28}
           fill={BODY}
           stroke={MUTED}
           strokeWidth={2}
         />
         <SvgText
-          x={240}
-          y={136}
+          x={30}
+          y={69}
           fill={INK}
-          fontSize={12}
+          fontSize={11}
+          fontWeight="bold"
+          textAnchor="middle"
+        >
+          引っ張り
+        </SvgText>
+        <Rect x={16} y={76} width={28} height={6} rx={3} fill={MUTED} />
+        <Rect x={16} y={76} width={23} height={6} rx={3} fill={BRAND} />
+      </G>
+      <G>
+        <Circle
+          cx={250}
+          cy={138}
+          r={27}
+          fill={BODY}
+          stroke={MUTED}
+          strokeWidth={2}
+        />
+        <SvgText
+          x={250}
+          y={135}
+          fill={INK}
+          fontSize={11}
           fontWeight="bold"
           textAnchor="middle"
         >
           流し
         </SvgText>
-        <Rect x={227} y={144} width={26} height={6} rx={3} fill={MUTED} />
-        <Rect x={227} y={144} width={11} height={6} rx={3} fill={BRAND} />
+        <Rect x={237} y={142} width={26} height={6} rx={3} fill={MUTED} />
+        <Rect x={237} y={142} width={11} height={6} rx={3} fill={BRAND} />
       </G>
       <Sparkle x={236} y={30} size={9} />
     </ArtCanvas>
