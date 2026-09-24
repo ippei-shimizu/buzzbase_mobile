@@ -38,6 +38,11 @@ export const defaultHandlers = [
   http.get(`${API_V1_URL}/pro/status`, () =>
     HttpResponse.json(DEFAULT_PRO_STATUS),
   ),
+  // Paywall の価値画面が本人の打球データを描くために走らせる。既定は空を返し、
+  // サンプル表示にフォールバックさせる。
+  http.get(`${API_BASE_URL}/api/v2/stats/hit_directions`, () =>
+    HttpResponse.json({ directions: [], home_runs: [] }),
+  ),
   // 打席詳細画面の単体取得。既定は 404（テスト側で server.use により実データを返す）。
   // `:id` パターンは by_game より後に評価されるよう、by_game も明示しておく。
   http.get(
