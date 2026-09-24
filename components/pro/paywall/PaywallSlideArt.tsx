@@ -803,10 +803,12 @@ interface PitchBallProps {
   r: number;
   /** 打率に応じた縁の色。 */
   ringColor: string;
+  /** 縫い目の傾き（度）。球種ごとの握り・回転の向きに合わせる。 */
+  seamRotation: number;
 }
 
-/** 球のイラスト。白い円に赤い縫い目を 2 本入れる。 */
-function PitchBall({ cx, cy, r, ringColor }: PitchBallProps) {
+/** 球のイラスト。白い円に赤い縫い目を 2 本入れ、球種ごとに縫い目を傾ける。 */
+function PitchBall({ cx, cy, r, ringColor, seamRotation }: PitchBallProps) {
   const seamOffset = r * 0.58;
   const seamReach = r * 0.78;
   const stitchYs = [-0.42, 0, 0.42];
@@ -820,29 +822,31 @@ function PitchBall({ cx, cy, r, ringColor }: PitchBallProps) {
         stroke={ringColor}
         strokeWidth={3}
       />
-      {[-1, 1].map((side) => (
-        <G key={side}>
-          <Path
-            d={`M ${cx + side * seamOffset},${cy - seamReach} Q ${cx + side * r * 0.12},${cy} ${cx + side * seamOffset},${cy + seamReach}`}
-            fill="none"
-            stroke="#d64545"
-            strokeWidth={1.6}
-            strokeLinecap="round"
-          />
-          {stitchYs.map((ratio) => (
-            <Line
-              key={ratio}
-              x1={cx + side * (seamOffset - r * 0.16)}
-              y1={cy + r * ratio - r * 0.06}
-              x2={cx + side * (seamOffset + r * 0.14)}
-              y2={cy + r * ratio + r * 0.06}
+      <G transform={`rotate(${seamRotation} ${cx} ${cy})`}>
+        {[-1, 1].map((side) => (
+          <G key={side}>
+            <Path
+              d={`M ${cx + side * seamOffset},${cy - seamReach} Q ${cx + side * r * 0.12},${cy} ${cx + side * seamOffset},${cy + seamReach}`}
+              fill="none"
               stroke="#d64545"
-              strokeWidth={1.2}
+              strokeWidth={1.6}
               strokeLinecap="round"
             />
-          ))}
-        </G>
-      ))}
+            {stitchYs.map((ratio) => (
+              <Line
+                key={ratio}
+                x1={cx + side * (seamOffset - r * 0.16)}
+                y1={cy + r * ratio - r * 0.06}
+                x2={cx + side * (seamOffset + r * 0.14)}
+                y2={cy + r * ratio + r * 0.06}
+                stroke="#d64545"
+                strokeWidth={1.2}
+                strokeLinecap="round"
+              />
+            ))}
+          </G>
+        ))}
+      </G>
     </G>
   );
 }
@@ -853,42 +857,49 @@ function PitchBall({ cx, cy, r, ringColor }: PitchBallProps) {
  * 端末を使わない唯一のスライドで、球種の並びが一目で比べられる。
  */
 export function PitchTypeArt() {
+  // seamRotation は球種の握り・回転の向きに合わせる。
+  // ストレートは縦回転で縫い目が立ち、カーブは横回転で寝る。
+  // スライダー・フォークは斜めに握るため互いに逆向きへ傾ける。
   const pitches = [
     {
-      cx: 44,
+      cx: 42,
       cy: 50,
       r: 26,
-      textX: 80,
+      textX: 78,
       name: "ストレート",
       average: 0.368,
       detail: "38打数 14安打",
+      seamRotation: 0,
     },
     {
-      cx: 179,
+      cx: 176,
       cy: 50,
       r: 23,
-      textX: 212,
+      textX: 209,
       name: "スライダー",
       average: 0.25,
       detail: "24打数 6安打",
+      seamRotation: 45,
     },
     {
-      cx: 44,
+      cx: 42,
       cy: 136,
       r: 23,
-      textX: 80,
+      textX: 78,
       name: "カーブ",
       average: 0.188,
       detail: "16打数 3安打",
+      seamRotation: 90,
     },
     {
-      cx: 179,
+      cx: 176,
       cy: 136,
       r: 23,
-      textX: 212,
+      textX: 209,
       name: "フォーク",
       average: 0.143,
       detail: "14打数 2安打",
+      seamRotation: -35,
     },
   ];
   // 色分けは他の成績スライドと同じ固定閾値のスケールに揃える。
@@ -919,30 +930,31 @@ export function PitchTypeArt() {
               cy={pitch.cy}
               r={pitch.r}
               ringColor={color}
+              seamRotation={pitch.seamRotation}
             />
             <SvgText
               x={pitch.textX}
-              y={pitch.cy - 8}
+              y={pitch.cy - 10}
               fill={INK}
-              fontSize={10}
+              fontSize={13}
               fontWeight="bold"
             >
               {pitch.name}
             </SvgText>
             <SvgText
               x={pitch.textX}
-              y={pitch.cy + 13}
+              y={pitch.cy + 14}
               fill={color}
-              fontSize={17}
+              fontSize={22}
               fontWeight="bold"
             >
               {formatAverage(pitch.average)}
             </SvgText>
             <SvgText
               x={pitch.textX}
-              y={pitch.cy + 25}
+              y={pitch.cy + 28}
               fill={SUB_INK}
-              fontSize={6.5}
+              fontSize={8.5}
             >
               {pitch.detail}
             </SvgText>
