@@ -1345,25 +1345,26 @@ export function SeasonTrendArt() {
       {/* 伸び幅のバッジ */}
       <G>
         <Rect
-          x={196}
+          x={194}
           y={20}
-          width={60}
+          width={64}
           height={26}
           rx={13}
           fill="rgba(208, 128, 0, 0.18)"
           stroke={BRAND}
           strokeWidth={1.5}
         />
-        <Polygon points="210,31 215,24 220,31" fill={BRAND} />
+        {/* 上向き三角が「伸びた」を表すので、数値に + は付けない */}
+        <Polygon points="202,37 208,26 214,37" fill={BRAND} />
         <SvgText
-          x={248}
-          y={39}
+          x={250}
+          y={38}
           fill={BRAND}
           fontSize={14}
           fontWeight="bold"
           textAnchor="end"
         >
-          +.073
+          .073
         </SvgText>
       </G>
 
