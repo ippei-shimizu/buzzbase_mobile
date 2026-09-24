@@ -142,7 +142,7 @@ describe("ProScreen", () => {
     expect(await findByText("￥980/月")).toBeTruthy();
   });
 
-  it("年額プランに月額換算比のお得金額バッジが表示される", async () => {
+  it("年額プランに月額換算比のお得額が表示される", async () => {
     setupSnackbar();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
 
@@ -151,7 +151,9 @@ describe("ProScreen", () => {
     await goToPlanStep(findByLabelText);
 
     // 月額980円×12=11,760円 に対し年額9,800円 → 1,960円お得。
-    expect(await findByText("年間￥1,960お得")).toBeTruthy();
+    expect(
+      await findByText("月あたり ￥817・1 年で ￥1,960 お得"),
+    ).toBeTruthy();
   });
 
   it("プランを選択して PROを始めるを押すと購入し、成功後 success 画面へ遷移する", async () => {

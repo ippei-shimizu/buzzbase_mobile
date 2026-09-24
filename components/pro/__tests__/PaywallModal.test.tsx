@@ -253,9 +253,9 @@ describe("PaywallModal", () => {
     );
 
     expect(getByText("Pro でできること")).toBeOnTheScreen();
-    expect(getByLabelText("広告に邪魔されない")).toBeOnTheScreen();
-    expect(getByLabelText("フォームを動画で残す")).toBeOnTheScreen();
-    expect(getByLabelText("チームや仲間と競い合う")).toBeOnTheScreen();
+    expect(getByLabelText("広告がすべて消える")).toBeOnTheScreen();
+    expect(getByLabelText("動画と画像を無制限に残せる")).toBeOnTheScreen();
+    expect(getByLabelText("グループをいくつでも作れる")).toBeOnTheScreen();
   });
 
   it("価値画面によくある質問が並び、解約してもデータが残ることを示す", () => {
@@ -332,7 +332,7 @@ describe("PaywallModal", () => {
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
-  it("価値画面では価格を出さず、CTA を押すとプラン画面で価格を表示する", async () => {
+  it("CTA を押すとプラン画面に切り替わり、両プランを選べる", async () => {
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
 
     const { findByLabelText, findByText, queryByText } = renderWithProviders(
@@ -340,12 +340,13 @@ describe("PaywallModal", () => {
     );
 
     await findByLabelText("7日間無料で試す");
-    expect(queryByText("月額プラン")).not.toBeOnTheScreen();
+    expect(queryByText("プランを選ぶ")).not.toBeOnTheScreen();
 
     await goToPlanStep(findByLabelText);
 
-    expect(await findByText("月額プラン")).toBeTruthy();
-    expect(await findByText("年額プラン")).toBeTruthy();
+    expect(await findByText("プランを選ぶ")).toBeOnTheScreen();
+    expect(await findByLabelText("月額プラン ￥980")).toBeOnTheScreen();
+    expect(await findByLabelText("年額プラン ￥9,800")).toBeOnTheScreen();
   });
 
   it("年額プランに月あたり金額と月額換算比のお得額が表示される", async () => {
@@ -422,12 +423,12 @@ describe("PaywallModal", () => {
     );
 
     await goToPlanStep(findByLabelText);
-    await findByText("月額プラン");
+    await findByText("プランを選ぶ");
 
     fireEvent.press(await findByLabelText("戻る"));
 
-    expect(await findByText("広告を非表示にして集中する")).toBeOnTheScreen();
-    expect(queryByText("月額プラン")).not.toBeOnTheScreen();
+    expect(await findByLabelText("広告なしで記録に集中")).toBeOnTheScreen();
+    expect(queryByText("プランを選ぶ")).not.toBeOnTheScreen();
   });
 
   it("Pro状態の判定確定前は、実際はトライアル利用済みでもCTAボタンに中立文言を表示する", async () => {
