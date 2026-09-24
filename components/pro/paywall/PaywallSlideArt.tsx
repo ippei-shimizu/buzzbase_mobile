@@ -610,16 +610,42 @@ function CountPhone({
  * 対戦投手別の打撃成績。
  * 構図: 端末の画面に投手の一覧を映し、左に得意な投手のカードを飛び出させる
  * （みてねの「2分以上の動画」型）。
+ * 行の項目は実際の一覧（PitcherFaceoffList）に揃え、投手名・チーム名・投げる手・
+ * タイプ・対戦数・打率・打数安打を並べる。
  */
 export function PitcherFaceoffArt() {
   const bezel = PHONE.width * 0.045;
   const screenX = PHONE.x + bezel;
-  const rowX = 72;
-  const rowWidth = 136;
+  const rowX = 70;
+  const rowWidth = 140;
   const rows = [
-    { y: 58, average: 0.421, hand: "右", highlighted: true },
-    { y: 92, average: 0.286, hand: "左", highlighted: false },
-    { y: 126, average: 0.15, hand: "右", highlighted: false },
+    {
+      y: 54,
+      name: "投手 A",
+      attributes: "〇〇高校・右投げ・パワー",
+      faced: "21対戦",
+      average: 0.421,
+      atBats: "19-8",
+      highlighted: true,
+    },
+    {
+      y: 94,
+      name: "投手 B",
+      attributes: "△△高校・左投げ・技巧派",
+      faced: "16対戦",
+      average: 0.286,
+      atBats: "14-4",
+      highlighted: false,
+    },
+    {
+      y: 134,
+      name: "投手 C",
+      attributes: "□□高校・右投げ・130km/h台",
+      faced: "22対戦",
+      average: 0.15,
+      atBats: "20-3",
+      highlighted: false,
+    },
   ];
   // 色分けは他の成績スライドと同じ固定閾値のスケールに揃える。
   const colorForAverage = (average: number): string => {
@@ -631,14 +657,11 @@ export function PitcherFaceoffArt() {
   };
   const formatAverage = (average: number): string =>
     average.toFixed(3).replace(/^0\./, ".");
-  /** 投手のアイコン（頭と肩だけの簡略図）。 */
-  const pitcherGlyph = (cx: number, cy: number, scale: number) => (
+  /** 投手のアイコン（頭と肩だけの簡略図）。飛び出すカードにだけ使う。 */
+  const pitcherGlyph = (cx: number, cy: number) => (
     <G>
-      <Circle cx={cx} cy={cy - 3.4 * scale} r={3.2 * scale} fill={SUB_INK} />
-      <Path
-        d={`M ${cx - 6 * scale},${cy + 6 * scale} a ${6 * scale},${6 * scale} 0 0 1 ${12 * scale},0 Z`}
-        fill={SUB_INK}
-      />
+      <Circle cx={cx} cy={cy - 3.4} r={3.2} fill={SUB_INK} />
+      <Path d={`M ${cx - 6},${cy + 6} a 6,6 0 0 1 12,0 Z`} fill={SUB_INK} />
     </G>
   );
 
@@ -647,69 +670,49 @@ export function PitcherFaceoffArt() {
       <Confetti
         items={[
           { cx: 256, cy: 36, r: 9, fill: "#4F9E6B", opacity: 0.22 },
-          { cx: 240, cy: 166, r: 11, fill: BRAND, opacity: 0.18 },
+          { cx: 240, cy: 168, r: 11, fill: BRAND, opacity: 0.18 },
         ]}
       />
       <PhoneMock {...PHONE} showHomeIndicator={false}>
-        <Rect
+        <SvgText
           x={screenX + 12}
-          y={42}
-          width={46}
-          height={6}
-          rx={3}
-          fill={MUTED}
-        />
+          y={46}
+          fill={INK}
+          fontSize={9}
+          fontWeight="bold"
+        >
+          対戦投手別
+        </SvgText>
         {rows.map((row) => (
           <G key={row.y}>
             <Rect
               x={rowX}
               y={row.y}
               width={rowWidth}
-              height={30}
+              height={36}
               rx={8}
               fill={row.highlighted ? "rgba(208, 128, 0, 0.16)" : CARD_BG}
               stroke={row.highlighted ? BRAND : CARD_EDGE}
               strokeWidth={row.highlighted ? 1.5 : 1}
             />
-            <Circle cx={rowX + 17} cy={row.y + 15} r={10} fill={BODY} />
-            {pitcherGlyph(rowX + 17, row.y + 15, 1)}
-            <Rect
-              x={rowX + 33}
-              y={row.y + 8}
-              width={40}
-              height={6}
-              rx={3}
-              fill={MUTED}
-            />
-            <Rect
-              x={rowX + 33}
-              y={row.y + 18}
-              width={24}
-              height={4}
-              rx={2}
-              fill={MUTED}
-              opacity={0.7}
-            />
-            <Rect
-              x={rowX + 80}
-              y={row.y + 10}
-              width={13}
-              height={11}
-              rx={3}
-              fill={BODY}
-            />
             <SvgText
-              x={rowX + 86.5}
-              y={row.y + 18.5}
-              fill={SUB_INK}
-              fontSize={7.5}
-              textAnchor="middle"
+              x={rowX + 8}
+              y={row.y + 13}
+              fill={INK}
+              fontSize={8.5}
+              fontWeight="bold"
             >
-              {row.hand}
+              {`▶ ${row.name}`}
+            </SvgText>
+            <SvgText x={rowX + 8} y={row.y + 23} fill={SUB_INK} fontSize={6.2}>
+              {row.attributes}
+            </SvgText>
+            <SvgText x={rowX + 8} y={row.y + 32} fill={SUB_INK} fontSize={6.2}>
+              {row.faced}
             </SvgText>
             <SvgText
-              x={rowX + rowWidth - 10}
-              y={row.y + 20}
+              x={rowX + rowWidth - 8}
+              y={row.y + 18}
               fill={colorForAverage(row.average)}
               fontSize={14}
               fontWeight="bold"
@@ -717,14 +720,23 @@ export function PitcherFaceoffArt() {
             >
               {formatAverage(row.average)}
             </SvgText>
+            <SvgText
+              x={rowX + rowWidth - 8}
+              y={row.y + 29}
+              fill={SUB_INK}
+              fontSize={6.2}
+              textAnchor="end"
+            >
+              {row.atBats}
+            </SvgText>
           </G>
         ))}
         {/* 続きがあることを示す 4 行目 */}
         <Rect
           x={rowX}
-          y={160}
+          y={174}
           width={rowWidth}
-          height={30}
+          height={36}
           rx={8}
           fill={CARD_BG}
           opacity={0.45}
@@ -732,13 +744,13 @@ export function PitcherFaceoffArt() {
       </PhoneMock>
 
       {/* 得意な投手を飛び出させたカード */}
-      <G transform="rotate(-6 37 102)">
-        <Card x={6} y={74} width={62} height={58} fill="#2E2E30" />
-        <Circle cx={22} cy={96} r={10} fill={BODY} />
-        {pitcherGlyph(22, 96, 1)}
+      <G transform="rotate(-6 36 104)">
+        <Card x={5} y={76} width={62} height={58} fill="#2E2E30" />
+        <Circle cx={21} cy={98} r={10} fill={BODY} />
+        {pitcherGlyph(21, 98)}
         <SvgText
-          x={48}
-          y={101}
+          x={47}
+          y={103}
           fill={BRAND}
           fontSize={15}
           fontWeight="bold"
@@ -747,16 +759,16 @@ export function PitcherFaceoffArt() {
           .421
         </SvgText>
         <SvgText
-          x={37}
-          y={122}
+          x={36}
+          y={124}
           fill={SUB_INK}
-          fontSize={7.5}
+          fontSize={6.5}
           textAnchor="middle"
         >
-          右投げ・14打数
+          〇〇高校・右投げ
         </SvgText>
       </G>
-      <Sparkle x={236} y={92} size={9} />
+      <Sparkle x={238} y={94} size={9} />
     </ArtCanvas>
   );
 }
