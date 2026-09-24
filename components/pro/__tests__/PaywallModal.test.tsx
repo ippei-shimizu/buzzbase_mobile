@@ -825,8 +825,8 @@ describe("orderSlides", () => {
 
     expect(slides.map((slide) => slide.key)).toEqual([
       "hit_direction",
-      "count_situation",
       "pitch_course",
+      "count_situation",
       "season_trend",
       "no_ads",
     ]);

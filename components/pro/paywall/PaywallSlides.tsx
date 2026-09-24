@@ -30,7 +30,8 @@ interface SlideCopy {
   description: string;
 }
 
-// 既定の並び順。打席の詳細入力を持つユーザーが多い成績分析を先に見せる。
+// 既定の並び順。図だけで「何が読み取れるか」が伝わる成績分析を先に見せる。
+// 方向別 → コース別はどちらもヒートマップで、打率の高低が一目で分かる。
 const SLIDES: readonly SlideCopy[] = [
   {
     key: "hit_direction",
@@ -39,16 +40,16 @@ const SLIDES: readonly SlideCopy[] = [
       "どこへ打ったときに結果が出ているかを、球場図のヒートマップで確認できます。",
   },
   {
-    key: "count_situation",
-    title: "カウント別の\n強さが見える",
-    description:
-      "初球・有利カウント・追い込みで打率がどう変わるかを比べられます。",
-  },
-  {
     key: "pitch_course",
     title: "コース別の\n得意・苦手がわかる",
     description:
       "ゾーンごとのヒートマップで、狙い球と苦手コースがはっきりします。",
+  },
+  {
+    key: "count_situation",
+    title: "カウント別の\n強さが見える",
+    description:
+      "初球・有利カウント・追い込みで打率がどう変わるかを比べられます。",
   },
   {
     key: "season_trend",

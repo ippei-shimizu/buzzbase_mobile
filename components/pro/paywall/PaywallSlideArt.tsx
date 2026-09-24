@@ -22,6 +22,7 @@ import {
   GROUND_SECOND,
   GROUND_THIRD,
 } from "@constants/groundCanvas";
+import { PITCH_COURSE_TRACK_FRACTIONS } from "@constants/pitchCourse";
 
 /**
  * Paywall スライドの機能紹介イラスト。
@@ -605,112 +606,126 @@ export function CountSituationArt() {
 
 /**
  * コース別の打率。
- * 構図: 傾けたカードを重ね、右下に丸いバッジを添える（みてねの「まとめてダウンロード」型）。
+ * 構図: 端末の画面に 5x5 のコース別ヒートマップを映し、下にホームベースを置く。
+ * 中央 3x3（ストライクゾーン）には打率を載せ、外周のボールゾーンは沈ませる。
  */
 export function PitchCourseArt() {
-  const cellSize = 24;
-  const gap = 4;
-  const originX = 106;
-  const originY = 52;
-  // 真ん中〜内寄りが得意、外角低めが苦手という分かりやすい濃淡にする。
-  const opacities = [0.28, 0.5, 0.2, 0.68, 1, 0.42, 0.36, 0.58, 0.16];
+  const phone = { x: 60, y: 12, width: 160, height: 250 };
+  const bezel = phone.width * 0.045;
+  const screenX = phone.x + bezel;
+  const gridSize = 112;
+  const gridX = phone.x + (phone.width - gridSize) / 2;
+  const gridY = 54;
+  // トラック比は実際のコース図（PITCH_COURSE_TRACK_FRACTIONS）と同じで、
+  // 外周のボールゾーンだけ細くなる。
+  const total = PITCH_COURSE_TRACK_FRACTIONS.reduce(
+    (sum, fraction) => sum + fraction,
+    0,
+  );
+  const sizes = PITCH_COURSE_TRACK_FRACTIONS.map(
+    (fraction) => (fraction / total) * gridSize,
+  );
+  const offsets = sizes.reduce<number[]>(
+    (acc, size, index) => [...acc, acc[index] + size],
+    [0],
+  );
+  // ストライクゾーン 9 マスの打率（イラスト用のダミー値）。真ん中が得意、
+  // 低め外寄りが苦手という読み取りやすい散らし方にする。
+  const strikeAverages = [
+    [0.333, 0.286, 0.2],
+    [0.4, 0.476, 0.25],
+    [0.214, 0.3, 0.118],
+  ];
+  // 色分けは実際のコース別カードと同じ固定閾値のスケールに揃える。
+  const colorForAverage = (average: number): string => {
+    if (average >= 0.45) return "#d64545";
+    if (average >= 0.35) return "#d98236";
+    if (average >= 0.25) return "#c9a227";
+    if (average >= 0.15) return "#4f9e6b";
+    return "#4173b3";
+  };
+  const formatAverage = (average: number): string =>
+    average.toFixed(3).replace(/^0\./, ".");
+  const zoneX = gridX + offsets[1];
+  const zoneY = gridY + offsets[1];
+  const zoneSize = offsets[4] - offsets[1];
+
   return (
     <ArtCanvas>
       <Confetti
         items={[
-          { cx: 32, cy: 44, r: 10, fill: "#4F9E6B", opacity: 0.22 },
-          { cx: 250, cy: 40, r: 7, fill: BRAND, opacity: 0.25 },
+          { cx: 30, cy: 44, r: 10, fill: "#4F9E6B", opacity: 0.22 },
+          { cx: 254, cy: 152, r: 9, fill: BRAND, opacity: 0.22 },
         ]}
       />
-      <G transform="rotate(-9 140 100)">
-        <Card
-          x={76}
-          y={36}
-          width={128}
-          height={124}
-          fill={BODY}
-          opacity={0.55}
-        />
-      </G>
-      <G transform="rotate(4 140 100)">
-        <Card x={84} y={34} width={120} height={124} />
-        {opacities.map((opacity, index) => {
-          const row = Math.floor(index / 3);
-          const col = index % 3;
-          return (
-            <Rect
-              key={index}
-              x={originX + col * (cellSize + gap)}
-              y={originY + row * (cellSize + gap)}
-              width={cellSize}
-              height={cellSize}
-              rx={5}
-              fill={BRAND}
-              opacity={opacity}
-            />
-          );
-        })}
+      <PhoneMock {...phone} showHomeIndicator={false}>
         <Rect
-          x={originX - 6}
-          y={originY - 6}
-          width={3 * cellSize + 2 * gap + 12}
-          height={3 * cellSize + 2 * gap + 12}
-          rx={8}
+          x={screenX + 12}
+          y={44}
+          width={46}
+          height={6}
+          rx={3}
+          fill={MUTED}
+        />
+        {/* ボールゾーンを含む 5x5 */}
+        {sizes.map((cellHeight, row) =>
+          sizes.map((cellWidth, col) => {
+            const isStrike = row >= 1 && row <= 3 && col >= 1 && col <= 3;
+            const average = isStrike
+              ? strikeAverages[row - 1][col - 1]
+              : undefined;
+            const x = gridX + offsets[col];
+            const y = gridY + offsets[row];
+            return (
+              <G key={`${row}-${col}`}>
+                <Rect
+                  x={x + 1}
+                  y={y + 1}
+                  width={cellWidth - 2}
+                  height={cellHeight - 2}
+                  rx={3}
+                  fill={
+                    average === undefined ? MUTED : colorForAverage(average)
+                  }
+                  opacity={average === undefined ? 0.35 : 0.92}
+                />
+                {average === undefined ? null : (
+                  <SvgText
+                    x={x + cellWidth / 2}
+                    y={y + cellHeight / 2 + 3.2}
+                    fill={INK}
+                    fontSize={9}
+                    fontWeight="bold"
+                    textAnchor="middle"
+                  >
+                    {formatAverage(average)}
+                  </SvgText>
+                )}
+              </G>
+            );
+          }),
+        )}
+        {/* ストライクゾーンの枠 */}
+        <Rect
+          x={zoneX}
+          y={zoneY}
+          width={zoneSize}
+          height={zoneSize}
+          rx={4}
           fill="none"
           stroke={INK}
-          strokeWidth={1.4}
-          opacity={0.5}
+          strokeWidth={2}
+          opacity={0.85}
         />
-      </G>
-      {/* 狙いを定めるバッジ */}
-      <G>
-        <Circle cx={208} cy={144} r={22} fill={BRAND} />
-        <Circle
-          cx={208}
-          cy={144}
-          r={10}
-          fill="none"
-          stroke={INK}
-          strokeWidth={2.4}
+        {/* ホームベース（捕手目線） */}
+        <Polygon
+          points="127,171 153,171 153,179 140,187 127,179"
+          fill={INK}
+          opacity={0.85}
         />
-        <Line
-          x1={208}
-          y1={128}
-          x2={208}
-          y2={136}
-          stroke={INK}
-          strokeWidth={2.4}
-          strokeLinecap="round"
-        />
-        <Line
-          x1={208}
-          y1={152}
-          x2={208}
-          y2={160}
-          stroke={INK}
-          strokeWidth={2.4}
-          strokeLinecap="round"
-        />
-        <Line
-          x1={192}
-          y1={144}
-          x2={200}
-          y2={144}
-          stroke={INK}
-          strokeWidth={2.4}
-          strokeLinecap="round"
-        />
-        <Line
-          x1={216}
-          y1={144}
-          x2={224}
-          y2={144}
-          stroke={INK}
-          strokeWidth={2.4}
-          strokeLinecap="round"
-        />
-      </G>
-      <Sparkle x={54} y={136} size={8} />
+      </PhoneMock>
+      <Sparkle x={42} y={118} size={9} />
+      <Sparkle x={244} y={50} size={8} color="#5B8DEF" />
     </ArtCanvas>
   );
 }
