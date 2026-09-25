@@ -4,6 +4,7 @@
  * 検証対象:
  * - 複数の投手の行を同時に展開できる
  * - 展開済みの行を再度押すとその行だけ閉じる
+ * - rows が差し替わっても展開状態を持ち越す
  */
 import type { PitcherFaceoff } from "../../../types/stats";
 import { fireEvent, render, screen } from "@testing-library/react-native";
@@ -71,6 +72,18 @@ describe("PitcherFaceoffList", () => {
 
     expect(isExpanded("投手A")).toBe(false);
     expect(isExpanded("投手B")).toBe(true);
+    expect(screen.getAllByText("出塁率")).toHaveLength(1);
+  });
+
+  // rows の差し替えは pull to refresh や refetch でも起きるため、展開状態は意図的に持ち越す。
+  it("rows が差し替わっても展開済みの行の状態を保つ", () => {
+    const { rerender } = renderList();
+
+    pressRow("投手A");
+    rerender(buildList([buildRow(1, "投手A"), buildRow(3, "投手C")]));
+
+    expect(isExpanded("投手A")).toBe(true);
+    expect(isExpanded("投手C")).toBe(false);
     expect(screen.getAllByText("出塁率")).toHaveLength(1);
   });
 });
