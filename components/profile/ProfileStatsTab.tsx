@@ -124,13 +124,14 @@ export const ProfileStatsTab = ({
                 "長打率",
                 formatStat(calc?.slugging_percentage),
               ],
-              ["OPS", formatStat(calc?.ops), "ISO", formatStat(calc?.iso)],
               [
-                "ISOD",
-                formatStat(calc?.isod),
-                "BB/K",
-                formatStat(calc?.bb_per_k),
+                "OPS",
+                formatStat(calc?.ops),
+                "得点圏打率",
+                formatStat(calc?.scoring_position_batting_average),
               ],
+              ["ISO", formatStat(calc?.iso), "ISOD", formatStat(calc?.isod)],
+              ["BB/K", formatStat(calc?.bb_per_k), "", ""],
             ]}
           />
         </View>
