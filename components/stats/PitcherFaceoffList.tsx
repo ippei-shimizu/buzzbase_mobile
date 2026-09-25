@@ -30,7 +30,11 @@ export const PitcherFaceoffList = ({
   const toggleExpanded = (pitcherId: number) => {
     setExpandedIds((current) => {
       const next = new Set(current);
-      if (!next.delete(pitcherId)) next.add(pitcherId);
+      if (next.has(pitcherId)) {
+        next.delete(pitcherId);
+      } else {
+        next.add(pitcherId);
+      }
       return next;
     });
   };
