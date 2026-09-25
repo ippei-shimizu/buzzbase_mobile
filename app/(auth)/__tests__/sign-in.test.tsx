@@ -304,6 +304,31 @@ describe("sign-in: メール/パスワード ログイン", () => {
     expect(routerSpies.replace).not.toHaveBeenCalled();
   });
 
+  it("API に到達できない時はネットワークエラーの文言を表示する", async () => {
+    server.use(http.post(apiUrl("/auth/sign_in"), () => HttpResponse.error()));
+
+    const { getByPlaceholderText, getByText, findByText, queryByText } =
+      renderSignIn();
+
+    fireEvent.changeText(
+      getByPlaceholderText("email@example.com"),
+      "test@example.com",
+    );
+    fireEvent.changeText(
+      getByPlaceholderText("6文字以上の半角英数字"),
+      "password123",
+    );
+    fireEvent.press(getByText("ログイン"));
+
+    await findByText(
+      "ネットワークエラーが発生しました。通信状況を確認してもう一度お試しください",
+    );
+    // 通信断をサーバーエラーと取り違えていないことを確認する。
+    expect(
+      queryByText("エラーが発生しました。もう一度お試しください"),
+    ).toBeNull();
+  });
+
   it("レート制限（429）時は back が返した文言を表示する", async () => {
     server.use(
       http.post(apiUrl("/auth/sign_in"), () =>
