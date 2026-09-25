@@ -146,7 +146,8 @@ export default function SummaryScreen() {
   const handleComplete = async () => {
     // 編集保存も summary を経由するため、新規作成のみを完了として計測する。
     // resetFlow() で store がクリアされる前に計測する。
-    if (!store.isEditMode) {
+    const isEditMode = store.isEditMode;
+    if (!isEditMode) {
       trackGameRecordCompleted({
         match_type: toMatchTypeKey(store.matchType),
         appearance_type: store.appearanceType,
@@ -161,7 +162,7 @@ export default function SummaryScreen() {
     const shown = await tryShowPrePrompt("complete");
     if (shown) return;
 
-    await showMatchSaveInterstitial(hasEntitlement("no_ads"));
+    await showMatchSaveInterstitial(hasEntitlement("no_ads"), isEditMode);
     router.replace({
       pathname: "/(tabs)/(game-results)",
       params: { tab: "list" },
@@ -171,7 +172,8 @@ export default function SummaryScreen() {
   const handleRecordNote = async () => {
     // resetFlow() で store がクリアされる前に gameResultId を退避する。
     const gameResultId = store.gameResultId;
-    if (!store.isEditMode) {
+    const isEditMode = store.isEditMode;
+    if (!isEditMode) {
       trackGameRecordCompleted({
         match_type: toMatchTypeKey(store.matchType),
         appearance_type: store.appearanceType,
@@ -180,7 +182,7 @@ export default function SummaryScreen() {
     }
     resetFlow();
     invalidateGameResultRelated(queryClient);
-    await showMatchSaveInterstitial(hasEntitlement("no_ads"));
+    await showMatchSaveInterstitial(hasEntitlement("no_ads"), isEditMode);
     router.replace({
       pathname: "/(note)/new",
       params: gameResultId ? { gameResultId: String(gameResultId) } : {},
