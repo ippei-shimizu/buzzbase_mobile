@@ -3,6 +3,7 @@
  */
 import { fireEvent } from "@testing-library/react-native";
 import { useAuthStore } from "@stores/authStore";
+import { NETWORK_ERROR_MESSAGE } from "@utils/axiosError";
 import {
   apiUrl,
   http,
@@ -77,6 +78,23 @@ describe("forgot-password: パスワードリセット申請", () => {
     fireEvent.press(getByText("送信する"));
 
     await findByText(GENERIC_MESSAGE);
+  });
+
+  it("API に到達できないときは送信完了扱いにせずネットワークエラーを表示する", async () => {
+    server.use(http.post(apiUrl("/auth/password"), () => HttpResponse.error()));
+
+    const { getByPlaceholderText, getByText, findByText, queryByText } =
+      renderForgotPassword();
+
+    fireEvent.changeText(
+      getByPlaceholderText("email@example.com"),
+      "offline@example.com",
+    );
+    fireEvent.press(getByText("送信する"));
+
+    await findByText(NETWORK_ERROR_MESSAGE);
+    // 通信断はメールアドレスの有無に依存しないため、列挙対策の一律成功表示に含めない。
+    expect(queryByText(GENERIC_MESSAGE)).toBeNull();
   });
 
   it("レート制限（429）のときは専用文言を表示し、送信完了画面に進まない", async () => {

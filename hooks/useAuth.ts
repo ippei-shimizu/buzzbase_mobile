@@ -6,7 +6,6 @@ import type {
 } from "../types/auth";
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
-import { isAxiosError } from "axios";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { appleSignIn } from "@services/appleAuthService";
@@ -23,6 +22,7 @@ import { googleSignIn } from "@services/googleAuthService";
 import { useAuthStore } from "@stores/authStore";
 import { useGameRecordStore } from "@stores/gameRecordStore";
 import { getAuthToken, clearAllAuthTokens } from "@utils/authTokenStorage";
+import { isNetworkError } from "@utils/axiosError";
 import { posthog } from "@utils/posthog";
 
 /**
@@ -56,7 +56,7 @@ export const useAuth = () => {
       } catch (error) {
         // ネットワーク到達不可は認証無効ではないためログイン継続。401 時は
         // axiosInstance のインターセプタ側で clearAllAuthTokens が走る。
-        if (isAxiosError(error) && !error.response) {
+        if (isNetworkError(error)) {
           setIsLoggedIn(true);
           return;
         }

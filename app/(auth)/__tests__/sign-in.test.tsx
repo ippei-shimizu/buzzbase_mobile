@@ -9,6 +9,7 @@
 import type { RouterSpies } from "../../../__tests__/test-utils/mockExpoRouter";
 import { fireEvent, waitFor } from "@testing-library/react-native";
 import { useAuthStore } from "@stores/authStore";
+import { NETWORK_ERROR_MESSAGE } from "@utils/axiosError";
 import {
   apiUrl,
   authSuccessHeaders,
@@ -242,7 +243,7 @@ describe("sign-in: メール/パスワード ログイン", () => {
     expect(
       queryByText("メールアドレスまたはパスワードが正しくありません"),
     ).toBeNull();
-    expect(queryByText("ネットワークエラーが発生しました")).toBeNull();
+    expect(queryByText(NETWORK_ERROR_MESSAGE)).toBeNull();
   });
 
   it("401 + confirmation エラー時は confirmation-pending へ遷移する", async () => {
@@ -302,6 +303,29 @@ describe("sign-in: メール/パスワード ログイン", () => {
     await findByText("メールアドレスまたはパスワードが正しくありません");
     const routerSpies = getRouterSpies();
     expect(routerSpies.replace).not.toHaveBeenCalled();
+  });
+
+  it("API に到達できない時はネットワークエラーの文言を表示する", async () => {
+    server.use(http.post(apiUrl("/auth/sign_in"), () => HttpResponse.error()));
+
+    const { getByPlaceholderText, getByText, findByText, queryByText } =
+      renderSignIn();
+
+    fireEvent.changeText(
+      getByPlaceholderText("email@example.com"),
+      "test@example.com",
+    );
+    fireEvent.changeText(
+      getByPlaceholderText("6文字以上の半角英数字"),
+      "password123",
+    );
+    fireEvent.press(getByText("ログイン"));
+
+    await findByText(NETWORK_ERROR_MESSAGE);
+    // 通信断をサーバーエラーと取り違えていないことを確認する。
+    expect(
+      queryByText("エラーが発生しました。もう一度お試しください"),
+    ).toBeNull();
   });
 
   it("レート制限（429）時は back が返した文言を表示する", async () => {
