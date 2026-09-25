@@ -404,14 +404,15 @@ describe("DashboardContent: 打撃成績表の得点圏打率", () => {
     expect(getByText(".312")).toBeTruthy();
   });
 
-  it("得点圏の打数が無いときは .000 ではなく「-」を表示する", async () => {
-    const { getByText, queryByText } = renderDashboard(
+  it("得点圏の打数が無いときは値セルに「-」を表示する", async () => {
+    const { getByText, getAllByText } = renderDashboard(
       withScoringPosition(null),
     );
 
     await waitFor(() => {
       expect(getByText("得点圏打率")).toBeTruthy();
     });
-    expect(queryByText(".000")).toBeNull();
+    // 集計値を全て埋めたフィクスチャなので、「-」は得点圏打率の値セルにしか出ない。
+    expect(getAllByText("-")).toHaveLength(1);
   });
 });
