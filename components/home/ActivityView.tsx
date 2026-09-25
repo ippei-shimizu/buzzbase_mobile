@@ -81,6 +81,8 @@ export function ActivityView({ isActive = true }: ActivityViewProps) {
         {/* 提案A: 記録 → 今日 → 継続（報酬）→ 振り返り → ツール → 積み上げ の順。 */}
         <RecordButtonsSection />
         <TodayTasksSection />
+        {/* 末尾では到達率が1割程度のため、「今日やること」の直後に置く。 */}
+        {isActive ? <InlineBannerAd placement="home" /> : null}
         <CurrentThemeSection />
         <TodayGoalSection />
         <StreakHeaderSection />
@@ -89,7 +91,6 @@ export function ActivityView({ isActive = true }: ActivityViewProps) {
         <ImprovementToolsSection />
         <MonthlySummarySection />
         <RecentPracticeSection />
-        {isActive ? <InlineBannerAd placement="home" /> : null}
       </ScrollView>
       <BackToTopButton visible={showBackToTop} onPress={scrollToTop} />
     </View>

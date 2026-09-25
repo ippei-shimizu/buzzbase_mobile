@@ -122,6 +122,8 @@ export const DashboardContent = ({
           style={styles.section}
           onRecordGame={handleRecordGame}
         />
+        {/* 末尾では到達率が1割程度のため、最近の試合結果の直後に置く。 */}
+        {showInlineAd ? <InlineBannerAd placement="home" /> : null}
         <GroupRankings
           rankings={data.group_rankings}
           style={styles.section}
@@ -130,7 +132,6 @@ export const DashboardContent = ({
           onCreateGroup={handleCreateGroup}
           onJoinGroup={handleJoinGroup}
         />
-        {showInlineAd ? <InlineBannerAd placement="home" /> : null}
       </ScrollView>
       <BackToTopButton visible={showBackToTop} onPress={scrollToTop} />
     </View>
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 0,
+    paddingBottom: 8,
   },
   section: {
     marginTop: 24,

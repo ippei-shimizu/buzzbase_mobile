@@ -56,5 +56,6 @@ export function InlineBannerAd({ placement }: InlineBannerAdProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: "center", marginVertical: 8 },
+  // 直前のコンテンツの操作要素との距離を取り、誤タップを避けるため上を厚くする。
+  container: { alignItems: "center", marginTop: 32, marginBottom: 8 },
 });
