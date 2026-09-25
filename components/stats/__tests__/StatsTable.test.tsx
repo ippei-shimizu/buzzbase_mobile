@@ -119,6 +119,6 @@ describe("打撃成績テーブルの得点圏打率列", () => {
     );
 
     expect(getAllByText("-")).toHaveLength(2);
-    expect(queryByText(".000")).toBeNull();
+    expect(queryByText("0.000")).toBeNull();
   });
 });
