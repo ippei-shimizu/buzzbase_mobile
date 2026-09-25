@@ -54,6 +54,11 @@ jest.mock("@sentry/react-native", () => ({
   wrap: (component: unknown) => component,
 }));
 
+// @react-native-community/netinfo: ネイティブモジュールのため公式の jest モックに差し替える。
+jest.mock("@react-native-community/netinfo", () =>
+  require("@react-native-community/netinfo/jest/netinfo-mock.js"),
+);
+
 // posthog-react-native: ネイティブ依存を含むため import を成立させる。
 // utils/posthog は __DEV__===true でシングルトンが null になるが、_layout が
 // PostHogProvider を import するため Provider をパススルーで差し替える。
