@@ -1,7 +1,7 @@
 /**
  * プロフィール保存後にマイページのチーム表示が新しいチームへ差し替わることの振る舞いテスト。
  */
-import { renderHook, waitFor } from "@testing-library/react-native";
+import { act, renderHook, waitFor } from "@testing-library/react-native";
 import React from "react";
 import {
   apiUrl,
@@ -66,7 +66,9 @@ describe("プロフィール保存後の所属チーム表示", () => {
       category_name: "大学生",
       prefecture_name: "神奈川県",
     });
-    await result.current.profileEdit.updateProfile(new FormData());
+    await act(async () => {
+      await result.current.profileEdit.updateProfile(new FormData());
+    });
 
     await waitFor(() => {
       expect(result.current.myTeam.teamName).toBe("新チーム");
