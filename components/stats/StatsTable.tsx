@@ -3,7 +3,10 @@ import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { StatTooltipLabel } from "@components/ui/StatTooltipLabel";
 import { formatRate, formatEra } from "@utils/formatStats";
-import { INNING_FORMAT_TOOLTIP } from "./statTooltips";
+import {
+  INNING_FORMAT_TOOLTIP,
+  SCORING_POSITION_BATTING_AVERAGE_TOOLTIP,
+} from "./statTooltips";
 
 interface Column<T> {
   key: keyof T;
@@ -13,6 +16,8 @@ interface Column<T> {
   highlight?: boolean;
   /** ヘッダータップで表示する補足説明。指定があれば StatTooltipLabel を使う */
   tooltip?: string;
+  /** 値が null / 未返却のときに 0 として整形せず「-」を出す。母数 0 を 0 と区別したい指標で使う */
+  dashWhenMissing?: boolean;
 }
 
 interface StatsTableProps<T> {
@@ -64,6 +69,14 @@ export const BATTING_COLUMNS: Column<BattingStatsRow>[] = [
   { key: "error", label: "失策", width: 40, format: fmtInt },
   { key: "slugging_percentage", label: "長打率", width: 48, format: fmt3 },
   { key: "ops", label: "OPS", width: 48, format: fmt3 },
+  {
+    key: "scoring_position_batting_average",
+    label: "得点圏打率",
+    width: 48,
+    format: fmt3,
+    tooltip: SCORING_POSITION_BATTING_AVERAGE_TOOLTIP,
+    dashWhenMissing: true,
+  },
   { key: "iso", label: "ISO", width: 48, format: fmt3 },
   { key: "bb_per_k", label: "BB/K", width: 48, format: fmt3 },
   { key: "babip", label: "BABIP", width: 50, format: fmt3 },
@@ -262,10 +275,14 @@ export function StatsTable<T extends { label: string; opponent?: string }>({
                   ]}
                 >
                   {columns.map((col) => {
-                    const val = (row[col.key] as number | undefined) ?? 0;
-                    const formatted = col.format
-                      ? col.format(val)
-                      : String(val);
+                    const raw = row[col.key] as number | null | undefined;
+                    const val = raw ?? 0;
+                    const formatted =
+                      raw == null && col.dashWhenMissing
+                        ? "-"
+                        : col.format
+                          ? col.format(val)
+                          : String(val);
                     return (
                       <View
                         key={String(col.key)}
