@@ -17,7 +17,7 @@ export const INNING_FORMAT_TOOLTIP =
   "試合のイニング制（7回制 or 9回制）に応じて計算されます。";
 
 export const SCORING_POSITION_BATTING_AVERAGE_TOOLTIP =
-  "走者が二塁・三塁にいる場面（得点圏）での打率です。走者状況を記録した打席が対象で、対象の打席が無いときは「-」と表示します。";
+  "二塁または三塁に走者がいる場面（得点圏。一・二塁や満塁も含みます）での打率です。走者状況を記録した打席が対象で、得点圏での打数が 0 のときは「-」と表示します。";
 
 export const STAT_TOOLTIPS: Readonly<Record<string, string>> = {
   得点圏打率: SCORING_POSITION_BATTING_AVERAGE_TOOLTIP,
