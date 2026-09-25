@@ -22,12 +22,12 @@ describe("ActivityView", () => {
 
     renderWithProviders(<ActivityView />);
 
-    await screen.findByLabelText("mock-banner-ad");
-    expect(positionInTree("mock-banner-ad")).toBeGreaterThan(
-      positionInTree("今日のやること"),
+    const ad = await screen.findByLabelText("mock-banner-ad");
+    expect(positionInTree(ad)).toBeGreaterThan(
+      positionInTree(screen.getByText("今日のやること")),
     );
-    expect(positionInTree("mock-banner-ad")).toBeLessThan(
-      positionInTree("練習ツール"),
+    expect(positionInTree(ad)).toBeLessThan(
+      positionInTree(screen.getByText("練習ツール")),
     );
   });
 });

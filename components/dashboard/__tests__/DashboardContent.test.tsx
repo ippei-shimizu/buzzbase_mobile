@@ -188,12 +188,12 @@ describe("DashboardContent: 広告の配置", () => {
 
     renderDashboard();
 
-    await screen.findByLabelText("mock-banner-ad");
-    expect(positionInTree("mock-banner-ad")).toBeGreaterThan(
-      positionInTree("直近の試合結果"),
+    const ad = await screen.findByLabelText("mock-banner-ad");
+    expect(positionInTree(ad)).toBeGreaterThan(
+      positionInTree(screen.getByText("直近の試合結果")),
     );
-    expect(positionInTree("mock-banner-ad")).toBeLessThan(
-      positionInTree("グループランキング"),
+    expect(positionInTree(ad)).toBeLessThan(
+      positionInTree(screen.getByText("グループランキング")),
     );
   });
 });

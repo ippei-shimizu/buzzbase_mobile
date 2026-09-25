@@ -1,17 +1,29 @@
 import { screen } from "@testing-library/react-native";
 
+// react-test-renderer の型定義が入っていないため、ツリーを辿るのに必要な形だけ定義する。
+interface TestElement {
+  children: (TestElement | string)[];
+}
+
+const flattenTree = (node: TestElement): TestElement[] => [
+  node,
+  ...node.children
+    .filter((child): child is TestElement => typeof child !== "string")
+    .flatMap(flattenTree),
+];
+
 /**
- * 描画ツリー上の出現位置を返す。要素同士の前後関係（配置順）の検証に使う。
- * RNTL のクエリは2つの要素の前後を比較できないため、シリアライズした
- * ツリー文字列での出現位置で代用する。
+ * 描画ツリーを深さ優先で辿ったときの出現順を返す。要素同士の前後関係（配置順）の
+ * 検証に使う。RNTL のクエリは2つの要素の前後を比較できないため、要素の同一性を
+ * 保ったまま訪問順で代用する。
  *
- * @param text 表示テキストまたは accessibilityLabel
- * @returns ツリー文字列中の最初の出現位置
+ * @param element getByText / getByLabelText 等で取得した要素
+ * @returns ツリー中の訪問順（0 始まり）
  */
-export const positionInTree = (text: string): number => {
-  const position = JSON.stringify(screen.toJSON()).indexOf(text);
+export const positionInTree = (element: TestElement): number => {
+  const position = flattenTree(screen.UNSAFE_root).indexOf(element);
   if (position === -1) {
-    throw new Error(`positionInTree: "${text}" が描画されていません`);
+    throw new Error("positionInTree: 要素が描画ツリーに存在しません");
   }
   return position;
 };
