@@ -85,10 +85,19 @@ const isWithinMinInterval = async (todayCount: number): Promise<boolean> => {
 };
 
 const recordShown = async (): Promise<void> => {
-  const count = await todayShownCount();
-  await SecureStore.setItemAsync(KEYS.LAST_SHOWN_DATE, todayString());
-  await SecureStore.setItemAsync(KEYS.SHOWN_COUNT_TODAY, String(count + 1));
-  await SecureStore.setItemAsync(KEYS.LAST_SHOWN_AT, new Date().toISOString());
+  try {
+    const count = await todayShownCount();
+    // 途中で失敗しても間隔ガードだけは残るよう時刻を先に書く。逆順だと
+    // 「回数は増えたが時刻が無い」状態になり、直後の保存で2回目が即座に出る。
+    await SecureStore.setItemAsync(
+      KEYS.LAST_SHOWN_AT,
+      new Date().toISOString(),
+    );
+    await SecureStore.setItemAsync(KEYS.LAST_SHOWN_DATE, todayString());
+    await SecureStore.setItemAsync(KEYS.SHOWN_COUNT_TODAY, String(count + 1));
+  } catch {
+    // 記録に失敗しても保存完了後の画面遷移は止めない。
+  }
 };
 
 /**
