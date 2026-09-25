@@ -1223,7 +1223,10 @@ export default function StatsScreen() {
           <View style={styles.tableBottomSpacer} />
         </View>
       )}
-      {key === activeTab ? <InlineBannerAd placement="stats" /> : null}
+      {/* 直前に表の下スペーサー(300px)があるため、上マージンは最小限にする。 */}
+      {key === activeTab ? (
+        <InlineBannerAd placement="stats" topSpacing={8} />
+      ) : null}
     </ScrollView>
   );
 

@@ -12,16 +12,20 @@ import {
 interface InlineBannerAdProps {
   /** 画面ごとに広告ユニットを分けるための識別子。 */
   placement: BannerPlacement;
+  /** 直前のコンテンツとの間隔。直前に余白を持つ画面は小さい値を渡す。 */
+  topSpacing?: number;
 }
 
 /**
- * 各画面のスクロール領域の末尾（一番下までスクロールした先）に表示する、
- * 画面専用のバナー広告。ボトムナビ直上に常時表示する`AppBannerAd`(全画面
- * 共通、横長のアンカー型)とは見た目を変え、フィード末尾に馴染む
- * MEDIUM_RECTANGLE(300x250)を使う。Pro加入者(no_ads entitlement)には
- * 表示しない。
+ * 各画面のスクロール領域に差し込む、画面専用のバナー広告。ボトムナビ直上に
+ * 常時表示する`AppBannerAd`(全画面共通、横長のアンカー型)とは見た目を変え、
+ * コンテンツに馴染むMEDIUM_RECTANGLE(300x250)を使う。Pro加入者
+ * (no_ads entitlement)には表示しない。
  */
-export function InlineBannerAd({ placement }: InlineBannerAdProps) {
+export function InlineBannerAd({
+  placement,
+  topSpacing = 32,
+}: InlineBannerAdProps) {
   const { hasEntitlement, isLoading } = useEntitlement();
   // BannerAd は失敗しても再ロードしないため、SDK初期化前にマウントされると
   // その画面が生きている間ずっと空枠のままになる。初期化完了まで描画を待つ。
@@ -41,7 +45,7 @@ export function InlineBannerAd({ placement }: InlineBannerAdProps) {
   if (!unitId) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { marginTop: topSpacing }]}>
       <BannerAd
         unitId={unitId}
         size={BannerAdSize.MEDIUM_RECTANGLE}
@@ -56,6 +60,5 @@ export function InlineBannerAd({ placement }: InlineBannerAdProps) {
 }
 
 const styles = StyleSheet.create({
-  // 直前のコンテンツの操作要素との距離を取り、誤タップを避けるため上を厚くする。
-  container: { alignItems: "center", marginTop: 32, marginBottom: 8 },
+  container: { alignItems: "center", marginBottom: 8 },
 });
