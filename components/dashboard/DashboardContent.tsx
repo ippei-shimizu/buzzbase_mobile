@@ -122,8 +122,11 @@ export const DashboardContent = ({
           style={styles.section}
           onRecordGame={handleRecordGame}
         />
-        {/* 末尾では到達率が1割程度のため、最近の試合結果の直後に置く。 */}
-        {showInlineAd ? <InlineBannerAd placement="home" /> : null}
+        {/* 末尾では到達率が1割程度のため、最近の試合結果の直後に置く。
+            直前がタップ可能な試合カードなので、誤タップを避けて間隔を広く取る。 */}
+        {showInlineAd ? (
+          <InlineBannerAd placement="home" topSpacing={48} />
+        ) : null}
         <GroupRankings
           rankings={data.group_rankings}
           style={styles.section}

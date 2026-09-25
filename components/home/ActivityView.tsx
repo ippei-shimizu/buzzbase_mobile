@@ -81,8 +81,9 @@ export function ActivityView({ isActive = true }: ActivityViewProps) {
         {/* 提案A: 記録 → 今日 → 継続（報酬）→ 振り返り → ツール → 積み上げ の順。 */}
         <RecordButtonsSection />
         <TodayTasksSection />
-        {/* 末尾では到達率が1割程度のため、「今日やること」の直後に置く。 */}
-        {isActive ? <InlineBannerAd placement="home" /> : null}
+        {/* 末尾では到達率が1割程度のため、「今日やること」の直後に置く。
+            直前がタップ可能なリンク行なので、誤タップを避けて間隔を広く取る。 */}
+        {isActive ? <InlineBannerAd placement="home" topSpacing={48} /> : null}
         <CurrentThemeSection />
         <TodayGoalSection />
         <StreakHeaderSection />
