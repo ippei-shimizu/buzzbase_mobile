@@ -61,12 +61,11 @@ export default function SignInScreen() {
 
       if (status === 401) {
         setErrors(["メールアドレスまたはパスワードが正しくありません"]);
-      } else {
-        setErrors(["エラーが発生しました。もう一度お試しください"]);
+        return;
       }
-    } else {
-      setErrors(["エラーが発生しました。もう一度お試しください"]);
     }
+
+    setErrors(["エラーが発生しました。もう一度お試しください"]);
   };
 
   const handleSubmit = async () => {
