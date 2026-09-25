@@ -106,6 +106,8 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 32,
+    // 末尾まで送ると「トップに戻る」ボタン(bottom 24 / 36px)が重なるため、
+    // 覆われる高さ分を空ける。
+    paddingBottom: 72,
   },
 });

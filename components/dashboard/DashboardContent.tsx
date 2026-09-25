@@ -147,7 +147,9 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 8,
+    // 末尾まで送ると「トップに戻る」ボタン(bottom 24 / 36px)が重なるため、
+    // 覆われる高さ分を空ける。
+    paddingBottom: 72,
   },
   section: {
     marginTop: 24,
