@@ -26,8 +26,10 @@ describe("ActivityView", () => {
     expect(positionInTree(ad)).toBeGreaterThan(
       positionInTree(screen.getByText("今日のやること")),
     );
+    // 直後のセクション（テーマ・目標）はローディング中 null を返すため、
+    // 確実に描画される「継続」を上限にして前後を1セクション単位で固定する。
     expect(positionInTree(ad)).toBeLessThan(
-      positionInTree(screen.getByText("練習ツール")),
+      positionInTree(screen.getByText("継続")),
     );
   });
 });
