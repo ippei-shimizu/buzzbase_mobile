@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { getMyTeam } from "@services/teamService";
 
 /**
@@ -14,15 +15,17 @@ export const useMyTeam = (userId: string | null | undefined) => {
     enabled: !!userId,
   });
 
+  // refetch は enabled を無視して発火するため、userId 未確定のまま呼ばれると
+  // `/teams/undefined/my_team` を叩いてしまう。呼び出し側で判定せずに済むようここで塞ぐ。
+  const refetchIfReady = useCallback(async () => {
+    if (userId) await refetch();
+  }, [userId, refetch]);
+
   return {
     teamName: data?.name,
     categoryName: data?.category_name ?? undefined,
     prefectureName: data?.prefecture_name ?? undefined,
     isLoading,
-    // refetch は enabled を無視して発火するため、userId 未確定のまま呼ばれると
-    // `/teams/undefined/my_team` を叩いてしまう。呼び出し側で判定せずに済むようここで塞ぐ。
-    refetch: () => {
-      if (userId) void refetch();
-    },
+    refetch: refetchIfReady,
   };
 };
