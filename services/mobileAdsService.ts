@@ -1,3 +1,4 @@
+import NetInfo from "@react-native-community/netinfo";
 import * as Sentry from "@sentry/react-native";
 import mobileAds from "react-native-google-mobile-ads";
 import { isAdsEnabledPlatform } from "@constants/admob";
@@ -16,18 +17,43 @@ const markInitialized = (): void => {
  * 初期化が応答しないまま広告が永久に出ない状態を避けるための上限。
  * この時間を超えたら初期化を待たずにバナーの描画を許可する(このPR以前と同じ挙動)。
  */
-const INITIALIZE_TIMEOUT_MS = 5_000;
+// iOS のコールドスタート直後は SDK の設定取得だけで5秒を超えることがあるため余裕を持たせる。
+const INITIALIZE_TIMEOUT_MS = 15_000;
 
-const withTimeout = (promise: Promise<unknown>): Promise<unknown> =>
-  Promise.race([
-    promise,
-    new Promise((_resolve, reject) =>
-      setTimeout(
-        () => reject(new Error("mobileAds().initialize() timed out")),
-        INITIALIZE_TIMEOUT_MS,
-      ),
-    ),
-  ]);
+const withTimeout = (promise: Promise<unknown>): Promise<unknown> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise((_resolve, reject) => {
+    timer = setTimeout(
+      () => reject(new Error("mobileAds().initialize() timed out")),
+      INITIALIZE_TIMEOUT_MS,
+    );
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+};
+
+const fetchNetworkState = async (): Promise<Record<string, unknown>> => {
+  try {
+    const { type, isConnected, isInternetReachable } = await NetInfo.fetch();
+    return { type, isConnected, isInternetReachable };
+  } catch {
+    return { type: "fetch_failed" };
+  }
+};
+
+const reportInitializeFailure = async (
+  error: unknown,
+  elapsedMs: number,
+): Promise<void> => {
+  // 失敗しても広告が出ないだけの想定内の劣化なので、error アラートを鳴らさない。
+  Sentry.captureException(error, {
+    level: "warning",
+    tags: { source: "mobile_ads_initialize" },
+    extra: {
+      elapsed_ms: elapsedMs,
+      network: await fetchNetworkState(),
+    },
+  });
+};
 
 /** useSyncExternalStore 用のスナップショット。 */
 export const getMobileAdsInitialized = (): boolean => isInitialized;
@@ -54,22 +80,21 @@ export const initializeMobileAds = (): Promise<void> => {
 
   // 初期化が確定しない限りバナーを描画しないため、完了通知に至らない経路を残さない。
   // ネイティブモジュールの呼び出しが同期的に throw した場合も catch に流す。
+  const startedAt = Date.now();
   initialization ??= Promise.resolve()
     .then(() => withTimeout(mobileAds().initialize()))
     .then(() => {
       markInitialized();
     })
-    .catch((error: unknown) => {
-      // 初期化失敗は広告が出ないだけでアプリは動くため、握って続行する。
-      // 検知手段がSentryしかないので必ず送る。
-      Sentry.captureException(error, {
-        tags: { source: "mobile_ads_initialize" },
-      });
+    .catch(async (error: unknown) => {
       // 失敗した Promise を保持すると以降の呼び出しが「成功済み」として素通りする。
       // 起動直後のネットワーク不通で広告が永久に出ない状態を避けるため捨てる。
       initialization = null;
-      // 起動処理が失敗してもリクエスト自体は通る可能性があるため、描画は止めない。
+      // 起動処理が失敗してもリクエスト自体は通る可能性があるため、接続状態の取得を待たずに描画を許可する。
       markInitialized();
+      // 初期化失敗は広告が出ないだけでアプリは動くため、握って続行する。
+      // 検知手段がSentryしかないので必ず送る。
+      await reportInitializeFailure(error, Date.now() - startedAt);
     });
   return initialization;
 };
