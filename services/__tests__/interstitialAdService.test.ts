@@ -177,6 +177,17 @@ describe("showMatchSaveInterstitial", () => {
     expect(mockCreateForAdRequest).not.toHaveBeenCalled();
   });
 
+  it("表示時刻の記録が無く今日すでに表示済みなら表示しない", async () => {
+    mockStoredValues({
+      admob_interstitial_last_shown_date: todayString(),
+      admob_interstitial_shown_count_today: "1",
+    });
+
+    await showMatchSaveInterstitial(false);
+
+    expect(mockCreateForAdRequest).not.toHaveBeenCalled();
+  });
+
   it("前回の表示から充分に時間が空いていれば2回目も表示する", async () => {
     mockStoredValues({
       admob_interstitial_last_shown_date: todayString(),

@@ -74,9 +74,11 @@ const todayShownCount = async (): Promise<number> => {
   );
 };
 
-const isWithinMinInterval = async (): Promise<boolean> => {
+const isWithinMinInterval = async (todayCount: number): Promise<boolean> => {
   const lastShownAt = await SecureStore.getItemAsync(KEYS.LAST_SHOWN_AT);
-  if (!lastShownAt) return false;
+  // 表示時刻の記録を始める前に今日1回表示した端末は時刻を持たない。時刻が不明な
+  // 間は間隔を守る側に倒す(次の表示で記録され、翌日以降は通常判定に戻る)。
+  if (!lastShownAt) return todayCount > 0;
   const elapsedMs = Date.now() - new Date(lastShownAt).getTime();
   // 端末の時刻が巻き戻ると経過が負になる。記録を信用せず表示を許す(次の表示で復旧する)。
   return elapsedMs >= 0 && elapsedMs < MIN_INTERVAL_MS;
@@ -110,8 +112,9 @@ export const showMatchSaveInterstitial = async (
   if (!unitId) return;
 
   if (await isWithinGracePeriod()) return;
-  if ((await todayShownCount()) >= DAILY_LIMIT) return;
-  if (await isWithinMinInterval()) return;
+  const todayCount = await todayShownCount();
+  if (todayCount >= DAILY_LIMIT) return;
+  if (await isWithinMinInterval(todayCount)) return;
 
   const interstitial = InterstitialAd.createForAdRequest(unitId);
 
