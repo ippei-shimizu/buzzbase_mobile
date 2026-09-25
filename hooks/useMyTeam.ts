@@ -6,10 +6,10 @@ import { getMyTeam } from "@services/teamService";
  * ユーザーの所属チーム情報（チーム名・カテゴリ名・都道府県名）を取得するフック。
  *
  * @param userId ユーザーの公開 ID（`user_id` 文字列）
- * @returns チーム表示用の各値と、プルダウン更新用の `refetch`
+ * @returns チーム表示用の各値と、プルダウン更新用の `refetch` / `isRefreshing`
  */
 export const useMyTeam = (userId: string | null | undefined) => {
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isRefetching, refetch } = useQuery({
     queryKey: ["myTeam", userId],
     queryFn: () => getMyTeam(userId!),
     enabled: !!userId,
@@ -26,6 +26,7 @@ export const useMyTeam = (userId: string | null | undefined) => {
     categoryName: data?.category_name ?? undefined,
     prefectureName: data?.prefecture_name ?? undefined,
     isLoading,
+    isRefreshing: isRefetching,
     refetch: refetchIfReady,
   };
 };

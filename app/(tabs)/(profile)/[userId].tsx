@@ -55,6 +55,7 @@ export default function UserProfileScreen() {
     teamName,
     categoryName,
     prefectureName,
+    isRefreshing: isMyTeamRefreshing,
     refetch: refetchMyTeam,
   } = useMyTeam(data ? userId : undefined);
   const { data: awards } = useUserAwards(data?.user.id);
@@ -244,7 +245,12 @@ export default function UserProfileScreen() {
       keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControl
-          refreshing={isRefreshing || isStatsRefreshing || isGamesRefreshing}
+          refreshing={
+            isRefreshing ||
+            isMyTeamRefreshing ||
+            isStatsRefreshing ||
+            isGamesRefreshing
+          }
           onRefresh={handleRefresh}
           tintColor="#d08000"
         />

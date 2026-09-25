@@ -56,6 +56,7 @@ jest.mock("@hooks/useMyTeam", () => ({
     categoryName: undefined,
     prefectureName: undefined,
     isLoading: false,
+    isRefreshing: false,
     refetch: jest.fn(),
   }),
 }));
