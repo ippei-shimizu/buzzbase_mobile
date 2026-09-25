@@ -4,7 +4,12 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { UsernameRegistrationForm } from "@components/auth/UsernameRegistrationForm";
-import { isNetworkError, NETWORK_ERROR_MESSAGE } from "@utils/axiosError";
+import {
+  isNetworkError,
+  isRateLimitError,
+  NETWORK_ERROR_MESSAGE,
+  rateLimitErrorMessage,
+} from "@utils/axiosError";
 import axiosInstance from "@utils/axiosInstance";
 
 export default function UsernameRegistrationScreen() {
@@ -52,7 +57,9 @@ export default function UsernameRegistrationScreen() {
       });
       router.replace("/(tabs)");
     } catch (error) {
-      if (isNetworkError(error)) {
+      if (isRateLimitError(error)) {
+        setErrors([rateLimitErrorMessage(error)]);
+      } else if (isNetworkError(error)) {
         setErrors([NETWORK_ERROR_MESSAGE]);
       } else if (error instanceof AxiosError) {
         const messages: string[] =
