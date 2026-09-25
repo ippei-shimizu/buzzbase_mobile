@@ -110,6 +110,12 @@ const mockStoredValues = (overrides: Record<string, string> = {}): void => {
   );
 };
 
+// 非表示の検証で完了を待たないための待機。ガードが外れると
+// showMatchSaveInterstitial は LOAD_TIMEOUT_MS まで解決せず、await すると
+// assertion ではなくテストタイムアウトで落ちて原因が読めなくなる。
+const flushPendingReads = (): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, 0));
+
 describe("showMatchSaveInterstitial", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -148,7 +154,8 @@ describe("showMatchSaveInterstitial", () => {
   it("編集保存では表示しない", async () => {
     mockStoredValues();
 
-    await showMatchSaveInterstitial(false, true);
+    void showMatchSaveInterstitial(false, true);
+    await flushPendingReads();
 
     expect(mockCreateForAdRequest).not.toHaveBeenCalled();
   });
@@ -160,7 +167,8 @@ describe("showMatchSaveInterstitial", () => {
       admob_interstitial_last_shown_at: minutesAgoIso(60),
     });
 
-    await showMatchSaveInterstitial(false);
+    void showMatchSaveInterstitial(false);
+    await flushPendingReads();
 
     expect(mockCreateForAdRequest).not.toHaveBeenCalled();
   });
@@ -172,7 +180,8 @@ describe("showMatchSaveInterstitial", () => {
       admob_interstitial_last_shown_at: minutesAgoIso(5),
     });
 
-    await showMatchSaveInterstitial(false);
+    void showMatchSaveInterstitial(false);
+    await flushPendingReads();
 
     expect(mockCreateForAdRequest).not.toHaveBeenCalled();
   });
@@ -183,7 +192,8 @@ describe("showMatchSaveInterstitial", () => {
       admob_interstitial_shown_count_today: "1",
     });
 
-    await showMatchSaveInterstitial(false);
+    void showMatchSaveInterstitial(false);
+    await flushPendingReads();
 
     expect(mockCreateForAdRequest).not.toHaveBeenCalled();
   });
