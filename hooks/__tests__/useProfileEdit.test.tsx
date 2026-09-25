@@ -91,13 +91,20 @@ describe("プロフィール保存後の所属チーム表示", () => {
       }),
     );
 
-    const { result } = renderHook(() => useMyTeam(undefined), {
-      wrapper: buildWrapper(),
-    });
+    const { result, rerender } = renderHook(
+      ({ userId }: { userId: string | undefined }) => useMyTeam(userId),
+      { wrapper: buildWrapper(), initialProps: { userId: undefined } },
+    );
 
-    result.current.refetch();
+    await act(async () => {
+      await result.current.refetch();
+    });
     await flushPendingRequests();
 
     expect(requestedUserIds).toEqual([]);
+
+    // 上の空配列が待ち不足によるものでないことを担保する陽性コントロール。
+    rerender({ userId: USER_ID });
+    await waitFor(() => expect(requestedUserIds).toEqual([USER_ID]));
   });
 });
