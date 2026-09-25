@@ -124,3 +124,19 @@ export const rateLimitErrorMessage = (error: unknown): string => {
   const data = error.response?.data as { message?: string } | undefined;
   return data?.message || RATE_LIMIT_FALLBACK_MESSAGE;
 };
+
+export const NETWORK_ERROR_MESSAGE =
+  "ネットワークエラーが発生しました。通信状況を確認してもう一度お試しください";
+
+/**
+ * 通信自体が成立せずレスポンスを受け取れなかったかどうかを判定する。
+ *
+ * 接続失敗・タイムアウトも AxiosError として throw されるため、`instanceof AxiosError`
+ * だけで分岐すると status を見る側の分岐に流れ込み、通信断がサーバーエラーの文言で表示される。
+ *
+ * @param error - try/catchで受けた error 値（unknown）
+ * @returns AxiosErrorかつレスポンスを受け取れていない場合のみ true
+ */
+export const isNetworkError = (error: unknown): boolean => {
+  return axios.isAxiosError(error) && !error.response;
+};

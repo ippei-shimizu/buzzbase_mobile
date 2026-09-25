@@ -1,11 +1,15 @@
-import { AxiosError } from "axios";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ConfirmationPendingView } from "@components/auth/ConfirmationPendingView";
 import { useAuth } from "@hooks/useAuth";
-import { isRateLimitError, rateLimitErrorMessage } from "@utils/axiosError";
+import {
+  isNetworkError,
+  isRateLimitError,
+  NETWORK_ERROR_MESSAGE,
+  rateLimitErrorMessage,
+} from "@utils/axiosError";
 
 export default function ConfirmationPendingScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -27,10 +31,10 @@ export default function ConfirmationPendingScreen() {
     } catch (error) {
       if (isRateLimitError(error)) {
         setErrors([rateLimitErrorMessage(error)]);
-      } else if (error instanceof AxiosError) {
-        setErrors(["確認メールの再送信に失敗しました"]);
+      } else if (isNetworkError(error)) {
+        setErrors([NETWORK_ERROR_MESSAGE]);
       } else {
-        setErrors(["ネットワークエラーが発生しました"]);
+        setErrors(["確認メールの再送信に失敗しました"]);
       }
     } finally {
       setIsResending(false);

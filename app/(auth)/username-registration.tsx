@@ -4,6 +4,7 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { UsernameRegistrationForm } from "@components/auth/UsernameRegistrationForm";
+import { isNetworkError, NETWORK_ERROR_MESSAGE } from "@utils/axiosError";
 import axiosInstance from "@utils/axiosInstance";
 
 export default function UsernameRegistrationScreen() {
@@ -51,7 +52,9 @@ export default function UsernameRegistrationScreen() {
       });
       router.replace("/(tabs)");
     } catch (error) {
-      if (error instanceof AxiosError) {
+      if (isNetworkError(error)) {
+        setErrors([NETWORK_ERROR_MESSAGE]);
+      } else if (error instanceof AxiosError) {
         const messages: string[] =
           error.response?.data?.errors?.full_messages ||
           error.response?.data?.errors ||
@@ -62,7 +65,7 @@ export default function UsernameRegistrationScreen() {
           setErrors(["エラーが発生しました。もう一度お試しください"]);
         }
       } else {
-        setErrors(["ネットワークエラーが発生しました"]);
+        setErrors(["エラーが発生しました。もう一度お試しください"]);
       }
     } finally {
       setIsSubmitting(false);
