@@ -82,19 +82,59 @@ describe("initializeMobileAds", () => {
     expect(getMobileAdsInitialized()).toBe(true);
   });
 
-  it("初期化が応答しないままでも一定時間で描画を許可する", async () => {
+  it("初期化が応答しないままでも15秒で描画を許可する", async () => {
     jest.useFakeTimers();
     const { initializeMobileAds, getMobileAdsInitialized, initialize } =
       loadService();
     initialize.mockReturnValueOnce(new Promise(() => {}));
 
     const pending = initializeMobileAds();
+
+    await jest.advanceTimersByTimeAsync(14_999);
     expect(getMobileAdsInitialized()).toBe(false);
 
-    await jest.advanceTimersByTimeAsync(5_000);
+    await jest.advanceTimersByTimeAsync(1);
     await pending;
 
     expect(getMobileAdsInitialized()).toBe(true);
+    jest.useRealTimers();
+  });
+
+  it("タイムアウト時は経過時間と接続状態を添えて warning としてSentryへ送る", async () => {
+    jest.useFakeTimers();
+    const { initializeMobileAds, initialize, captureException } = loadService();
+    initialize.mockReturnValueOnce(new Promise(() => {}));
+
+    const pending = initializeMobileAds();
+    await jest.advanceTimersByTimeAsync(15_000);
+    await pending;
+
+    expect(captureException).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "mobileAds().initialize() timed out",
+      }),
+      expect.objectContaining({
+        level: "warning",
+        extra: {
+          elapsed_ms: 15_000,
+          network: {
+            type: "cellular",
+            isConnected: true,
+            isInternetReachable: true,
+          },
+        },
+      }),
+    );
+    jest.useRealTimers();
+  });
+
+  it("初期化が成功したらタイムアウト監視を残さない", async () => {
+    jest.useFakeTimers();
+    const { initializeMobileAds } = loadService();
+
+    await initializeMobileAds();
+
+    expect(jest.getTimerCount()).toBe(0);
     jest.useRealTimers();
   });
 
