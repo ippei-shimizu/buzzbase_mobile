@@ -9,6 +9,7 @@
 import type { RouterSpies } from "../../../__tests__/test-utils/mockExpoRouter";
 import { fireEvent, waitFor } from "@testing-library/react-native";
 import { useAuthStore } from "@stores/authStore";
+import { NETWORK_ERROR_MESSAGE } from "@utils/axiosError";
 import {
   apiUrl,
   authSuccessHeaders,
@@ -242,7 +243,7 @@ describe("sign-in: メール/パスワード ログイン", () => {
     expect(
       queryByText("メールアドレスまたはパスワードが正しくありません"),
     ).toBeNull();
-    expect(queryByText("ネットワークエラーが発生しました")).toBeNull();
+    expect(queryByText(NETWORK_ERROR_MESSAGE)).toBeNull();
   });
 
   it("401 + confirmation エラー時は confirmation-pending へ遷移する", async () => {
@@ -320,9 +321,7 @@ describe("sign-in: メール/パスワード ログイン", () => {
     );
     fireEvent.press(getByText("ログイン"));
 
-    await findByText(
-      "ネットワークエラーが発生しました。通信状況を確認してもう一度お試しください",
-    );
+    await findByText(NETWORK_ERROR_MESSAGE);
     // 通信断をサーバーエラーと取り違えていないことを確認する。
     expect(
       queryByText("エラーが発生しました。もう一度お試しください"),
