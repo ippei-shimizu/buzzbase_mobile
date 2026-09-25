@@ -86,7 +86,14 @@ const daysAgoIso = (days: number): string => {
   return date.toISOString();
 };
 
-const todayString = (): string => new Date().toISOString().slice(0, 10);
+// 実装と同じく端末ローカルの暦日。UTC日付だとJSTの00:00〜09:00に実行したとき
+// 実装の返す日付と食い違い、表示履歴が「今日」と判定されなくなる。
+const todayString = (): string => {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+};
 
 const minutesAgoIso = (minutes: number): string =>
   new Date(Date.now() - minutes * 60 * 1000).toISOString();

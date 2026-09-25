@@ -21,7 +21,14 @@ const MIN_INTERVAL_MS = 15 * 60 * 1000;
 // 保存完了後の画面遷移が無期限にブロックされないためのフォールバック。
 const LOAD_TIMEOUT_MS = 10_000;
 
-const todayString = (): string => new Date().toISOString().slice(0, 10);
+// 「1日」はユーザーの体感に合わせて端末ローカルの暦日で数える。UTC日付だと
+// JSTでは09:00に窓が切り替わり、朝から試合がある日に上限が実質2倍になる。
+const todayString = (): string => {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+};
 
 const daysSince = (dateString: string | null): number => {
   if (!dateString) return Infinity;
