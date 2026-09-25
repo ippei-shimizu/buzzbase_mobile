@@ -32,18 +32,23 @@ const buildRow = (pitcherId: number, pitcherName: string): PitcherFaceoff => ({
   result_counts: [],
 });
 
-const renderList = () =>
-  render(
-    <PitcherFaceoffList
-      rows={[buildRow(1, "投手A"), buildRow(2, "投手B")]}
-      minPlateAppearances={3}
-      totalTargetPa={20}
-    />,
-  );
+const buildList = (rows: PitcherFaceoff[]) => (
+  <PitcherFaceoffList rows={rows} minPlateAppearances={3} totalTargetPa={20} />
+);
+
+const renderList = (
+  rows: PitcherFaceoff[] = [buildRow(1, "投手A"), buildRow(2, "投手B")],
+) => render(buildList(rows));
+
+const rowOf = (pitcherName: string) =>
+  screen.getByRole("button", { name: new RegExp(pitcherName) });
 
 const pressRow = (pitcherName: string) => {
-  fireEvent.press(screen.getByText(new RegExp(`${pitcherName}$`)));
+  fireEvent.press(rowOf(pitcherName));
 };
+
+const isExpanded = (pitcherName: string) =>
+  rowOf(pitcherName).props.accessibilityState?.expanded === true;
 
 describe("PitcherFaceoffList", () => {
   it("複数の投手の行を同時に展開できる", () => {
@@ -52,8 +57,9 @@ describe("PitcherFaceoffList", () => {
     pressRow("投手A");
     pressRow("投手B");
 
-    expect(screen.getByText("▼ 投手A")).toBeTruthy();
-    expect(screen.getByText("▼ 投手B")).toBeTruthy();
+    expect(isExpanded("投手A")).toBe(true);
+    expect(isExpanded("投手B")).toBe(true);
+    expect(screen.getAllByText("出塁率")).toHaveLength(2);
   });
 
   it("展開済みの行を再度押すとその行だけ閉じる", () => {
@@ -63,7 +69,8 @@ describe("PitcherFaceoffList", () => {
     pressRow("投手B");
     pressRow("投手A");
 
-    expect(screen.getByText("▶ 投手A")).toBeTruthy();
-    expect(screen.getByText("▼ 投手B")).toBeTruthy();
+    expect(isExpanded("投手A")).toBe(false);
+    expect(isExpanded("投手B")).toBe(true);
+    expect(screen.getAllByText("出塁率")).toHaveLength(1);
   });
 });
