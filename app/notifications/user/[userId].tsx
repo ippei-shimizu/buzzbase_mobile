@@ -40,9 +40,12 @@ export default function NotificationUserProfileScreen() {
 
   // プロフィール取得が通ってから叩く。非公開アカウントで本体が 403 のときに
   // チーム情報だけ取得してしまわないようにする。
-  const { teamName, categoryName, prefectureName } = useMyTeam(
-    data ? userId : undefined,
-  );
+  const {
+    teamName,
+    categoryName,
+    prefectureName,
+    refetch: refetchMyTeam,
+  } = useMyTeam(data ? userId : undefined);
   const { data: awards } = useUserAwards(data?.user.id);
 
   // 成績フィルター
@@ -96,6 +99,7 @@ export default function NotificationUserProfileScreen() {
 
   const handleRefresh = () => {
     refetch();
+    refetchMyTeam();
     if (canViewContent) {
       refetchStats();
       refetchGames();

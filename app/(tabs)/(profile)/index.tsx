@@ -177,9 +177,12 @@ export default function ProfileScreen() {
   }, [battingStats, pitchingStats, triggerPositiveEvent]);
 
   // 所属チーム情報・受賞歴
-  const { teamName, categoryName, prefectureName } = useMyTeam(
-    profile?.user_id,
-  );
+  const {
+    teamName,
+    categoryName,
+    prefectureName,
+    refetch: refetchMyTeam,
+  } = useMyTeam(profile?.user_id);
   const { data: awards } = useUserAwards(profile?.id);
 
   // 試合結果
@@ -219,6 +222,7 @@ export default function ProfileScreen() {
 
   const handleRefresh = () => {
     refetch();
+    refetchMyTeam();
     refetchStats();
     refetchGames();
   };

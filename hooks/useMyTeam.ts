@@ -5,9 +5,10 @@ import { getMyTeam } from "@services/teamService";
  * ユーザーの所属チーム情報（チーム名・カテゴリ名・都道府県名）を取得するフック。
  *
  * @param userId ユーザーの公開 ID（`user_id` 文字列）
+ * @returns チーム表示用の各値と、プルダウン更新用の `refetch`
  */
 export const useMyTeam = (userId: string | null | undefined) => {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["myTeam", userId],
     queryFn: () => getMyTeam(userId!),
     enabled: !!userId,
@@ -18,5 +19,10 @@ export const useMyTeam = (userId: string | null | undefined) => {
     categoryName: data?.category_name ?? undefined,
     prefectureName: data?.prefecture_name ?? undefined,
     isLoading,
+    // refetch は enabled を無視して発火するため、userId 未確定のまま呼ばれると
+    // `/teams/undefined/my_team` を叩いてしまう。呼び出し側で判定せずに済むようここで塞ぐ。
+    refetch: () => {
+      if (userId) void refetch();
+    },
   };
 };
