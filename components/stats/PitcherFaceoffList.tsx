@@ -80,6 +80,14 @@ export const PitcherFaceoffList = ({
               activeOpacity={0.7}
               onPress={() => toggleExpanded(row.pitcher_id)}
               accessibilityRole="button"
+              accessibilityLabel={[
+                row.pitcher_name,
+                attributeText,
+                `${row.plate_appearances}対戦`,
+                `打率${formatBattingAverage(row.batting_average, row.at_bats)}`,
+              ]
+                .filter(Boolean)
+                .join("、")}
               accessibilityState={{ expanded: isExpanded }}
             >
               <View style={styles.leftCol}>
