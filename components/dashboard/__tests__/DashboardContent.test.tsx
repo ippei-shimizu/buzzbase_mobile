@@ -11,7 +11,7 @@
 import type { RouterSpies } from "../../../__tests__/test-utils/mockExpoRouter";
 import type { DashboardData } from "../../../types/dashboard";
 import type { ReactNode } from "react";
-import { fireEvent, waitFor } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { Text } from "react-native";
 import {
   apiUrl,
@@ -19,8 +19,10 @@ import {
   http,
   HttpResponse,
 } from "../../../__tests__/test-utils/handlers";
+import { positionInTree } from "../../../__tests__/test-utils/positionInTree";
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
 import { server } from "../../../jest-setup-msw";
+import { initializeMobileAds } from "../../../services/mobileAdsService";
 import { DashboardContent } from "../DashboardContent";
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -174,6 +176,24 @@ describe("DashboardContent: 空データ時の初回試合記録 CTA", () => {
 
     expect(getRouterSpies().push).toHaveBeenCalledWith(
       "/(game-record)/step1-game-info",
+    );
+  });
+});
+
+describe("DashboardContent: 広告の配置", () => {
+  it("広告を直近の試合結果とグループランキングの間に表示する", async () => {
+    // BannerAd は SDK 初期化前にマウントされると空枠のままになるため、
+    // コンポーネント側が初期化完了を待つ。本番と同じ順序をテストでも再現する。
+    await initializeMobileAds();
+
+    renderDashboard();
+
+    const ad = await screen.findByLabelText("mock-banner-ad");
+    expect(positionInTree(ad)).toBeGreaterThan(
+      positionInTree(screen.getByText("直近の試合結果")),
+    );
+    expect(positionInTree(ad)).toBeLessThan(
+      positionInTree(screen.getByText("グループランキング")),
     );
   });
 });

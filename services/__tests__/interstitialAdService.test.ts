@@ -1,6 +1,6 @@
 /**
  * 試合記録保存後インタースティシャル広告の振る舞いテスト。
- * 猶予期間・1日1回上限・Pro加入者の非表示判定を検証する。
+ * 猶予期間・1日2回上限・最短表示間隔・編集保存・Pro加入者の非表示判定を検証する。
  *
  * react-native-google-mobile-adsはこのファイル専用にローカルモックする。
  * jest.mock(...)のファクトリはモジュールのrequire解決時に呼ばれるため、
@@ -86,6 +86,36 @@ const daysAgoIso = (days: number): string => {
   return date.toISOString();
 };
 
+// 実装と同じく端末ローカルの暦日。UTC日付だとJSTの00:00〜09:00に実行したとき
+// 実装の返す日付と食い違い、表示履歴が「今日」と判定されなくなる。
+const todayString = (): string => {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+};
+
+const minutesAgoIso = (minutes: number): string =>
+  new Date(Date.now() - minutes * 60 * 1000).toISOString();
+
+// 猶予期間を抜けたユーザーの SecureStore 応答。overrides で表示履歴を足す。
+const mockStoredValues = (overrides: Record<string, string> = {}): void => {
+  const values: Record<string, string> = {
+    admob_install_date: daysAgoIso(30),
+    admob_launch_count: "10",
+    ...overrides,
+  };
+  getSecureStore().getItemAsync.mockImplementation((key: string) =>
+    Promise.resolve(values[key] ?? null),
+  );
+};
+
+// 非表示の検証で完了を待たないための待機。ガードが外れると
+// showMatchSaveInterstitial は LOAD_TIMEOUT_MS まで解決せず、await すると
+// assertion ではなくテストタイムアウトで落ちて原因が読めなくなる。
+const flushPendingReads = (): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, 0));
+
 describe("showMatchSaveInterstitial", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -121,29 +151,78 @@ describe("showMatchSaveInterstitial", () => {
     expect(mockCreateForAdRequest).not.toHaveBeenCalled();
   });
 
-  it("1日の表示上限に達していたら表示しない", async () => {
-    const today = new Date().toISOString().slice(0, 10);
-    getSecureStore().getItemAsync.mockImplementation((key: string) => {
-      if (key === "admob_install_date") return Promise.resolve(daysAgoIso(30));
-      if (key === "admob_launch_count") return Promise.resolve("10");
-      if (key === "admob_interstitial_last_shown_date")
-        return Promise.resolve(today);
-      if (key === "admob_interstitial_shown_count_today")
-        return Promise.resolve("1");
-      return Promise.resolve(null);
-    });
+  it("編集保存では表示しない", async () => {
+    mockStoredValues();
 
-    await showMatchSaveInterstitial(false);
+    void showMatchSaveInterstitial(false, true);
+    await flushPendingReads();
 
     expect(mockCreateForAdRequest).not.toHaveBeenCalled();
   });
 
-  it("猶予期間を過ぎ上限未達なら広告を読み込んで表示し、表示回数を記録する", async () => {
-    getSecureStore().getItemAsync.mockImplementation((key: string) => {
-      if (key === "admob_install_date") return Promise.resolve(daysAgoIso(30));
-      if (key === "admob_launch_count") return Promise.resolve("10");
-      return Promise.resolve(null);
+  it("1日の表示上限に達していたら表示しない", async () => {
+    mockStoredValues({
+      admob_interstitial_last_shown_date: todayString(),
+      admob_interstitial_shown_count_today: "2",
+      admob_interstitial_last_shown_at: minutesAgoIso(60),
     });
+
+    void showMatchSaveInterstitial(false);
+    await flushPendingReads();
+
+    expect(mockCreateForAdRequest).not.toHaveBeenCalled();
+  });
+
+  it("前回の表示から間もないうちは上限未達でも表示しない", async () => {
+    mockStoredValues({
+      admob_interstitial_last_shown_date: todayString(),
+      admob_interstitial_shown_count_today: "1",
+      admob_interstitial_last_shown_at: minutesAgoIso(5),
+    });
+
+    void showMatchSaveInterstitial(false);
+    await flushPendingReads();
+
+    expect(mockCreateForAdRequest).not.toHaveBeenCalled();
+  });
+
+  it("表示時刻の記録が無く今日すでに表示済みなら表示しない", async () => {
+    mockStoredValues({
+      admob_interstitial_last_shown_date: todayString(),
+      admob_interstitial_shown_count_today: "1",
+    });
+
+    void showMatchSaveInterstitial(false);
+    await flushPendingReads();
+
+    expect(mockCreateForAdRequest).not.toHaveBeenCalled();
+  });
+
+  it("前回の表示から充分に時間が空いていれば2回目も表示する", async () => {
+    mockStoredValues({
+      admob_interstitial_last_shown_date: todayString(),
+      admob_interstitial_shown_count_today: "1",
+      admob_interstitial_last_shown_at: minutesAgoIso(30),
+    });
+
+    const resultPromise = showMatchSaveInterstitial(false);
+    await waitUntil(() => mockCreateForAdRequest.mock.results.length > 0);
+    const instance = latestInstance();
+    await waitUntil(() => instance.load.mock.calls.length > 0);
+    instance.fireEvent("loaded");
+    await waitUntil(() => instance.show.mock.calls.length > 0);
+    instance.fireEvent("closed");
+    await resultPromise;
+
+    expect(instance.show).toHaveBeenCalled();
+    expect(getSecureStore().setItemAsync).toHaveBeenCalledWith(
+      "admob_interstitial_shown_count_today",
+      "2",
+    );
+  });
+
+  it("猶予期間を過ぎ上限未達なら広告を読み込んで表示し、表示回数を記録する", async () => {
+    mockStoredValues();
 
     const resultPromise = showMatchSaveInterstitial(false);
     await waitUntil(() => mockCreateForAdRequest.mock.results.length > 0);
@@ -159,6 +238,10 @@ describe("showMatchSaveInterstitial", () => {
     expect(getSecureStore().setItemAsync).toHaveBeenCalledWith(
       "admob_interstitial_shown_count_today",
       "1",
+    );
+    expect(getSecureStore().setItemAsync).toHaveBeenCalledWith(
+      "admob_interstitial_last_shown_at",
+      expect.any(String),
     );
   });
 });

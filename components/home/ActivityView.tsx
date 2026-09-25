@@ -81,6 +81,9 @@ export function ActivityView({ isActive = true }: ActivityViewProps) {
         {/* 提案A: 記録 → 今日 → 継続（報酬）→ 振り返り → ツール → 積み上げ の順。 */}
         <RecordButtonsSection />
         <TodayTasksSection />
+        {/* 末尾では到達率が1割程度のため、「今日やること」の直後に置く。
+            直前がタップ可能なリンク行なので、誤タップを避けて間隔を広く取る。 */}
+        {isActive ? <InlineBannerAd placement="home" topSpacing={48} /> : null}
         <CurrentThemeSection />
         <TodayGoalSection />
         <StreakHeaderSection />
@@ -89,7 +92,6 @@ export function ActivityView({ isActive = true }: ActivityViewProps) {
         <ImprovementToolsSection />
         <MonthlySummarySection />
         <RecentPracticeSection />
-        {isActive ? <InlineBannerAd placement="home" /> : null}
       </ScrollView>
       <BackToTopButton visible={showBackToTop} onPress={scrollToTop} />
     </View>
@@ -105,6 +107,8 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 32,
+    // 末尾まで送ると「トップに戻る」ボタン(bottom 24 / 36px)が重なるため、
+    // 覆われる高さ分を空ける。
+    paddingBottom: 72,
   },
 });

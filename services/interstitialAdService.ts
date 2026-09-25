@@ -6,18 +6,29 @@ const KEYS = {
   INSTALL_DATE: "admob_install_date",
   LAUNCH_COUNT: "admob_launch_count",
   LAST_SHOWN_DATE: "admob_interstitial_last_shown_date",
+  LAST_SHOWN_AT: "admob_interstitial_last_shown_at",
   SHOWN_COUNT_TODAY: "admob_interstitial_shown_count_today",
 } as const;
 
 // 初回起動後しばらくは広告を出さず、初回体験の質を守る猶予期間。
 const GRACE_PERIOD_DAYS = 7;
 const GRACE_PERIOD_LAUNCH_COUNT = 5;
-const DAILY_LIMIT = 1;
+const DAILY_LIMIT = 2;
+// 大会日に複数試合を続けて入力すると数分以内に全画面広告が連続するため、
+// 1日の上限とは別に表示間隔の下限を設ける。
+const MIN_INTERVAL_MS = 15 * 60 * 1000;
 // ロード/表示のいずれのイベントも発火しないケース(ネットワーク異常等)で
 // 保存完了後の画面遷移が無期限にブロックされないためのフォールバック。
 const LOAD_TIMEOUT_MS = 10_000;
 
-const todayString = (): string => new Date().toISOString().slice(0, 10);
+// 「1日」はユーザーの体感に合わせて端末ローカルの暦日で数える。UTC日付だと
+// JSTでは09:00に窓が切り替わり、朝から試合がある日に上限が実質2倍になる。
+const todayString = (): string => {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+};
 
 const daysSince = (dateString: string | null): number => {
   if (!dateString) return Infinity;
@@ -63,28 +74,56 @@ const todayShownCount = async (): Promise<number> => {
   );
 };
 
+const isWithinMinInterval = async (todayCount: number): Promise<boolean> => {
+  const lastShownAt = await SecureStore.getItemAsync(KEYS.LAST_SHOWN_AT);
+  // 表示時刻の記録を始める前に今日1回表示した端末は時刻を持たない。時刻が不明な
+  // 間は間隔を守る側に倒す(次の表示で記録され、翌日以降は通常判定に戻る)。
+  if (!lastShownAt) return todayCount > 0;
+  const elapsedMs = Date.now() - new Date(lastShownAt).getTime();
+  // 端末の時刻が巻き戻ると経過が負になる。記録を信用せず表示を許す(次の表示で復旧する)。
+  return elapsedMs >= 0 && elapsedMs < MIN_INTERVAL_MS;
+};
+
 const recordShown = async (): Promise<void> => {
-  const count = await todayShownCount();
-  await SecureStore.setItemAsync(KEYS.LAST_SHOWN_DATE, todayString());
-  await SecureStore.setItemAsync(KEYS.SHOWN_COUNT_TODAY, String(count + 1));
+  try {
+    const count = await todayShownCount();
+    // 途中で失敗しても間隔ガードだけは残るよう時刻を先に書く。逆順だと
+    // 「回数は増えたが時刻が無い」状態になり、直後の保存で2回目が即座に出る。
+    await SecureStore.setItemAsync(
+      KEYS.LAST_SHOWN_AT,
+      new Date().toISOString(),
+    );
+    await SecureStore.setItemAsync(KEYS.LAST_SHOWN_DATE, todayString());
+    await SecureStore.setItemAsync(KEYS.SHOWN_COUNT_TODAY, String(count + 1));
+  } catch {
+    // 記録に失敗しても保存完了後の画面遷移は止めない。
+  }
 };
 
 /**
  * 試合記録の保存完了直後に呼ぶインタースティシャル広告。
- * 1日1回上限・初回起動後の猶予期間・Pro加入者(no_ads entitlement)は表示しない。
+ * 1日2回上限・前回表示から15分・初回起動後の猶予期間・Pro加入者
+ * (no_ads entitlement)は表示しない。
+ *
+ * @param hasNoAdsEntitlement 広告非表示のentitlementを持つか
+ * @param isEditMode 既存記録の編集保存か。入力ミスの修正に広告を当てないため表示しない
  */
 export const showMatchSaveInterstitial = async (
   hasNoAdsEntitlement: boolean,
+  isEditMode = false,
 ): Promise<void> => {
+  if (isEditMode) return;
   // ユニットIDの取得はPro判定の後、表示条件の判定より前に行う。Pro加入者に未設定
   // 警告を出さないためにPro判定は先に置き、広告を配信しないAndroidで
-  // SecureStore を3回読むのを避けるため表示条件より前に置く。
+  // SecureStore を何度も読むのを避けるため表示条件より前に置く。
   if (hasNoAdsEntitlement) return;
   const unitId = interstitialAdUnitId();
   if (!unitId) return;
 
   if (await isWithinGracePeriod()) return;
-  if ((await todayShownCount()) >= DAILY_LIMIT) return;
+  const todayCount = await todayShownCount();
+  if (todayCount >= DAILY_LIMIT) return;
+  if (await isWithinMinInterval(todayCount)) return;
 
   const interstitial = InterstitialAd.createForAdRequest(unitId);
 
