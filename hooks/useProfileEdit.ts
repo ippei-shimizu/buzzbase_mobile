@@ -11,6 +11,8 @@ export const useProfileEdit = () => {
       trackProfileUpdated();
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["teams"] });
+      // ["teams"] はピッカー用のマスタ一覧で、プロフィール上部の所属チーム表示とは別キー。
+      queryClient.invalidateQueries({ queryKey: ["myTeam"] });
       queryClient.invalidateQueries({ queryKey: ["awards"] });
     },
   });
