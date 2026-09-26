@@ -26,7 +26,7 @@ const CELLS: readonly CellConfig[] = [
   { key: "number_of_pitches", label: "総投球数", format: "count" },
   { key: "hits_allowed", label: "被安打", format: "count" },
   { key: "home_runs_hit", label: "被本塁打", format: "count" },
-  { key: "strikeouts", label: "三振", format: "count" },
+  { key: "strikeouts", label: "奪三振", format: "count" },
   { key: "base_on_balls", label: "四球", format: "count" },
   { key: "hit_by_pitch", label: "死球", format: "count" },
   { key: "run_allowed", label: "失点", format: "count" },
