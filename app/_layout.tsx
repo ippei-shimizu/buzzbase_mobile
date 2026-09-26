@@ -100,46 +100,48 @@ function RootLayoutInner() {
 
   const signInWithConfirmationTokens = useCallback(
     async (queryParams: Linking.ParsedURL["queryParams"]) => {
-      let authResponse;
+      // 呼び出し元は void で投げるため、ここで握らないと unhandled rejection になり失敗も追跡できない。
+      // router.replace はナビゲーションの初期化前（getInitialURL 経路のコールドスタート直後）に throw しうる。
       try {
-        authResponse = await completeEmailConfirmation(queryParams);
-      } catch {
         // 検証に失敗した場合はトークンを保存していないため、既存セッションを消す必要はない。
         // 未検証のトークンでログイン状態にはしないので、ネットワーク不通も手動ログインへ倒す。
+        const authResponse = await completeEmailConfirmation(queryParams);
+        if (!authResponse) {
+          fallbackToManualSignIn();
+          return;
+        }
+
+        // logout() を経由せずに別アカウントのセッションへ移るため、前のユーザーの
+        // クエリキャッシュとウィザードの下書きを持ち越さないよう明示的に捨てる。
+        queryClient.clear();
+        useGameRecordStore.getState().reset();
+
+        setIsLoggedIn(true);
+        setIsLoading(false);
+
+        // プロフィール取得自体が失敗したケースは安全側（username-registration）に倒す。
+        let nextPath: "/(tabs)" | "/(auth)/username-registration";
+        try {
+          const profile = await getCurrentUserProfile();
+          nextPath = profile.user_id
+            ? "/(tabs)"
+            : "/(auth)/username-registration";
+        } catch {
+          nextPath = "/(auth)/username-registration";
+        }
+        router.replace(nextPath);
+
+        // 遷移より前に出すと、プロフィール取得が既定の表示時間より長引いた場合に着地前に消える。
+        useSnackbarStore.getState().show({
+          type: "success",
+          message: "メールアドレスの認証が完了しました",
+        });
+      } catch (error) {
+        Sentry.captureException(error, {
+          tags: { source: "email_confirmation_auto_login" },
+        });
         fallbackToManualSignIn();
-        return;
       }
-
-      if (!authResponse) {
-        fallbackToManualSignIn();
-        return;
-      }
-
-      // logout() を経由せずに別アカウントのセッションへ移るため、前のユーザーの
-      // クエリキャッシュとウィザードの下書きを持ち越さないよう明示的に捨てる。
-      queryClient.clear();
-      useGameRecordStore.getState().reset();
-
-      setIsLoggedIn(true);
-      setIsLoading(false);
-
-      // プロフィール取得自体が失敗したケースは安全側（username-registration）に倒す。
-      let nextPath: "/(tabs)" | "/(auth)/username-registration";
-      try {
-        const profile = await getCurrentUserProfile();
-        nextPath = profile.user_id
-          ? "/(tabs)"
-          : "/(auth)/username-registration";
-      } catch {
-        nextPath = "/(auth)/username-registration";
-      }
-      router.replace(nextPath);
-
-      // 遷移より前に出すと、プロフィール取得が既定の表示時間より長引いた場合に着地前に消える。
-      useSnackbarStore.getState().show({
-        type: "success",
-        message: "メールアドレスの認証が完了しました",
-      });
     },
     [fallbackToManualSignIn, router, setIsLoading, setIsLoggedIn],
   );
