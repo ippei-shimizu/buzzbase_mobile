@@ -637,7 +637,6 @@ export default function StatsScreen() {
     useState<BattingTrendGranularity>("game");
   const [eraTrendGranularity, setEraTrendGranularity] =
     useState<EraTrendGranularity>("month");
-  const [seasonPaywallOpen, setSeasonPaywallOpen] = useState(false);
   // どの Pro カードから開かれたかを保持する。Paywall のコピーと計測の trigger を
   // タップ元の機能に合わせるため、boolean ではなく feature キーで持つ。
   const [proPaywallFeature, setProPaywallFeature] = useState<ProFeature | null>(
@@ -859,7 +858,7 @@ export default function StatsScreen() {
                     !hasEntitlement("season_transition_graph")
                   ) {
                     trackProFeatureTapped("season_transition_graph");
-                    setSeasonPaywallOpen(true);
+                    setProPaywallFeature("season_transition_graph");
                     return;
                   }
                   trackBattingTrendGranularityChanged(next);
@@ -1141,7 +1140,7 @@ export default function StatsScreen() {
                     !hasEntitlement("season_transition_graph")
                   ) {
                     trackProFeatureTapped("season_transition_graph");
-                    setSeasonPaywallOpen(true);
+                    setProPaywallFeature("season_transition_graph");
                     return;
                   }
                   setEraTrendGranularity(next);
@@ -1322,11 +1321,6 @@ export default function StatsScreen() {
         onClose={closeMenu}
       />
 
-      <PaywallModal
-        isOpen={seasonPaywallOpen}
-        onClose={() => setSeasonPaywallOpen(false)}
-        feature="season_transition_graph"
-      />
       <PaywallModal
         isOpen={proPaywallFeature !== null}
         onClose={() => setProPaywallFeature(null)}
