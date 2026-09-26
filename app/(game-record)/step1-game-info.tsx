@@ -98,7 +98,7 @@ export default function Step1GameInfoScreen() {
       });
       // 新規作成時、直近試合のフォーム初期値を読み込む。
       // - inning_format / match_type / batting_order: 直近試合の値
-      // - defensive_position: プロフィール優先 → 直近試合フォールバック（サーバー側で解決済み）
+      // - defensive_position / my_team_name: プロフィール優先 → 直近試合フォールバック（サーバー側で解決済み）
       // 履歴なし・未設定で nil が返るフィールドは触らず initialState のままにする。
       getMatchResultFormDefaults()
         .then((defaults) => {
@@ -114,6 +114,9 @@ export default function Step1GameInfoScreen() {
           }
           if (defaults.batting_order) {
             s.setField("battingOrder", defaults.batting_order);
+          }
+          if (defaults.my_team_name) {
+            s.setField("myTeamName", defaults.my_team_name);
           }
         })
         .catch(() => {
