@@ -13,6 +13,7 @@ interface Props {
   prefectures: { label: string; value: number }[];
   onSelectTeam: (id: number, name: string) => void;
   onCustomTeamInput: (name: string) => void;
+  onSearchTeam: (query: string) => void;
   onSelectCategory: (value: string | number | null) => void;
   onSelectPrefecture: (value: string | number | null) => void;
 }
@@ -26,6 +27,7 @@ export const TeamSection = ({
   prefectures,
   onSelectTeam,
   onCustomTeamInput,
+  onSearchTeam,
   onSelectCategory,
   onSelectPrefecture,
 }: Props) => {
@@ -41,6 +43,7 @@ export const TeamSection = ({
         value={teamName}
         onSelect={(value, label) => onSelectTeam(value as number, label)}
         onCustomInput={onCustomTeamInput}
+        onSearchTextChange={onSearchTeam}
         placeholder="チーム名を検索・入力"
       />
 
