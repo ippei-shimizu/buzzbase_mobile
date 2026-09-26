@@ -362,11 +362,13 @@ export const toDetailInputFlags = (
 ): PlateAppearanceDetailFlags => {
   const itemFlags = {
     has_pitcher: state.pitcherId !== null,
-    has_count: state.finalBalls !== null || state.finalStrikes !== null,
+    has_count:
+      state.finalBalls !== null ||
+      state.finalStrikes !== null ||
+      state.finalOuts !== null,
     has_situation:
       state.runnersState !== null ||
       state.inning !== null ||
-      state.finalOuts !== null ||
       state.appearanceSituationId !== null,
     has_first_pitch_swing: state.firstPitchSwing !== null,
     has_contact_quality: state.contactQualityId !== null,
