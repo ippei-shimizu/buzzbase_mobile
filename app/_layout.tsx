@@ -122,20 +122,24 @@ function RootLayoutInner() {
 
       setIsLoggedIn(true);
       setIsLoading(false);
+
+      // プロフィール取得自体が失敗したケースは安全側（username-registration）に倒す。
+      let nextPath: "/(tabs)" | "/(auth)/username-registration";
+      try {
+        const profile = await getCurrentUserProfile();
+        nextPath = profile.user_id
+          ? "/(tabs)"
+          : "/(auth)/username-registration";
+      } catch {
+        nextPath = "/(auth)/username-registration";
+      }
+      router.replace(nextPath);
+
+      // 遷移より前に出すと、プロフィール取得が既定の表示時間より長引いた場合に着地前に消える。
       useSnackbarStore.getState().show({
         type: "success",
         message: "メールアドレスの認証が完了しました",
       });
-
-      // プロフィール取得自体が失敗したケースは安全側（username-registration）に倒す。
-      try {
-        const profile = await getCurrentUserProfile();
-        router.replace(
-          profile.user_id ? "/(tabs)" : "/(auth)/username-registration",
-        );
-      } catch {
-        router.replace("/(auth)/username-registration");
-      }
     },
     [fallbackToManualSignIn, router, setIsLoading, setIsLoggedIn],
   );
