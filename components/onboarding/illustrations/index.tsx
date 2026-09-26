@@ -1,3 +1,4 @@
+import type { ArtProps } from "@components/pro/paywall/artPrimitives";
 import type { OnboardingIllustration } from "@constants/onboarding";
 import React from "react";
 import { AutoCalcIllustration } from "./AutoCalcIllustration";
@@ -6,19 +7,18 @@ import { RankingIllustration } from "./RankingIllustration";
 
 const ILLUSTRATIONS: Record<
   OnboardingIllustration,
-  ({ size }: { size?: number }) => React.JSX.Element
+  (props: ArtProps) => React.JSX.Element
 > = {
   autoCalc: AutoCalcIllustration,
   ranking: RankingIllustration,
   growth: GrowthIllustration,
 };
 
-interface Props {
+interface Props extends ArtProps {
   name: OnboardingIllustration;
-  size?: number;
 }
 
-export const OnboardingIllustrationView = ({ name, size }: Props) => {
+export const OnboardingIllustrationView = ({ name, height }: Props) => {
   const Illustration = ILLUSTRATIONS[name];
-  return <Illustration size={size} />;
+  return <Illustration height={height} />;
 };

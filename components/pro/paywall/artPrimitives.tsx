@@ -10,9 +10,10 @@ import Svg, {
 } from "react-native-svg";
 
 /**
- * Paywall のイラストで共有する部品。
+ * Paywall と登録前オンボーディングのイラストで共有する部品。
  * 配色・キャンバス寸法・端末モック・カード・装飾をここに集約し、
- * スライド用（PaywallSlideArt）と機能一覧用（PaywallFeatureArt）の双方から使う。
+ * Paywall（PaywallSlideArt / PaywallFeatureArt）と components/onboarding/illustrations から使う。
+ * 定数を変えるとオンボーディングの図も崩れるため、Paywall の都合だけで変えない。
  */
 
 const CANVAS_WIDTH = 280;
@@ -59,7 +60,7 @@ export function Confetti({ items }: { items: readonly ConfettiItem[] }) {
   );
 }
 
-/** 四方に光る装飾。加入後の体験が特別に見えるようにする。 */
+/** 四方に光る装飾。強調したい要素の周りに添えて特別に見せる。 */
 export function Sparkle({
   x,
   y,
