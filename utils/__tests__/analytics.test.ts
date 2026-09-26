@@ -178,6 +178,18 @@ const SHARED_EVENT_CASES: {
     properties: { feature: "unlimited_practice_menus" },
     run: (a) => a.trackFreeLimitReached("unlimited_practice_menus"),
   },
+  {
+    event: "onboarding step viewed",
+    properties: { step_index: 1, illustration: "ranking" },
+    run: (a) =>
+      a.trackOnboardingStepViewed({ step_index: 1, illustration: "ranking" }),
+  },
+  {
+    event: "onboarding completed",
+    properties: { skipped: true, last_step_index: 0 },
+    run: (a) =>
+      a.trackOnboardingCompleted({ skipped: true, last_step_index: 0 }),
+  },
 ];
 
 describe("analytics", () => {

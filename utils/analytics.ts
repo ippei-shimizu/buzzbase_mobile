@@ -1,3 +1,4 @@
+import type { OnboardingIllustration } from "../constants/onboarding";
 import type { GoalKind, GoalPeriodType } from "../types/goal";
 import type { PlanType, Platform, ProFeature } from "../types/pro";
 import type { EventType } from "../types/schedule";
@@ -198,3 +199,19 @@ export const trackFreeLimitReached = (
   feature: ProFeature,
   props?: { source?: string; detection?: "client" | "server" },
 ) => capture("free limit reached", { feature, ...props });
+
+/**
+ * 初回ウォークスルーのスライド表示。1枚目の初期表示も含み、戻る操作で往復すると
+ * 再送されるため、スライド別通過率はユニークユーザー数で集計する。
+ * mobile は登録前、Web はユーザー名登録後に表示するため、横断集計は `$lib` で分ける。
+ */
+export const trackOnboardingStepViewed = (props: {
+  step_index: number;
+  illustration: OnboardingIllustration;
+}) => capture("onboarding step viewed", props);
+
+/** 初回ウォークスルーの終了。スキップと「はじめる」の両方で送り、`skipped` で区別する。 */
+export const trackOnboardingCompleted = (props: {
+  skipped: boolean;
+  last_step_index: number;
+}) => capture("onboarding completed", props);
