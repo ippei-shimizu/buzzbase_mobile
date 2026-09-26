@@ -334,6 +334,10 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
  * UI 側はこれを「この打席を完了」ボタンの `disabled` 制御に使い、
  * `toCreatePayload` が throw する条件に到達しないようにする。
  */
+export const isBattingRecordReadyToSubmit = (
+  state: Pick<BattingRecordState, "batterBoxNumber" | "plateResultId">,
+): boolean => state.batterBoxNumber !== null && state.plateResultId !== null;
+
 type DetailInputSource = Pick<
   BattingRecordState,
   | "finalBalls"
@@ -383,7 +387,3 @@ export const toDetailInputFlags = (
     has_detail: Object.values(itemFlags).some(Boolean),
   };
 };
-
-export const isBattingRecordReadyToSubmit = (
-  state: Pick<BattingRecordState, "batterBoxNumber" | "plateResultId">,
-): boolean => state.batterBoxNumber !== null && state.plateResultId !== null;
