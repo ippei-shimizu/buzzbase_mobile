@@ -288,6 +288,14 @@ export interface PitchCourseZone {
   plate_appearances: number;
   at_bats: number;
   hits: number;
+  /** 塁打。未対応のバックエンドでは欠けるため、表示側では 0 として扱う。 */
+  total_bases?: number;
+  /** 三振 + 振り逃げ。未対応のバックエンドでは欠けるため、表示側では 0 として扱う。 */
+  strikeouts?: number;
+  /** 三振のうち空振り。振り逃げには swing_type が入らないため内訳の合計は strikeouts 以下になる。 */
+  swinging_strikeouts?: number;
+  /** 三振のうち見逃し。 */
+  looking_strikeouts?: number;
   batting_average: number;
   /** 打数が min_at_bats 以上か。false は参考値（半透明表示）。 */
   is_reliable: boolean;
@@ -297,6 +305,11 @@ export interface PitchCourseZoneSummary {
   plate_appearances: number;
   at_bats: number;
   hits: number;
+  /** 以下 4 つは未対応のバックエンドでは欠けるため、表示側では 0 として扱う。 */
+  total_bases?: number;
+  strikeouts?: number;
+  swinging_strikeouts?: number;
+  looking_strikeouts?: number;
   batting_average: number;
 }
 
