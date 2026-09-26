@@ -14,7 +14,7 @@ import {
   SUB_INK,
 } from "@components/pro/paywall/artPrimitives";
 
-const PHONE = { x: 22, y: 14, width: 132, height: 200 } as const;
+const PHONE = { x: 22, y: 14, width: 132, height: 246 } as const;
 
 const PLATE_APPEARANCES = [
   { label: "1打席", result: "右安", isHit: true },
