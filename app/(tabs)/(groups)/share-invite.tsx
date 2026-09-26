@@ -10,9 +10,8 @@ import {
   StyleSheet,
 } from "react-native";
 import { Icon } from "@components/icon/Icon";
+import { buildAppStoreUrl } from "@constants/appStore";
 import { useGetOrCreateInviteLink } from "@hooks/useGroupMutations";
-
-const APP_STORE_URL = "https://apps.apple.com/jp/app/buzz-base/id6761011816";
 
 export default function ShareInviteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -40,7 +39,7 @@ export default function ShareInviteScreen() {
   const handleShare = async () => {
     if (!data) return;
 
-    const message = `BUZZ BASEで「${data.group_name}」に参加しよう！\n\n招待コード: ${data.code}\n\nアプリをダウンロード\n${APP_STORE_URL}\n\nアプリをインストールして、招待コードを入力してね！`;
+    const message = `BUZZ BASEで「${data.group_name}」に参加しよう！\n\n招待コード: ${data.code}\n\nアプリをダウンロード\n${buildAppStoreUrl("share_group_invite")}\n\nアプリをインストールして、招待コードを入力してね！`;
 
     await Share.share({ message });
   };
