@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -12,6 +13,7 @@ import { PlateAppearanceCard } from "@components/game-record/plate-appearance/Pl
 import { StepIndicator } from "@components/game-record/StepIndicator";
 import { Button } from "@components/ui/Button";
 import { usePlateAppearancesByGame } from "@hooks/usePlateAppearances";
+import { trackGameRecordStepViewed } from "@utils/analytics";
 import { useGameRecordStore } from "../../../stores/gameRecordStore";
 
 /**
@@ -28,6 +30,10 @@ export default function PlateAppearancesListScreen() {
   const pitchingResultId = useGameRecordStore((s) => s.pitchingResultId);
   const { plateAppearances, isLoading } =
     usePlateAppearancesByGame(gameResultId);
+
+  useEffect(() => {
+    trackGameRecordStepViewed("plate_appearances");
+  }, []);
 
   if (gameResultId === null) {
     return (

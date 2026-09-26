@@ -48,7 +48,21 @@ export const trackSignUpCompleted = (loginType: LoginType) =>
 export const trackUserLoggedIn = (loginType: LoginType) =>
   capture("user logged in", { login_type: loginType });
 
-export const trackGameRecordStepViewed = (step: 1 | 2 | 3 | "summary") =>
+/**
+ * 試合記録フローの画面。数値は既存の画面番号で、過去データと連続させるため意味を変えない。
+ * 打席記録（打席リストと入力ウィザードの各ステップ）は文字列の値で区別する。
+ */
+export type GameRecordStep =
+  | 1
+  | 2
+  | 3
+  | "summary"
+  | "plate_appearances"
+  | "plate_appearance_result"
+  | "plate_appearance_counter"
+  | "plate_appearance_detail";
+
+export const trackGameRecordStepViewed = (step: GameRecordStep) =>
   capture("game record step viewed", { step });
 
 export const trackGameRecordCompleted = (props: {
