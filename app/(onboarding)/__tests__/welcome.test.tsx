@@ -196,6 +196,19 @@ describe("onboarding welcome", () => {
       ]);
     });
 
+    it("スワイプでの移動でもステップ表示イベントを1回だけ送る", () => {
+      const view = renderWelcome();
+      const { width } = Dimensions.get("window");
+
+      endSwipeAt(view, width);
+      endSwipeAt(view, width);
+
+      expect(capturedEvents("onboarding step viewed")).toEqual([
+        { step_index: 0, illustration: "autoCalc" },
+        { step_index: 1, illustration: "ranking" },
+      ]);
+    });
+
     it("スワイプの終端が範囲外でも落ちずに最終ステップとして扱う", () => {
       const view = renderWelcome();
       const { width } = Dimensions.get("window");
