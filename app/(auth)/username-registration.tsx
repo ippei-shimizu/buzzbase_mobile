@@ -55,7 +55,8 @@ export default function UsernameRegistrationScreen() {
       await axiosInstance.put("/user", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      router.replace("/(tabs)");
+      // 必須項目の登録を終えてから任意のプロフィール入力を挟む。
+      router.replace("/(auth)/profile-setup");
     } catch (error) {
       if (isRateLimitError(error)) {
         setErrors([rateLimitErrorMessage(error)]);
