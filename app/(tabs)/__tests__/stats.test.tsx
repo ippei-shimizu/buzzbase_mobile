@@ -193,6 +193,28 @@ describe("成績画面の投球サマリ", () => {
     expect(screen.getByLabelText("投球回 21.33")).toBeOnTheScreen();
   });
 
+  it("投球サマリを取得できないときもカード以外の投球タブの内容を表示する", async () => {
+    respondWithEmptyStats();
+    let responded = false;
+    server.use(
+      http.get(baseUrl("/api/v2/stats/pitching_summary"), () => {
+        responded = true;
+        return HttpResponse.json({ error: "Not Found" }, { status: 404 });
+      }),
+    );
+    renderWithProviders(<StatsScreen />);
+
+    await waitFor(() => expect(screen.getByText("打撃成績")).toBeOnTheScreen());
+    fireEvent.press(screen.getByText("投球"));
+    await waitFor(() => expect(responded).toBe(true));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    expect(screen.getByText("投球成績")).toBeOnTheScreen();
+    expect(screen.queryByText(/投球回$/)).toBeNull();
+  });
+
   it("投球タブを開くまで投球サマリを取得しない", async () => {
     respondWithEmptyStats();
     let requested = false;
