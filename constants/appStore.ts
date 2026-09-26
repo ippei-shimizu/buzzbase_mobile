@@ -17,12 +17,17 @@ export const IOS_REVIEW_URL = `itms-apps://itunes.apple.com/app/id${IOS_APPLE_ID
 export const IOS_APP_STORE_PROVIDER_TOKEN = "128690561";
 
 /**
- * App Store Connect が発行するキャンペーンリンクと同じ形式の App Store URL を返す。
- * front の `buildAppStoreUrl` と同じ形式で、シェア導線ごとにユニークな campaign 名を渡す。
- *
- * @param campaign 例: "share_game_summary" / "share_group_invite"
+ * 計測対象の導線ごとの campaign 名。打ち間違えると App Store Connect 側で別キャンペーンとして黙って集計されるため、列挙で縛る。
  */
-export const buildAppStoreUrl = (campaign: string): string =>
+export type AppStoreCampaign = "share_game_summary" | "share_group_invite";
+
+/**
+ * App Store Connect が発行するキャンペーンリンクと同じ形式の App Store URL を返す。
+ * front の `buildAppStoreUrl` と同じ形式で、導線ごとにユニークな campaign 名を渡す。
+ *
+ * @param campaign App Store Connect に登録する campaign 名
+ */
+export const buildAppStoreUrl = (campaign: AppStoreCampaign): string =>
   `https://apps.apple.com/app/apple-store/id${IOS_APPLE_ID}?pt=${IOS_APP_STORE_PROVIDER_TOKEN}&ct=${encodeURIComponent(campaign)}&mt=8`;
 
 export const ANDROID_PACKAGE = "jp.buzzbase.mobile";
