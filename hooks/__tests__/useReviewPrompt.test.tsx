@@ -110,10 +110,41 @@ describe("useReviewPrompt", () => {
     expect(await triggerShare()).toBe(true);
   });
 
-  it("同じ年に3回要求していたら要求しない", async () => {
+  it("直近365日に3回要求していたら、年をまたいでいても要求しない", async () => {
     seed({
       store_review_positive_event_count: "4",
-      store_review_install_date: daysAgo(365),
+      store_review_install_date: daysAgo(730),
+      store_review_consumed_milestone: "2",
+      store_review_shown_at_list: JSON.stringify([
+        daysAgo(300),
+        daysAgo(200),
+        daysAgo(100),
+      ]),
+      store_review_last_shown: daysAgo(100),
+    });
+    expect(await triggerShare()).toBe(false);
+    expect(requestReviewMock).not.toHaveBeenCalled();
+  });
+
+  it("365日より前の要求は回数に数えない", async () => {
+    seed({
+      store_review_positive_event_count: "4",
+      store_review_install_date: daysAgo(730),
+      store_review_consumed_milestone: "2",
+      store_review_shown_at_list: JSON.stringify([
+        daysAgo(400),
+        daysAgo(200),
+        daysAgo(100),
+      ]),
+      store_review_last_shown: daysAgo(100),
+    });
+    expect(await triggerShare()).toBe(true);
+  });
+
+  it("暦年カウントで当年に3回要求済みの端末では要求しない", async () => {
+    seed({
+      store_review_positive_event_count: "4",
+      store_review_install_date: daysAgo(730),
       store_review_consumed_milestone: "2",
       store_review_shown_count: "3",
       store_review_shown_year: String(new Date().getFullYear()),

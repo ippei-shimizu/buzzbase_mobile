@@ -9,16 +9,18 @@ const KEYS = {
   POSITIVE_EVENT_COUNT: "store_review_positive_event_count",
   INSTALL_DATE: "store_review_install_date",
   LAST_SHOWN: "store_review_last_shown",
-  SHOWN_COUNT: "store_review_shown_count",
-  SHOWN_YEAR: "store_review_shown_year",
+  SHOWN_AT_LIST: "store_review_shown_at_list",
   CONSUMED_MILESTONE: "store_review_consumed_milestone",
 } as const;
 
 const LEGACY_GAME_COUNT_KEY = "store_review_game_count";
+const LEGACY_SHOWN_COUNT_KEY = "store_review_shown_count";
+const LEGACY_SHOWN_YEAR_KEY = "store_review_shown_year";
 
 const MILESTONES = [2, 5, 20, 50, 100];
 const MIN_DAYS_SINCE_INSTALL = 7;
-const MAX_SHOWS_PER_YEAR = 3;
+// Apple の上限「365日で3回」に窓を揃える。暦年で数えると年末と年明けで最大6回になる。
+const MAX_SHOWS_PER_365_DAYS = 3;
 const MIN_DAYS_BETWEEN_SHOWS = 60;
 
 function daysSince(dateString: string | null): number {
@@ -46,17 +48,45 @@ function findReachedMilestone(
   return reached.length > 0 ? reached[reached.length - 1] : null;
 }
 
+function parseShownAtList(value: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+/** 直近365日以内にレビューを要求した日時（ISO 文字列）の一覧を返す。 */
+async function readRecentShownAtList(): Promise<string[]> {
+  const stored = await SecureStore.getItemAsync(KEYS.SHOWN_AT_LIST);
+  const shownAtList =
+    stored !== null ? parseShownAtList(stored) : await readLegacyShownAtList();
+  return shownAtList.filter((shownAt) => daysSince(shownAt) < 365);
+}
+
+// 暦年カウント時代の端末は日時の一覧を持たないため、当年の回数ぶんを最終表示日で近似する。
+async function readLegacyShownAtList(): Promise<string[]> {
+  const lastShown = await SecureStore.getItemAsync(KEYS.LAST_SHOWN);
+  const shownYear = await SecureStore.getItemAsync(LEGACY_SHOWN_YEAR_KEY);
+  if (!lastShown || shownYear !== String(new Date().getFullYear())) return [];
+  const shownCount = await readInt(LEGACY_SHOWN_COUNT_KEY);
+  return Array.from({ length: shownCount }, () => lastShown);
+}
+
 async function recordReviewRequested(
-  baseShownCount: number,
+  recentShownAtList: string[],
   milestone: number,
 ): Promise<void> {
+  const now = new Date().toISOString();
   // 途中で失敗しても、同じマイルストーンで再要求しないよう消化を先に書く。
   await SecureStore.setItemAsync(KEYS.CONSUMED_MILESTONE, String(milestone));
-  await SecureStore.setItemAsync(KEYS.LAST_SHOWN, new Date().toISOString());
-  await SecureStore.setItemAsync(KEYS.SHOWN_COUNT, String(baseShownCount + 1));
+  await SecureStore.setItemAsync(KEYS.LAST_SHOWN, now);
   await SecureStore.setItemAsync(
-    KEYS.SHOWN_YEAR,
-    String(new Date().getFullYear()),
+    KEYS.SHOWN_AT_LIST,
+    JSON.stringify([...recentShownAtList, now]),
   );
 }
 
@@ -96,12 +126,8 @@ export const useStoreReview = () => {
       return false;
     }
 
-    const storedYear = await SecureStore.getItemAsync(KEYS.SHOWN_YEAR);
-    const shownCount =
-      storedYear === String(new Date().getFullYear())
-        ? await readInt(KEYS.SHOWN_COUNT)
-        : 0;
-    if (shownCount >= MAX_SHOWS_PER_YEAR) return false;
+    const recentShownAtList = await readRecentShownAtList();
+    if (recentShownAtList.length >= MAX_SHOWS_PER_365_DAYS) return false;
 
     const lastShown = await SecureStore.getItemAsync(KEYS.LAST_SHOWN);
     if (lastShown && daysSince(lastShown) < MIN_DAYS_BETWEEN_SHOWS) {
@@ -113,7 +139,7 @@ export const useStoreReview = () => {
 
     await StoreReview.requestReview();
     try {
-      await recordReviewRequested(shownCount, milestone);
+      await recordReviewRequested(recentShownAtList, milestone);
     } catch (error) {
       // 要求自体は成功しているため true を返し、広告との二重割り込みを避ける。
       Sentry.captureException(error, {
