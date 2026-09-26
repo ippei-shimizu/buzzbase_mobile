@@ -1,4 +1,8 @@
-import type { PaywallStepName, ProTrigger } from "@utils/analytics";
+import type {
+  PaywallPlacement,
+  PaywallStepName,
+  ProTrigger,
+} from "@utils/analytics";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   trackPaywallDismissed,
@@ -12,6 +16,7 @@ interface UsePaywallStepsOptions {
   trigger: ProTrigger;
   /** Paywall が表示中かつ課金ファネルの分母に含めてよいとき true。 */
   active: boolean;
+  placement: PaywallPlacement;
 }
 
 /**
@@ -22,7 +27,11 @@ interface UsePaywallStepsOptions {
  *
  * @returns 現在のステップと、遷移・離脱を計測付きで行うハンドラ
  */
-export function usePaywallSteps({ trigger, active }: UsePaywallStepsOptions) {
+export function usePaywallSteps({
+  trigger,
+  active,
+  placement,
+}: UsePaywallStepsOptions) {
   const [step, setStepState] = useState<PaywallStep>("value");
   const stepRef = useRef<PaywallStep>("value");
 
@@ -37,8 +46,8 @@ export function usePaywallSteps({ trigger, active }: UsePaywallStepsOptions) {
   }, [active, setStep]);
 
   useEffect(() => {
-    if (active) trackPaywallStepViewed({ step, trigger });
-  }, [active, step, trigger]);
+    if (active) trackPaywallStepViewed({ step, trigger, placement });
+  }, [active, step, trigger, placement]);
 
   const goToPlan = useCallback(() => setStep("plan"), [setStep]);
   const goToFeatures = useCallback(() => setStep("features"), [setStep]);
@@ -46,8 +55,8 @@ export function usePaywallSteps({ trigger, active }: UsePaywallStepsOptions) {
 
   /** 購入に至らず閉じたときに呼ぶ。どのステップで離脱したかを計測する。 */
   const trackDismiss = useCallback(() => {
-    trackPaywallDismissed({ step: stepRef.current, trigger });
-  }, [trigger]);
+    trackPaywallDismissed({ step: stepRef.current, trigger, placement });
+  }, [trigger, placement]);
 
   return { step, goToPlan, goToFeatures, goToValue, trackDismiss };
 }

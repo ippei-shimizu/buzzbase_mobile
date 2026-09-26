@@ -1,7 +1,7 @@
 import type { usePaywallPurchase } from "./usePaywallPurchase";
 import type { PaywallStep } from "./usePaywallSteps";
 import type { Feature } from "../../../types/pro";
-import type { ProTrigger } from "@utils/analytics";
+import type { PaywallPlacement, ProTrigger } from "@utils/analytics";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -39,6 +39,7 @@ interface PaywallFlowProps {
   feature?: Feature;
   contextMessage?: string;
   trigger: ProTrigger;
+  placement: PaywallPlacement;
   step: PaywallStep;
   goToPlan: () => void;
   goToFeatures: () => void;
@@ -60,6 +61,7 @@ export function PaywallFlow({
   feature,
   contextMessage,
   trigger,
+  placement,
   step,
   goToPlan,
   goToFeatures,
@@ -308,6 +310,7 @@ export function PaywallFlow({
                   trackPaywallPlanSelected({
                     plan_type: toPlanType(pkg.packageType),
                     trigger,
+                    placement,
                   });
                 }}
                 accessibilityRole="radio"
