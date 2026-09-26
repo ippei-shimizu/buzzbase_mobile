@@ -10,7 +10,11 @@ interface Props {
 
 export const OnboardingSlide = ({ width, step }: Props) => (
   <View style={[styles.container, { width }]}>
-    <View style={styles.illustrationFrame}>
+    <View
+      style={styles.illustrationFrame}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
       <OnboardingIllustrationView name={step.illustration} />
     </View>
     <Text style={styles.title}>{step.title}</Text>
