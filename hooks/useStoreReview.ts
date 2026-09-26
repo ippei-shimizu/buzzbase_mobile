@@ -3,7 +3,11 @@ import * as SecureStore from "expo-secure-store";
 import * as StoreReview from "expo-store-review";
 import { useCallback } from "react";
 import { Linking, Platform } from "react-native";
-import { ANDROID_STORE_URL, IOS_REVIEW_URL } from "@constants/appStore";
+import {
+  ANDROID_PLAY_STORE_URL,
+  ANDROID_STORE_URL,
+  IOS_REVIEW_URL,
+} from "@constants/appStore";
 
 const KEYS = {
   POSITIVE_EVENT_COUNT: "store_review_positive_event_count",
@@ -162,12 +166,12 @@ export const useStoreReview = () => {
   }, []);
 
   /**
-   * 設定画面の「レビューで応援する」から呼ばれる、ストアのレビュー画面への明示遷移。
+   * 「レビューで応援する」などユーザーの操作を起点に、ストアのレビュー画面を開く。
    *
    * iOS: App Storeのレビュー書き込み画面（`?action=write-review`）を直接開く。
    * Android: Play Storeのアプリページを開く（書き込み画面への直接スキームは存在しない）。
    *
-   * `Linking.canOpenURL` で開けない場合は何もしない（Sentryで観測のみ）。
+   * iOS で `Linking.canOpenURL` が開けないと返した場合は何もしない（Sentryで観測のみ）。
    * Simulatorでは `itms-apps://` が解決されないことがあるため、このパスはサイレントフェイルする想定。
    */
   const openStoreReviewPage = useCallback(async () => {
@@ -178,6 +182,12 @@ export const useStoreReview = () => {
     try {
       const canOpen = await Linking.canOpenURL(url);
       if (!canOpen) {
+        // Android 11 以降は <queries> 宣言が無いと market:// を解決できないため、
+        // ブラウザでも必ず開ける https の Play Store ページへ逃がす。
+        if (Platform.OS === "android") {
+          await Linking.openURL(ANDROID_PLAY_STORE_URL);
+          return;
+        }
         Sentry.captureMessage("Store review URL cannot be opened", {
           level: "warning",
           extra: { url, platform: Platform.OS },

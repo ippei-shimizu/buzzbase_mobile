@@ -7,6 +7,7 @@ import {
   SettingsSection,
   type SettingsItem,
 } from "@components/profile/SettingsSection";
+import { FEEDBACK_CONTACT_ROUTE } from "@constants/contact";
 import { useAuth } from "@hooks/useAuth";
 import { useStoreReview } from "@hooks/useStoreReview";
 
@@ -89,9 +90,15 @@ export default function SettingsScreen() {
           },
         },
         {
+          icon: "chatbubble-outline",
+          title: "ご意見・ご要望",
+          description: "改善してほしいこと・欲しい機能を送る",
+          onPress: () => router.push(FEEDBACK_CONTACT_ROUTE),
+        },
+        {
           icon: "mail-outline",
           title: "お問い合わせ",
-          description: "ご意見・不具合の報告など",
+          description: "不具合の報告・その他のお問い合わせ",
           onPress: () => router.push("/(profile)/contact"),
         },
         {

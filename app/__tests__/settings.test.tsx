@@ -103,7 +103,19 @@ describe("SettingsScreen", () => {
     });
   });
 
-  it("canOpenURL が false を返す場合は openURL を呼ばない", async () => {
+  it("Android で market:// を開けない場合は https の Play Store ページを開く", async () => {
+    setPlatformOS("android");
+    canOpenSpy.mockResolvedValueOnce(false);
+    const { getByText } = renderWithProviders(<SettingsScreen />);
+    fireEvent.press(getByText("レビューで応援する"));
+    await waitFor(() => {
+      expect(openURLSpy).toHaveBeenCalledWith(
+        "https://play.google.com/store/apps/details?id=jp.buzzbase.mobile",
+      );
+    });
+  });
+
+  it("iOS で canOpenURL が false を返す場合は openURL を呼ばない", async () => {
     setPlatformOS("ios");
     canOpenSpy.mockResolvedValueOnce(false);
     const { getByText } = renderWithProviders(<SettingsScreen />);
@@ -125,6 +137,15 @@ describe("SettingsScreen", () => {
     const { getByText } = renderWithProviders(<SettingsScreen />);
     fireEvent.press(getByText("お問い合わせ"));
     expect(getRouterSpies().push).toHaveBeenCalledWith("/(profile)/contact");
+  });
+
+  it("「ご意見・ご要望」タップでフィードバック用のお問い合わせ画面へ遷移する", () => {
+    const { getByText } = renderWithProviders(<SettingsScreen />);
+    fireEvent.press(getByText("ご意見・ご要望"));
+    expect(getRouterSpies().push).toHaveBeenCalledWith({
+      pathname: "/(profile)/contact",
+      params: { subject: "feedback" },
+    });
   });
 
   it("「プロフィール編集」タップで edit 画面へ遷移する", () => {
