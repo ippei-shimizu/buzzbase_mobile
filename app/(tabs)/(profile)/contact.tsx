@@ -2,6 +2,7 @@ import { useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { WebView } from "react-native-webview";
+import { FEEDBACK_CONTACT_SUBJECT } from "@constants/contact";
 
 const CONTACT_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLSfbVKEQcaWWG6b5bAL429RVHO3dkCvvhOcuvHhNA3vY3ZKdIg/viewform?embedded=true";
@@ -9,7 +10,7 @@ const CONTACT_URL =
 export default function ContactScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const { subject } = useLocalSearchParams<{ subject?: string }>();
-  const showFeedbackBanner = subject === "feedback";
+  const showFeedbackBanner = subject === FEEDBACK_CONTACT_SUBJECT;
 
   return (
     <View style={styles.container}>

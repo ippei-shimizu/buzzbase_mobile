@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Icon } from "@components/icon/Icon";
+import { FEEDBACK_CONTACT_ROUTE } from "@constants/contact";
 import { useStoreReview } from "@hooks/useStoreReview";
 
 interface FooterLinkProps {
@@ -40,12 +41,7 @@ export function FeedbackFooter() {
         <FooterLink
           icon="chatbubble-outline"
           label="ご意見・ご要望を送る"
-          onPress={() =>
-            router.push({
-              pathname: "/(profile)/contact",
-              params: { subject: "feedback" },
-            })
-          }
+          onPress={() => router.push(FEEDBACK_CONTACT_ROUTE)}
         />
         <FooterLink
           icon="star-outline"
