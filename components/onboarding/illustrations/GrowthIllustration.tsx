@@ -22,8 +22,10 @@ import {
 } from "@components/pro/paywall/artPrimitives";
 
 const CHART = { left: 44, right: 222, top: 70, bottom: 150 } as const;
-const MIN_AVERAGE = 0.22;
-const MAX_AVERAGE = 0.34;
+// yFor はクランプしないため、MONTHLY_AVERAGES がこの上下端を外れると折れ線がカードのヘッダーへ抜ける。
+const AXIS_MIN_AVERAGE = 0.22;
+const AXIS_MAX_AVERAGE = 0.34;
+const AXIS_TICKS = [0.32, 0.28, 0.24] as const;
 
 // シーズン粒度の推移は Pro 限定のため、無料で見られる月別の1系列だけを描く。
 const MONTHLY_AVERAGES = [
@@ -41,7 +43,7 @@ const xFor = (index: number) =>
 
 const yFor = (average: number) =>
   CHART.bottom -
-  ((average - MIN_AVERAGE) / (MAX_AVERAGE - MIN_AVERAGE)) *
+  ((average - AXIS_MIN_AVERAGE) / (AXIS_MAX_AVERAGE - AXIS_MIN_AVERAGE)) *
     (CHART.bottom - CHART.top);
 
 /**
@@ -93,7 +95,7 @@ export function GrowthIllustration({ height }: ArtProps) {
         月別
       </SvgText>
 
-      {[0.32, 0.28, 0.24].map((tick) => (
+      {AXIS_TICKS.map((tick) => (
         <Line
           key={tick}
           x1={CHART.left}
