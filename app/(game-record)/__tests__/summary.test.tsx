@@ -4,6 +4,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import * as SecureStore from "expo-secure-store";
 import * as StoreReview from "expo-store-review";
+import { Share } from "react-native";
 import { InterstitialAd } from "react-native-google-mobile-ads";
 import {
   baseUrl,
@@ -242,5 +243,26 @@ describe("SummaryScreen", () => {
         params: { gameResultId: "123" },
       });
     });
+  });
+
+  it("「記録を完了する」を押した後は、広告の読み込みを待つ間も成績をシェアできない", async () => {
+    seedStorageWhereInterstitialIsShown();
+    (StoreReview.isAvailableAsync as jest.Mock).mockResolvedValueOnce(false);
+    (InterstitialAd.createForAdRequest as jest.Mock).mockClear();
+    const shareSpy = jest
+      .spyOn(Share, "share")
+      .mockResolvedValue({ action: Share.dismissedAction });
+    useGameRecordStore.setState({ gameResultId: 123, isEditMode: false });
+
+    renderWithProviders(<SummaryScreen />);
+
+    await pressCompleteButton();
+    await waitFor(() =>
+      expect(InterstitialAd.createForAdRequest).toHaveBeenCalled(),
+    );
+    fireEvent.press(screen.getByText("成績をシェア"));
+
+    expect(shareSpy).not.toHaveBeenCalled();
+    shareSpy.mockRestore();
   });
 });

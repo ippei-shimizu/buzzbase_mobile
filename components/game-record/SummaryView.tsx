@@ -47,7 +47,7 @@ interface Props {
   pitchingBaseOnBalls: number;
   pitchingHitByPitch: number;
   onComplete: () => void;
-  /** 完了処理の実行中。完了ボタンと野球ノートボタンを無効化して二重送信を防ぐ。 */
+  /** 完了処理の実行中。store がリセット済みのため、完了・野球ノート・シェアの各ボタンを無効化する。 */
   isCompleting?: boolean;
   onShare?: () => void;
   /** 指定時、シェアボタンの近くに野球ノート作成への動線を表示する。 */
@@ -174,12 +174,14 @@ export function SummaryView(props: Props) {
         <View style={{ alignItems: "center", marginTop: 12 }}>
           <TouchableOpacity
             onPress={props.onShare}
+            disabled={props.isCompleting}
             style={{
               borderWidth: 1,
               borderColor: "#d08000",
               borderRadius: 8,
               paddingHorizontal: 24,
               paddingVertical: 10,
+              opacity: props.isCompleting ? 0.5 : 1,
             }}
           >
             <Text
