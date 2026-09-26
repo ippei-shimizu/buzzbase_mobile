@@ -47,6 +47,7 @@ import { PlateAppearanceDonut } from "@components/stats/PlateAppearanceDonut";
 import {
   CountSituationDummy,
   DUMMY_PITCH_COURSES,
+  DUMMY_PITCHER_FACEOFF_COURSES,
 } from "@components/stats/proComingSoonDummies";
 import { ProComingSoonHitDirectionField } from "@components/stats/ProComingSoonHitDirectionField";
 import { RunnersSituationCard } from "@components/stats/RunnersSituationCard";
@@ -1008,7 +1009,10 @@ export default function StatsScreen() {
               />
               <SampleDataLabel />
               <View style={styles.comingSoonDummy}>
-                <PitchCourseCard data={DUMMY_PITCH_COURSES} />
+                <PitchCourseCard
+                  data={DUMMY_PITCH_COURSES}
+                  samplePitcherCross={DUMMY_PITCHER_FACEOFF_COURSES}
+                />
               </View>
             </View>
           )}

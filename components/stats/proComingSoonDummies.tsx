@@ -1,4 +1,8 @@
-import type { PitchCourseData, PitchCourseZone } from "../../types/stats";
+import type {
+  PitchCourseData,
+  PitchCourseZone,
+  PitcherFaceoffCourseData,
+} from "../../types/stats";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -82,11 +86,12 @@ const DUMMY_PITCH_COURSE_SEEDS: readonly [number, number, number][] = [
 
 const STRIKE_ZONE = new Set([7, 8, 9, 12, 13, 14, 17, 18, 19]);
 
-const DUMMY_PITCH_COURSE_ZONES: PitchCourseZone[] = Array.from(
-  { length: 25 },
-  (_, index) => {
+const buildDummyZones = (
+  seeds: readonly [number, number, number][],
+): PitchCourseZone[] =>
+  Array.from({ length: 25 }, (_, index) => {
     const course = index + 1;
-    const seed = DUMMY_PITCH_COURSE_SEEDS.find(([c]) => c === course);
+    const seed = seeds.find(([c]) => c === course);
     const atBats = seed?.[1] ?? 0;
     const hits = seed?.[2] ?? 0;
     return {
@@ -100,8 +105,9 @@ const DUMMY_PITCH_COURSE_ZONES: PitchCourseZone[] = Array.from(
       batting_average: atBats > 0 ? Number((hits / atBats).toFixed(3)) : 0,
       is_reliable: atBats >= 3,
     };
-  },
-);
+  });
+
+const DUMMY_PITCH_COURSE_ZONES = buildDummyZones(DUMMY_PITCH_COURSE_SEEDS);
 
 const sumDummyZones = (zones: PitchCourseZone[]) => {
   const atBats = zones.reduce((sum, z) => sum + z.at_bats, 0);
@@ -127,4 +133,39 @@ export const DUMMY_PITCH_COURSES: PitchCourseData = {
     0,
   ),
   min_at_bats: 3,
+};
+
+/**
+ * コース別カード「投手別」タブのサンプルデータ。
+ * 投手ごとに攻められ方が違う（C は外角低め中心、D は内角中心）ことを見せる。
+ */
+export const DUMMY_PITCHER_FACEOFF_COURSES: PitcherFaceoffCourseData = {
+  rows: [
+    {
+      id: 3,
+      label: "投手 C",
+      team_name: "□□高校",
+      plate_appearances: 10,
+      zones: buildDummyZones([
+        [13, 2, 1],
+        [14, 2, 0],
+        [19, 4, 0],
+        [20, 2, 1],
+      ]),
+    },
+    {
+      id: 4,
+      label: "投手 D",
+      team_name: "◇◇高校",
+      plate_appearances: 7,
+      zones: buildDummyZones([
+        [7, 3, 2],
+        [12, 3, 1],
+        [17, 1, 0],
+      ]),
+    },
+  ],
+  total_target_pa: 17,
+  min_at_bats: 3,
+  min_plate_appearances: 3,
 };

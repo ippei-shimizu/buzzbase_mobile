@@ -6,6 +6,7 @@
  * - 打数が min_at_bats 未満のセルは打率に (N打数) の参考値表記が付く
  * - total_target_pa が 0 のときはヒートマップを出さず空状態を表示する
  * - 「球種別」タブを開いたときにだけクロス集計 API を取得する
+ * - 「投手別」タブを開いたときにだけ投手×コース API を取得し、投手を切り替えられる
  */
 import type { PitchCourseData, PitchCourseZone } from "../../../types/stats";
 import { fireEvent } from "@testing-library/react-native";
@@ -155,5 +156,140 @@ describe("PitchCourseCard", () => {
     expect(await findByText("ストレート系 (5)")).toBeTruthy();
     expect(crossRequested).toBe(true);
     expect(await findByText(".600")).toBeTruthy();
+  });
+
+  it("投手別タブを開いたときにだけ取得し、選んだ投手のコース別打率を表示する", async () => {
+    let pitcherCrossRequested = false;
+    server.use(
+      http.get(baseUrl("/api/v2/stats/pitcher_faceoff_courses"), () => {
+        pitcherCrossRequested = true;
+        return HttpResponse.json({
+          rows: [
+            {
+              id: 11,
+              label: "エース投手",
+              team_name: "相手高校",
+              plate_appearances: 5,
+              zones: buildData({
+                19: {
+                  plate_appearances: 5,
+                  at_bats: 5,
+                  hits: 4,
+                  batting_average: 0.8,
+                  is_reliable: true,
+                },
+              }).zones,
+            },
+            {
+              id: 12,
+              label: "控え投手",
+              team_name: null,
+              plate_appearances: 3,
+              zones: buildData({
+                7: {
+                  plate_appearances: 3,
+                  at_bats: 3,
+                  hits: 0,
+                  batting_average: 0,
+                  is_reliable: true,
+                },
+              }).zones,
+            },
+          ],
+          total_target_pa: 8,
+          min_at_bats: 3,
+          min_plate_appearances: 3,
+        });
+      }),
+    );
+
+    const data = buildData({
+      13: {
+        plate_appearances: 5,
+        at_bats: 5,
+        hits: 2,
+        batting_average: 0.4,
+        is_reliable: true,
+      },
+    });
+    const { getByText, findByText, queryByText } = renderWithProviders(
+      <PitchCourseCard data={data} crossFilters={{}} />,
+    );
+
+    expect(pitcherCrossRequested).toBe(false);
+    fireEvent.press(getByText("投手別"));
+    expect(await findByText("エース投手 (5)")).toBeTruthy();
+    expect(pitcherCrossRequested).toBe(true);
+    expect(getByText("相手高校")).toBeTruthy();
+    expect(getByText(".800")).toBeTruthy();
+
+    fireEvent.press(getByText("控え投手 (3)"));
+    expect(getByText(".000")).toBeTruthy();
+    expect(queryByText(".800")).toBeNull();
+  });
+
+  it("しきい値以上の投手がいなければその旨を表示する", async () => {
+    server.use(
+      http.get(baseUrl("/api/v2/stats/pitcher_faceoff_courses"), () =>
+        HttpResponse.json({
+          rows: [],
+          total_target_pa: 2,
+          min_at_bats: 3,
+          min_plate_appearances: 3,
+        }),
+      ),
+    );
+    const data = buildData({
+      13: {
+        plate_appearances: 5,
+        at_bats: 5,
+        hits: 2,
+        batting_average: 0.4,
+        is_reliable: true,
+      },
+    });
+    const { getByText, findByText } = renderWithProviders(
+      <PitchCourseCard data={data} crossFilters={{}} />,
+    );
+
+    fireEvent.press(getByText("投手別"));
+    expect(
+      await findByText("コースを記録した対戦が3打席以上の投手がいません"),
+    ).toBeTruthy();
+  });
+
+  it("サンプル指定時は球種別タブを出さず、API を呼ばずに投手別タブを表示する", () => {
+    const data = buildData({
+      13: {
+        plate_appearances: 5,
+        at_bats: 5,
+        hits: 2,
+        batting_average: 0.4,
+        is_reliable: true,
+      },
+    });
+    const { getByText, queryByText } = renderWithProviders(
+      <PitchCourseCard
+        data={data}
+        samplePitcherCross={{
+          rows: [
+            {
+              id: 1,
+              label: "投手 C",
+              team_name: null,
+              plate_appearances: 3,
+              zones: data.zones,
+            },
+          ],
+          total_target_pa: 3,
+          min_at_bats: 3,
+          min_plate_appearances: 3,
+        }}
+      />,
+    );
+
+    expect(queryByText("球種別")).toBeNull();
+    fireEvent.press(getByText("投手別"));
+    expect(getByText("投手 C (3)")).toBeTruthy();
   });
 });
