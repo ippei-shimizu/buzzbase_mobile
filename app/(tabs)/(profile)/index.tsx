@@ -472,7 +472,7 @@ export default function ProfileScreen() {
               />
             )}
             <InlineBannerAd placement="profile" />
-            <FeedbackFooter />
+            {isStatsLoading ? null : <FeedbackFooter />}
           </View>
         </ScrollView>
 
@@ -656,7 +656,7 @@ export default function ProfileScreen() {
             )}
           </View>
           <InlineBannerAd placement="profile" />
-          <FeedbackFooter />
+          {isGamesLoading ? null : <FeedbackFooter />}
         </View>
       </ScrollView>
 
