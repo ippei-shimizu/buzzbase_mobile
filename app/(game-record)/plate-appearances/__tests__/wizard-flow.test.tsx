@@ -31,6 +31,16 @@ jest.mock("expo-router", () => {
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
 
+const mockCapture = jest.fn();
+jest.mock("@utils/posthog", () => ({
+  posthog: { capture: (...args: unknown[]) => mockCapture(...args) },
+}));
+
+const viewedGameRecordSteps = () =>
+  mockCapture.mock.calls
+    .filter(([event]) => event === "game record step viewed")
+    .map(([, properties]) => properties.step);
+
 const buildCreatedResponse = (
   overrides: Partial<PlateAppearanceV2> = {},
 ): PlateAppearanceV2 => ({
@@ -76,6 +86,7 @@ const buildCreatedResponse = (
 });
 
 beforeEach(() => {
+  mockCapture.mockClear();
   useGameRecordStore.getState().reset();
   useBattingRecordStore.getState().reset();
   // 試合 ID が確定している前提（Step1 通過後）。
@@ -363,5 +374,33 @@ describe("打席ステップ式ウィザードのフロー", () => {
 
     // POST が一切呼ばれていない
     expect(postSpy).not.toHaveBeenCalled();
+  });
+
+  it("結果選択 → 打点入力 → 詳細入力 → 結果選択への戻りを、表示したステップとして順に計測する", async () => {
+    const view = renderWithProviders(<NewPlateAppearanceScreen />);
+    const ground = await view.findByLabelText("グラウンド");
+    expect(viewedGameRecordSteps()).toEqual(["plate_appearance_result"]);
+
+    fireEvent(ground, "press", {
+      nativeEvent: { locationX: 420 * 0.5, locationY: 340 * 0.3 },
+    });
+    fireEvent.press(view.getByRole("button", { name: "ヒット" }));
+    fireEvent.press(view.getByRole("button", { name: "単打" }));
+    await view.findByLabelText("詳細を入力する");
+    fireEvent.press(view.getByLabelText("詳細を入力する"));
+    await view.findByLabelText("一塁");
+    fireEvent.press(
+      view.getByRole("button", { name: "打点・盗塁の入力に戻る" }),
+    );
+    fireEvent.press(view.getByRole("button", { name: "打席結果の選択に戻る" }));
+    await view.findByLabelText("グラウンド");
+
+    expect(viewedGameRecordSteps()).toEqual([
+      "plate_appearance_result",
+      "plate_appearance_counter",
+      "plate_appearance_detail",
+      "plate_appearance_counter",
+      "plate_appearance_result",
+    ]);
   });
 });
