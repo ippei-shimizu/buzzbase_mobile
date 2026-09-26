@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,10 @@ import { Button } from "@components/ui/Button";
 import { ONBOARDING_STEPS } from "@constants/onboarding";
 import { useAuth } from "@hooks/useAuth";
 import { useOnboarding } from "@hooks/useOnboarding";
+import {
+  trackOnboardingCompleted,
+  trackOnboardingStepViewed,
+} from "@utils/analytics";
 
 export default function OnboardingWelcome() {
   const { width } = useWindowDimensions();
@@ -29,6 +33,14 @@ export default function OnboardingWelcome() {
   const [pageIndex, setPageIndex] = useState(0);
 
   const isLastStep = pageIndex === ONBOARDING_STEPS.length - 1;
+
+  // ボタンとスワイプのどちらで切り替わっても1回だけ送るため、表示中のページに同期させる
+  useEffect(() => {
+    trackOnboardingStepViewed({
+      step_index: pageIndex,
+      illustration: ONBOARDING_STEPS[pageIndex].illustration,
+    });
+  }, [pageIndex]);
 
   const handleMomentumScrollEnd = (
     event: NativeSyntheticEvent<NativeScrollEvent>,
@@ -42,10 +54,11 @@ export default function OnboardingWelcome() {
     setPageIndex(clamped);
   };
 
-  const finish = async () => {
+  const finish = async (skipped: boolean) => {
     // 連続タップによる二重遷移・二重フラグ書き込みを防ぐ
     if (isFinishingRef.current) return;
     isFinishingRef.current = true;
+    trackOnboardingCompleted({ skipped, last_step_index: pageIndex });
     await complete();
     router.replace(isLoggedIn ? "/(tabs)" : "/(auth)/sign-up");
   };
@@ -66,7 +79,7 @@ export default function OnboardingWelcome() {
           <View />
         )}
         <TouchableOpacity
-          onPress={finish}
+          onPress={() => finish(true)}
           hitSlop={8}
           accessibilityRole="button"
         >
@@ -93,7 +106,11 @@ export default function OnboardingWelcome() {
           activeIndex={pageIndex}
         />
         {isLastStep ? (
-          <Button title="はじめる" onPress={finish} style={styles.cta} />
+          <Button
+            title="はじめる"
+            onPress={() => finish(false)}
+            style={styles.cta}
+          />
         ) : (
           <Button
             title="次へ"

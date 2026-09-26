@@ -22,6 +22,17 @@ jest.mock("expo-router", () => {
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
 
+const mockCapture = jest.fn();
+jest.mock("@utils/posthog", () => ({
+  isPostHogEnabled: true,
+  posthog: { capture: (...args: unknown[]) => mockCapture(...args) },
+}));
+
+const capturedEvents = (event: string) =>
+  mockCapture.mock.calls
+    .filter(([capturedEvent]) => capturedEvent === event)
+    .map(([, properties]) => properties);
+
 const getRouterSpies = (): RouterSpies => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const expoRouterMock = require("expo-router") as {
@@ -114,5 +125,65 @@ describe("onboarding welcome", () => {
       );
     });
     expect(getRouterSpies().replace).toHaveBeenCalledWith("/(auth)/sign-up");
+  });
+
+  describe("計測", () => {
+    it("初期表示と各ステップへの移動でステップ表示イベントを送る", () => {
+      const { getByText } = renderWelcome();
+
+      fireEvent.press(getByText("次へ"));
+      fireEvent.press(getByText("次へ"));
+
+      expect(capturedEvents("onboarding step viewed")).toEqual([
+        { step_index: 0, illustration: "autoCalc" },
+        { step_index: 1, illustration: "ranking" },
+        { step_index: 2, illustration: "growth" },
+      ]);
+    });
+
+    it("スキップで skipped: true の完了イベントを送る", async () => {
+      const { getByText } = renderWelcome();
+
+      fireEvent.press(getByText("次へ"));
+      fireEvent.press(getByText("スキップ"));
+
+      await waitFor(() => {
+        expect(getRouterSpies().replace).toHaveBeenCalled();
+      });
+      expect(capturedEvents("onboarding completed")).toEqual([
+        { skipped: true, last_step_index: 1 },
+      ]);
+    });
+
+    it("「はじめる」で skipped: false の完了イベントを送る", async () => {
+      const { getByText } = renderWelcome();
+
+      fireEvent.press(getByText("次へ"));
+      fireEvent.press(getByText("次へ"));
+      fireEvent.press(getByText("はじめる"));
+
+      await waitFor(() => {
+        expect(getRouterSpies().replace).toHaveBeenCalled();
+      });
+      expect(capturedEvents("onboarding completed")).toEqual([
+        { skipped: false, last_step_index: 2 },
+      ]);
+    });
+
+    it("完了フラグの書き込みに失敗しても完了イベントを送って遷移する", async () => {
+      setItemAsyncMock.mockRejectedValueOnce(new Error("keychain unavailable"));
+      const { getByText } = renderWelcome();
+
+      fireEvent.press(getByText("スキップ"));
+
+      await waitFor(() => {
+        expect(getRouterSpies().replace).toHaveBeenCalledWith(
+          "/(auth)/sign-up",
+        );
+      });
+      expect(capturedEvents("onboarding completed")).toEqual([
+        { skipped: true, last_step_index: 0 },
+      ]);
+    });
   });
 });
