@@ -2,10 +2,12 @@ import type {
   PitchCourseData,
   PitchCoursePitchTypeData,
   PitchCourseZone,
+  PitchCourseZoneSummary,
   PitcherFaceoffCourseData,
 } from "../../types/stats";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { sumPitchCourseCounts } from "@utils/pitchCourseMetrics";
 
 /**
  * Pro プラン Coming soon カードのサンプル表示用ダミー body。
@@ -65,7 +67,7 @@ const styles = StyleSheet.create({
 });
 
 /**
- * コース別の打率カードのサンプルデータ（PitchCourseCard に渡す）。
+ * コース別分析カードのサンプルデータ（PitchCourseCard に渡す）。
  * 真ん中〜内寄りが得意、外角低めが苦手という分かりやすい傾向を作る。
  */
 const DUMMY_PITCH_COURSE_SEEDS: readonly [number, number, number][] = [
@@ -95,14 +97,25 @@ const buildDummyZones = (
     const seed = seeds.find(([c]) => c === course);
     const atBats = seed?.[1] ?? 0;
     const hits = seed?.[2] ?? 0;
+    const row = Math.floor((course - 1) / 5) + 1;
+    const col = ((course - 1) % 5) + 1;
+    const isStrikeZone = STRIKE_ZONE.has(course);
+    const outs = atBats - hits;
+    // 外角低めほど三振が増える、という傾向を打率のサンプルと揃えて作る。
+    const strikeouts =
+      row >= 4 || col >= 4 ? Math.ceil(outs / 2) : Math.floor(outs / 3);
     return {
       course,
-      row: Math.floor((course - 1) / 5) + 1,
-      col: ((course - 1) % 5) + 1,
-      is_strike_zone: STRIKE_ZONE.has(course),
+      row,
+      col,
+      is_strike_zone: isStrikeZone,
       plate_appearances: atBats,
       at_bats: atBats,
       hits,
+      total_bases: isStrikeZone ? hits + Math.floor(hits / 2) : hits,
+      strikeouts,
+      swinging_strikeouts: Math.ceil(strikeouts / 2),
+      looking_strikeouts: Math.floor(strikeouts / 3),
       batting_average: atBats > 0 ? Number((hits / atBats).toFixed(3)) : 0,
       is_reliable: atBats >= 3,
     };
@@ -110,14 +123,14 @@ const buildDummyZones = (
 
 const DUMMY_PITCH_COURSE_ZONES = buildDummyZones(DUMMY_PITCH_COURSE_SEEDS);
 
-const sumDummyZones = (zones: PitchCourseZone[]) => {
-  const atBats = zones.reduce((sum, z) => sum + z.at_bats, 0);
-  const hits = zones.reduce((sum, z) => sum + z.hits, 0);
+const sumDummyZones = (zones: PitchCourseZone[]): PitchCourseZoneSummary => {
+  const counts = sumPitchCourseCounts(zones);
   return {
-    plate_appearances: zones.reduce((sum, z) => sum + z.plate_appearances, 0),
-    at_bats: atBats,
-    hits,
-    batting_average: atBats > 0 ? Number((hits / atBats).toFixed(3)) : 0,
+    ...counts,
+    batting_average:
+      counts.at_bats > 0
+        ? Number((counts.hits / counts.at_bats).toFixed(3))
+        : 0,
   };
 };
 

@@ -32,6 +32,23 @@ export const PITCH_COURSE_TRACK_FRACTIONS: readonly number[] = [
   0.62, 1, 1, 1, 0.62,
 ];
 
+/**
+ * 5x5 のトラック番号 (1〜5) → 3x3 に畳んだときのバンド番号 (1〜3)。
+ * 外周と内側の1列を合わせて 高め/三塁側・真ん中・低め/一塁側 の3帯にする。
+ */
+export const pitchCourseBand = (track: number): number => {
+  if (track <= 2) return 1;
+  if (track === 3) return 2;
+  return 3;
+};
+
+// 3x3 に畳んだグリッドのトラック比。5x5 と同じ幾何に見えるよう元のトラック比を合算する。
+export const PITCH_COURSE_BAND_TRACK_FRACTIONS: readonly number[] = [
+  PITCH_COURSE_TRACK_FRACTIONS[0] + PITCH_COURSE_TRACK_FRACTIONS[1],
+  PITCH_COURSE_TRACK_FRACTIONS[2],
+  PITCH_COURSE_TRACK_FRACTIONS[3] + PITCH_COURSE_TRACK_FRACTIONS[4],
+];
+
 // 各トラックの終端位置（0〜1 の正規化座標）。
 const TRACK_EDGES: readonly number[] = (() => {
   const total = PITCH_COURSE_TRACK_FRACTIONS.reduce(
