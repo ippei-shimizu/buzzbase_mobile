@@ -65,6 +65,13 @@ describe("formatEra（小数2桁・先頭0は除去しない）", () => {
     expect(formatEra(3.45)).toBe("3.45");
     expect(formatEra(9.999)).toBe("10.00");
   });
+
+  it("値が欠けている・非有限のときは 0.00 を返す", () => {
+    expect(formatEra(undefined)).toBe("0.00");
+    expect(formatEra(null)).toBe("0.00");
+    expect(formatEra(Infinity)).toBe("0.00");
+    expect(formatEra(NaN)).toBe("0.00");
+  });
 });
 
 describe("formatHomeRunWithInsideThePark（本塁打に走本塁打の内数を添える）", () => {

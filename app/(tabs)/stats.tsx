@@ -42,6 +42,8 @@ import { PeriodToggle } from "@components/stats/PeriodToggle";
 import { PitchCourseCard } from "@components/stats/PitchCourseCard";
 import { PitcherAttributeSummary } from "@components/stats/PitcherAttributeSummary";
 import { PitcherFaceoffList } from "@components/stats/PitcherFaceoffList";
+import { PitchingAdditionalStatsCard } from "@components/stats/PitchingAdditionalStatsCard";
+import { PitchingHeadlineStatsCard } from "@components/stats/PitchingHeadlineStatsCard";
 import { PitchTypeCard } from "@components/stats/PitchTypeCard";
 import { PlateAppearanceDonut } from "@components/stats/PlateAppearanceDonut";
 import {
@@ -84,6 +86,7 @@ import {
   usePlateAppearanceBreakdown,
   useBattingStatsTable,
   usePitchingStatsTable,
+  usePitchingSummary,
   useEraTrend,
   useHeadlineStats,
   useRunnersSituation,
@@ -665,6 +668,7 @@ export default function StatsScreen() {
     tableStartMonth,
     tableEndMonth,
   );
+  const pitchingSummary = usePitchingSummary(filters, activeTab === "pitching");
   const eraTrend = useEraTrend(
     filters.year,
     filters.seasonId,
@@ -723,6 +727,7 @@ export default function StatsScreen() {
       headlineStats.refetch(),
       additionalStats.refetch(),
       runnersSituation.refetch(),
+      pitchingSummary.refetch(),
       battingTable.refetch(),
       pitchingTable.refetch(),
       eraTrend.refetch(),
@@ -743,6 +748,7 @@ export default function StatsScreen() {
     headlineStats.refetch,
     additionalStats.refetch,
     runnersSituation.refetch,
+    pitchingSummary.refetch,
     battingTable.refetch,
     pitchingTable.refetch,
     eraTrend.refetch,
@@ -1128,6 +1134,12 @@ export default function StatsScreen() {
         </View>
       ) : (
         <View style={styles.content}>
+          {pitchingSummary.data && (
+            <FetchingOverlay isFetching={pitchingSummary.isFetching}>
+              <PitchingHeadlineStatsCard data={pitchingSummary.data} />
+              <PitchingAdditionalStatsCard data={pitchingSummary.data} />
+            </FetchingOverlay>
+          )}
           {eraTrend.data && eraTrend.data.points.length > 0 && (
             <FetchingOverlay isFetching={eraTrend.isFetching}>
               <EraTrendChart

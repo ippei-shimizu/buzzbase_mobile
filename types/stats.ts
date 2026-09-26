@@ -97,9 +97,11 @@ export interface BattingStatsRow {
   scoring_position_batting_average?: number | null;
 }
 
-export interface PitchingStatsRow {
-  label: string;
-  opponent?: string;
+/**
+ * stats 投球タブ最上部の主要スタッツ / その他数値カード用レスポンス。
+ * 集計対象と計算式は投球成績テーブルの通算行に揃えてある。
+ */
+export interface PitchingSummary {
   appearances: number;
   win: number;
   loss: number;
@@ -122,6 +124,11 @@ export interface PitchingStatsRow {
   bb_per_nine: number;
   k_bb: number;
   win_percentage: number;
+}
+
+export interface PitchingStatsRow extends PitchingSummary {
+  label: string;
+  opponent?: string;
 }
 
 export interface WinLossSummary {

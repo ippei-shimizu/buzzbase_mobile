@@ -25,8 +25,10 @@ export function formatRate2(value: number): string {
 /**
  * 防御率・WHIP・K/9等の投手指標をフォーマットする
  * 先頭の0を除去しない（例: 0.50 → 0.50）
+ * 古い back がキーを返さない場合や非有限値でも描画を落とさないよう 0.00 にする
  */
-export function formatEra(value: number): string {
+export function formatEra(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "0.00";
   return value.toFixed(2);
 }
 
