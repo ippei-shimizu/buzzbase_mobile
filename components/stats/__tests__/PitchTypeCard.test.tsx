@@ -5,7 +5,7 @@
  * - 複数の球種の行を同時に展開できる
  * - 展開済みの行を再度押すとその行だけ閉じる
  * - rows が差し替わっても展開状態を持ち越す
- * - 開閉記号を読み上げ対象から外す
+ * - 行の読み上げラベルに打率と打数・安打を含め、開閉記号は含めない
  */
 import type { PitchTypeRow } from "../../../types/stats";
 import { fireEvent, render, screen } from "@testing-library/react-native";
@@ -81,9 +81,11 @@ describe("PitchTypeCard", () => {
     expect(screen.getAllByText("出塁率")).toHaveLength(1);
   });
 
-  it("開閉記号を読み上げ対象から外す", () => {
+  it("行の読み上げラベルに打率と打数・安打を含め、開閉記号は含めない", () => {
     renderCard();
 
-    expect(rowOf("ストレート").props.accessibilityLabel).not.toMatch(/[▶▼]/);
+    expect(
+      screen.getByLabelText("ストレート、打率.333、9打数3安打"),
+    ).toBeOnTheScreen();
   });
 });
