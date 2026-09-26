@@ -1,7 +1,8 @@
 import type { PitchTypeRow } from "../../types/stats";
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { PitcherStatsDetailGrid } from "@components/stats/PitcherStatsDetailGrid";
+import { useExpandedIds } from "@hooks/useExpandedIds";
 import { formatBattingAverage } from "@utils/formatBattingAverage";
 
 interface PitchTypeCardProps {
@@ -58,21 +59,7 @@ const InsightRow = ({
  * 各行タップで PitcherFaceoffList と同じ詳細グリッドを展開する（複数行を同時に展開できる）。
  */
 export const PitchTypeCard = ({ rows, totalTargetPa }: PitchTypeCardProps) => {
-  const [expandedIds, setExpandedIds] = useState<ReadonlySet<number>>(
-    () => new Set(),
-  );
-
-  const toggleExpanded = (pitchTypeId: number) => {
-    setExpandedIds((current) => {
-      const next = new Set(current);
-      if (next.has(pitchTypeId)) {
-        next.delete(pitchTypeId);
-      } else {
-        next.add(pitchTypeId);
-      }
-      return next;
-    });
-  };
+  const { expandedIds, toggleExpanded } = useExpandedIds();
 
   if (totalTargetPa === 0) {
     return (

@@ -1,7 +1,8 @@
 import type { PitcherFaceoff } from "../../types/stats";
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { PitcherStatsDetailGrid } from "@components/stats/PitcherStatsDetailGrid";
+import { useExpandedIds } from "@hooks/useExpandedIds";
 import { formatBattingAverage } from "@utils/formatBattingAverage";
 
 interface PitcherFaceoffListProps {
@@ -23,21 +24,7 @@ export const PitcherFaceoffList = ({
   minPlateAppearances,
   totalTargetPa,
 }: PitcherFaceoffListProps) => {
-  const [expandedIds, setExpandedIds] = useState<ReadonlySet<number>>(
-    () => new Set(),
-  );
-
-  const toggleExpanded = (pitcherId: number) => {
-    setExpandedIds((current) => {
-      const next = new Set(current);
-      if (next.has(pitcherId)) {
-        next.delete(pitcherId);
-      } else {
-        next.add(pitcherId);
-      }
-      return next;
-    });
-  };
+  const { expandedIds, toggleExpanded } = useExpandedIds();
 
   if (rows.length === 0) {
     return (
