@@ -127,6 +127,15 @@ describe("SettingsScreen", () => {
     expect(getRouterSpies().push).toHaveBeenCalledWith("/(profile)/contact");
   });
 
+  it("「ご意見・ご要望」タップでフィードバック用のお問い合わせ画面へ遷移する", () => {
+    const { getByText } = renderWithProviders(<SettingsScreen />);
+    fireEvent.press(getByText("ご意見・ご要望"));
+    expect(getRouterSpies().push).toHaveBeenCalledWith({
+      pathname: "/(profile)/contact",
+      params: { subject: "feedback" },
+    });
+  });
+
   it("「プロフィール編集」タップで edit 画面へ遷移する", () => {
     const { getByText } = renderWithProviders(<SettingsScreen />);
     fireEvent.press(getByText("プロフィール編集"));

@@ -89,6 +89,16 @@ export default function SettingsScreen() {
           },
         },
         {
+          icon: "chatbubble-outline",
+          title: "ご意見・ご要望",
+          description: "改善してほしいこと・欲しい機能を送る",
+          onPress: () =>
+            router.push({
+              pathname: "/(profile)/contact",
+              params: { subject: "feedback" },
+            }),
+        },
+        {
           icon: "mail-outline",
           title: "お問い合わせ",
           description: "ご意見・不具合の報告など",
