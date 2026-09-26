@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { formatEra } from "@utils/formatStats";
 
 interface PitchingHeadlineStatsCardProps {
-  data: PitchingSummary | undefined;
+  data: PitchingSummary;
 }
 
 interface MetricItem {
@@ -37,7 +37,6 @@ const buildMetrics = (
 export function PitchingHeadlineStatsCard({
   data,
 }: PitchingHeadlineStatsCardProps) {
-  if (!data) return null;
   const metrics = buildMetrics(data);
 
   return (

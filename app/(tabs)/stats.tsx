@@ -1137,10 +1137,6 @@ export default function StatsScreen() {
           {pitchingSummary.data && (
             <FetchingOverlay isFetching={pitchingSummary.isFetching}>
               <PitchingHeadlineStatsCard data={pitchingSummary.data} />
-            </FetchingOverlay>
-          )}
-          {pitchingSummary.data && (
-            <FetchingOverlay isFetching={pitchingSummary.isFetching}>
               <PitchingAdditionalStatsCard data={pitchingSummary.data} />
             </FetchingOverlay>
           )}
