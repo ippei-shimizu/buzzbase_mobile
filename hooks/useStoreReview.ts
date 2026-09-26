@@ -18,7 +18,7 @@ const LEGACY_GAME_COUNT_KEY = "store_review_game_count";
 const MILESTONES = [2, 5, 20, 50, 100];
 const MIN_DAYS_SINCE_INSTALL = 7;
 const MAX_SHOWS_PER_YEAR = 3;
-const MIN_DAYS_BETWEEN_SHOWS = 90;
+const MIN_DAYS_BETWEEN_SHOWS = 60;
 
 function daysSince(dateString: string | null): number {
   if (!dateString) return Infinity;
