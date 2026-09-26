@@ -23,7 +23,21 @@ export const PitcherFaceoffList = ({
   minPlateAppearances,
   totalTargetPa,
 }: PitcherFaceoffListProps) => {
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedIds, setExpandedIds] = useState<ReadonlySet<number>>(
+    () => new Set(),
+  );
+
+  const toggleExpanded = (pitcherId: number) => {
+    setExpandedIds((current) => {
+      const next = new Set(current);
+      if (next.has(pitcherId)) {
+        next.delete(pitcherId);
+      } else {
+        next.add(pitcherId);
+      }
+      return next;
+    });
+  };
 
   if (rows.length === 0) {
     return (
@@ -50,7 +64,7 @@ export const PitcherFaceoffList = ({
       </View>
 
       {rows.map((row) => {
-        const isExpanded = expandedId === row.pitcher_id;
+        const isExpanded = expandedIds.has(row.pitcher_id);
         const attributeText = [
           row.team_name,
           formatThrowHand(row.throw_hand),
@@ -64,8 +78,16 @@ export const PitcherFaceoffList = ({
             <TouchableOpacity
               style={styles.row}
               activeOpacity={0.7}
-              onPress={() => setExpandedId(isExpanded ? null : row.pitcher_id)}
+              onPress={() => toggleExpanded(row.pitcher_id)}
               accessibilityRole="button"
+              accessibilityLabel={[
+                row.pitcher_name,
+                attributeText,
+                `${row.plate_appearances}対戦`,
+                `打率${formatBattingAverage(row.batting_average, row.at_bats)}`,
+              ]
+                .filter(Boolean)
+                .join("、")}
               accessibilityState={{ expanded: isExpanded }}
             >
               <View style={styles.leftCol}>
