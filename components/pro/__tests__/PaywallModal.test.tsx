@@ -243,13 +243,15 @@ describe("PaywallModal", () => {
 
   it("試合を記録したシーズンが2つ以上あれば、来季からの案内は出さない", async () => {
     getOfferingsMock.mockResolvedValueOnce(null);
+    let seasonsRequested = false;
     server.use(
-      http.get(apiUrl("/seasons"), () =>
-        HttpResponse.json([
+      http.get(apiUrl("/seasons"), () => {
+        seasonsRequested = true;
+        return HttpResponse.json([
           buildSeason({ id: 2, name: "2026年", game_results_count: 8 }),
           buildSeason({ id: 1, name: "2025年", game_results_count: 12 }),
-        ]),
-      ),
+        ]);
+      }),
     );
 
     const { queryByText } = renderWithProviders(
@@ -260,10 +262,8 @@ describe("PaywallModal", () => {
       />,
     );
 
-    // シーズン取得前は単年扱いで案内が出るため、取得を待ってから確認する。
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    });
+    await waitFor(() => expect(seasonsRequested).toBe(true));
+    await act(async () => {});
     expect(queryByText(/来シーズンの記録が増えると/)).toBeNull();
   });
 
