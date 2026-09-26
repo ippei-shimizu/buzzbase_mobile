@@ -18,10 +18,13 @@ export const useSeasons = (userId?: number) => {
   };
 };
 
-export const useMySeasons = () => {
+export const useMySeasons = ({
+  enabled = true,
+}: { enabled?: boolean } = {}) => {
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
     queryKey: ["seasons"],
     queryFn: () => getSeasons(),
+    enabled,
   });
 
   return {

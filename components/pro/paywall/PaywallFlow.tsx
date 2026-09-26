@@ -71,18 +71,19 @@ export function PaywallFlow({
 }: PaywallFlowProps) {
   const router = useRouter();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+  const isSeasonTrigger = trigger === "season_transition_graph";
   const {
     seasons,
     isLoading: isSeasonsLoading,
     isError: isSeasonsError,
-  } = useMySeasons();
+  } = useMySeasons({ enabled: isSeasonTrigger });
   // シーズン推移グラフは試合の紐付いたシーズンだけを集計するため、空のシーズンは数えない。
   const recordedSeasonCount = seasons.filter(
     (season) => season.game_results_count > 0,
   ).length;
   // 取得前・取得失敗時も 0 件になるため、単年と断定せず通常の比較訴求を出す。
   const isSingleSeason =
-    trigger === "season_transition_graph" &&
+    isSeasonTrigger &&
     !isSeasonsLoading &&
     !isSeasonsError &&
     recordedSeasonCount < 2;

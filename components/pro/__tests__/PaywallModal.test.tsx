@@ -290,6 +290,31 @@ describe("PaywallModal", () => {
     expect(queryByText(/来シーズンの記録が増えると/)).toBeNull();
   });
 
+  it("シーズン推移以外から開いたときは、シーズン一覧を取得しない", async () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+    let seasonsRequested = false;
+    server.use(
+      http.get(apiUrl("/seasons"), () => {
+        seasonsRequested = true;
+        return HttpResponse.json([]);
+      }),
+    );
+
+    renderWithProviders(
+      <PaywallModal
+        isOpen
+        onClose={mockOnClose}
+        feature="hit_direction_average"
+      />,
+    );
+
+    // MSW の resolver は次の tick 以降に走るため、同期で確認せず少し待つ。
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(seasonsRequested).toBe(false);
+  });
+
   it("価値画面に Pro でできることの紹介スライドが並ぶ", () => {
     getOfferingsMock.mockResolvedValueOnce(null);
 
