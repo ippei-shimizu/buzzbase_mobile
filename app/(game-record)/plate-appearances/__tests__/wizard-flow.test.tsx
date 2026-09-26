@@ -9,10 +9,10 @@
  * - expo-router のみ jest.mock（環境境界）
  * - 内部 state は直接参照せず、公開 UI 経由で確認
  */
-import type { PlateAppearanceV2 } from "../../../../types/plateAppearance";
 import { fireEvent, waitFor } from "@testing-library/react-native";
 import { useBattingRecordStore } from "@stores/battingRecordStore";
 import { useGameRecordStore } from "@stores/gameRecordStore";
+import { buildPlateAppearanceV2 } from "../../../../__tests__/test-utils/factories/plateAppearance";
 import {
   baseUrl,
   http,
@@ -40,50 +40,6 @@ const viewedGameRecordSteps = () =>
   mockCapture.mock.calls
     .filter(([event]) => event === "game record step viewed")
     .map(([, properties]) => properties.step);
-
-const buildCreatedResponse = (
-  overrides: Partial<PlateAppearanceV2> = {},
-): PlateAppearanceV2 => ({
-  id: 555,
-  game_result_id: 123,
-  user_id: 7,
-  batter_box_number: 1,
-  batting_result: "中安",
-  plate_result_id: 7,
-  hit_direction_id: 10,
-  batting_position_id: null,
-  out_type: null,
-  hit_type: "single",
-  swing_type: null,
-  home_run_type: null,
-  hit_location_x: "0.5000",
-  hit_location_y: "0.3000",
-  rbi: 1,
-  run_scored: 0,
-  stolen_bases: 0,
-  caught_stealing: 0,
-  final_balls: null,
-  final_strikes: null,
-  final_outs: null,
-  first_pitch_swing: null,
-  runners_state: null,
-  inning: null,
-  pitch_course: null,
-  pitch_course_x: null,
-  pitch_course_y: null,
-  self_analysis_memo: null,
-  opponent_memo: null,
-  is_new_format: true,
-  has_detail_data: false,
-  contact_quality: null,
-  timing: null,
-  pitch_type: null,
-  pitcher: null,
-  appearance_situation: null,
-  created_at: "2026-06-04T10:30:00Z",
-  updated_at: "2026-06-04T10:30:00Z",
-  ...overrides,
-});
 
 beforeEach(() => {
   mockCapture.mockClear();
@@ -160,7 +116,7 @@ describe("打席ステップ式ウィザードのフロー", () => {
     server.use(
       http.post(baseUrl("/api/v2/plate_appearances"), async ({ request }) => {
         capturedPayload = (await request.json()) as typeof capturedPayload;
-        return HttpResponse.json(buildCreatedResponse(), { status: 201 });
+        return HttpResponse.json(buildPlateAppearanceV2(), { status: 201 });
       }),
     );
 
@@ -210,7 +166,7 @@ describe("打席ステップ式ウィザードのフロー", () => {
       http.post(baseUrl("/api/v2/plate_appearances"), async ({ request }) => {
         capturedPayload = (await request.json()) as typeof capturedPayload;
         return HttpResponse.json(
-          buildCreatedResponse({
+          buildPlateAppearanceV2({
             plate_result_id: 10,
             hit_type: "home_run",
             home_run_type: "inside_the_park",
@@ -251,7 +207,7 @@ describe("打席ステップ式ウィザードのフロー", () => {
       http.post(baseUrl("/api/v2/plate_appearances"), async ({ request }) => {
         capturedPayload = (await request.json()) as typeof capturedPayload;
         return HttpResponse.json(
-          buildCreatedResponse({
+          buildPlateAppearanceV2({
             plate_result_id: 10,
             hit_type: "home_run",
             home_run_type: "over_fence",
@@ -291,7 +247,7 @@ describe("打席ステップ式ウィザードのフロー", () => {
       http.post(baseUrl("/api/v2/plate_appearances"), async ({ request }) => {
         capturedPayload = (await request.json()) as typeof capturedPayload;
         return HttpResponse.json(
-          buildCreatedResponse({
+          buildPlateAppearanceV2({
             runners_state: "first",
             contact_quality: { id: 1, name: "真芯", display_order: 1 },
             self_analysis_memo: "差し込まれた",
@@ -363,7 +319,7 @@ describe("打席ステップ式ウィザードのフロー", () => {
 
   it("中断ボタンを押すと API は呼ばれず onClose（router.back）が走る", async () => {
     const postSpy = jest.fn(() =>
-      HttpResponse.json(buildCreatedResponse(), { status: 201 }),
+      HttpResponse.json(buildPlateAppearanceV2(), { status: 201 }),
     );
     server.use(http.post(baseUrl("/api/v2/plate_appearances"), postSpy));
 

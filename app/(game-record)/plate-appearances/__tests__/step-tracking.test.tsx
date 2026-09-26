@@ -2,9 +2,9 @@
  * 打席記録フローの「game record step viewed」計測の結合テスト。
  * 打席リスト表示と、編集モードのウィザードがステップ計測に混ざらないことを見る。
  */
-import type { PlateAppearanceV2 } from "../../../../types/plateAppearance";
 import { useBattingRecordStore } from "@stores/battingRecordStore";
 import { useGameRecordStore } from "@stores/gameRecordStore";
+import { buildPlateAppearanceV2 } from "../../../../__tests__/test-utils/factories/plateAppearance";
 import {
   baseUrl,
   http,
@@ -34,50 +34,6 @@ const viewedGameRecordSteps = () =>
     .filter(([event]) => event === "game record step viewed")
     .map(([, properties]) => properties.step);
 
-const buildPlateAppearance = (
-  overrides: Partial<PlateAppearanceV2> = {},
-): PlateAppearanceV2 => ({
-  id: 555,
-  game_result_id: 123,
-  user_id: 7,
-  batter_box_number: 1,
-  batting_result: "中安",
-  plate_result_id: 7,
-  hit_direction_id: 10,
-  batting_position_id: null,
-  out_type: null,
-  hit_type: "single",
-  swing_type: null,
-  home_run_type: null,
-  hit_location_x: "0.5000",
-  hit_location_y: "0.3000",
-  rbi: 1,
-  run_scored: 0,
-  stolen_bases: 0,
-  caught_stealing: 0,
-  final_balls: null,
-  final_strikes: null,
-  final_outs: null,
-  first_pitch_swing: null,
-  runners_state: null,
-  inning: null,
-  pitch_course: null,
-  pitch_course_x: null,
-  pitch_course_y: null,
-  self_analysis_memo: null,
-  opponent_memo: null,
-  is_new_format: true,
-  has_detail_data: false,
-  contact_quality: null,
-  timing: null,
-  pitch_type: null,
-  pitcher: null,
-  appearance_situation: null,
-  created_at: "2026-06-04T10:30:00Z",
-  updated_at: "2026-06-04T10:30:00Z",
-  ...overrides,
-});
-
 beforeEach(() => {
   mockCapture.mockClear();
   useGameRecordStore.getState().reset();
@@ -90,7 +46,7 @@ beforeEach(() => {
 
   server.use(
     http.get(baseUrl("/api/v2/plate_appearances/by_game/123"), () =>
-      HttpResponse.json({ plate_appearances: [buildPlateAppearance()] }),
+      HttpResponse.json({ plate_appearances: [buildPlateAppearanceV2()] }),
     ),
   );
 });
