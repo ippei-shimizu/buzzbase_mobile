@@ -226,6 +226,11 @@ describe("PitchCourseCard", () => {
     fireEvent.press(getByText("控え投手 (3)"));
     expect(getByText(".000")).toBeTruthy();
     expect(queryByText(".800")).toBeNull();
+
+    fireEvent.press(getByText("コース別"));
+    fireEvent.press(getByText("投手別"));
+    expect(await findByText(".000")).toBeTruthy();
+    expect(queryByText(".800")).toBeNull();
   });
 
   it("しきい値以上の投手がいなければその旨を表示する", async () => {

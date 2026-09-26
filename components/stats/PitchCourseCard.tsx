@@ -120,14 +120,14 @@ function ZoneHeatmap({
 function PitcherCrossPanel({
   data,
   isLoading,
+  selectedPitcherId,
+  onSelectPitcher,
 }: {
   data: PitcherFaceoffCourseData | undefined;
   isLoading: boolean;
+  selectedPitcherId: number | null;
+  onSelectPitcher: (pitcherId: number) => void;
 }) {
-  const [selectedPitcherId, setSelectedPitcherId] = useState<number | null>(
-    null,
-  );
-
   if (isLoading) {
     return (
       <View style={styles.crossLoading}>
@@ -173,7 +173,7 @@ function PitcherCrossPanel({
               accessibilityRole="button"
               accessibilityState={{ selected }}
               style={[styles.chip, selected && styles.chipSelected]}
-              onPress={() => setSelectedPitcherId(row.id)}
+              onPress={() => onSelectPitcher(row.id)}
             >
               <Text
                 style={[styles.chipText, selected && styles.chipTextSelected]}
@@ -215,6 +215,9 @@ export function PitchCourseCard({
 }: Props) {
   const [tab, setTab] = useState<PitchCourseTab>("course");
   const [selectedPitchTypeId, setSelectedPitchTypeId] = useState<number | null>(
+    null,
+  );
+  const [selectedPitcherId, setSelectedPitcherId] = useState<number | null>(
     null,
   );
   const showCrossTab = crossFilters !== undefined;
@@ -326,6 +329,8 @@ export function PitchCourseCard({
         <PitcherCrossPanel
           data={samplePitcherCross ?? pitcherCross.data}
           isLoading={samplePitcherCross ? false : pitcherCross.isLoading}
+          selectedPitcherId={selectedPitcherId}
+          onSelectPitcher={setSelectedPitcherId}
         />
       ) : cross.isLoading ? (
         <View style={styles.crossLoading}>
