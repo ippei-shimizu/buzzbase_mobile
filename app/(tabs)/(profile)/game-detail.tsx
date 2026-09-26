@@ -6,9 +6,8 @@ import React from "react";
 import { TouchableOpacity, StyleSheet, Alert, View } from "react-native";
 import { GameResultDetail } from "@components/game-results/GameResultDetail";
 import { Icon } from "@components/icon/Icon";
-import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { useProfile } from "@hooks/useProfile";
-import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
+import { useReviewPrompt } from "@hooks/useReviewPrompt";
 import { deleteGameResult } from "@services/gameResultService";
 import { useGameRecordStore } from "@stores/gameRecordStore";
 import { isAxios404 } from "@utils/axiosError";
@@ -21,7 +20,7 @@ export default function ProfileGameDetailScreen() {
   const queryClient = useQueryClient();
   const { profile } = useProfile();
   const loadFromGameResult = useGameRecordStore((s) => s.loadFromGameResult);
-  const { triggerPositiveEvent, modalProps } = useReviewPromptModal();
+  const { triggerPositiveEvent } = useReviewPrompt();
 
   if (!gameJson) {
     return null;
@@ -40,7 +39,7 @@ export default function ProfileGameDetailScreen() {
 
   const handleShare = async () => {
     const result = await shareGameResult(game);
-    if (result.shared) await triggerPositiveEvent();
+    if (result.shared) await triggerPositiveEvent({ trigger: "shared" });
   };
 
   const handleEdit = () => {
@@ -116,7 +115,6 @@ export default function ProfileGameDetailScreen() {
         }}
       />
       <GameResultDetail game={game} onShare={handleShare} />
-      <PreReviewPrompt {...modalProps} />
     </>
   );
 }

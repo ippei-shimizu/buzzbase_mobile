@@ -22,7 +22,6 @@ import { GameResultListItem } from "@components/game-results/GameResultListItem"
 import { Icon } from "@components/icon/Icon";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
-import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import {
   FilterDropdown,
   MATCH_TYPE_OPTIONS,
@@ -41,7 +40,7 @@ import { useMyTeam } from "@hooks/useMyTeam";
 import { useProfile } from "@hooks/useProfile";
 import { useProfileStats } from "@hooks/useProfileStats";
 import { useUserProfileDetail } from "@hooks/useRelationship";
-import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
+import { useReviewPrompt } from "@hooks/useReviewPrompt";
 import { useMySeasons } from "@hooks/useSeasons";
 import { useTournaments } from "@hooks/useTournaments";
 import { monthOptionsFromRecorded } from "@utils/monthOptions";
@@ -164,7 +163,7 @@ export default function ProfileScreen() {
     isRefreshing: isStatsRefreshing,
   } = useProfileStats(filters);
 
-  const { triggerPositiveEvent, modalProps } = useReviewPromptModal();
+  const { triggerPositiveEvent } = useReviewPrompt();
 
   useEffect(() => {
     const battingAvg = battingStats?.calculated?.batting_average;
@@ -172,7 +171,10 @@ export default function ProfileScreen() {
     const hasPositiveBatting = battingAvg != null && battingAvg >= 0.3;
     const hasPositivePitching = era != null && era <= 3.0;
     if (hasPositiveBatting || hasPositivePitching) {
-      triggerPositiveEvent("profile-stats-positive");
+      triggerPositiveEvent({
+        trigger: "profile_stats",
+        sessionKey: "profile-stats-positive",
+      });
     }
   }, [battingStats, pitchingStats, triggerPositiveEvent]);
 
@@ -214,7 +216,7 @@ export default function ProfileScreen() {
         message: `BUZZ BASEで${profile.name ?? ""}のプロフィールをチェック！\nhttps://buzzbase.jp/${profile.user_id}`,
       });
       if (result.action === Share.sharedAction) {
-        await triggerPositiveEvent();
+        await triggerPositiveEvent({ trigger: "shared" });
       }
     } catch {
       // ユーザーがキャンセルした場合やシェア失敗時は無視
@@ -478,7 +480,6 @@ export default function ProfileScreen() {
           opacity={menuOpacity}
           onClose={closeMenu}
         />
-        <PreReviewPrompt {...modalProps} />
       </>
     );
   }
@@ -662,7 +663,6 @@ export default function ProfileScreen() {
         opacity={menuOpacity}
         onClose={closeMenu}
       />
-      <PreReviewPrompt {...modalProps} />
     </>
   );
 }

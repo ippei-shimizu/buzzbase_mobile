@@ -27,9 +27,13 @@ function daysSince(dateString: string | null): number {
   return Math.floor((now - then) / (1000 * 60 * 60 * 24));
 }
 
-async function recordPrePromptShown(baseCount: number): Promise<void> {
+async function readInt(key: string): Promise<number> {
+  return parseInt((await SecureStore.getItemAsync(key)) ?? "0", 10) || 0;
+}
+
+async function recordReviewRequested(baseShownCount: number): Promise<void> {
   await SecureStore.setItemAsync(KEYS.LAST_SHOWN, new Date().toISOString());
-  await SecureStore.setItemAsync(KEYS.SHOWN_COUNT, String(baseCount + 1));
+  await SecureStore.setItemAsync(KEYS.SHOWN_COUNT, String(baseShownCount + 1));
   await SecureStore.setItemAsync(
     KEYS.SHOWN_YEAR,
     String(new Date().getFullYear()),
@@ -57,12 +61,12 @@ export const useStoreReview = () => {
     return next;
   }, []);
 
-  const checkAndShowPrePrompt = useCallback(async (): Promise<boolean> => {
-    const currentCount = await SecureStore.getItemAsync(
-      KEYS.POSITIVE_EVENT_COUNT,
-    );
-    const count = parseInt(currentCount ?? "0", 10) || 0;
-
+  /**
+   * マイルストーンに到達していて頻度ゲートを満たすとき、OS のレビューダイアログを要求する。
+   * @return `requestReview()` を呼んだら true。OS が実際に表示したかは API から取得できない
+   */
+  const requestReviewIfEligible = useCallback(async (): Promise<boolean> => {
+    const count = await readInt(KEYS.POSITIVE_EVENT_COUNT);
     if (!MILESTONES.includes(count)) return false;
 
     const installDate = await SecureStore.getItemAsync(KEYS.INSTALL_DATE);
@@ -70,14 +74,11 @@ export const useStoreReview = () => {
       return false;
     }
 
-    const currentYear = new Date().getFullYear();
     const storedYear = await SecureStore.getItemAsync(KEYS.SHOWN_YEAR);
-    let shownCount =
-      parseInt((await SecureStore.getItemAsync(KEYS.SHOWN_COUNT)) ?? "0", 10) ||
-      0;
-    if (storedYear !== String(currentYear)) {
-      shownCount = 0;
-    }
+    const shownCount =
+      storedYear === String(new Date().getFullYear())
+        ? await readInt(KEYS.SHOWN_COUNT)
+        : 0;
     if (shownCount >= MAX_SHOWS_PER_YEAR) return false;
 
     const lastShown = await SecureStore.getItemAsync(KEYS.LAST_SHOWN);
@@ -88,14 +89,9 @@ export const useStoreReview = () => {
     const isAvailable = await StoreReview.isAvailableAsync();
     if (!isAvailable) return false;
 
-    await recordPrePromptShown(shownCount);
-    return true;
-  }, []);
-
-  const requestNativeReview = useCallback(async () => {
-    const isAvailable = await StoreReview.isAvailableAsync();
-    if (!isAvailable) return;
     await StoreReview.requestReview();
+    await recordReviewRequested(shownCount);
+    return true;
   }, []);
 
   /**
@@ -134,8 +130,7 @@ export const useStoreReview = () => {
     initInstallDate,
     initPositiveEventCount,
     incrementPositiveEvent,
-    checkAndShowPrePrompt,
-    requestNativeReview,
+    requestReviewIfEligible,
     openStoreReviewPage,
   };
 };

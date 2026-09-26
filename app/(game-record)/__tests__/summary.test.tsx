@@ -1,7 +1,9 @@
 /**
- * 試合記録サマリー画面の「野球ノートを記録する」動線の振る舞いテスト。
+ * 試合記録サマリー画面の「野球ノートを記録する」「試合一覧へ」動線の振る舞いテスト。
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import * as SecureStore from "expo-secure-store";
+import * as StoreReview from "expo-store-review";
 import {
   baseUrl,
   http,
@@ -21,6 +23,11 @@ jest.mock("expo-router", () => {
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
 
+jest.mock("expo-store-review", () => ({
+  isAvailableAsync: jest.fn().mockResolvedValue(true),
+  requestReview: jest.fn().mockResolvedValue(undefined),
+}));
+
 const getRouterSpies = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const m = require("expo-router") as { __routerSpies: { replace: jest.Mock } };
@@ -28,6 +35,8 @@ const getRouterSpies = () => {
 };
 
 beforeEach(() => {
+  (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(null);
+  (SecureStore.setItemAsync as jest.Mock).mockResolvedValue(undefined);
   useGameRecordStore.getState().reset();
   server.use(
     http.get(baseUrl("/api/v2/plate_appearances/by_game/123"), () =>
@@ -53,5 +62,40 @@ describe("SummaryScreen", () => {
         params: { gameResultId: "123" },
       });
     });
+  });
+
+  it("「試合一覧へ」でレビューの条件を満たすと、事前の質問を挟まず OS のレビューを要求して試合一覧へ遷移する", async () => {
+    const storage = new Map<string, string>([
+      ["store_review_positive_event_count", "1"],
+      [
+        "store_review_install_date",
+        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      ],
+    ]);
+    (SecureStore.getItemAsync as jest.Mock).mockImplementation(
+      async (key: string) => storage.get(key) ?? null,
+    );
+    (SecureStore.setItemAsync as jest.Mock).mockImplementation(
+      async (key: string, value: string) => {
+        storage.set(key, value);
+      },
+    );
+    useGameRecordStore.setState({ gameResultId: 123, isEditMode: false });
+
+    renderWithProviders(<SummaryScreen />);
+
+    await waitFor(() =>
+      expect(screen.getByText("試合一覧へ")).toBeOnTheScreen(),
+    );
+    fireEvent.press(screen.getByText("試合一覧へ"));
+
+    await waitFor(() => {
+      expect(getRouterSpies().replace).toHaveBeenCalledWith({
+        pathname: "/(tabs)/(game-results)",
+        params: { tab: "list" },
+      });
+    });
+    expect(StoreReview.requestReview).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText("BUZZ BASEは気に入っていますか？")).toBeNull();
   });
 });
