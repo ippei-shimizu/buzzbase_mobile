@@ -16,14 +16,18 @@ import {
 } from "@constants/revenueCat";
 import { usePushNotifications } from "@hooks/usePushNotifications";
 import { useStoreReview } from "@hooks/useStoreReview";
+import { completeEmailConfirmation } from "@services/authService";
 import { configureGoogleSignIn } from "@services/googleAuthService";
 import { initializeMobileAds } from "@services/mobileAdsService";
+import { getCurrentUserProfile } from "@services/profileService";
 import {
   addCustomerInfoUpdateListener,
   configureRevenueCat,
 } from "@services/revenueCatService";
 import { requestTrackingPermissionOnce } from "@services/trackingTransparencyService";
 import { useAuthStore } from "@stores/authStore";
+import { useGameRecordStore } from "@stores/gameRecordStore";
+import { useSnackbarStore } from "@stores/snackbarStore";
 import { posthog } from "@utils/posthog";
 import { queryClient } from "@utils/queryClient";
 
@@ -82,6 +86,65 @@ function RootLayoutInner() {
   const router = useRouter();
   const { initInstallDate, initPositiveEventCount } = useStoreReview();
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const setIsLoggedIn = useAuthStore((s) => s.setIsLoggedIn);
+  const setIsLoading = useAuthStore((s) => s.setIsLoading);
+
+  // 認証トークンを載せない back / 確認リンクの期限切れでも進めるよう、手動ログインへ倒す。
+  const fallbackToManualSignIn = useCallback(() => {
+    Alert.alert(
+      "メール認証完了",
+      "メールアドレスの認証が完了しました。ログインしてください。",
+      [{ text: "OK", onPress: () => router.replace("/(auth)/sign-in") }],
+    );
+  }, [router]);
+
+  const signInWithConfirmationTokens = useCallback(
+    async (queryParams: Linking.ParsedURL["queryParams"]) => {
+      // 呼び出し元は void で投げるため、ここで握らないと unhandled rejection になり失敗も追跡できない。
+      // router.replace はナビゲーションの初期化前（getInitialURL 経路のコールドスタート直後）に throw しうる。
+      try {
+        // 検証に失敗した場合はトークンを保存していないため、既存セッションを消す必要はない。
+        // 未検証のトークンでログイン状態にはしないので、ネットワーク不通も手動ログインへ倒す。
+        const authResponse = await completeEmailConfirmation(queryParams);
+        if (!authResponse) {
+          fallbackToManualSignIn();
+          return;
+        }
+
+        // logout() を経由せずに別アカウントのセッションへ移るため、前のユーザーの
+        // クエリキャッシュとウィザードの下書きを持ち越さないよう明示的に捨てる。
+        queryClient.clear();
+        useGameRecordStore.getState().reset();
+
+        setIsLoggedIn(true);
+        setIsLoading(false);
+
+        // プロフィール取得自体が失敗したケースは安全側（username-registration）に倒す。
+        let nextPath: "/(tabs)" | "/(auth)/username-registration";
+        try {
+          const profile = await getCurrentUserProfile();
+          nextPath = profile.user_id
+            ? "/(tabs)"
+            : "/(auth)/username-registration";
+        } catch {
+          nextPath = "/(auth)/username-registration";
+        }
+        router.replace(nextPath);
+
+        // 遷移より前に出すと、プロフィール取得が既定の表示時間より長引いた場合に着地前に消える。
+        useSnackbarStore.getState().show({
+          type: "success",
+          message: "メールアドレスの認証が完了しました",
+        });
+      } catch (error) {
+        Sentry.captureException(error, {
+          tags: { source: "email_confirmation_auto_login" },
+        });
+        fallbackToManualSignIn();
+      }
+    },
+    [fallbackToManualSignIn, router, setIsLoading, setIsLoggedIn],
+  );
 
   const handleDeepLink = useCallback(
     (url: string) => {
@@ -92,11 +155,7 @@ function RootLayoutInner() {
       ) {
         const success = parsed.queryParams?.account_confirmation_success;
         if (success === "true") {
-          Alert.alert(
-            "メール認証完了",
-            "メールアドレスの認証が完了しました。ログインしてください。",
-            [{ text: "OK", onPress: () => router.replace("/(auth)/sign-in") }],
-          );
+          void signInWithConfirmationTokens(parsed.queryParams);
         } else {
           router.replace("/(auth)/sign-in");
         }
@@ -126,7 +185,7 @@ function RootLayoutInner() {
         }
       }
     },
-    [router],
+    [router, signInWithConfirmationTokens],
   );
 
   useEffect(() => {

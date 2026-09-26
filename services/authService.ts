@@ -18,8 +18,16 @@ import axios from "axios";
 import { API_V1_URL } from "@constants/api";
 import { loginRevenueCat, logoutRevenueCat } from "@services/revenueCatService";
 import { trackSignUpCompleted, trackUserLoggedIn } from "@utils/analytics";
-import { clearAllAuthTokens } from "@utils/authTokenStorage";
+import {
+  clearAllAuthTokens,
+  saveAuthTokensFromHeaders,
+} from "@utils/authTokenStorage";
 import axiosInstance from "@utils/axiosInstance";
+import {
+  clearPendingConfirmationUid,
+  getPendingConfirmationUid,
+  setPendingConfirmationUid,
+} from "@utils/pendingConfirmation";
 import { posthog } from "@utils/posthog";
 
 // RevenueCat の alias 付け失敗で認証フローが落ちないよう、fire-and-forget で呼ぶ。
@@ -87,7 +95,61 @@ export const signUp = async (data: SignUpData): Promise<void> => {
       process.env.EXPO_PUBLIC_CONFIRM_SUCCESS_URL ||
       "buzzbase://confirmation-success",
   });
+  await setPendingConfirmationUid(data.email);
   trackSignUpCompleted("email");
+};
+
+// ディープリンクのクエリは同名キーが複数あると配列で渡るため、単一の文字列だけを受け付ける。
+const singleQueryValue = (
+  value: string | string[] | undefined,
+): string | undefined => (typeof value === "string" ? value : undefined);
+
+/**
+ * メール確認のディープリンクで受け取った認証トークンで認証済み状態にする。
+ * back が確認成功時のリダイレクト URL に載せるトークンを使うため、手動での再ログインが不要になる。
+ *
+ * この端末でサインアップ / 再送したメールアドレスと uid が一致する場合だけ受け入れる。
+ * `buzzbase://` は誰でも発火できるため、検証しないと第三者のトークンを載せたリンクで
+ * 別アカウントにログインさせられる（ログイン CSRF）。
+ *
+ * 受け取ったトークンは SecureStore へ保存する前に、そのトークン自体を明示ヘッダーに載せて検証する。
+ * 先に保存すると、検証に失敗したときに既にログイン中だったセッションを壊してしまい、
+ * SecureStore への保存が失敗していた場合には古いトークンで検証が通って別ユーザーとして成功扱いになる。
+ *
+ * @param params ディープリンクのクエリパラメータ
+ * @return 受け入れて検証できた場合は認証レスポンス。受け入れ条件を満たさない場合は null
+ */
+export const completeEmailConfirmation = async (
+  params: Record<string, string | string[] | undefined> | null | undefined,
+): Promise<AuthResponse | null> => {
+  const accessToken = singleQueryValue(params?.["access-token"]);
+  const client = singleQueryValue(params?.client);
+  const uid = singleQueryValue(params?.uid);
+  if (!accessToken || !client || !uid) return null;
+
+  const pendingUid = await getPendingConfirmationUid();
+  if (!pendingUid || pendingUid.toLowerCase() !== uid.toLowerCase())
+    return null;
+
+  const response = await axios.get<AuthResponse>(
+    `${API_V1_URL}/auth/validate_token`,
+    { headers: { "access-token": accessToken, client, uid } },
+  );
+
+  await saveAuthTokensFromHeaders({
+    "access-token": accessToken,
+    client,
+    uid,
+  });
+  await clearPendingConfirmationUid();
+
+  const body = response.data;
+  if (body.data?.id) {
+    Sentry.setUser({ id: String(body.data.id) });
+    syncRevenueCatLogin(String(body.data.id));
+    posthog?.identify(String(body.data.id));
+  }
+  return body;
 };
 
 /** 確認メールを再送信 */
@@ -98,6 +160,7 @@ export const resendConfirmation = async (email: string): Promise<void> => {
       process.env.EXPO_PUBLIC_CONFIRM_SUCCESS_URL ||
       "buzzbase://confirmation-success",
   });
+  await setPendingConfirmationUid(email);
 };
 
 /**
