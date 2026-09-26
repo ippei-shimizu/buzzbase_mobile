@@ -13,6 +13,21 @@ type AnalyticsModule = typeof AnalyticsNamespace;
 
 const captureMock = posthog?.capture as jest.Mock;
 
+const PLATE_APPEARANCE_COMPLETED_PROPERTIES = {
+  is_edit: false,
+  has_hit_direction: true,
+  has_detail: true,
+  has_pitcher: true,
+  has_count: false,
+  has_situation: true,
+  has_first_pitch_swing: false,
+  has_contact_quality: true,
+  has_timing: false,
+  has_pitch_type: true,
+  has_pitch_course: true,
+  has_memo: false,
+};
+
 /**
  * front（buzzbase_front/app/utils/analytics.ts）と共通のイベント名・プロパティ。
  * Web / アプリでファネルを横断集計するため、この表からずれてはならない。
@@ -53,13 +68,9 @@ const SHARED_EVENT_CASES: {
   },
   {
     event: "plate appearance completed",
-    properties: { is_edit: false, has_pitcher: true, has_detail: false },
+    properties: PLATE_APPEARANCE_COMPLETED_PROPERTIES,
     run: (a) =>
-      a.trackPlateAppearanceCompleted({
-        is_edit: false,
-        has_pitcher: true,
-        has_detail: false,
-      }),
+      a.trackPlateAppearanceCompleted(PLATE_APPEARANCE_COMPLETED_PROPERTIES),
   },
   {
     event: "plate appearance canceled",
