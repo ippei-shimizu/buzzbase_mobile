@@ -67,40 +67,45 @@ interface AnalysisSettings {
 }
 
 function SegmentedSelector<Key extends string>({
+  caption,
   options,
   selectedKey,
   onSelect,
 }: {
+  caption: string;
   options: readonly { key: Key; label: string }[];
   selectedKey: Key;
   onSelect: (key: Key) => void;
 }) {
   return (
-    <View style={styles.selectorRow}>
-      {options.map(({ key, label }) => {
-        const selected = key === selectedKey;
-        return (
-          <TouchableOpacity
-            key={key}
-            accessibilityRole="button"
-            accessibilityState={{ selected }}
-            style={[
-              styles.selectorButton,
-              selected && styles.selectorButtonActive,
-            ]}
-            onPress={() => onSelect(key)}
-          >
-            <Text
+    <View style={styles.selectorGroup}>
+      <Text style={styles.selectorCaption}>{caption}</Text>
+      <View style={styles.selectorRow}>
+        {options.map(({ key, label }) => {
+          const selected = key === selectedKey;
+          return (
+            <TouchableOpacity
+              key={key}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
               style={[
-                styles.selectorLabel,
-                selected && styles.selectorLabelActive,
+                styles.selectorButton,
+                selected && styles.selectorButtonActive,
               ]}
+              onPress={() => onSelect(key)}
             >
-              {label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+              <Text
+                style={[
+                  styles.selectorLabel,
+                  selected && styles.selectorLabelActive,
+                ]}
+              >
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -496,11 +501,13 @@ export function PitchCourseCard({
       ) : null}
 
       <SegmentedSelector
+        caption="指標"
         options={PITCH_COURSE_METRIC_OPTIONS}
         selectedKey={metric}
         onSelect={setMetric}
       />
       <SegmentedSelector
+        caption="区切り"
         options={PITCH_COURSE_GRANULARITY_OPTIONS}
         selectedKey={granularity}
         onSelect={setGranularity}
@@ -639,11 +646,18 @@ const styles = StyleSheet.create({
   tabLabelActive: {
     color: "#FFFFFF",
   },
+  selectorGroup: {
+    marginTop: 8,
+    gap: 4,
+  },
+  selectorCaption: {
+    color: "#71717A",
+    fontSize: 10,
+  },
   selectorRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 4,
-    marginTop: 8,
   },
   selectorButton: {
     borderWidth: 1,

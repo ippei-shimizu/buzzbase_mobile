@@ -452,6 +452,8 @@ describe("PitchCourseCard", () => {
     const { getByRole, getByText, queryByText } = renderWithProviders(
       <PitchCourseCard data={data} />,
     );
+    expect(getByText("指標")).toBeTruthy();
+    expect(getByText("区切り")).toBeTruthy();
     expect(getByRole("button", { name: "打率", selected: true })).toBeTruthy();
     expect(getByText(".400")).toBeTruthy();
 
