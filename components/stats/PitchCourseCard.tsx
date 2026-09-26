@@ -228,7 +228,7 @@ export function PitchCourseCard({
   );
   const pitcherCross = usePitcherFaceoffCourses(
     crossFilters ?? {},
-    showCrossTab && tab === "pitcher",
+    showCrossTab && samplePitcherCross === undefined && tab === "pitcher",
   );
 
   if (data.total_target_pa === 0) {

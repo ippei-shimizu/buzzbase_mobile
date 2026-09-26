@@ -9,7 +9,7 @@
  * - 「投手別」タブを開いたときにだけ投手×コース API を取得し、投手を切り替えられる
  */
 import type { PitchCourseData, PitchCourseZone } from "../../../types/stats";
-import { fireEvent } from "@testing-library/react-native";
+import { act, fireEvent } from "@testing-library/react-native";
 import React from "react";
 import {
   baseUrl,
@@ -63,6 +63,12 @@ const buildData = (
     ...overrides,
   };
 };
+
+/** マウントやタブ切替で発火したリクエストが MSW に届くまで待つ。 */
+const flushPendingRequests = () =>
+  act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
 
 describe("PitchCourseCard", () => {
   it("打数 0 のセルは '-' 表示になる", () => {
@@ -296,5 +302,55 @@ describe("PitchCourseCard", () => {
     expect(queryByText("球種別")).toBeNull();
     fireEvent.press(getByText("投手別"));
     expect(getByText("投手 C (3)")).toBeTruthy();
+  });
+
+  it("サンプル指定時はフィルタを渡されていても投手別の API を呼ばない", async () => {
+    let pitcherCrossRequested = false;
+    server.use(
+      http.get(baseUrl("/api/v2/stats/pitcher_faceoff_courses"), () => {
+        pitcherCrossRequested = true;
+        return HttpResponse.json({
+          rows: [],
+          total_target_pa: 0,
+          min_at_bats: 3,
+          min_plate_appearances: 3,
+        });
+      }),
+    );
+    const data = buildData({
+      13: {
+        plate_appearances: 5,
+        at_bats: 5,
+        hits: 2,
+        batting_average: 0.4,
+        is_reliable: true,
+      },
+    });
+    const { getByText } = renderWithProviders(
+      <PitchCourseCard
+        data={data}
+        crossFilters={{}}
+        samplePitcherCross={{
+          rows: [
+            {
+              id: 1,
+              label: "投手 C",
+              team_name: null,
+              plate_appearances: 3,
+              zones: data.zones,
+            },
+          ],
+          total_target_pa: 3,
+          min_at_bats: 3,
+          min_plate_appearances: 3,
+        }}
+      />,
+    );
+
+    fireEvent.press(getByText("投手別"));
+    await flushPendingRequests();
+
+    expect(getByText("投手 C (3)")).toBeTruthy();
+    expect(pitcherCrossRequested).toBe(false);
   });
 });
