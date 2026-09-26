@@ -11,7 +11,7 @@ interface Props {
 export const OnboardingSlide = ({ width, step }: Props) => (
   <View style={[styles.container, { width }]}>
     <View style={styles.illustrationFrame}>
-      <OnboardingIllustrationView name={step.illustration} size={220} />
+      <OnboardingIllustrationView name={step.illustration} />
     </View>
     <Text style={styles.title}>{step.title}</Text>
     <Text style={styles.copy}>{step.copy}</Text>
@@ -26,10 +26,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   illustrationFrame: {
-    width: 240,
-    height: 240,
-    alignItems: "center",
-    justifyContent: "center",
+    alignSelf: "stretch",
     marginBottom: 40,
   },
   title: {
