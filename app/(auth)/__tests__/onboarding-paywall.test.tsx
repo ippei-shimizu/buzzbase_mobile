@@ -24,7 +24,7 @@ jest.mock("expo-router", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
   } = require("../../../__tests__/test-utils/mockExpoRouter");
   return buildExpoRouterMock({
-    searchParams: { trigger: "pitch_type_average" },
+    searchParams: { leadSlide: "pitch_type" },
   });
 });
 
@@ -122,7 +122,7 @@ describe("OnboardingPaywallScreen", () => {
     );
   });
 
-  it("表示を placement と渡されたトリガー付きで計測する", async () => {
+  it("表示を placement と先頭スライド付きで計測し、trigger は機能キーで汚さない", async () => {
     givenProStatus();
     getOfferingsMock.mockResolvedValue(mockOffering);
 
@@ -130,8 +130,9 @@ describe("OnboardingPaywallScreen", () => {
 
     await waitFor(() => {
       expect(capturedEvent("paywall viewed")?.[1]).toEqual({
-        trigger: "pitch_type_average",
+        trigger: "general",
         placement: "onboarding",
+        lead_slide: "pitch_type",
       });
     });
   });
@@ -140,12 +141,13 @@ describe("OnboardingPaywallScreen", () => {
     givenProStatus({ pro_active: true, status: "active" });
     getOfferingsMock.mockResolvedValue(mockOffering);
 
-    renderWithProviders(<OnboardingPaywallScreen />);
+    const screen = renderWithProviders(<OnboardingPaywallScreen />);
 
     await waitFor(() => {
       expect(getRouterSpies().replace).toHaveBeenCalledWith("/(tabs)");
     });
     expect(capturedEvent("paywall viewed")).toBeUndefined();
+    expect(screen.queryByLabelText("閉じる")).toBeNull();
   });
 
   it("購入できるプランが無いときは出さずダッシュボードへ抜ける", async () => {
@@ -155,10 +157,32 @@ describe("OnboardingPaywallScreen", () => {
       availablePackages: [],
     });
 
-    renderWithProviders(<OnboardingPaywallScreen />);
+    const screen = renderWithProviders(<OnboardingPaywallScreen />);
 
     await waitFor(() => {
       expect(getRouterSpies().replace).toHaveBeenCalledWith("/(tabs)");
     });
+    // 取得失敗・0件で抜けた分をファネルの分母に入れない
+    expect(capturedEvent("paywall viewed")).toBeUndefined();
+    expect(capturedEvent("paywall step viewed")).toBeUndefined();
+    expect(screen.queryByLabelText("閉じる")).toBeNull();
+  });
+
+  it("閉じるを連打しても離脱の計測は1回だけ送る", async () => {
+    givenProStatus();
+    getOfferingsMock.mockResolvedValue(mockOffering);
+
+    const screen = renderWithProviders(<OnboardingPaywallScreen />);
+    const closeButton = await screen.findByLabelText("閉じる");
+    fireEvent.press(closeButton);
+    fireEvent.press(closeButton);
+
+    await waitFor(() => {
+      expect(getRouterSpies().replace).toHaveBeenCalledTimes(1);
+    });
+    const dismissed = captureMock.mock.calls.filter(
+      ([name]) => name === "paywall dismissed",
+    );
+    expect(dismissed).toHaveLength(1);
   });
 });
