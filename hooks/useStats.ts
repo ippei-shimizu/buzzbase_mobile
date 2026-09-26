@@ -22,6 +22,7 @@ import {
   getTimingBreakdown,
   getBattingStatsTable,
   getPitchingStatsTable,
+  getPitchingSummary,
   getEraTrend,
   getGameSummary,
   getHeadlineStats,
@@ -297,6 +298,14 @@ export const useAdditionalStats = (filters: StatsFilters) =>
   useQuery({
     queryKey: ["additionalStats", filters],
     queryFn: () => getAdditionalStats(filters),
+    staleTime: STATS_STALE_TIME,
+    placeholderData: keepPreviousData,
+  });
+
+export const usePitchingSummary = (filters: StatsFilters) =>
+  useQuery({
+    queryKey: ["pitchingSummary", filters],
+    queryFn: () => getPitchingSummary(filters),
     staleTime: STATS_STALE_TIME,
     placeholderData: keepPreviousData,
   });

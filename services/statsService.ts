@@ -17,6 +17,7 @@ import type {
   TimingBreakdownData,
   BattingStatsRow,
   PitchingStatsRow,
+  PitchingSummary,
   EraTrendData,
   EraTrendGranularity,
   GameSummary,
@@ -273,6 +274,16 @@ export const getAdditionalStats = async (
   const query = buildStatsQuery(filters);
   const res = await axiosInstance.get(
     `${STATS_URL}/additional_stats${query ? `?${query}` : ""}`,
+  );
+  return res.data;
+};
+
+export const getPitchingSummary = async (
+  filters: StatsFilters,
+): Promise<PitchingSummary> => {
+  const query = buildStatsQuery(filters);
+  const res = await axiosInstance.get<PitchingSummary>(
+    `${STATS_URL}/pitching_summary${query ? `?${query}` : ""}`,
   );
   return res.data;
 };

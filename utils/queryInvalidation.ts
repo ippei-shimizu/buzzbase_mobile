@@ -32,6 +32,7 @@ export type InvalidateGameResultMode = "stale-only" | "refetch";
  *   `hitLocations` / `countSituations` / `contactQualities` /
  *   `pitchTypes` / `pitcherFaceoffs` / `pitcherAttributeSummary` /
  *   `battingTrend` / `paBreakdown` / `battingTable` / `pitchingTable` /
+ *   `pitchingSummary` /
  *   `eraTrend` / `gameSummary`
  *
  * @param queryClient - 呼び出し元で `useQueryClient()` で取得した QueryClient
@@ -59,6 +60,7 @@ const RELATED_QUERY_KEYS = [
   "paBreakdown",
   "battingTable",
   "pitchingTable",
+  "pitchingSummary",
   "eraTrend",
   "gameSummary",
 ] as const;
