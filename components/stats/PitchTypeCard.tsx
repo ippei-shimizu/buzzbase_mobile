@@ -23,28 +23,31 @@ const InsightRow = ({
   highlightColor,
   isExpanded,
   onPress,
-}: InsightRowProps) => (
-  <TouchableOpacity
-    style={styles.row}
-    activeOpacity={0.7}
-    onPress={onPress}
-    accessibilityRole="button"
-    accessibilityLabel={`${row.label}、打率${formatBattingAverage(row.batting_average, row.at_bats)}、${row.at_bats}打数${row.hits}安打`}
-    accessibilityState={{ expanded: isExpanded }}
-  >
-    <Text style={styles.pitchLabel}>
-      {isExpanded ? "▼" : "▶"} {row.label}
-    </Text>
-    <View style={styles.rowRight}>
-      <Text style={[styles.average, { color: highlightColor }]}>
-        {formatBattingAverage(row.batting_average, row.at_bats)}
+}: InsightRowProps) => {
+  const average = formatBattingAverage(row.batting_average, row.at_bats);
+  return (
+    <TouchableOpacity
+      style={styles.row}
+      activeOpacity={0.7}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${row.label}、打率${average}、${row.at_bats}打数${row.hits}安打`}
+      accessibilityState={{ expanded: isExpanded }}
+    >
+      <Text style={styles.pitchLabel}>
+        {isExpanded ? "▼" : "▶"} {row.label}
       </Text>
-      <Text style={styles.subText}>
-        ({row.at_bats}-{row.hits})
-      </Text>
-    </View>
-  </TouchableOpacity>
-);
+      <View style={styles.rowRight}>
+        <Text style={[styles.average, { color: highlightColor }]}>
+          {average}
+        </Text>
+        <Text style={styles.subText}>
+          ({row.at_bats}-{row.hits})
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 /**
  * 球種別打率カード。
