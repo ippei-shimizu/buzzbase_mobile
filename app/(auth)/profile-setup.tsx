@@ -11,7 +11,11 @@ import { ProfileSetupForm } from "@components/auth/ProfileSetupForm";
 import { usePositions } from "@hooks/usePositions";
 import { useProfile } from "@hooks/useProfile";
 import { useTeamName, useTeamSearch } from "@hooks/useTeamSearch";
-import { createTeam, searchTeams } from "@services/gameRecordService";
+import {
+  createTeam,
+  searchTeams,
+  TEAM_SEARCH_MAX_LIMIT,
+} from "@services/gameRecordService";
 import { updateUserPositions } from "@services/positionService";
 import { updateUserProfile } from "@services/profileService";
 import { useSnackbarStore } from "@stores/snackbarStore";
@@ -19,10 +23,6 @@ import {
   trackProfileSetupCompleted,
   trackProfileSetupViewed,
 } from "@utils/analytics";
-
-// 部分一致検索のためサジェスト件数のままだと完全一致が候補から溢れ、既存チームを重複作成しうる。
-// 送信時の引き当てはサーバー上限まで引き上げて取得する（試合記録の送信処理と同じ方針）。
-const TEAM_SEARCH_MAX_LIMIT = 100;
 
 /**
  * ユーザー名登録の直後に挟む任意のプロフィール入力。
