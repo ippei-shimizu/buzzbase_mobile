@@ -1,15 +1,14 @@
 import type { BattingBox } from "../../types/gameRecord";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Share, View } from "react-native";
 import { SummaryView } from "@components/game-record/SummaryView";
-import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { BottomTabBar } from "@components/ui/BottomTabBar";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { usePlateAppearancesByGame } from "@hooks/usePlateAppearances";
-import { useStoreReview } from "@hooks/useStoreReview";
+import { useReviewPrompt } from "@hooks/useReviewPrompt";
 import { showMatchSaveInterstitial } from "@services/interstitialAdService";
 import {
   trackGameRecordCompleted,
@@ -19,18 +18,13 @@ import { toMatchTypeKey } from "@utils/matchType";
 import { invalidateGameResultRelated } from "@utils/queryInvalidation";
 import { useGameRecordStore } from "../../stores/gameRecordStore";
 
-type PrePromptSource = "complete" | "share";
-
 export default function SummaryScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { resetFlow } = useGameRecord();
   const store = useGameRecordStore();
-  const { incrementPositiveEvent, checkAndShowPrePrompt, requestNativeReview } =
-    useStoreReview();
+  const { triggerPositiveEvent } = useReviewPrompt();
   const { hasEntitlement } = useEntitlement();
-  const [prePromptVisible, setPrePromptVisible] = useState(false);
-  const sourceRef = useRef<PrePromptSource>("complete");
 
   useEffect(() => {
     trackGameRecordStepViewed("summary");
@@ -78,21 +72,6 @@ export default function SummaryScreen() {
     ? aggregate((pa) => pa.caught_stealing)
     : store.caughtStealing;
 
-  const tryShowPrePrompt = async (source: PrePromptSource) => {
-    try {
-      await incrementPositiveEvent();
-      const shouldShow = await checkAndShowPrePrompt();
-      if (shouldShow) {
-        sourceRef.current = source;
-        setPrePromptVisible(true);
-        return true;
-      }
-    } catch {
-      // 失敗時は静かに無視する
-    }
-    return false;
-  };
-
   const handleShare = async () => {
     const lines: string[] = [];
     const formattedDate = store.date
@@ -136,7 +115,7 @@ export default function SummaryScreen() {
     try {
       const result = await Share.share({ message: lines.join("\n") });
       if (result.action === Share.sharedAction) {
-        await tryShowPrePrompt("share");
+        await triggerPositiveEvent({ trigger: "shared" });
       }
     } catch {
       // ユーザーがキャンセルした場合は無視
@@ -157,12 +136,14 @@ export default function SummaryScreen() {
     resetFlow();
     invalidateGameResultRelated(queryClient);
 
-    // ストアレビュー促進プロンプトとインタースティシャル広告を同時に出すと
-    // 割り込みが二重になるため、プロンプトが出た場合は広告を出さずに優先する。
-    const shown = await tryShowPrePrompt("complete");
-    if (shown) return;
-
-    await showMatchSaveInterstitial(hasEntitlement("no_ads"), isEditMode);
+    // レビューダイアログとインタースティシャル広告を同時に出すと
+    // 割り込みが二重になるため、レビューを要求した場合は広告を出さない。
+    const reviewRequested = await triggerPositiveEvent({
+      trigger: "game_record_completed",
+    });
+    if (!reviewRequested) {
+      await showMatchSaveInterstitial(hasEntitlement("no_ads"), isEditMode);
+    }
     router.replace({
       pathname: "/(tabs)/(game-results)",
       params: { tab: "list" },
@@ -187,34 +168,6 @@ export default function SummaryScreen() {
       pathname: "/(note)/new",
       params: gameResultId ? { gameResultId: String(gameResultId) } : {},
     });
-  };
-
-  const handlePrePromptYes = async () => {
-    const source = sourceRef.current;
-    setPrePromptVisible(false);
-    await requestNativeReview().catch(() => {});
-    if (source === "complete") {
-      router.replace({
-        pathname: "/(tabs)/(game-results)",
-        params: { tab: "list" },
-      });
-    }
-  };
-
-  const handlePrePromptNo = () => {
-    const source = sourceRef.current;
-    setPrePromptVisible(false);
-    if (source === "complete") {
-      router.replace({
-        pathname: "/(tabs)/(profile)/contact",
-        params: { subject: "feedback" },
-      });
-    } else {
-      router.push({
-        pathname: "/(tabs)/(profile)/contact",
-        params: { subject: "feedback" },
-      });
-    }
   };
 
   return (
@@ -258,11 +211,6 @@ export default function SummaryScreen() {
         onRecordNote={handleRecordNote}
       />
       <BottomTabBar />
-      <PreReviewPrompt
-        visible={prePromptVisible}
-        onYes={handlePrePromptYes}
-        onNo={handlePrePromptNo}
-      />
     </View>
   );
 }

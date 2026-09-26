@@ -9,9 +9,8 @@ import {
 } from "react-native";
 import { DashboardContent } from "@components/dashboard/DashboardContent";
 import { Icon } from "@components/icon/Icon";
-import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
 import { useDashboard } from "@hooks/useDashboard";
-import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
+import { useReviewPrompt } from "@hooks/useReviewPrompt";
 import { useGameRecordStore } from "@stores/gameRecordStore";
 
 /**
@@ -26,10 +25,10 @@ interface DashboardViewProps {
 export function DashboardView({ isActive = true }: DashboardViewProps) {
   const router = useRouter();
   const { data, isLoading, isError, refetch, isRefreshing } = useDashboard();
-  const { triggerPositiveEvent, modalProps } = useReviewPromptModal();
+  const { triggerPositiveEvent } = useReviewPrompt();
 
   useEffect(() => {
-    // 裏の面から出すと、ユーザーが見ていない面の出来事でモーダルが割り込むため。
+    // 裏の面から出すと、ユーザーが見ていない面の出来事でレビューダイアログが割り込むため。
     if (!isActive || !data) return;
     const inTopThree = data.group_rankings.some((group) =>
       [...group.batting_rankings, ...group.pitching_rankings].some(
@@ -40,7 +39,10 @@ export function DashboardView({ isActive = true }: DashboardViewProps) {
       ),
     );
     if (inTopThree) {
-      triggerPositiveEvent("dashboard-ranking-top3");
+      triggerPositiveEvent({
+        trigger: "dashboard_ranking",
+        sessionKey: "dashboard-ranking-top3",
+      });
     }
   }, [isActive, data, triggerPositiveEvent]);
 
@@ -64,29 +66,26 @@ export function DashboardView({ isActive = true }: DashboardViewProps) {
   }
 
   return (
-    <>
-      <DashboardContent
-        data={data}
-        isRefreshing={isRefreshing}
-        onRefresh={refetch}
-        showInlineAd={isActive}
-        headerComponent={
-          <TouchableOpacity
-            style={styles.recordButton}
-            onPress={() => {
-              // 直前の編集モードフラグが残っていると Step1 が編集モードのまま起動するため、
-              // 新規記録の入口では store を必ず初期化する。
-              useGameRecordStore.getState().reset();
-              router.push("/(game-record)/step1-game-info");
-            }}
-          >
-            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.recordButtonText}>試合結果を記録する</Text>
-          </TouchableOpacity>
-        }
-      />
-      <PreReviewPrompt {...modalProps} />
-    </>
+    <DashboardContent
+      data={data}
+      isRefreshing={isRefreshing}
+      onRefresh={refetch}
+      showInlineAd={isActive}
+      headerComponent={
+        <TouchableOpacity
+          style={styles.recordButton}
+          onPress={() => {
+            // 直前の編集モードフラグが残っていると Step1 が編集モードのまま起動するため、
+            // 新規記録の入口では store を必ず初期化する。
+            useGameRecordStore.getState().reset();
+            router.push("/(game-record)/step1-game-info");
+          }}
+        >
+          <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+          <Text style={styles.recordButtonText}>試合結果を記録する</Text>
+        </TouchableOpacity>
+      }
+    />
   );
 }
 

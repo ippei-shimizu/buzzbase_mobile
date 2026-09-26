@@ -141,6 +141,21 @@ export const trackReviewCompleted = (props: { answer_count: number }) =>
 export const trackShadowSwingCompleted = (props: { swing_count: number }) =>
   capture("shadow swing completed", props);
 
+/** OS のストアレビューダイアログを要求したポジティブイベントの種類。 */
+export type StoreReviewTrigger =
+  | "game_record_completed"
+  | "shared"
+  | "dashboard_ranking"
+  | "profile_stats";
+
+/**
+ * OS のストアレビューダイアログの要求。OS が実際に表示したか・ユーザーが評価したかは
+ * API から取得できないため、計測できるのは要求回数まで。
+ */
+export const trackStoreReviewRequested = (props: {
+  trigger: StoreReviewTrigger;
+}) => capture("store review requested", props);
+
 /** Paywall（PaywallModal / Pro 画面）の表示。課金ファネルの分母。 */
 export const trackPaywallViewed = (trigger: ProTrigger) =>
   capture("paywall viewed", { trigger });

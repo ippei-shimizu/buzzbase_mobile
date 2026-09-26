@@ -4,13 +4,12 @@ import React from "react";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 import { GameResultDetail } from "@components/game-results/GameResultDetail";
 import { Icon } from "@components/icon/Icon";
-import { PreReviewPrompt } from "@components/store-review/PreReviewPrompt";
-import { useReviewPromptModal } from "@hooks/useReviewPromptModal";
+import { useReviewPrompt } from "@hooks/useReviewPrompt";
 import { shareGameResult } from "@utils/shareGameResult";
 
 export default function NotificationGameDetailScreen() {
   const { game: gameJson } = useLocalSearchParams<{ game: string }>();
-  const { triggerPositiveEvent, modalProps } = useReviewPromptModal();
+  const { triggerPositiveEvent } = useReviewPrompt();
 
   if (!gameJson) {
     return null;
@@ -25,7 +24,7 @@ export default function NotificationGameDetailScreen() {
 
   const handleShare = async () => {
     const result = await shareGameResult(game);
-    if (result.shared) await triggerPositiveEvent();
+    if (result.shared) await triggerPositiveEvent({ trigger: "shared" });
   };
 
   return (
@@ -46,7 +45,6 @@ export default function NotificationGameDetailScreen() {
         }}
       />
       <GameResultDetail game={game} />
-      <PreReviewPrompt {...modalProps} />
     </>
   );
 }

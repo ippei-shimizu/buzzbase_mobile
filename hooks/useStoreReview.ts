@@ -9,16 +9,21 @@ const KEYS = {
   POSITIVE_EVENT_COUNT: "store_review_positive_event_count",
   INSTALL_DATE: "store_review_install_date",
   LAST_SHOWN: "store_review_last_shown",
-  SHOWN_COUNT: "store_review_shown_count",
-  SHOWN_YEAR: "store_review_shown_year",
+  SHOWN_AT_LIST: "store_review_shown_at_list",
+  CONSUMED_MILESTONE: "store_review_consumed_milestone",
 } as const;
 
 const LEGACY_GAME_COUNT_KEY = "store_review_game_count";
+const LEGACY_SHOWN_COUNT_KEY = "store_review_shown_count";
+const LEGACY_SHOWN_YEAR_KEY = "store_review_shown_year";
 
 const MILESTONES = [2, 5, 20, 50, 100];
+// 最後のマイルストーン以降も対象から外さないよう、この間隔で繰り返す。
+const REPEAT_MILESTONE_INTERVAL = 100;
 const MIN_DAYS_SINCE_INSTALL = 7;
-const MAX_SHOWS_PER_YEAR = 3;
-const MIN_DAYS_BETWEEN_SHOWS = 90;
+// Apple の上限「365日で3回」に窓を揃える。暦年で数えると年末と年明けで最大6回になる。
+const MAX_SHOWS_PER_365_DAYS = 3;
+const MIN_DAYS_BETWEEN_SHOWS = 60;
 
 function daysSince(dateString: string | null): number {
   if (!dateString) return Infinity;
@@ -27,12 +32,72 @@ function daysSince(dateString: string | null): number {
   return Math.floor((now - then) / (1000 * 60 * 60 * 24));
 }
 
-async function recordPrePromptShown(baseCount: number): Promise<void> {
-  await SecureStore.setItemAsync(KEYS.LAST_SHOWN, new Date().toISOString());
-  await SecureStore.setItemAsync(KEYS.SHOWN_COUNT, String(baseCount + 1));
+async function readInt(key: string): Promise<number> {
+  return parseInt((await SecureStore.getItemAsync(key)) ?? "0", 10) || 0;
+}
+
+/**
+ * 到達済みで未消化のマイルストーンのうち最大のものを返す。無ければ null。
+ * 一度に複数を跨いだ場合もまとめて消化し、同じ到達で連続発火させない。
+ */
+function findReachedMilestone(
+  count: number,
+  consumedMilestone: number,
+): number | null {
+  const lastFixedMilestone = Math.max(...MILESTONES);
+  const repeatedMilestones: number[] = [];
+  for (
+    let milestone = lastFixedMilestone + REPEAT_MILESTONE_INTERVAL;
+    milestone <= count;
+    milestone += REPEAT_MILESTONE_INTERVAL
+  ) {
+    repeatedMilestones.push(milestone);
+  }
+  const reached = [...MILESTONES, ...repeatedMilestones].filter(
+    (milestone) => milestone > consumedMilestone && milestone <= count,
+  );
+  return reached.length > 0 ? Math.max(...reached) : null;
+}
+
+function parseShownAtList(value: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+/** 直近365日以内にレビューを要求した日時（ISO 文字列）の一覧を返す。 */
+async function readRecentShownAtList(): Promise<string[]> {
+  const stored = await SecureStore.getItemAsync(KEYS.SHOWN_AT_LIST);
+  const shownAtList =
+    stored !== null ? parseShownAtList(stored) : await readLegacyShownAtList();
+  return shownAtList.filter((shownAt) => daysSince(shownAt) < 365);
+}
+
+// 暦年カウント時代の端末は日時の一覧を持たないため、当年の回数ぶんを最終表示日で近似する。
+async function readLegacyShownAtList(): Promise<string[]> {
+  const lastShown = await SecureStore.getItemAsync(KEYS.LAST_SHOWN);
+  const shownYear = await SecureStore.getItemAsync(LEGACY_SHOWN_YEAR_KEY);
+  if (!lastShown || shownYear !== String(new Date().getFullYear())) return [];
+  const shownCount = await readInt(LEGACY_SHOWN_COUNT_KEY);
+  return Array.from({ length: shownCount }, () => lastShown);
+}
+
+async function recordReviewRequested(
+  recentShownAtList: string[],
+  milestone: number,
+): Promise<void> {
+  const now = new Date().toISOString();
+  // 途中で失敗しても、同じマイルストーンで再要求しないよう消化を先に書く。
+  await SecureStore.setItemAsync(KEYS.CONSUMED_MILESTONE, String(milestone));
+  await SecureStore.setItemAsync(KEYS.LAST_SHOWN, now);
   await SecureStore.setItemAsync(
-    KEYS.SHOWN_YEAR,
-    String(new Date().getFullYear()),
+    KEYS.SHOWN_AT_LIST,
+    JSON.stringify([...recentShownAtList, now]),
   );
 }
 
@@ -57,28 +122,23 @@ export const useStoreReview = () => {
     return next;
   }, []);
 
-  const checkAndShowPrePrompt = useCallback(async (): Promise<boolean> => {
-    const currentCount = await SecureStore.getItemAsync(
-      KEYS.POSITIVE_EVENT_COUNT,
-    );
-    const count = parseInt(currentCount ?? "0", 10) || 0;
-
-    if (!MILESTONES.includes(count)) return false;
+  /**
+   * 未消化のマイルストーンに到達していて頻度ゲートを満たすとき、OS のレビューダイアログを要求する。
+   * @return `requestReview()` を呼んだら true。OS が実際に表示したかは API から取得できない
+   */
+  const requestReviewIfEligible = useCallback(async (): Promise<boolean> => {
+    const count = await readInt(KEYS.POSITIVE_EVENT_COUNT);
+    const consumedMilestone = await readInt(KEYS.CONSUMED_MILESTONE);
+    const milestone = findReachedMilestone(count, consumedMilestone);
+    if (milestone === null) return false;
 
     const installDate = await SecureStore.getItemAsync(KEYS.INSTALL_DATE);
     if (!installDate || daysSince(installDate) < MIN_DAYS_SINCE_INSTALL) {
       return false;
     }
 
-    const currentYear = new Date().getFullYear();
-    const storedYear = await SecureStore.getItemAsync(KEYS.SHOWN_YEAR);
-    let shownCount =
-      parseInt((await SecureStore.getItemAsync(KEYS.SHOWN_COUNT)) ?? "0", 10) ||
-      0;
-    if (storedYear !== String(currentYear)) {
-      shownCount = 0;
-    }
-    if (shownCount >= MAX_SHOWS_PER_YEAR) return false;
+    const recentShownAtList = await readRecentShownAtList();
+    if (recentShownAtList.length >= MAX_SHOWS_PER_365_DAYS) return false;
 
     const lastShown = await SecureStore.getItemAsync(KEYS.LAST_SHOWN);
     if (lastShown && daysSince(lastShown) < MIN_DAYS_BETWEEN_SHOWS) {
@@ -88,14 +148,17 @@ export const useStoreReview = () => {
     const isAvailable = await StoreReview.isAvailableAsync();
     if (!isAvailable) return false;
 
-    await recordPrePromptShown(shownCount);
-    return true;
-  }, []);
-
-  const requestNativeReview = useCallback(async () => {
-    const isAvailable = await StoreReview.isAvailableAsync();
-    if (!isAvailable) return;
     await StoreReview.requestReview();
+    try {
+      await recordReviewRequested(recentShownAtList, milestone);
+    } catch (error) {
+      // 要求自体は成功しているため true を返し、広告との二重割り込みを避ける。
+      Sentry.captureException(error, {
+        tags: { feature: "store-review" },
+        extra: { milestone },
+      });
+    }
+    return true;
   }, []);
 
   /**
@@ -134,8 +197,7 @@ export const useStoreReview = () => {
     initInstallDate,
     initPositiveEventCount,
     incrementPositiveEvent,
-    checkAndShowPrePrompt,
-    requestNativeReview,
+    requestReviewIfEligible,
     openStoreReviewPage,
   };
 };
