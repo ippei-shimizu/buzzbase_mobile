@@ -4,7 +4,7 @@ import type { BattingSide } from "@constants/handedness";
 import * as Sentry from "@sentry/react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ProfileSetupForm } from "@components/auth/ProfileSetupForm";
@@ -14,6 +14,10 @@ import { updateUserPositions } from "@services/positionService";
 import { updateUserProfile } from "@services/profileService";
 import { createTeam, searchTeams } from "@services/teamService";
 import { useSnackbarStore } from "@stores/snackbarStore";
+import {
+  trackProfileSetupCompleted,
+  trackProfileSetupViewed,
+} from "@utils/analytics";
 
 /**
  * ユーザー名登録の直後に挟む任意のプロフィール入力。
@@ -48,9 +52,18 @@ export default function ProfileSetupScreen() {
     (team) => team.name !== trimmedTeamName,
   );
 
-  const leave = () => {
+  useEffect(() => {
+    trackProfileSetupViewed();
+  }, []);
+
+  const leave = (skipped: boolean) => {
     if (isLeavingRef.current) return;
     isLeavingRef.current = true;
+    trackProfileSetupCompleted({
+      skipped,
+      has_team: trimmedTeamName.length > 0,
+      position_count: selectedPositionIds.length,
+    });
     router.replace("/(tabs)");
   };
 
@@ -94,7 +107,7 @@ export default function ProfileSetupScreen() {
         await updateUserPositions(profile.id, selectedPositionIds);
       }
 
-      leave();
+      leave(false);
       useSnackbarStore.getState().show({
         type: "success",
         message: "プロフィールを保存しました",
@@ -133,7 +146,7 @@ export default function ProfileSetupScreen() {
           onThrowHandChange={setThrowHand}
           onBattingSideChange={setBattingSide}
           onSubmit={handleSubmit}
-          onSkip={leave}
+          onSkip={() => leave(true)}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>
