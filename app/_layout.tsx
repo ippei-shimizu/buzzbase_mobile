@@ -26,6 +26,7 @@ import {
 } from "@services/revenueCatService";
 import { requestTrackingPermissionOnce } from "@services/trackingTransparencyService";
 import { useAuthStore } from "@stores/authStore";
+import { useGameRecordStore } from "@stores/gameRecordStore";
 import { useSnackbarStore } from "@stores/snackbarStore";
 import { posthog } from "@utils/posthog";
 import { queryClient } from "@utils/queryClient";
@@ -113,6 +114,11 @@ function RootLayoutInner() {
         fallbackToManualSignIn();
         return;
       }
+
+      // logout() を経由せずに別アカウントのセッションへ移るため、前のユーザーの
+      // クエリキャッシュとウィザードの下書きを持ち越さないよう明示的に捨てる。
+      queryClient.clear();
+      useGameRecordStore.getState().reset();
 
       setIsLoggedIn(true);
       setIsLoading(false);
