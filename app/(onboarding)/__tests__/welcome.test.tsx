@@ -10,6 +10,7 @@
 import type { RouterSpies } from "../../../__tests__/test-utils/mockExpoRouter";
 import { fireEvent, waitFor } from "@testing-library/react-native";
 import * as SecureStore from "expo-secure-store";
+import { Dimensions, ScrollView } from "react-native";
 import { useAuthStore } from "@stores/authStore";
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
 
@@ -21,6 +22,26 @@ jest.mock("expo-router", () => {
   return buildExpoRouterMock();
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
+
+const mockCapture = jest.fn();
+jest.mock("@utils/posthog", () => ({
+  isPostHogEnabled: true,
+  posthog: { capture: (...args: unknown[]) => mockCapture(...args) },
+}));
+
+const endSwipeAt = (
+  view: ReturnType<typeof renderWelcome>,
+  offsetX: number,
+) => {
+  fireEvent(view.UNSAFE_getByType(ScrollView), "momentumScrollEnd", {
+    nativeEvent: { contentOffset: { x: offsetX, y: 0 } },
+  });
+};
+
+const capturedEvents = (event: string) =>
+  mockCapture.mock.calls
+    .filter(([capturedEvent]) => capturedEvent === event)
+    .map(([, properties]) => properties);
 
 const getRouterSpies = (): RouterSpies => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -114,5 +135,91 @@ describe("onboarding welcome", () => {
       );
     });
     expect(getRouterSpies().replace).toHaveBeenCalledWith("/(auth)/sign-up");
+  });
+
+  describe("計測", () => {
+    it("初期表示と各ステップへの移動でステップ表示イベントを送る", () => {
+      const { getByText } = renderWelcome();
+
+      fireEvent.press(getByText("次へ"));
+      fireEvent.press(getByText("次へ"));
+
+      expect(capturedEvents("onboarding step viewed")).toEqual([
+        { step_index: 0, illustration: "autoCalc" },
+        { step_index: 1, illustration: "ranking" },
+        { step_index: 2, illustration: "growth" },
+      ]);
+    });
+
+    it("スキップで skipped: true の完了イベントを送る", async () => {
+      const { getByText } = renderWelcome();
+
+      fireEvent.press(getByText("次へ"));
+      fireEvent.press(getByText("スキップ"));
+
+      await waitFor(() => {
+        expect(getRouterSpies().replace).toHaveBeenCalled();
+      });
+      expect(capturedEvents("onboarding completed")).toEqual([
+        { skipped: true, last_step_index: 1 },
+      ]);
+    });
+
+    it("「はじめる」で skipped: false の完了イベントを送る", async () => {
+      const { getByText } = renderWelcome();
+
+      fireEvent.press(getByText("次へ"));
+      fireEvent.press(getByText("次へ"));
+      fireEvent.press(getByText("はじめる"));
+
+      await waitFor(() => {
+        expect(getRouterSpies().replace).toHaveBeenCalled();
+      });
+      expect(capturedEvents("onboarding completed")).toEqual([
+        { skipped: false, last_step_index: 2 },
+      ]);
+    });
+
+    it("完了フラグの書き込みに失敗しても完了イベントを送って遷移する", async () => {
+      setItemAsyncMock.mockRejectedValueOnce(new Error("keychain unavailable"));
+      const { getByText } = renderWelcome();
+
+      fireEvent.press(getByText("スキップ"));
+
+      await waitFor(() => {
+        expect(getRouterSpies().replace).toHaveBeenCalledWith(
+          "/(auth)/sign-up",
+        );
+      });
+      expect(capturedEvents("onboarding completed")).toEqual([
+        { skipped: true, last_step_index: 0 },
+      ]);
+    });
+
+    it("スワイプでの移動でもステップ表示イベントを1回だけ送る", () => {
+      const view = renderWelcome();
+      const { width } = Dimensions.get("window");
+
+      endSwipeAt(view, width);
+      endSwipeAt(view, width);
+
+      expect(capturedEvents("onboarding step viewed")).toEqual([
+        { step_index: 0, illustration: "autoCalc" },
+        { step_index: 1, illustration: "ranking" },
+      ]);
+    });
+
+    it("スワイプの終端が範囲外でも落ちずに最終ステップとして扱う", () => {
+      const view = renderWelcome();
+      const { width } = Dimensions.get("window");
+
+      endSwipeAt(view, width * 10);
+
+      expect(view.getByText("はじめる")).toBeTruthy();
+      expect(capturedEvents("onboarding step viewed")).toEqual([
+        { step_index: 0, illustration: "autoCalc" },
+        { step_index: 2, illustration: "growth" },
+      ]);
+    });
   });
 });
