@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Icon } from "@components/icon/Icon";
 import { trackProFeatureTapped } from "@utils/analytics";
-import { PRO_PAYWALL_COPY } from "./PaywallModal";
+import { PRO_PAYWALL_COPY } from "./paywall/paywallContent";
 
 interface ProUpsellCardProps {
   /** 指定すると PRO_PAYWALL_COPY から title/description/benefits を引く。 */

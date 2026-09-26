@@ -63,8 +63,9 @@ const mockOffering = {
       product: {
         title: "月額プラン",
         description: "毎月課金されるプラン",
-        priceString: "¥980",
+        priceString: "￥980",
         price: 980,
+        currencyCode: "JPY",
       },
     },
     {
@@ -73,8 +74,9 @@ const mockOffering = {
       product: {
         title: "年額プラン",
         description: "年1回課金されるプラン",
-        priceString: "¥9,800",
+        priceString: "￥9,800",
         price: 9800,
+        currencyCode: "JPY",
       },
     },
   ],
@@ -104,32 +106,54 @@ const setupSyncEndpoint = () => {
   };
 };
 
+type FindByLabelText = ReturnType<
+  typeof renderWithProviders
+>["findByLabelText"];
+
+// 価値画面 → プラン画面へ進む。価格・購入・復元はプラン画面側にあるため、
+// 課金系のテストはこのヘルパーで 2 ステップ目まで進めてから操作する。
+const goToPlanStep = async (
+  findByLabelText: FindByLabelText,
+  label = "7日間無料で試す",
+) => {
+  fireEvent.press(await findByLabelText(label));
+};
+
 describe("ProScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("PaywallModal と同じ構成（ブランド表示・機能比較表・プラン一覧）を表示する", async () => {
+  it("PaywallModal と同じ 2 ステップ構成（価値訴求 → プラン）を表示する", async () => {
     setupSnackbar();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
 
-    const { findByText, getByText } = renderWithProviders(<ProScreen />);
+    const { findByLabelText, findByText, getByText } = renderWithProviders(
+      <ProScreen />,
+    );
 
     expect(getByText("BUZZ BASE")).toBeOnTheScreen();
-    expect(getByText("PRO でできること")).toBeOnTheScreen();
-    expect(getByText("注意事項")).toBeOnTheScreen();
+    expect(getByText("Pro でできること")).toBeOnTheScreen();
+    expect(getByText("よくある質問")).toBeOnTheScreen();
+
+    await goToPlanStep(findByLabelText);
+
     expect(await findByText("月額プラン")).toBeTruthy();
-    expect(await findByText("¥980/月")).toBeTruthy();
+    expect(await findByText("￥980/月")).toBeTruthy();
   });
 
-  it("年額プランに月額換算比のお得金額バッジが表示される", async () => {
+  it("年額プランに月額換算比のお得額が表示される", async () => {
     setupSnackbar();
     getOfferingsMock.mockResolvedValueOnce(mockOffering);
 
-    const { findByText } = renderWithProviders(<ProScreen />);
+    const { findByLabelText, findByText } = renderWithProviders(<ProScreen />);
+
+    await goToPlanStep(findByLabelText);
 
     // 月額980円×12=11,760円 に対し年額9,800円 → 1,960円お得。
-    expect(await findByText("年間¥1,960お得")).toBeTruthy();
+    expect(
+      await findByText("月あたり ￥817・1 年で ￥1,960 お得"),
+    ).toBeTruthy();
   });
 
   it("プランを選択して PROを始めるを押すと購入し、成功後 success 画面へ遷移する", async () => {
@@ -142,7 +166,8 @@ describe("ProScreen", () => {
 
     // 年額プランがあるので初期選択は年額プランになる。
     await waitFor(() => expect(getOfferingsMock).toHaveBeenCalledTimes(1));
-    const ctaButton = await findByLabelText("7日間無料で試す");
+    await goToPlanStep(findByLabelText);
+    const ctaButton = await findByLabelText("このプランで7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
@@ -166,9 +191,9 @@ describe("ProScreen", () => {
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
 
-    const monthlyCard = await findByLabelText("月額プラン ¥980");
-    fireEvent.press(monthlyCard);
-    fireEvent.press(await findByLabelText("7日間無料で試す"));
+    await goToPlanStep(findByLabelText);
+    fireEvent.press(await findByLabelText("月額プラン ￥980"));
+    fireEvent.press(await findByLabelText("このプランで7日間無料で試す"));
 
     await waitFor(() => {
       expect(purchasePackageMock).toHaveBeenCalledWith(
@@ -185,7 +210,8 @@ describe("ProScreen", () => {
     purchasePackageMock.mockReturnValueOnce(new Promise(() => {}));
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
-    const ctaButton = await findByLabelText("7日間無料で試す");
+    await goToPlanStep(findByLabelText);
+    const ctaButton = await findByLabelText("このプランで7日間無料で試す");
     fireEvent.press(ctaButton);
     fireEvent.press(ctaButton);
     fireEvent.press(ctaButton);
@@ -202,6 +228,7 @@ describe("ProScreen", () => {
     restorePurchasesMock.mockReturnValueOnce(new Promise(() => {}));
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
+    await goToPlanStep(findByLabelText);
     const restoreLink = await findByLabelText("購入を復元");
     fireEvent.press(restoreLink);
     fireEvent.press(restoreLink);
@@ -221,7 +248,8 @@ describe("ProScreen", () => {
     );
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
-    const ctaButton = await findByLabelText("7日間無料で試す");
+    await goToPlanStep(findByLabelText);
+    const ctaButton = await findByLabelText("このプランで7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
@@ -236,7 +264,9 @@ describe("ProScreen", () => {
     setupSnackbar();
     getOfferingsMock.mockRejectedValueOnce(new Error("offerings unavailable"));
 
-    const { findByText } = renderWithProviders(<ProScreen />);
+    const { findByLabelText, findByText } = renderWithProviders(<ProScreen />);
+
+    await goToPlanStep(findByLabelText);
 
     expect(
       await findByText(
@@ -251,7 +281,8 @@ describe("ProScreen", () => {
     purchasePackageMock.mockRejectedValueOnce(new Error("network down"));
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
-    const ctaButton = await findByLabelText("7日間無料で試す");
+    await goToPlanStep(findByLabelText);
+    const ctaButton = await findByLabelText("このプランで7日間無料で試す");
     fireEvent.press(ctaButton);
 
     await waitFor(() => {
@@ -272,7 +303,8 @@ describe("ProScreen", () => {
       ),
     );
     const { findByLabelText } = renderWithProviders(<ProScreen />);
-    fireEvent.press(await findByLabelText("7日間無料で試す"));
+    await goToPlanStep(findByLabelText);
+    fireEvent.press(await findByLabelText("このプランで7日間無料で試す"));
 
     await waitFor(() => {
       expect(showMock).toHaveBeenCalledWith(
@@ -302,7 +334,8 @@ describe("ProScreen", () => {
     );
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
-    fireEvent.press(await findByLabelText("7日間無料で試す"));
+    await goToPlanStep(findByLabelText);
+    fireEvent.press(await findByLabelText("このプランで7日間無料で試す"));
 
     await waitFor(() => {
       expect(getRouterSpies().replace).toHaveBeenCalledWith("/pro/success");
@@ -321,6 +354,7 @@ describe("ProScreen", () => {
     const showMock = setupSnackbar();
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
+    await goToPlanStep(findByLabelText);
     const restoreLink = await findByLabelText("購入を復元");
     fireEvent.press(restoreLink);
 
@@ -348,6 +382,7 @@ describe("ProScreen", () => {
     );
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
+    await goToPlanStep(findByLabelText);
     fireEvent.press(await findByLabelText("購入を復元"));
 
     await waitFor(() => {
@@ -370,6 +405,7 @@ describe("ProScreen", () => {
     const showMock = setupSnackbar();
 
     const { findByLabelText } = renderWithProviders(<ProScreen />);
+    await goToPlanStep(findByLabelText);
     fireEvent.press(await findByLabelText("購入を復元"));
 
     await waitFor(() => {
