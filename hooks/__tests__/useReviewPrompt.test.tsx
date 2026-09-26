@@ -135,6 +135,23 @@ describe("useReviewPrompt", () => {
     expect(requestReviewMock).toHaveBeenCalledTimes(2);
   });
 
+  it("要求後の記録に失敗しても要求済みとして扱い、同じマイルストーンで再要求しない", async () => {
+    seed({
+      store_review_positive_event_count: "1",
+      store_review_install_date: daysAgo(30),
+    });
+    (SecureStore.setItemAsync as jest.Mock).mockImplementation(
+      async (key: string, value: string) => {
+        if (key === "store_review_last_shown") throw new Error("write error");
+        storage.set(key, value);
+      },
+    );
+    expect(await triggerShare()).toBe(true);
+
+    expect(await triggerShare()).toBe(false);
+    expect(requestReviewMock).toHaveBeenCalledTimes(1);
+  });
+
   it("要求したときだけ、トリガー種別付きで計測する", async () => {
     seed({
       store_review_positive_event_count: "0",

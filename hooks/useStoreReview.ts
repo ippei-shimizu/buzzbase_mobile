@@ -50,13 +50,14 @@ async function recordReviewRequested(
   baseShownCount: number,
   milestone: number,
 ): Promise<void> {
+  // 途中で失敗しても、同じマイルストーンで再要求しないよう消化を先に書く。
+  await SecureStore.setItemAsync(KEYS.CONSUMED_MILESTONE, String(milestone));
   await SecureStore.setItemAsync(KEYS.LAST_SHOWN, new Date().toISOString());
   await SecureStore.setItemAsync(KEYS.SHOWN_COUNT, String(baseShownCount + 1));
   await SecureStore.setItemAsync(
     KEYS.SHOWN_YEAR,
     String(new Date().getFullYear()),
   );
-  await SecureStore.setItemAsync(KEYS.CONSUMED_MILESTONE, String(milestone));
 }
 
 export const useStoreReview = () => {
@@ -111,7 +112,15 @@ export const useStoreReview = () => {
     if (!isAvailable) return false;
 
     await StoreReview.requestReview();
-    await recordReviewRequested(shownCount, milestone);
+    try {
+      await recordReviewRequested(shownCount, milestone);
+    } catch (error) {
+      // 要求自体は成功しているため true を返し、広告との二重割り込みを避ける。
+      Sentry.captureException(error, {
+        tags: { feature: "store-review" },
+        extra: { milestone },
+      });
+    }
     return true;
   }, []);
 
