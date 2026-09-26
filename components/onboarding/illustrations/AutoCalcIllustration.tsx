@@ -24,9 +24,21 @@ const PLATE_APPEARANCES = [
 ] as const;
 
 const METRICS = [
-  { label: "打率", value: ".333", y: 22, rotate: -4, isHighlighted: false },
-  { label: "OPS", value: ".900", y: 72, rotate: 0, isHighlighted: true },
-  { label: "防御率", value: "2.50", y: 122, rotate: 3, isHighlighted: false },
+  {
+    label: "今季 打率",
+    value: ".333",
+    y: 22,
+    rotate: -4,
+    isHighlighted: false,
+  },
+  { label: "今季 OPS", value: ".900", y: 72, rotate: 0, isHighlighted: true },
+  {
+    label: "今季 防御率",
+    value: "2.50",
+    y: 122,
+    rotate: 3,
+    isHighlighted: false,
+  },
 ] as const;
 
 const METRIC_CARD = { x: 176, width: 94, height: 44 } as const;
