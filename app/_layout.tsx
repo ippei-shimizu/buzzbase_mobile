@@ -16,14 +16,19 @@ import {
 } from "@constants/revenueCat";
 import { usePushNotifications } from "@hooks/usePushNotifications";
 import { useStoreReview } from "@hooks/useStoreReview";
+import { completeEmailConfirmation } from "@services/authService";
 import { configureGoogleSignIn } from "@services/googleAuthService";
 import { initializeMobileAds } from "@services/mobileAdsService";
+import { getCurrentUserProfile } from "@services/profileService";
 import {
   addCustomerInfoUpdateListener,
   configureRevenueCat,
 } from "@services/revenueCatService";
 import { requestTrackingPermissionOnce } from "@services/trackingTransparencyService";
 import { useAuthStore } from "@stores/authStore";
+import { useSnackbarStore } from "@stores/snackbarStore";
+import { clearAllAuthTokens } from "@utils/authTokenStorage";
+import { isNetworkError } from "@utils/axiosError";
 import { posthog } from "@utils/posthog";
 import { queryClient } from "@utils/queryClient";
 
@@ -82,6 +87,60 @@ function RootLayoutInner() {
   const router = useRouter();
   const { initInstallDate, initPositiveEventCount } = useStoreReview();
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const setIsLoggedIn = useAuthStore((s) => s.setIsLoggedIn);
+  const setIsLoading = useAuthStore((s) => s.setIsLoading);
+
+  // 認証トークンを載せない back / 確認リンクの期限切れでも進めるよう、手動ログインへ倒す。
+  const fallbackToManualSignIn = useCallback(() => {
+    Alert.alert(
+      "メール認証完了",
+      "メールアドレスの認証が完了しました。ログインしてください。",
+      [{ text: "OK", onPress: () => router.replace("/(auth)/sign-in") }],
+    );
+  }, [router]);
+
+  const signInWithConfirmationTokens = useCallback(
+    async (queryParams: Linking.ParsedURL["queryParams"]) => {
+      let authResponse;
+      try {
+        authResponse = await completeEmailConfirmation(queryParams);
+      } catch (error) {
+        // ネットワーク到達不可はトークン失効とは限らないため、保存済みトークンを残して起動時の検証に委ねる。
+        if (isNetworkError(error)) {
+          setIsLoggedIn(true);
+          setIsLoading(false);
+          router.replace("/(tabs)");
+          return;
+        }
+        await clearAllAuthTokens();
+        fallbackToManualSignIn();
+        return;
+      }
+
+      if (!authResponse) {
+        fallbackToManualSignIn();
+        return;
+      }
+
+      setIsLoggedIn(true);
+      setIsLoading(false);
+      useSnackbarStore.getState().show({
+        type: "success",
+        message: "メールアドレスの認証が完了しました",
+      });
+
+      // プロフィール取得自体が失敗したケースは安全側（username-registration）に倒す。
+      try {
+        const profile = await getCurrentUserProfile();
+        router.replace(
+          profile.user_id ? "/(tabs)" : "/(auth)/username-registration",
+        );
+      } catch {
+        router.replace("/(auth)/username-registration");
+      }
+    },
+    [fallbackToManualSignIn, router, setIsLoading, setIsLoggedIn],
+  );
 
   const handleDeepLink = useCallback(
     (url: string) => {
@@ -92,11 +151,7 @@ function RootLayoutInner() {
       ) {
         const success = parsed.queryParams?.account_confirmation_success;
         if (success === "true") {
-          Alert.alert(
-            "メール認証完了",
-            "メールアドレスの認証が完了しました。ログインしてください。",
-            [{ text: "OK", onPress: () => router.replace("/(auth)/sign-in") }],
-          );
+          void signInWithConfirmationTokens(parsed.queryParams);
         } else {
           router.replace("/(auth)/sign-in");
         }
@@ -126,7 +181,7 @@ function RootLayoutInner() {
         }
       }
     },
-    [router],
+    [router, signInWithConfirmationTokens],
   );
 
   useEffect(() => {

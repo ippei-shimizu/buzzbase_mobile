@@ -18,7 +18,10 @@ import axios from "axios";
 import { API_V1_URL } from "@constants/api";
 import { loginRevenueCat, logoutRevenueCat } from "@services/revenueCatService";
 import { trackSignUpCompleted, trackUserLoggedIn } from "@utils/analytics";
-import { clearAllAuthTokens } from "@utils/authTokenStorage";
+import {
+  clearAllAuthTokens,
+  saveAuthTokensFromHeaders,
+} from "@utils/authTokenStorage";
 import axiosInstance from "@utils/axiosInstance";
 import { posthog } from "@utils/posthog";
 
@@ -88,6 +91,34 @@ export const signUp = async (data: SignUpData): Promise<void> => {
       "buzzbase://confirmation-success",
   });
   trackSignUpCompleted("email");
+};
+
+// ディープリンクのクエリは同名キーが複数あると配列で渡るため、単一の文字列だけを受け付ける。
+const singleQueryValue = (
+  value: string | string[] | undefined,
+): string | undefined => (typeof value === "string" ? value : undefined);
+
+/**
+ * メール確認のディープリンクで受け取った認証トークンを保存し、そのまま認証済み状態にする。
+ * back が確認成功時のリダイレクト URL に載せるトークンを使うため、手動での再ログインが不要になる。
+ *
+ * @param params ディープリンクのクエリパラメータ
+ * @return トークンが揃っていて検証できた場合は認証レスポンス。揃っていない場合は null
+ */
+export const completeEmailConfirmation = async (
+  params: Record<string, string | string[] | undefined> | null | undefined,
+): Promise<AuthResponse | null> => {
+  const accessToken = singleQueryValue(params?.["access-token"]);
+  const client = singleQueryValue(params?.client);
+  const uid = singleQueryValue(params?.uid);
+  if (!accessToken || !client || !uid) return null;
+
+  await saveAuthTokensFromHeaders({
+    "access-token": accessToken,
+    client,
+    uid,
+  });
+  return await validateToken();
 };
 
 /** 確認メールを再送信 */
