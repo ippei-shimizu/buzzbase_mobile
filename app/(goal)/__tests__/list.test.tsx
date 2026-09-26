@@ -10,7 +10,10 @@ import {
   HttpResponse,
 } from "../../../__tests__/test-utils/handlers";
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
-import { seedEligibleStoreReview } from "../../../__tests__/test-utils/storeReview";
+import {
+  resetStoreReviewStorage,
+  seedEligibleStoreReview,
+} from "../../../__tests__/test-utils/storeReview";
 import { server } from "../../../jest-setup-msw";
 import { DEFAULT_PRO_STATUS, FREE_FEATURES } from "../../../types/pro";
 import GoalListScreen from "../list";
@@ -91,6 +94,8 @@ const setupGoals = (goals: unknown[]) => {
     http.get(baseUrl("/api/v2/goals/history"), () => HttpResponse.json([])),
   );
 };
+
+afterEach(resetStoreReviewStorage);
 
 describe("GoalListScreen", () => {
   it("無料ユーザーが個人目標を既に2件持っていると、追加ボタンでPro訴求が出て遷移しない", async () => {

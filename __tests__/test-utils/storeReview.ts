@@ -28,3 +28,17 @@ export const seedEligibleStoreReview = (): Map<string, string> => {
   );
   return storage;
 };
+
+/**
+ * seed した状態を同じファイルの後続テストへ持ち越さないよう、`jest-setup.ts` の既定の実装へ戻す。
+ * `seedEligibleStoreReview` を使うファイルの `afterEach` から呼ぶ。
+ */
+export const resetStoreReviewStorage = (): void => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const secureStore = require("expo-secure-store") as {
+    getItemAsync: jest.Mock;
+    setItemAsync: jest.Mock;
+  };
+  secureStore.getItemAsync.mockResolvedValue(null);
+  secureStore.setItemAsync.mockResolvedValue(undefined);
+};

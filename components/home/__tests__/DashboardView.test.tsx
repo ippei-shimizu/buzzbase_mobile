@@ -15,7 +15,10 @@ import {
   createTestQueryClient,
   renderWithProviders,
 } from "../../../__tests__/test-utils/renderWithProviders";
-import { seedEligibleStoreReview } from "../../../__tests__/test-utils/storeReview";
+import {
+  resetStoreReviewStorage,
+  seedEligibleStoreReview,
+} from "../../../__tests__/test-utils/storeReview";
 import { server } from "../../../jest-setup-msw";
 import { DashboardView } from "../DashboardView";
 
@@ -76,6 +79,8 @@ const respondDashboard = (ranking: RankingEntry) => {
     ),
   );
 };
+
+afterEach(resetStoreReviewStorage);
 
 beforeEach(() => {
   jest.clearAllMocks();

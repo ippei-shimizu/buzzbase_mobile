@@ -9,7 +9,10 @@ import {
   HttpResponse,
 } from "../../../__tests__/test-utils/handlers";
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
-import { seedEligibleStoreReview } from "../../../__tests__/test-utils/storeReview";
+import {
+  resetStoreReviewStorage,
+  seedEligibleStoreReview,
+} from "../../../__tests__/test-utils/storeReview";
 import { server } from "../../../jest-setup-msw";
 import { previousMonthKey } from "../../../utils/achievementSummary";
 import { AchievementSummaryModal } from "../AchievementSummaryModal";
@@ -77,6 +80,8 @@ const setupHistoryAndBadges = (history: unknown[], badges: unknown[] = []) => {
     http.get(baseUrl("/api/v2/goal_badges"), () => HttpResponse.json(badges)),
   );
 };
+
+afterEach(resetStoreReviewStorage);
 
 describe("AchievementSummaryModal", () => {
   beforeEach(() => {
