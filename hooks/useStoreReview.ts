@@ -11,6 +11,7 @@ const KEYS = {
   LAST_SHOWN: "store_review_last_shown",
   SHOWN_COUNT: "store_review_shown_count",
   SHOWN_YEAR: "store_review_shown_year",
+  CONSUMED_MILESTONE: "store_review_consumed_milestone",
 } as const;
 
 const LEGACY_GAME_COUNT_KEY = "store_review_game_count";
@@ -31,13 +32,31 @@ async function readInt(key: string): Promise<number> {
   return parseInt((await SecureStore.getItemAsync(key)) ?? "0", 10) || 0;
 }
 
-async function recordReviewRequested(baseShownCount: number): Promise<void> {
+/**
+ * 到達済みで未消化のマイルストーンのうち最大のものを返す。無ければ null。
+ * 一度に複数を跨いだ場合もまとめて消化し、同じ到達で連続発火させない。
+ */
+function findReachedMilestone(
+  count: number,
+  consumedMilestone: number,
+): number | null {
+  const reached = MILESTONES.filter(
+    (milestone) => milestone > consumedMilestone && milestone <= count,
+  );
+  return reached.length > 0 ? reached[reached.length - 1] : null;
+}
+
+async function recordReviewRequested(
+  baseShownCount: number,
+  milestone: number,
+): Promise<void> {
   await SecureStore.setItemAsync(KEYS.LAST_SHOWN, new Date().toISOString());
   await SecureStore.setItemAsync(KEYS.SHOWN_COUNT, String(baseShownCount + 1));
   await SecureStore.setItemAsync(
     KEYS.SHOWN_YEAR,
     String(new Date().getFullYear()),
   );
+  await SecureStore.setItemAsync(KEYS.CONSUMED_MILESTONE, String(milestone));
 }
 
 export const useStoreReview = () => {
@@ -62,12 +81,14 @@ export const useStoreReview = () => {
   }, []);
 
   /**
-   * マイルストーンに到達していて頻度ゲートを満たすとき、OS のレビューダイアログを要求する。
+   * 未消化のマイルストーンに到達していて頻度ゲートを満たすとき、OS のレビューダイアログを要求する。
    * @return `requestReview()` を呼んだら true。OS が実際に表示したかは API から取得できない
    */
   const requestReviewIfEligible = useCallback(async (): Promise<boolean> => {
     const count = await readInt(KEYS.POSITIVE_EVENT_COUNT);
-    if (!MILESTONES.includes(count)) return false;
+    const consumedMilestone = await readInt(KEYS.CONSUMED_MILESTONE);
+    const milestone = findReachedMilestone(count, consumedMilestone);
+    if (milestone === null) return false;
 
     const installDate = await SecureStore.getItemAsync(KEYS.INSTALL_DATE);
     if (!installDate || daysSince(installDate) < MIN_DAYS_SINCE_INSTALL) {
@@ -90,7 +111,7 @@ export const useStoreReview = () => {
     if (!isAvailable) return false;
 
     await StoreReview.requestReview();
-    await recordReviewRequested(shownCount);
+    await recordReviewRequested(shownCount, milestone);
     return true;
   }, []);
 
