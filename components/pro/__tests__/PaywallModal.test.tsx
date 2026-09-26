@@ -902,13 +902,21 @@ describe("PaywallModal", () => {
     fireEvent.press(getByLabelText("Pro の全機能を見る"));
 
     const groupTitles = getAllByText(
-      /^(成績|広告非表示|グループ|練習を記録|その他)$/,
+      /^(成績|広告非表示|グループ|練習を記録|野球ノート|予定・プラン管理|目標管理|課題管理|振り返りレポート|練習と成績のつながり|素振りカウントタイマー|継続|その他)$/,
     ).map((element) => element.props.children);
     expect(groupTitles).toEqual([
       "成績",
       "広告非表示",
       "グループ",
       "練習を記録",
+      "野球ノート",
+      "予定・プラン管理",
+      "目標管理",
+      "課題管理",
+      "振り返りレポート",
+      "練習と成績のつながり",
+      "素振りカウントタイマー",
+      "継続",
       "その他",
     ]);
   });
