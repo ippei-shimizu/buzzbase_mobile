@@ -3,7 +3,6 @@ import {
   getPrefectures,
   getBaseballCategories,
 } from "../services/masterDataService";
-import { getTeams } from "../services/teamService";
 
 export const usePrefectures = () => {
   return useQuery({
@@ -16,12 +15,5 @@ export const useBaseballCategories = () => {
   return useQuery({
     queryKey: ["baseballCategories"],
     queryFn: getBaseballCategories,
-  });
-};
-
-export const useTeams = () => {
-  return useQuery({
-    queryKey: ["teams"],
-    queryFn: getTeams,
   });
 };
