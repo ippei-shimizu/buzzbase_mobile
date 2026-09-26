@@ -112,6 +112,10 @@ const singleQueryValue = (
  * `buzzbase://` は誰でも発火できるため、検証しないと第三者のトークンを載せたリンクで
  * 別アカウントにログインさせられる（ログイン CSRF）。
  *
+ * 受け取ったトークンは SecureStore へ保存する前に、そのトークン自体を明示ヘッダーに載せて検証する。
+ * 先に保存すると、検証に失敗したときに既にログイン中だったセッションを壊してしまい、
+ * SecureStore への保存が失敗していた場合には古いトークンで検証が通って別ユーザーとして成功扱いになる。
+ *
  * @param params ディープリンクのクエリパラメータ
  * @return 受け入れて検証できた場合は認証レスポンス。受け入れ条件を満たさない場合は null
  */
@@ -127,13 +131,25 @@ export const completeEmailConfirmation = async (
   if (!pendingUid || pendingUid.toLowerCase() !== uid.toLowerCase())
     return null;
 
+  const response = await axios.get<AuthResponse>(
+    `${API_V1_URL}/auth/validate_token`,
+    { headers: { "access-token": accessToken, client, uid } },
+  );
+
   await saveAuthTokensFromHeaders({
     "access-token": accessToken,
     client,
     uid,
   });
   await clearPendingConfirmationUid();
-  return await validateToken();
+
+  const body = response.data;
+  if (body.data?.id) {
+    Sentry.setUser({ id: String(body.data.id) });
+    syncRevenueCatLogin(String(body.data.id));
+    posthog?.identify(String(body.data.id));
+  }
+  return body;
 };
 
 /** 確認メールを再送信 */
