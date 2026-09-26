@@ -249,7 +249,7 @@ interface FeatureGroup {
   keys: ProFeature[];
 }
 
-// 「PRO でできること」表のグループ分け。PRO_FEATURES 全31項目を過不足なく1回ずつ含む
+// 「PRO でできること」表のグループ分け。PRO_FEATURES の全項目を過不足なく1回ずつ含む
 // （テストで網羅性を担保。詳細は __tests__/PaywallModal.test.tsx）。
 // グループ名・アイコンはホーム画面の実際のセクション名・導線に合わせる
 // （例: ImprovementToolsSection の各ツール名）。ただし「練習ツール」だけは
