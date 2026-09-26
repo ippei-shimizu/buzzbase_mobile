@@ -15,11 +15,11 @@ import {
 import { sumPitchCourseCounts } from "@utils/pitchCourseMetrics";
 
 /**
- * Pro プラン Coming soon カードのサンプル表示用ダミー body。
+ * 未加入ユーザー向けの Pro 訴求カードに添えるサンプル表示用ダミー body。
  * 数値はすべてダミー固定値で正確さは不要。レイアウトに似せて「何ができる機能か」を視覚的に伝える役割を持つ。
  * 球種別・対戦投手別はタップ展開込みで実コンポーネント（PitchTypeCard/PitcherFaceoffList）に
  * サンプルデータを渡す方式のため、ここには含まれない（app/(tabs)/stats.tsx を参照）。
- * 方向別の球場図は ProComingSoonHitDirectionField.tsx を参照。
+ * 方向別の球場図は ProSampleHitDirectionField.tsx を参照。
  */
 
 export function CountSituationDummy() {
