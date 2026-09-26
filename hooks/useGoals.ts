@@ -62,9 +62,13 @@ export const useGoalMutations = () => {
   const remove = useMutation({ mutationFn: deleteGoal, onSuccess: invalidate });
   const achieve = useMutation({
     mutationFn: achieveGoal,
-    onSuccess: () => {
+    onSuccess: (_goal, goalId) => {
       invalidate();
-      void triggerPositiveEvent({ trigger: "goal_achieved" });
+      // 達成と取り消しの往復で同じ目標を二重に数えないよう、目標ごとにセッション1回へ抑える。
+      void triggerPositiveEvent({
+        trigger: "goal_achieved",
+        sessionKey: `goal-achieved-${goalId}`,
+      });
     },
   });
   const unachieve = useMutation({
