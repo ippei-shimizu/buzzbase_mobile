@@ -5,7 +5,7 @@
  * - 打数 0 のセルは "-" 表示（色スケールの対象外）
  * - 打数が min_at_bats 未満のセルは打率に (N打数) の参考値表記が付く
  * - total_target_pa が 0 のときはヒートマップを出さず空状態を表示する
- * - 「球種別」タブを開いたときにだけクロス集計 API を取得する
+ * - 「球種別」タブを開いたときにだけクロス集計 API を取得する（サンプル指定時は API を呼ばない）
  * - 「投手別」タブを開いたときにだけ投手×コース API を取得し、セレクトで投手を切り替えられる
  */
 import type { PitchCourseData, PitchCourseZone } from "../../../types/stats";
@@ -353,5 +353,78 @@ describe("PitchCourseCard", () => {
 
     expect(getByText("投手 C 3打席")).toBeTruthy();
     expect(pitcherCrossRequested).toBe(false);
+  });
+
+  it("球種別のサンプル指定時は、フィルタを渡されていても API を呼ばずにサンプルで球種を切り替えられる", async () => {
+    let crossRequested = false;
+    server.use(
+      http.get(baseUrl("/api/v2/stats/pitch_course_pitch_types"), () => {
+        crossRequested = true;
+        return HttpResponse.json({
+          rows: [],
+          total_target_pa: 0,
+          min_at_bats: 3,
+        });
+      }),
+    );
+    const data = buildData({
+      13: {
+        plate_appearances: 5,
+        at_bats: 5,
+        hits: 2,
+        batting_average: 0.4,
+        is_reliable: true,
+      },
+    });
+    const { getByText, queryByText } = renderWithProviders(
+      <PitchCourseCard
+        data={data}
+        crossFilters={{}}
+        samplePitchTypeCross={{
+          rows: [
+            {
+              id: 1,
+              label: "ストレート",
+              plate_appearances: 5,
+              zones: buildData({
+                13: {
+                  plate_appearances: 5,
+                  at_bats: 5,
+                  hits: 4,
+                  batting_average: 0.8,
+                  is_reliable: true,
+                },
+              }).zones,
+            },
+            {
+              id: 2,
+              label: "スライダー",
+              plate_appearances: 3,
+              zones: buildData({
+                19: {
+                  plate_appearances: 3,
+                  at_bats: 3,
+                  hits: 0,
+                  batting_average: 0,
+                  is_reliable: true,
+                },
+              }).zones,
+            },
+          ],
+          total_target_pa: 8,
+          min_at_bats: 3,
+        }}
+      />,
+    );
+
+    fireEvent.press(getByText("球種別"));
+    expect(getByText(".800")).toBeTruthy();
+
+    fireEvent.press(getByText("スライダー (3)"));
+    expect(getByText(".000")).toBeTruthy();
+    expect(queryByText(".800")).toBeNull();
+
+    await flushPendingRequests();
+    expect(crossRequested).toBe(false);
   });
 });

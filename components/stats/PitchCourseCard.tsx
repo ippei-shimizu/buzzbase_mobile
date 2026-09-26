@@ -30,6 +30,11 @@ interface Props {
    */
   crossFilters?: StatsFilters;
   /**
+   * Paywall 用のダミー表示で「球種別」タブを体験させるためのサンプル。
+   * 指定時は API を呼ばずにこのデータで球種別タブを表示する。
+   */
+  samplePitchTypeCross?: PitchCoursePitchTypeData;
+  /**
    * Paywall 用のダミー表示で「投手別」タブを体験させるためのサンプル。
    * 指定時は API を呼ばずにこのデータで投手別タブを表示する。
    */
@@ -200,6 +205,7 @@ const Notes = ({ children }: { children?: React.ReactNode }) => (
 export function PitchCourseCard({
   data,
   crossFilters,
+  samplePitchTypeCross,
   samplePitcherCross,
 }: Props) {
   const [tab, setTab] = useState<PitchCourseTab>("course");
@@ -210,10 +216,11 @@ export function PitchCourseCard({
     null,
   );
   const showCrossTab = crossFilters !== undefined;
+  const showPitchTypeTab = showCrossTab || samplePitchTypeCross !== undefined;
   const showPitcherTab = showCrossTab || samplePitcherCross !== undefined;
   const cross = usePitchCoursePitchTypes(
     crossFilters ?? {},
-    showCrossTab && tab === "pitch_type",
+    showCrossTab && samplePitchTypeCross === undefined && tab === "pitch_type",
   );
   const pitcherCross = usePitcherFaceoffCourses(
     crossFilters ?? {},
@@ -236,7 +243,9 @@ export function PitchCourseCard({
     );
   }
 
-  const crossData: PitchCoursePitchTypeData | undefined = cross.data;
+  const crossData: PitchCoursePitchTypeData | undefined =
+    samplePitchTypeCross ?? cross.data;
+  const isCrossLoading = samplePitchTypeCross ? false : cross.isLoading;
   const selectedRow =
     crossData?.rows.find((row) => row.id === selectedPitchTypeId) ??
     crossData?.rows.find((row) => row.plate_appearances > 0) ??
@@ -249,13 +258,17 @@ export function PitchCourseCard({
         <Text style={styles.targetPa}>対象 {data.total_target_pa} 打席</Text>
       </View>
 
-      {showPitcherTab ? (
+      {showPitchTypeTab || showPitcherTab ? (
         <View style={styles.tabRow}>
           {(
             [
               { key: "course", label: "コース別", isAvailable: true },
-              { key: "pitch_type", label: "球種別", isAvailable: showCrossTab },
-              { key: "pitcher", label: "投手別", isAvailable: true },
+              {
+                key: "pitch_type",
+                label: "球種別",
+                isAvailable: showPitchTypeTab,
+              },
+              { key: "pitcher", label: "投手別", isAvailable: showPitcherTab },
             ] as const
           )
             .filter(({ isAvailable }) => isAvailable)
@@ -321,7 +334,7 @@ export function PitchCourseCard({
           selectedPitcherId={selectedPitcherId}
           onSelectPitcher={setSelectedPitcherId}
         />
-      ) : cross.isLoading ? (
+      ) : isCrossLoading ? (
         <View style={styles.crossLoading}>
           <ActivityIndicator color="#d08000" />
         </View>
