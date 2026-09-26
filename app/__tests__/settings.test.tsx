@@ -103,7 +103,19 @@ describe("SettingsScreen", () => {
     });
   });
 
-  it("canOpenURL が false を返す場合は openURL を呼ばない", async () => {
+  it("Android で market:// を開けない場合は https の Play Store ページを開く", async () => {
+    setPlatformOS("android");
+    canOpenSpy.mockResolvedValueOnce(false);
+    const { getByText } = renderWithProviders(<SettingsScreen />);
+    fireEvent.press(getByText("レビューで応援する"));
+    await waitFor(() => {
+      expect(openURLSpy).toHaveBeenCalledWith(
+        "https://play.google.com/store/apps/details?id=jp.buzzbase.mobile",
+      );
+    });
+  });
+
+  it("iOS で canOpenURL が false を返す場合は openURL を呼ばない", async () => {
     setPlatformOS("ios");
     canOpenSpy.mockResolvedValueOnce(false);
     const { getByText } = renderWithProviders(<SettingsScreen />);
