@@ -163,6 +163,7 @@ function PitcherCrossPanel({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.pitcherChipScroll}
         contentContainerStyle={styles.pitcherChipRow}
       >
         {data.rows.map((row) => {
@@ -540,9 +541,12 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 10,
   },
+  pitcherChipScroll: {
+    flexGrow: 0,
+    marginTop: 12,
+  },
   pitcherChipRow: {
     gap: 6,
-    marginTop: 12,
   },
   pitcherTeam: {
     color: "#A1A1AA",
