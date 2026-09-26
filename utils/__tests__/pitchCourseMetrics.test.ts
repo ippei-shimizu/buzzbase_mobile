@@ -67,6 +67,11 @@ describe("foldPitchCourseZones", () => {
     expect(cells[8]).toMatchObject({ key: "3-3", plate_appearances: 4 });
   });
 
+  it("3x3 はストライクゾーンのコースを含むセルをストライクゾーン扱いにする", () => {
+    const cells = foldPitchCourseZones(zones, "grid3");
+    expect(cells.every((cell) => cell.isStrikeZone)).toBe(true);
+  });
+
   it("高低・内外は真ん中の帯を除き、1打席を高低と内外の両方に数える", () => {
     const cells = foldPitchCourseZones(zones, "split4");
     expect(cells.map((cell) => [cell.label, cell.plate_appearances])).toEqual([

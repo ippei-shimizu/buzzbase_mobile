@@ -102,15 +102,15 @@ export const sumPitchCourseCounts = (
     EMPTY_COUNTS,
   );
 
+/** 畳んだセルは、ストライクゾーンのコースを 1 つでも含めばストライクゾーン側の無彩色で描く。 */
 const buildCell = (
   key: string,
   label: string | null,
-  isStrikeZone: boolean,
   zones: readonly PitchCourseZone[],
 ): PitchCourseCell => ({
   key,
   label,
-  isStrikeZone,
+  isStrikeZone: zones.some((zone) => zone.is_strike_zone),
   courseCount: zones.length,
   ...sumPitchCourseCounts(zones),
 });
@@ -131,16 +131,13 @@ export const foldPitchCourseZones = (
     case "grid5":
       return [...zones]
         .sort((left, right) => left.course - right.course)
-        .map((zone) =>
-          buildCell(String(zone.course), null, zone.is_strike_zone, [zone]),
-        );
+        .map((zone) => buildCell(String(zone.course), null, [zone]));
     case "grid3":
       return BAND_INDEXES.flatMap((rowBand) =>
         BAND_INDEXES.map((colBand) =>
           buildCell(
             `${rowBand}-${colBand}`,
             null,
-            rowBand === 2 && colBand === 2,
             zones.filter(
               (zone) =>
                 pitchCourseBand(zone.row) === rowBand &&
@@ -154,25 +151,21 @@ export const foldPitchCourseZones = (
         buildCell(
           "high",
           "高め",
-          false,
           zones.filter((zone) => pitchCourseBand(zone.row) === 1),
         ),
         buildCell(
           "low",
           "低め",
-          false,
           zones.filter((zone) => pitchCourseBand(zone.row) === 3),
         ),
         buildCell(
           "third_base",
           "三塁側",
-          false,
           zones.filter((zone) => pitchCourseBand(zone.col) === 1),
         ),
         buildCell(
           "first_base",
           "一塁側",
-          false,
           zones.filter((zone) => pitchCourseBand(zone.col) === 3),
         ),
       ];
@@ -181,13 +174,11 @@ export const foldPitchCourseZones = (
         buildCell(
           "strike",
           "ストライクゾーン",
-          true,
           zones.filter((zone) => zone.is_strike_zone),
         ),
         buildCell(
           "ball",
           "ボールゾーン",
-          false,
           zones.filter((zone) => !zone.is_strike_zone),
         ),
       ];
