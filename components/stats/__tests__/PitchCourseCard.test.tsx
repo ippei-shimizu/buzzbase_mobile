@@ -566,4 +566,29 @@ describe("PitchCourseCard", () => {
     expect(getByText("1.500")).toBeTruthy();
     expect(getByText("4打数")).toBeTruthy();
   });
+
+  it("ストライク / ボールゾーンの集計は打率なら (打数-安打)、他の指標なら分母を添える", () => {
+    const data = buildData(
+      {
+        13: { plate_appearances: 14, at_bats: 12, hits: 4, total_bases: 6 },
+      },
+      {
+        strike_zone: {
+          ...EMPTY_SUMMARY,
+          plate_appearances: 14,
+          at_bats: 12,
+          hits: 4,
+          total_bases: 6,
+          batting_average: 0.333,
+        },
+      },
+    );
+    const { getByRole, getByText, getAllByText, queryByText } =
+      renderWithProviders(<PitchCourseCard data={data} />);
+    expect(getByText("(12-4)")).toBeTruthy();
+
+    fireEvent.press(getByRole("button", { name: "長打率" }));
+    expect(queryByText("(12-4)")).toBeNull();
+    expect(getAllByText("12打数")).toHaveLength(2);
+  });
 });

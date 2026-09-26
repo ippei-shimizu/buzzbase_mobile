@@ -374,13 +374,15 @@ function ZoneSummaryBox({
     totalPlateAppearances,
     courseCount,
   });
+  const detail =
+    settings.metric === "batting_average" && summary.at_bats > 0
+      ? `(${summary.at_bats}-${summary.hits})`
+      : value.subText;
   return (
     <View style={styles.summaryBox}>
       <Text style={styles.summaryLabel}>{label}</Text>
       <Text style={styles.summaryAverage}>{value.valueText}</Text>
-      {value.subText ? (
-        <Text style={styles.summaryDetail}>{value.subText}</Text>
-      ) : null}
+      {detail ? <Text style={styles.summaryDetail}>{detail}</Text> : null}
     </View>
   );
 }
