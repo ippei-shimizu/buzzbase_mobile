@@ -145,6 +145,15 @@ export function GrowthIllustration({ height }: ArtProps) {
           points={`${latestX - 6},46 ${latestX + 6},46 ${latestX},53`}
           fill={BRAND}
         />
+        <Line
+          x1={latestX}
+          y1={53}
+          x2={latestX}
+          y2={latestY - 9}
+          stroke={BRAND}
+          strokeWidth={1.5}
+          opacity={0.6}
+        />
         <SvgText x={190} y={25} fill="#2E2E2E" fontSize={9} fontWeight="bold">
           {`${latestMonth.month}の打率`}
         </SvgText>
