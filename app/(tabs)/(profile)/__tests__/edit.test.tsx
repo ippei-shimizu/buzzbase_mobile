@@ -1,5 +1,6 @@
 import type { RouterSpies } from "../../../../__tests__/test-utils/mockExpoRouter";
 import { act, fireEvent, waitFor } from "@testing-library/react-native";
+import { Alert } from "react-native";
 import {
   apiUrl,
   http,
@@ -140,6 +141,44 @@ describe("プロフィール編集画面の所属チーム", () => {
     expect(recorder.teamId).toBe("99");
     expect(recorder.updatedTeamIds).toEqual(["99"]);
     expect(recorder.createdTeamNames).toEqual([]);
+  });
+
+  it("所属チームの読み込み中に保存しても、所属チームを外して送らない", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const recorder = setUpServer({ ...PROFILE, team_id: 99 });
+    server.use(
+      http.get(apiUrl("/teams/buzz/my_team"), async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return HttpResponse.json({ name: "既存チーム" });
+      }),
+    );
+    const screen = render();
+
+    fireEvent.press(await screen.findByText("保存"));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(recorder.teamId).toBeNull();
+    expect(alertSpy).toHaveBeenCalledWith("読み込み中", expect.any(String));
+    alertSpy.mockRestore();
+  });
+
+  it("所属チームの取得に失敗しても保存できる", async () => {
+    const recorder = setUpServer({ ...PROFILE, team_id: 99 });
+    server.use(
+      http.get(apiUrl("/teams/buzz/my_team"), () =>
+        HttpResponse.json({}, { status: 500 }),
+      ),
+    );
+    const screen = render();
+
+    await screen.findByText("保存");
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    await saveAndWaitForBack(screen);
+    expect(recorder.teamId).toBe("");
   });
 
   it("チームの全件取得はしない", async () => {

@@ -61,8 +61,10 @@ export default function ProfileEditScreen() {
   const { profile, isLoading } = useProfile();
   const { updateProfile, isUpdating } = useProfileEdit();
   // マスターデータ
-  const { data: prefectures } = usePrefectures();
-  const { data: categories } = useBaseballCategories();
+  const { data: prefectures, isLoading: isPrefecturesLoading } =
+    usePrefectures();
+  const { data: categories, isLoading: isCategoriesLoading } =
+    useBaseballCategories();
   const { data: allPositions } = usePositions();
   const { data: existingAwards } = useUserAwards(profile?.id);
   const { mutateAsync: updatePositions } = useUpdateUserPositions();
@@ -99,7 +101,13 @@ export default function ProfileEditScreen() {
     teamName: profileTeamName,
     categoryName: profileTeamCategoryName,
     prefectureName: profileTeamPrefectureName,
+    isLoading: isMyTeamLoading,
   } = useMyTeam(profile?.team_id ? profile.user_id : null);
+  // 復元前に保存すると team_id が空で送られ所属が外れる。取得失敗時に保存できなくならないよう読み込み中だけ止める。
+  const isTeamRestoring =
+    !!profile?.team_id &&
+    !hasRestoredTeamRef.current &&
+    (isMyTeamLoading || isCategoriesLoading || isPrefecturesLoading);
 
   // 受賞歴
   const [awards, setAwards] = useState<AwardItem[]>([]);
@@ -202,6 +210,13 @@ export default function ProfileEditScreen() {
 
   const handleSave = async () => {
     if (!profile) return;
+    if (isTeamRestoring) {
+      Alert.alert(
+        "読み込み中",
+        "所属チームの読み込みが完了してから保存してください",
+      );
+      return;
+    }
 
     // user_idバリデーション
     const userIdPattern = /^[A-Za-z0-9_-]+$/;
