@@ -29,6 +29,7 @@ const InsightRow = ({
     activeOpacity={0.7}
     onPress={onPress}
     accessibilityRole="button"
+    accessibilityLabel={`${row.label}、打率${formatBattingAverage(row.batting_average, row.at_bats)}、${row.at_bats}打数${row.hits}安打`}
     accessibilityState={{ expanded: isExpanded }}
   >
     <Text style={styles.pitchLabel}>
@@ -51,10 +52,24 @@ const InsightRow = ({
  * TOP セクションでハイライトし、0 打数の球種は「その他 N 球種」に集約する
  * インサイト型 UI。打数 1 以上の球種を打率降順で並べ替えて、上位を得意、
  * 下位を苦手にする（同じ行を重複させない）。
- * 各行タップで PitcherFaceoffList と同じ詳細グリッドを展開する。
+ * 各行タップで PitcherFaceoffList と同じ詳細グリッドを展開する（複数行を同時に展開できる）。
  */
 export const PitchTypeCard = ({ rows, totalTargetPa }: PitchTypeCardProps) => {
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedIds, setExpandedIds] = useState<ReadonlySet<number>>(
+    () => new Set(),
+  );
+
+  const toggleExpanded = (pitchTypeId: number) => {
+    setExpandedIds((current) => {
+      const next = new Set(current);
+      if (next.has(pitchTypeId)) {
+        next.delete(pitchTypeId);
+      } else {
+        next.add(pitchTypeId);
+      }
+      return next;
+    });
+  };
 
   if (totalTargetPa === 0) {
     return (
@@ -87,14 +102,14 @@ export const PitchTypeCard = ({ rows, totalTargetPa }: PitchTypeCardProps) => {
   const zeroCount = rows.length - activeRows.length;
 
   const renderRow = (row: PitchTypeRow, highlightColor: string) => {
-    const isExpanded = expandedId === row.id;
+    const isExpanded = expandedIds.has(row.id);
     return (
       <View key={row.id}>
         <InsightRow
           row={row}
           highlightColor={highlightColor}
           isExpanded={isExpanded}
-          onPress={() => setExpandedId(isExpanded ? null : row.id)}
+          onPress={() => toggleExpanded(row.id)}
         />
         {isExpanded && (
           <View style={styles.detailWrapper}>
