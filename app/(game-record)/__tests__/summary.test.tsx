@@ -132,6 +132,25 @@ describe("SummaryScreen", () => {
     });
   });
 
+  it("編集モードで「記録を完了する」を押しても、完了は計測せずに試合一覧へ遷移する", async () => {
+    useGameRecordStore.setState({ gameResultId: 123, isEditMode: true });
+
+    renderWithProviders(<SummaryScreen />);
+
+    await pressCompleteButton();
+
+    await waitFor(() => {
+      expect(getRouterSpies().replace).toHaveBeenCalledWith({
+        pathname: "/(tabs)/(game-results)",
+        params: { tab: "list" },
+      });
+    });
+    const completedEvents = mockCapture.mock.calls.filter(
+      ([eventName]) => eventName === "game record completed",
+    );
+    expect(completedEvents).toHaveLength(0);
+  });
+
   it("「記録を完了する」を連打しても、完了の計測は1回だけ送られる", async () => {
     useGameRecordStore.setState({ gameResultId: 123, isEditMode: false });
 
