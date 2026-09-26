@@ -129,3 +129,18 @@ describe("成績画面のタブ切り替え", () => {
     expect(screen.queryByText("投球成績")).toBeNull();
   });
 });
+
+describe("成績画面の Pro 訴求", () => {
+  it("打撃分析の訴求から開いた Paywall は、機能が未公開だとは案内しない", async () => {
+    respondWithEmptyStats();
+    renderWithProviders(<StatsScreen />);
+
+    const [firstCta] = await screen.findAllByLabelText("Pro プランを見る");
+    fireEvent.press(firstCta);
+
+    expect(
+      await screen.findByLabelText("Pro の全機能を見る"),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(/近日公開予定/)).toBeNull();
+  });
+});

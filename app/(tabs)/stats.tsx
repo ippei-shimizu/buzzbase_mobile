@@ -49,8 +49,8 @@ import {
   DUMMY_PITCH_COURSES,
   DUMMY_PITCH_TYPE_COURSES,
   DUMMY_PITCHER_FACEOFF_COURSES,
-} from "@components/stats/proComingSoonDummies";
-import { ProComingSoonHitDirectionField } from "@components/stats/ProComingSoonHitDirectionField";
+} from "@components/stats/proSampleDummies";
+import { ProSampleHitDirectionField } from "@components/stats/ProSampleHitDirectionField";
 import { RunnersSituationCard } from "@components/stats/RunnersSituationCard";
 import { SprayChart } from "@components/stats/SprayChart";
 import { StatsFilters } from "@components/stats/StatsFilters";
@@ -637,11 +637,11 @@ export default function StatsScreen() {
     useState<BattingTrendGranularity>("game");
   const [eraTrendGranularity, setEraTrendGranularity] =
     useState<EraTrendGranularity>("month");
-  const [seasonPaywallOpen, setSeasonPaywallOpen] = useState(false);
   // どの Pro カードから開かれたかを保持する。Paywall のコピーと計測の trigger を
   // タップ元の機能に合わせるため、boolean ではなく feature キーで持つ。
-  const [comingSoonPaywallFeature, setComingSoonPaywallFeature] =
-    useState<ProFeature | null>(null);
+  const [proPaywallFeature, setProPaywallFeature] = useState<ProFeature | null>(
+    null,
+  );
   const battingTrend = useBattingTrend(filters, battingTrendGranularity);
   const paBreakdown = usePlateAppearanceBreakdown(filters);
   const headlineStats = useHeadlineStats(filters);
@@ -858,7 +858,7 @@ export default function StatsScreen() {
                     !hasEntitlement("season_transition_graph")
                   ) {
                     trackProFeatureTapped("season_transition_graph");
-                    setSeasonPaywallOpen(true);
+                    setProPaywallFeature("season_transition_graph");
                     return;
                   }
                   trackBattingTrendGranularityChanged(next);
@@ -893,12 +893,10 @@ export default function StatsScreen() {
               unlocked={false}
               loading={isProLoading}
               feature="hit_direction_average"
-              onPressCta={() =>
-                setComingSoonPaywallFeature("hit_direction_average")
-              }
+              onPressCta={() => setProPaywallFeature("hit_direction_average")}
               style={styles.proSectionSpacing}
             >
-              <ProComingSoonHitDirectionField />
+              <ProSampleHitDirectionField />
             </ProUpsellOverlay>
           )}
           {/* 7. PlateAppearanceDonut（打席結果の内訳） */}
@@ -948,11 +946,11 @@ export default function StatsScreen() {
               <ProUpsellCard
                 feature="count_situation_average"
                 onPressCta={() =>
-                  setComingSoonPaywallFeature("count_situation_average")
+                  setProPaywallFeature("count_situation_average")
                 }
               />
               <SampleDataLabel />
-              <View pointerEvents="none" style={styles.comingSoonDummy}>
+              <View pointerEvents="none" style={styles.sampleDummy}>
                 <CountSituationDummy />
               </View>
             </View>
@@ -973,14 +971,12 @@ export default function StatsScreen() {
             <View style={styles.proSectionSpacing}>
               <ProUpsellCard
                 feature="pitch_type_average"
-                onPressCta={() =>
-                  setComingSoonPaywallFeature("pitch_type_average")
-                }
+                onPressCta={() => setProPaywallFeature("pitch_type_average")}
               />
               <SampleDataLabel />
               {/* タップした時に詳細スタッツを展開するPro機能もサンプルで体験できるよう、
                       ダミーの静的リストではなく実コンポーネントにサンプルデータを渡す。 */}
-              <View style={styles.comingSoonDummy}>
+              <View style={styles.sampleDummy}>
                 <PitchTypeCard
                   rows={DUMMY_PITCH_TYPE_ROWS}
                   totalTargetPa={DUMMY_PITCH_TYPE_TOTAL_PA}
@@ -1004,12 +1000,10 @@ export default function StatsScreen() {
             <View style={styles.proSectionSpacing}>
               <ProUpsellCard
                 feature="pitch_course_average"
-                onPressCta={() =>
-                  setComingSoonPaywallFeature("pitch_course_average")
-                }
+                onPressCta={() => setProPaywallFeature("pitch_course_average")}
               />
               <SampleDataLabel />
-              <View style={styles.comingSoonDummy}>
+              <View style={styles.sampleDummy}>
                 <PitchCourseCard
                   data={DUMMY_PITCH_COURSES}
                   samplePitchTypeCross={DUMMY_PITCH_TYPE_COURSES}
@@ -1038,11 +1032,11 @@ export default function StatsScreen() {
               <ProUpsellCard
                 feature="pitcher_faceoff_average"
                 onPressCta={() =>
-                  setComingSoonPaywallFeature("pitcher_faceoff_average")
+                  setProPaywallFeature("pitcher_faceoff_average")
                 }
               />
               <SampleDataLabel />
-              <View style={styles.comingSoonDummy}>
+              <View style={styles.sampleDummy}>
                 <PitcherFaceoffList
                   rows={DUMMY_PITCHER_FACEOFF_ROWS}
                   minPlateAppearances={DUMMY_PITCHER_FACEOFF_MIN_PA}
@@ -1146,7 +1140,7 @@ export default function StatsScreen() {
                     !hasEntitlement("season_transition_graph")
                   ) {
                     trackProFeatureTapped("season_transition_graph");
-                    setSeasonPaywallOpen(true);
+                    setProPaywallFeature("season_transition_graph");
                     return;
                   }
                   setEraTrendGranularity(next);
@@ -1328,17 +1322,9 @@ export default function StatsScreen() {
       />
 
       <PaywallModal
-        isOpen={seasonPaywallOpen}
-        onClose={() => setSeasonPaywallOpen(false)}
-        feature="season_transition_graph"
-      />
-      {/* 未提供機能の訴求コピーを購入画面に出すため、加入直後に使えると誤解されない
-          よう公開予定であることを明示する。 */}
-      <PaywallModal
-        isOpen={comingSoonPaywallFeature !== null}
-        onClose={() => setComingSoonPaywallFeature(null)}
-        feature={comingSoonPaywallFeature ?? undefined}
-        contextMessage="この機能は近日公開予定です。Pro プランに加入すると公開時にそのまま使えます。"
+        isOpen={proPaywallFeature !== null}
+        onClose={() => setProPaywallFeature(null)}
+        feature={proPaywallFeature ?? undefined}
       />
     </>
   );
@@ -1367,7 +1353,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  comingSoonDummy: {
+  sampleDummy: {
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,

@@ -8,7 +8,7 @@
  * - 購入成功時の syncProStatus は /pro/sync への実リクエストを MSW で観測する。
  */
 import * as Sentry from "@sentry/react-native";
-import { fireEvent, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, waitFor } from "@testing-library/react-native";
 import { delay } from "msw";
 import { PURCHASES_ERROR_CODE } from "react-native-purchases";
 import {
@@ -17,6 +17,7 @@ import {
   restorePurchases,
 } from "@services/revenueCatService";
 import { useSnackbarStore } from "@stores/snackbarStore";
+import { buildSeason } from "../../../__tests__/test-utils/factories/season";
 import {
   apiUrl,
   http,
@@ -145,10 +146,10 @@ describe("PaywallModal", () => {
     setupSnackbar();
   });
 
-  it("Pro 機能を渡すと、その機能に対応したハイライトコピーが表示される", () => {
+  it("Pro 機能を渡すと、その機能に対応したハイライトコピーが表示される", async () => {
     getOfferingsMock.mockResolvedValueOnce(null);
 
-    const { getByText } = renderWithProviders(
+    const { findByText } = renderWithProviders(
       <PaywallModal
         isOpen
         onClose={mockOnClose}
@@ -156,7 +157,7 @@ describe("PaywallModal", () => {
       />,
     );
 
-    expect(getByText("シーズンを跨いだ成長を可視化")).toBeOnTheScreen();
+    expect(await findByText("シーズンを跨いだ成長を可視化")).toBeOnTheScreen();
   });
 
   it("benefits を持つ機能では description ではなく箇条書きを表示する", () => {
@@ -216,6 +217,77 @@ describe("PaywallModal", () => {
     expect(
       queryByText(PRO_PAYWALL_COPY.season_transition_graph.description),
     ).not.toBeOnTheScreen();
+  });
+
+  it("シーズンが複数あっても試合を記録したシーズンが1つなら、来季からの案内を出す", async () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+    server.use(
+      http.get(apiUrl("/seasons"), () =>
+        HttpResponse.json([
+          buildSeason({ id: 2, name: "2026年", game_results_count: 0 }),
+          buildSeason({ id: 1, name: "2025年", game_results_count: 12 }),
+        ]),
+      ),
+    );
+
+    const { findByText } = renderWithProviders(
+      <PaywallModal
+        isOpen
+        onClose={mockOnClose}
+        feature="season_transition_graph"
+      />,
+    );
+
+    expect(await findByText(/来シーズンの記録が増えると/)).toBeOnTheScreen();
+  });
+
+  it("試合を記録したシーズンが2つ以上あれば、来季からの案内は出さない", async () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+    let seasonsRequested = false;
+    server.use(
+      http.get(apiUrl("/seasons"), () => {
+        seasonsRequested = true;
+        return HttpResponse.json([
+          buildSeason({ id: 2, name: "2026年", game_results_count: 8 }),
+          buildSeason({ id: 1, name: "2025年", game_results_count: 12 }),
+        ]);
+      }),
+    );
+
+    const { queryByText } = renderWithProviders(
+      <PaywallModal
+        isOpen
+        onClose={mockOnClose}
+        feature="season_transition_graph"
+      />,
+    );
+
+    await waitFor(() => expect(seasonsRequested).toBe(true));
+    await act(async () => {});
+    expect(queryByText(/来シーズンの記録が増えると/)).toBeNull();
+  });
+
+  it("シーズンを取得できなかったときは、単年と断定した案内を出さない", async () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+    let seasonsRequested = false;
+    server.use(
+      http.get(apiUrl("/seasons"), () => {
+        seasonsRequested = true;
+        return HttpResponse.json({ error: "error" }, { status: 500 });
+      }),
+    );
+
+    const { queryByText } = renderWithProviders(
+      <PaywallModal
+        isOpen
+        onClose={mockOnClose}
+        feature="season_transition_graph"
+      />,
+    );
+
+    await waitFor(() => expect(seasonsRequested).toBe(true));
+    await act(async () => {});
+    expect(queryByText(/来シーズンの記録が増えると/)).toBeNull();
   });
 
   it("価値画面に Pro でできることの紹介スライドが並ぶ", () => {
@@ -818,6 +890,35 @@ describe("PaywallModal", () => {
     fireEvent.press(getByLabelText("1つのノートに複数の試合を紐付け"));
 
     expect(getByText("複数件")).toBeOnTheScreen();
+  });
+
+  it("全機能画面は成績・広告非表示・グループの順に並ぶ", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getAllByText, getByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="note_tags" />,
+    );
+
+    fireEvent.press(getByLabelText("Pro の全機能を見る"));
+
+    const groupTitles = getAllByText(
+      /^(成績|広告非表示|グループ|練習を記録|野球ノート|予定・プラン管理|目標管理|課題管理|振り返りレポート|練習と成績のつながり|素振りカウントタイマー|継続|その他)$/,
+    ).map((element) => element.props.children);
+    expect(groupTitles).toEqual([
+      "成績",
+      "広告非表示",
+      "グループ",
+      "練習を記録",
+      "野球ノート",
+      "予定・プラン管理",
+      "目標管理",
+      "課題管理",
+      "振り返りレポート",
+      "練習と成績のつながり",
+      "素振りカウントタイマー",
+      "継続",
+      "その他",
+    ]);
   });
 
   it("全機能画面からは戻るで価値画面へ戻れる", () => {

@@ -27,10 +27,9 @@ import {
 } from "@constants/groundCanvas";
 
 /**
- * Pro プラン Coming soon カードのボカし背景専用の球場図。
- * 実際の HitDirectionTable と見た目を揃えつつ、production コンポーネントには
- * 一切依存しない自己完結の静的描画（タップ・凡例・カード装飾なし）。
- * Pro 本体実装時はこのファイルごと削除できる。
+ * 未加入ユーザー向けに方向別打率をサンプル表示する、訴求カードのボカし背景専用の球場図。
+ * 実際の HitDirectionTable と見た目を揃えつつ、本人の成績を一切描かないよう
+ * 固定のサンプル値だけで描く自己完結の静的描画（タップ・凡例・カード装飾なし）。
  */
 
 const WIDTH = GROUND_CANVAS_WIDTH;
@@ -80,7 +79,7 @@ const DUMMY_AVERAGES: Record<number, number> = {
   13: 0.333,
 };
 
-export function ProComingSoonHitDirectionField() {
+export function ProSampleHitDirectionField() {
   const dirtCenterX = HOME.x;
   const dirtCenterY = FIRST.y + 5;
   const dirtRadius = 68;
@@ -93,7 +92,7 @@ export function ProComingSoonHitDirectionField() {
         viewBox={`0 0 ${WIDTH} ${SVG_HEIGHT}`}
       >
         <Defs>
-          <ClipPath id="fieldClipComingSoon">
+          <ClipPath id="fieldClipSample">
             <Path
               d={`M ${HOME.x},${HOME.y} L ${LEFT_END.x},${LEFT_END.y} A ${GROUND_OUTFIELD_RX},${GROUND_OUTFIELD_RY} 0 0,1 ${RIGHT_END.x},${RIGHT_END.y} Z`}
             />
@@ -101,7 +100,7 @@ export function ProComingSoonHitDirectionField() {
         </Defs>
 
         {/* 外野（緑の芝 + ストライプ） */}
-        <G clipPath="url(#fieldClipComingSoon)">
+        <G clipPath="url(#fieldClipSample)">
           <Rect x={0} y={0} width={WIDTH} height={HEIGHT} fill="#4a8e32" />
           {STRIPE_X_POSITIONS.map((x, i) => (
             <Rect
