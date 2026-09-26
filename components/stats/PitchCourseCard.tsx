@@ -188,19 +188,21 @@ function PitcherCrossPanel({
         <Text style={styles.pitcherTeam}>{selectedRow.team_name}</Text>
       ) : null}
       <ZoneHeatmap zones={selectedRow.zones} minAtBats={data.min_at_bats} />
-      <Notes />
-      <Text style={styles.noteText}>
-        コースを記録した対戦が{data.min_plate_appearances}
-        打席以上の投手のみ表示しています
-      </Text>
+      <Notes>
+        <Text style={styles.noteText}>
+          コースを記録した対戦が{data.min_plate_appearances}
+          打席以上の投手のみ表示しています
+        </Text>
+      </Notes>
     </>
   );
 }
 
-const Notes = () => (
+const Notes = ({ children }: { children?: React.ReactNode }) => (
   <View style={styles.notes}>
     <Text style={styles.noteText}>打数が3未満のコースは参考値です</Text>
     <Text style={styles.noteText}>捕手目線で表示しています</Text>
+    {children}
   </View>
 );
 
