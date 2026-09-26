@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Share, View } from "react-native";
 import { SummaryView } from "@components/game-record/SummaryView";
 import { BottomTabBar } from "@components/ui/BottomTabBar";
+import { buildAppStoreUrl } from "@constants/appStore";
 import { useEntitlement } from "@hooks/useEntitlement";
 import { useGameRecord } from "@hooks/useGameRecord";
 import { usePlateAppearancesByGame } from "@hooks/usePlateAppearances";
@@ -115,6 +116,7 @@ export default function SummaryScreen() {
     }
 
     lines.push("#BUZZBASE");
+    lines.push(buildAppStoreUrl("share_game_summary"));
 
     try {
       const result = await Share.share({ message: lines.join("\n") });

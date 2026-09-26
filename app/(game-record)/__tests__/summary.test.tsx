@@ -301,4 +301,23 @@ describe("SummaryScreen", () => {
       screen.getByRole("button", { name: "記録を完了する" }),
     ).toBeDisabled();
   });
+
+  it("「成績をシェア」で送る文言に、シェア経由を計測できる App Store のキャンペーンリンクが含まれる", async () => {
+    const shareSpy = jest
+      .spyOn(Share, "share")
+      .mockResolvedValue({ action: Share.dismissedAction });
+    useGameRecordStore.setState({ gameResultId: 123, isEditMode: false });
+
+    renderWithProviders(<SummaryScreen />);
+
+    fireEvent.press(await screen.findByText("成績をシェア"));
+
+    await waitFor(() => expect(shareSpy).toHaveBeenCalled());
+    expect(shareSpy.mock.calls[0][0]).toEqual({
+      message: expect.stringContaining(
+        "https://apps.apple.com/app/apple-store/id6761011816?pt=128690561&ct=share_game_summary&mt=8",
+      ),
+    });
+    shareSpy.mockRestore();
+  });
 });
