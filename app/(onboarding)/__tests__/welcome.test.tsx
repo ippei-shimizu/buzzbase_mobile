@@ -10,6 +10,7 @@
 import type { RouterSpies } from "../../../__tests__/test-utils/mockExpoRouter";
 import { fireEvent, waitFor } from "@testing-library/react-native";
 import * as SecureStore from "expo-secure-store";
+import { Dimensions, ScrollView } from "react-native";
 import { useAuthStore } from "@stores/authStore";
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
 
@@ -27,6 +28,15 @@ jest.mock("@utils/posthog", () => ({
   isPostHogEnabled: true,
   posthog: { capture: (...args: unknown[]) => mockCapture(...args) },
 }));
+
+const endSwipeAt = (
+  view: ReturnType<typeof renderWelcome>,
+  offsetX: number,
+) => {
+  fireEvent(view.UNSAFE_getByType(ScrollView), "momentumScrollEnd", {
+    nativeEvent: { contentOffset: { x: offsetX, y: 0 } },
+  });
+};
 
 const capturedEvents = (event: string) =>
   mockCapture.mock.calls
@@ -183,6 +193,19 @@ describe("onboarding welcome", () => {
       });
       expect(capturedEvents("onboarding completed")).toEqual([
         { skipped: true, last_step_index: 0 },
+      ]);
+    });
+
+    it("スワイプの終端が範囲外でも落ちずに最終ステップとして扱う", () => {
+      const view = renderWelcome();
+      const { width } = Dimensions.get("window");
+
+      endSwipeAt(view, width * 10);
+
+      expect(view.getByText("はじめる")).toBeTruthy();
+      expect(capturedEvents("onboarding step viewed")).toEqual([
+        { step_index: 0, illustration: "autoCalc" },
+        { step_index: 2, illustration: "growth" },
       ]);
     });
   });

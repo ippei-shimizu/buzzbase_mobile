@@ -23,6 +23,12 @@ import {
   trackOnboardingStepViewed,
 } from "@utils/analytics";
 
+// width が 0 の初回レイアウトや iPad のリサイズ中はオフセットから算出した index が範囲外・NaN になりうる
+const clampPageIndex = (index: number) =>
+  Number.isFinite(index)
+    ? Math.max(0, Math.min(index, ONBOARDING_STEPS.length - 1))
+    : 0;
+
 export default function OnboardingWelcome() {
   const { width } = useWindowDimensions();
   const router = useRouter();
@@ -45,11 +51,13 @@ export default function OnboardingWelcome() {
   const handleMomentumScrollEnd = (
     event: NativeSyntheticEvent<NativeScrollEvent>,
   ) => {
-    setPageIndex(Math.round(event.nativeEvent.contentOffset.x / width));
+    setPageIndex(
+      clampPageIndex(Math.round(event.nativeEvent.contentOffset.x / width)),
+    );
   };
 
   const goToPage = (index: number) => {
-    const clamped = Math.max(0, Math.min(index, ONBOARDING_STEPS.length - 1));
+    const clamped = clampPageIndex(index);
     scrollRef.current?.scrollTo({ x: clamped * width, animated: true });
     setPageIndex(clamped);
   };
