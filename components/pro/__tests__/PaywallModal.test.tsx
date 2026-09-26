@@ -146,10 +146,10 @@ describe("PaywallModal", () => {
     setupSnackbar();
   });
 
-  it("Pro 機能を渡すと、その機能に対応したハイライトコピーが表示される", () => {
+  it("Pro 機能を渡すと、その機能に対応したハイライトコピーが表示される", async () => {
     getOfferingsMock.mockResolvedValueOnce(null);
 
-    const { getByText } = renderWithProviders(
+    const { findByText } = renderWithProviders(
       <PaywallModal
         isOpen
         onClose={mockOnClose}
@@ -157,7 +157,7 @@ describe("PaywallModal", () => {
       />,
     );
 
-    expect(getByText("シーズンを跨いだ成長を可視化")).toBeOnTheScreen();
+    expect(await findByText("シーズンを跨いだ成長を可視化")).toBeOnTheScreen();
   });
 
   it("benefits を持つ機能では description ではなく箇条書きを表示する", () => {
@@ -264,6 +264,29 @@ describe("PaywallModal", () => {
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
+    expect(queryByText(/来シーズンの記録が増えると/)).toBeNull();
+  });
+
+  it("シーズンを取得できなかったときは、単年と断定した案内を出さない", async () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+    let seasonsRequested = false;
+    server.use(
+      http.get(apiUrl("/seasons"), () => {
+        seasonsRequested = true;
+        return HttpResponse.json({ error: "error" }, { status: 500 });
+      }),
+    );
+
+    const { queryByText } = renderWithProviders(
+      <PaywallModal
+        isOpen
+        onClose={mockOnClose}
+        feature="season_transition_graph"
+      />,
+    );
+
+    await waitFor(() => expect(seasonsRequested).toBe(true));
+    await act(async () => {});
     expect(queryByText(/来シーズンの記録が増えると/)).toBeNull();
   });
 
