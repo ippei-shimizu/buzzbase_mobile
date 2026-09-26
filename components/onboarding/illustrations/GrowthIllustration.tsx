@@ -52,8 +52,9 @@ export function GrowthIllustration({ height }: ArtProps) {
   const points = MONTHLY_AVERAGES.map(
     ({ average }, index) => `${xFor(index)},${yFor(average).toFixed(1)}`,
   );
+  const latestMonth = MONTHLY_AVERAGES[MONTHLY_AVERAGES.length - 1];
   const latestX = xFor(MONTHLY_AVERAGES.length - 1);
-  const latestY = yFor(MONTHLY_AVERAGES[MONTHLY_AVERAGES.length - 1].average);
+  const latestY = yFor(latestMonth.average);
   const areaPath = `M ${xFor(0)} ${CHART.bottom} L ${points.join(" L ")} L ${latestX} ${CHART.bottom} Z`;
 
   return (
@@ -145,10 +146,10 @@ export function GrowthIllustration({ height }: ArtProps) {
           fill={BRAND}
         />
         <SvgText x={190} y={25} fill="#2E2E2E" fontSize={9} fontWeight="bold">
-          8月の打率
+          {`${latestMonth.month}の打率`}
         </SvgText>
         <SvgText x={190} y={40} fill="#2E2E2E" fontSize={14} fontWeight="bold">
-          .318
+          {latestMonth.average.toFixed(3).replace(/^0/, "")}
         </SvgText>
         <Polygon points="236,40 242,29 248,40" fill="#2E2E2E" />
       </G>
