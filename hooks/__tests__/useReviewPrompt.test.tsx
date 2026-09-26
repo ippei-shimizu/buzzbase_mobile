@@ -75,7 +75,11 @@ describe("useReviewPrompt", () => {
     });
     expect(await triggerShare()).toBe(true);
 
-    seed({ store_review_last_shown: daysAgo(100) });
+    // ちょうど一致で判定していると、count が消化済みの値に戻ったとき再要求してしまう。
+    seed({
+      store_review_last_shown: daysAgo(100),
+      store_review_positive_event_count: "1",
+    });
     expect(await triggerShare()).toBe(false);
 
     seed({ store_review_positive_event_count: "4" });
