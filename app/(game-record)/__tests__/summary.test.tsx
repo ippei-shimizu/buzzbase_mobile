@@ -1,5 +1,5 @@
 /**
- * 試合記録サマリー画面の「野球ノートを記録する」「試合一覧へ」動線の振る舞いテスト。
+ * 試合記録サマリー画面の「野球ノートを記録する」「記録を完了する」動線の振る舞いテスト。
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import * as SecureStore from "expo-secure-store";
@@ -24,6 +24,12 @@ jest.mock("expo-router", () => {
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
 
+const mockCapture = jest.fn();
+jest.mock("@utils/posthog", () => ({
+  isPostHogEnabled: true,
+  posthog: { capture: (...args: unknown[]) => mockCapture(...args) },
+}));
+
 jest.mock("expo-store-review", () => ({
   isAvailableAsync: jest.fn().mockResolvedValue(true),
   requestReview: jest.fn().mockResolvedValue(undefined),
@@ -35,7 +41,15 @@ const getRouterSpies = () => {
   return m.__routerSpies;
 };
 
+const pressCompleteButton = async () => {
+  const completeButton = await screen.findByRole("button", {
+    name: "記録を完了する",
+  });
+  fireEvent.press(completeButton);
+};
+
 beforeEach(() => {
+  mockCapture.mockClear();
   (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(null);
   (SecureStore.setItemAsync as jest.Mock).mockResolvedValue(undefined);
   useGameRecordStore.getState().reset();
@@ -65,7 +79,33 @@ describe("SummaryScreen", () => {
     });
   });
 
-  it("「試合一覧へ」でレビューの条件を満たすと、広告を出さずに OS のレビューを要求して試合一覧へ遷移する", async () => {
+  it("「記録を完了する」を押すと、試合記録の完了を計測して試合一覧へ遷移する", async () => {
+    useGameRecordStore.setState({
+      gameResultId: 123,
+      isEditMode: false,
+      matchType: "公式戦",
+      appearanceType: "starter",
+      pitchingResultId: null,
+    });
+
+    renderWithProviders(<SummaryScreen />);
+
+    await pressCompleteButton();
+
+    await waitFor(() => {
+      expect(getRouterSpies().replace).toHaveBeenCalledWith({
+        pathname: "/(tabs)/(game-results)",
+        params: { tab: "list" },
+      });
+    });
+    expect(mockCapture).toHaveBeenCalledWith("game record completed", {
+      match_type: "regular",
+      appearance_type: "starter",
+      has_pitching: false,
+    });
+  });
+
+  it("「記録を完了する」でレビューの条件を満たすと、広告を出さずに OS のレビューを要求して試合一覧へ遷移する", async () => {
     const thirtyDaysAgo = new Date(
       Date.now() - 30 * 24 * 60 * 60 * 1000,
     ).toISOString();
@@ -88,10 +128,7 @@ describe("SummaryScreen", () => {
 
     renderWithProviders(<SummaryScreen />);
 
-    await waitFor(() =>
-      expect(screen.getByText("試合一覧へ")).toBeOnTheScreen(),
-    );
-    fireEvent.press(screen.getByText("試合一覧へ"));
+    await pressCompleteButton();
 
     await waitFor(() => {
       expect(getRouterSpies().replace).toHaveBeenCalledWith({
