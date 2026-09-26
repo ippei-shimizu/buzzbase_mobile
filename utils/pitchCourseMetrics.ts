@@ -70,11 +70,24 @@ const EMPTY_COUNTS: PitchCourseCounts = {
   looking_strikeouts: 0,
 };
 
+/** 欠けたカウントを 0 として埋める。塁打・三振を返さない旧バックエンドでも NaN を出さないため。 */
+export const normalizePitchCourseCounts = (
+  counts: Partial<PitchCourseCounts>,
+): PitchCourseCounts => ({
+  plate_appearances: counts.plate_appearances ?? 0,
+  at_bats: counts.at_bats ?? 0,
+  hits: counts.hits ?? 0,
+  total_bases: counts.total_bases ?? 0,
+  strikeouts: counts.strikeouts ?? 0,
+  swinging_strikeouts: counts.swinging_strikeouts ?? 0,
+  looking_strikeouts: counts.looking_strikeouts ?? 0,
+});
+
 /** 生カウントを単純合算する。率は合算後に再計算する前提で、ここでは扱わない。 */
 export const sumPitchCourseCounts = (
-  zones: readonly PitchCourseCounts[],
+  zones: readonly Partial<PitchCourseCounts>[],
 ): PitchCourseCounts =>
-  zones.reduce<PitchCourseCounts>(
+  zones.map(normalizePitchCourseCounts).reduce<PitchCourseCounts>(
     (total, zone) => ({
       plate_appearances: total.plate_appearances + zone.plate_appearances,
       at_bats: total.at_bats + zone.at_bats,
@@ -249,9 +262,10 @@ export interface PitchCourseMetricContext {
  */
 export const computePitchCourseMetric = (
   metric: PitchCourseMetric,
-  counts: PitchCourseCounts,
+  rawCounts: Partial<PitchCourseCounts>,
   { minAtBats, totalPlateAppearances, granularity }: PitchCourseMetricContext,
 ): PitchCourseMetricValue => {
+  const counts = normalizePitchCourseCounts(rawCounts);
   switch (metric) {
     case "plate_appearances": {
       if (counts.plate_appearances === 0 || totalPlateAppearances === 0) {
@@ -306,7 +320,7 @@ export interface StrikeoutBreakdown {
 }
 
 export const strikeoutBreakdown = (
-  zones: readonly PitchCourseCounts[],
+  zones: readonly Partial<PitchCourseCounts>[],
 ): StrikeoutBreakdown => {
   const total = sumPitchCourseCounts(zones);
   return {

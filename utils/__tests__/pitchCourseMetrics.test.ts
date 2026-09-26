@@ -4,6 +4,7 @@ import {
   foldPitchCourseZones,
   strikeoutBreakdown,
   sumPitchCourseCounts,
+  type PitchCourseMetric,
 } from "../pitchCourseMetrics";
 
 const buildZone = (
@@ -186,5 +187,48 @@ describe("strikeoutBreakdown", () => {
         buildZone(2, { strikeouts: 2, swinging_strikeouts: 2 }),
       ]),
     ).toEqual({ strikeouts: 5, swinging: 3, looking: 1, unspecified: 1 });
+  });
+});
+
+describe("塁打・三振を返さない旧バックエンドのレスポンス", () => {
+  const legacyZones = [
+    { plate_appearances: 6, at_bats: 5, hits: 2 },
+    { plate_appearances: 2, at_bats: 2, hits: 0 },
+  ];
+
+  it("欠けたカウントを 0 として合算する", () => {
+    expect(sumPitchCourseCounts(legacyZones)).toMatchObject({
+      plate_appearances: 8,
+      total_bases: 0,
+      strikeouts: 0,
+    });
+  });
+
+  it("どの指標でも NaN を表示しない", () => {
+    const metrics: PitchCourseMetric[] = [
+      "plate_appearances",
+      "batting_average",
+      "slugging",
+      "strikeout_rate",
+    ];
+    metrics.forEach((metric) => {
+      const value = computePitchCourseMetric(metric, legacyZones[0], context);
+      expect(`${value.valueText} ${value.subText} ${value.color}`).not.toMatch(
+        /NaN|undefined/,
+      );
+    });
+    expect(
+      computePitchCourseMetric("strikeout_rate", legacyZones[0], context)
+        .valueText,
+    ).toBe("0%");
+  });
+
+  it("三振の内訳は 0 件になる", () => {
+    expect(strikeoutBreakdown(legacyZones)).toEqual({
+      strikeouts: 0,
+      swinging: 0,
+      looking: 0,
+      unspecified: 0,
+    });
   });
 });
