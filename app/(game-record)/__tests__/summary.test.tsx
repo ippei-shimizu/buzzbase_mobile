@@ -87,6 +87,11 @@ beforeEach(() => {
   );
 });
 
+// テスト本文の最後で戻すと、途中の expect で落ちたときに Share.share のスパイが後続テストへ残る。
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
 describe("SummaryScreen", () => {
   it("「野球ノートを記録する」を押すと、試合を紐付けて野球ノート作成画面へ遷移する", async () => {
     useGameRecordStore.setState({ gameResultId: 123, isEditMode: false });
@@ -282,7 +287,6 @@ describe("SummaryScreen", () => {
     fireEvent.press(screen.getByText("成績をシェア"));
 
     expect(shareSpy).not.toHaveBeenCalled();
-    shareSpy.mockRestore();
   });
 
   it("「野球ノートを記録する」を押した後、「記録を完了する」は名前を保ったまま無効として読み上げられる", async () => {
@@ -317,6 +321,5 @@ describe("SummaryScreen", () => {
     expect(message).toContain(
       "https://apps.apple.com/app/apple-store/id6761011816?pt=128690561&ct=share_game_summary&mt=8",
     );
-    shareSpy.mockRestore();
   });
 });

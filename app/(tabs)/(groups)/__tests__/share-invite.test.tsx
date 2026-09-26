@@ -33,6 +33,11 @@ beforeEach(() => {
   );
 });
 
+// テスト本文の最後で戻すと、途中の expect で落ちたときに Share.share のスパイが後続テストへ残る。
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
 describe("ShareInviteScreen", () => {
   it("「LINEなどで共有」で送る文言に、招待コードと招待経由を計測できる App Store のキャンペーンリンクが含まれる", async () => {
     const shareSpy = jest
@@ -49,6 +54,5 @@ describe("ShareInviteScreen", () => {
     expect(message).toContain(
       "https://apps.apple.com/app/apple-store/id6761011816?pt=128690561&ct=share_group_invite&mt=8",
     );
-    shareSpy.mockRestore();
   });
 });
