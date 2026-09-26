@@ -1,7 +1,8 @@
 import type { PitchTypeRow } from "../../types/stats";
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { PitcherStatsDetailGrid } from "@components/stats/PitcherStatsDetailGrid";
+import { useExpandedIds } from "@hooks/useExpandedIds";
 import { formatBattingAverage } from "@utils/formatBattingAverage";
 
 interface PitchTypeCardProps {
@@ -23,27 +24,31 @@ const InsightRow = ({
   highlightColor,
   isExpanded,
   onPress,
-}: InsightRowProps) => (
-  <TouchableOpacity
-    style={styles.row}
-    activeOpacity={0.7}
-    onPress={onPress}
-    accessibilityRole="button"
-    accessibilityState={{ expanded: isExpanded }}
-  >
-    <Text style={styles.pitchLabel}>
-      {isExpanded ? "▼" : "▶"} {row.label}
-    </Text>
-    <View style={styles.rowRight}>
-      <Text style={[styles.average, { color: highlightColor }]}>
-        {formatBattingAverage(row.batting_average, row.at_bats)}
+}: InsightRowProps) => {
+  const average = formatBattingAverage(row.batting_average, row.at_bats);
+  return (
+    <TouchableOpacity
+      style={styles.row}
+      activeOpacity={0.7}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${row.label}、打率${average}、${row.at_bats}打数${row.hits}安打`}
+      accessibilityState={{ expanded: isExpanded }}
+    >
+      <Text style={styles.pitchLabel}>
+        {isExpanded ? "▼" : "▶"} {row.label}
       </Text>
-      <Text style={styles.subText}>
-        ({row.at_bats}-{row.hits})
-      </Text>
-    </View>
-  </TouchableOpacity>
-);
+      <View style={styles.rowRight}>
+        <Text style={[styles.average, { color: highlightColor }]}>
+          {average}
+        </Text>
+        <Text style={styles.subText}>
+          ({row.at_bats}-{row.hits})
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 /**
  * 球種別打率カード。
@@ -51,10 +56,10 @@ const InsightRow = ({
  * TOP セクションでハイライトし、0 打数の球種は「その他 N 球種」に集約する
  * インサイト型 UI。打数 1 以上の球種を打率降順で並べ替えて、上位を得意、
  * 下位を苦手にする（同じ行を重複させない）。
- * 各行タップで PitcherFaceoffList と同じ詳細グリッドを展開する。
+ * 各行タップで PitcherFaceoffList と同じ詳細グリッドを展開する（複数行を同時に展開できる）。
  */
 export const PitchTypeCard = ({ rows, totalTargetPa }: PitchTypeCardProps) => {
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const { expandedIds, toggleExpanded } = useExpandedIds();
 
   if (totalTargetPa === 0) {
     return (
@@ -87,14 +92,14 @@ export const PitchTypeCard = ({ rows, totalTargetPa }: PitchTypeCardProps) => {
   const zeroCount = rows.length - activeRows.length;
 
   const renderRow = (row: PitchTypeRow, highlightColor: string) => {
-    const isExpanded = expandedId === row.id;
+    const isExpanded = expandedIds.has(row.id);
     return (
       <View key={row.id}>
         <InsightRow
           row={row}
           highlightColor={highlightColor}
           isExpanded={isExpanded}
-          onPress={() => setExpandedId(isExpanded ? null : row.id)}
+          onPress={() => toggleExpanded(row.id)}
         />
         {isExpanded && (
           <View style={styles.detailWrapper}>
