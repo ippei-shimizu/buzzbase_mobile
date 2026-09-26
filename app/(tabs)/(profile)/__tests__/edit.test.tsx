@@ -195,6 +195,7 @@ describe("プロフィール編集画面の所属チーム", () => {
     await saveAndWaitForBack(screen);
     expect(recorder.teamId).toBe("55");
     expect(recorder.createdTeamNames).toEqual([]);
+    expect(recorder.updatedTeamIds).toEqual([]);
   });
 
   it("候補から選ばずに確定した名前の既存チームがカテゴリ・地域違いなら、そのチームを更新せず新規作成する", async () => {

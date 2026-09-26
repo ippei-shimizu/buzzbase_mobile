@@ -255,12 +255,14 @@ export default function ProfileEditScreen() {
           category_id: selectedCategoryId as number,
           prefecture_id: selectedPrefectureId as number,
         };
-        let teamId = selectedTeamId ?? (await findExistingTeamId(teamPayload));
-        if (!teamId) {
-          const newTeam = await createTeam(teamPayload);
-          teamId = newTeam.id;
-        } else {
+        let teamId = selectedTeamId;
+        if (teamId) {
+          // 自分で選んだ / 復元した所属チームのときだけ、入力されたカテゴリ・地域を反映する。
           await updateTeam(teamId, teamPayload);
+        } else {
+          teamId =
+            (await findExistingTeamId(teamPayload)) ??
+            (await createTeam(teamPayload)).id;
         }
         formData.append("user[team_id]", String(teamId));
       } else {
