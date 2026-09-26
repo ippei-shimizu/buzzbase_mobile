@@ -13,6 +13,7 @@ import { BackToTopButton } from "@components/ui/BackToTopButton";
 import { useBackToTop } from "@hooks/useBackToTop";
 import { useInviteCardDismissal } from "@hooks/useInviteCardDismissal";
 import { useProfile } from "@hooks/useProfile";
+import { trackProfileSetupReentryTapped } from "@utils/analytics";
 import { GroupRankings } from "./GroupRankings";
 import { RecentGameResults } from "./RecentGameResults";
 import { StatsOverview } from "./StatsOverview";
@@ -85,7 +86,10 @@ export const DashboardContent = ({
   const profileSetupAction = needsProfileSetup
     ? {
         label: "所属チームとポジションを設定する",
-        onPress: () => router.push("/(tabs)/(profile)/edit"),
+        onPress: () => {
+          trackProfileSetupReentryTapped();
+          router.push("/(tabs)/(profile)/edit");
+        },
       }
     : undefined;
 

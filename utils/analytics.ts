@@ -259,3 +259,10 @@ export const trackProfileSetupCompleted = (props: {
   has_team: boolean;
   position_count: number;
 }) => capture("profile setup completed", props);
+
+/**
+ * スキップした人向けのプロフィール設定導線（ダッシュボードのウェルカムカード）のタップ。
+ * `profile updated` はプロフィール編集画面から送られるため、この導線経由かを区別するのに必要。
+ */
+export const trackProfileSetupReentryTapped = () =>
+  capture("profile setup reentry tapped");
