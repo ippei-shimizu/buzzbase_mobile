@@ -11,6 +11,7 @@ import {
 import { Icon } from "@components/icon/Icon";
 import { useAchievementSummarySeen } from "@hooks/useAchievementSummarySeen";
 import { useGoalBadges, useGoalHistory } from "@hooks/useGoals";
+import { useReviewPrompt } from "@hooks/useReviewPrompt";
 import {
   formatMonthKeyJa,
   isDateInMonth,
@@ -26,6 +27,7 @@ export function AchievementSummaryModal() {
   const { goals: history, isLoading: isHistoryLoading } = useGoalHistory();
   const { badges, isLoading: isBadgesLoading } = useGoalBadges();
   const { getLastShownPeriod, markPeriodShown } = useAchievementSummarySeen();
+  const { triggerPositiveEvent } = useReviewPrompt();
   const [period, setPeriod] = useState<string | null>(null);
 
   useEffect(() => {
@@ -63,6 +65,10 @@ export function AchievementSummaryModal() {
   const handleClose = () => {
     void markPeriodShown(period);
     setPeriod(null);
+    // モーダルの上に OS のダイアログを重ねないよう、閉じたあとに要求する。
+    if (achievedCount > 0) {
+      void triggerPositiveEvent({ trigger: "goal_achieved" });
+    }
   };
 
   const handleViewBadges = () => {

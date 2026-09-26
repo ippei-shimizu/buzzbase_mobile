@@ -2,6 +2,7 @@
  * 目標一覧画面の「新しい目標を追加」ボタンの Pro 制限（無料は個人の期間目標2件まで）の振る舞いテスト。
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import * as StoreReview from "expo-store-review";
 import {
   apiUrl,
   baseUrl,
@@ -9,6 +10,7 @@ import {
   HttpResponse,
 } from "../../../__tests__/test-utils/handlers";
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
+import { seedEligibleStoreReview } from "../../../__tests__/test-utils/storeReview";
 import { server } from "../../../jest-setup-msw";
 import { DEFAULT_PRO_STATUS, FREE_FEATURES } from "../../../types/pro";
 import GoalListScreen from "../list";
@@ -21,6 +23,11 @@ jest.mock("expo-router", () => {
   return buildExpoRouterMock();
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
+
+jest.mock("expo-store-review", () => ({
+  isAvailableAsync: jest.fn().mockResolvedValue(true),
+  requestReview: jest.fn().mockResolvedValue(undefined),
+}));
 
 const getRouterSpies = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -127,5 +134,30 @@ describe("GoalListScreen", () => {
     fireEvent.press(screen.getByText("新しい目標を追加"));
 
     expect(getRouterSpies().push).toHaveBeenCalledWith("/(goal)/new");
+  });
+
+  it("定性目標を「達成にする」と、ストアレビューを要求する", async () => {
+    respondFree();
+    seedEligibleStoreReview();
+    const qualitativeGoal = {
+      ...buildGoal(1, "monthly"),
+      kind: "qualitative",
+      metric_key: null,
+      target_value: null,
+    };
+    setupGoals([qualitativeGoal]);
+    server.use(
+      http.post(baseUrl("/api/v2/goals/1/achievement"), () =>
+        HttpResponse.json({ ...qualitativeGoal, is_achieved: true }),
+      ),
+    );
+
+    renderWithProviders(<GoalListScreen />);
+
+    fireEvent.press(await screen.findByRole("button", { name: "達成にする" }));
+
+    await waitFor(() =>
+      expect(StoreReview.requestReview).toHaveBeenCalledTimes(1),
+    );
   });
 });

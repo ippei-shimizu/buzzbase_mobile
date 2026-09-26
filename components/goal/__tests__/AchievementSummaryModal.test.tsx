@@ -1,13 +1,15 @@
 /**
  * 月末に確定した目標の達成サマリーモーダルの振る舞いテスト。
  */
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import * as StoreReview from "expo-store-review";
 import {
   baseUrl,
   http,
   HttpResponse,
 } from "../../../__tests__/test-utils/handlers";
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
+import { seedEligibleStoreReview } from "../../../__tests__/test-utils/storeReview";
 import { server } from "../../../jest-setup-msw";
 import { previousMonthKey } from "../../../utils/achievementSummary";
 import { AchievementSummaryModal } from "../AchievementSummaryModal";
@@ -20,6 +22,11 @@ jest.mock("expo-router", () => {
   return buildExpoRouterMock();
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
+
+jest.mock("expo-store-review", () => ({
+  isAvailableAsync: jest.fn().mockResolvedValue(true),
+  requestReview: jest.fn().mockResolvedValue(undefined),
+}));
 
 const getRouterSpies = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -147,5 +154,37 @@ describe("AchievementSummaryModal", () => {
     fireEvent.press(screen.getByText("バッジを見る"));
 
     expect(getRouterSpies().push).toHaveBeenCalledWith("/(goal)/badges");
+  });
+
+  describe("ストアレビューの要求", () => {
+    it("達成した目標がある月のサマリーを閉じると、ストアレビューを要求する", async () => {
+      seedEligibleStoreReview();
+      setupHistoryAndBadges([buildFinalizedGoal(1, true)]);
+
+      renderWithProviders(<AchievementSummaryModal />);
+
+      fireEvent.press(await screen.findByText("閉じる"));
+
+      await waitFor(() =>
+        expect(StoreReview.requestReview).toHaveBeenCalledTimes(1),
+      );
+    });
+
+    it("達成した目標が無い月のサマリーを閉じても、ストアレビューを要求しない", async () => {
+      seedEligibleStoreReview();
+      setupHistoryAndBadges([buildFinalizedGoal(1, false)]);
+
+      renderWithProviders(<AchievementSummaryModal />);
+
+      fireEvent.press(await screen.findByText("閉じる"));
+
+      await waitFor(() => {
+        expect(screen.queryByText(/期限を迎えた目標/)).toBeNull();
+      });
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      });
+      expect(StoreReview.requestReview).not.toHaveBeenCalled();
+    });
   });
 });
