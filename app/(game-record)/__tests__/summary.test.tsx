@@ -265,4 +265,21 @@ describe("SummaryScreen", () => {
     expect(shareSpy).not.toHaveBeenCalled();
     shareSpy.mockRestore();
   });
+
+  it("「野球ノートを記録する」を押した後、「記録を完了する」は名前を保ったまま無効として読み上げられる", async () => {
+    seedStorageWhereInterstitialIsShown();
+    (InterstitialAd.createForAdRequest as jest.Mock).mockClear();
+    useGameRecordStore.setState({ gameResultId: 123, isEditMode: false });
+
+    renderWithProviders(<SummaryScreen />);
+
+    fireEvent.press(await screen.findByText("野球ノートを記録する"));
+    await waitFor(() =>
+      expect(InterstitialAd.createForAdRequest).toHaveBeenCalled(),
+    );
+
+    expect(
+      screen.getByRole("button", { name: "記録を完了する" }),
+    ).toBeDisabled();
+  });
 });

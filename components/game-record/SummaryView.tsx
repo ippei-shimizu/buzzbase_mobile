@@ -510,7 +510,7 @@ export function SummaryView(props: Props) {
           title="記録を完了する"
           accessibilityRole="button"
           onPress={props.onComplete}
-          loading={props.isCompleting}
+          disabled={props.isCompleting}
         />
       </View>
     </View>
