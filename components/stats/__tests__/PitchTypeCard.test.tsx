@@ -73,6 +73,7 @@ describe("PitchTypeCard", () => {
     const { rerender } = renderCard();
 
     pressRow("ストレート");
+    pressRow("カーブ");
     rerender(buildCard([buildRow(1, "ストレート"), buildRow(3, "スライダー")]));
 
     expect(rowOf("ストレート")).toBeExpanded();
