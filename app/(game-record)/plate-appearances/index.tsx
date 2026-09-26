@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -12,6 +13,7 @@ import { PlateAppearanceCard } from "@components/game-record/plate-appearance/Pl
 import { StepIndicator } from "@components/game-record/StepIndicator";
 import { Button } from "@components/ui/Button";
 import { usePlateAppearancesByGame } from "@hooks/usePlateAppearances";
+import { trackGameRecordStepViewed } from "@utils/analytics";
 import { useGameRecordStore } from "../../../stores/gameRecordStore";
 
 /**
@@ -28,6 +30,12 @@ export default function PlateAppearancesListScreen() {
   const pitchingResultId = useGameRecordStore((s) => s.pitchingResultId);
   const { plateAppearances, isLoading } =
     usePlateAppearancesByGame(gameResultId);
+
+  // エラー表示しか出せないケースを到達として数えると「進めなかった」と「進まなかった」が混ざる。
+  useEffect(() => {
+    if (gameResultId === null) return;
+    trackGameRecordStepViewed("plate_appearances");
+  }, [gameResultId]);
 
   if (gameResultId === null) {
     return (

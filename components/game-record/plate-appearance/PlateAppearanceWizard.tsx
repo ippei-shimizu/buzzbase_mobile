@@ -30,6 +30,8 @@ import {
 } from "@stores/battingRecordStore";
 import { useSnackbarStore } from "@stores/snackbarStore";
 import {
+  type GameRecordStep,
+  trackGameRecordStepViewed,
   trackPlateAppearanceCanceled,
   trackPlateAppearanceCompleted,
 } from "@utils/analytics";
@@ -56,6 +58,12 @@ interface Props {
 }
 
 type WizardStep = "tap_and_select" | "counter" | "detail";
+
+const TRACKED_STEP_BY_WIZARD_STEP: Record<WizardStep, GameRecordStep> = {
+  tap_and_select: "plate_appearance_result",
+  counter: "plate_appearance_counter",
+  detail: "plate_appearance_detail",
+};
 
 /**
  * v2 打席記録のステップ式ウィザード本体（新規 / 編集 兼用）。
@@ -147,6 +155,12 @@ export function PlateAppearanceWizard({
     // 依存配列に setter / props を入れると意味が変わるため敢えて空にする。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 編集モードはタブで自由に行き来するため、新規入力の離脱地点を測るステップ計測に混ぜない。
+  useEffect(() => {
+    if (isEditMode) return;
+    trackGameRecordStepViewed(TRACKED_STEP_BY_WIZARD_STEP[step]);
+  }, [step, isEditMode]);
 
   // Stack ヘッダーの戻るボタン挙動を制御。
   // - 新規モードの Step2/Step3: 1 つ前のステップに戻す
