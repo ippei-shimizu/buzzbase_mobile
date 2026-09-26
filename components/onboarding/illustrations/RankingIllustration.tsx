@@ -17,7 +17,7 @@ import {
 const PODIUM_BOTTOM = 184;
 const PODIUM_WIDTH = 62;
 
-// 表彰台の並び（左から 2位 / 1位 / 3位）で持つ。
+// 表彰台の見た目と対応させるため、順位順ではなく左からの配置順で持つ。
 const PODIUMS = [
   { rank: 2, x: 46, top: 110, average: ".365", avatarRadius: 17 },
   { rank: 1, x: 109, top: 90, average: ".412", avatarRadius: 21 },
