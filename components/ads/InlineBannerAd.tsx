@@ -14,6 +14,8 @@ interface InlineBannerAdProps {
   placement: BannerPlacement;
   /** 直前のコンテンツとの間隔。直前に余白を持つ画面は小さい値を渡す。 */
   topSpacing?: number;
+  /** 直後のコンテンツとの間隔。直後の要素が上余白を持たない画面は大きい値を渡す。 */
+  bottomSpacing?: number;
 }
 
 /**
@@ -25,6 +27,7 @@ interface InlineBannerAdProps {
 export function InlineBannerAd({
   placement,
   topSpacing = 32,
+  bottomSpacing = 8,
 }: InlineBannerAdProps) {
   const { hasEntitlement, isLoading } = useEntitlement();
   // BannerAd は失敗しても再ロードしないため、SDK初期化前にマウントされると
@@ -45,7 +48,12 @@ export function InlineBannerAd({
   if (!unitId) return null;
 
   return (
-    <View style={[styles.container, { marginTop: topSpacing }]}>
+    <View
+      style={[
+        styles.container,
+        { marginTop: topSpacing, marginBottom: bottomSpacing },
+      ]}
+    >
       <BannerAd
         unitId={unitId}
         size={BannerAdSize.MEDIUM_RECTANGLE}
@@ -60,5 +68,5 @@ export function InlineBannerAd({
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: "center", marginBottom: 8 },
+  container: { alignItems: "center" },
 });
