@@ -170,6 +170,21 @@ describe("AchievementSummaryModal", () => {
       );
     });
 
+    it("「バッジを見る」から閉じたときは、遷移先に重ねないようストアレビューを要求しない", async () => {
+      seedEligibleStoreReview();
+      setupHistoryAndBadges([buildFinalizedGoal(1, true)]);
+
+      renderWithProviders(<AchievementSummaryModal />);
+
+      fireEvent.press(await screen.findByText("バッジを見る"));
+
+      expect(getRouterSpies().push).toHaveBeenCalledWith("/(goal)/badges");
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      });
+      expect(StoreReview.requestReview).not.toHaveBeenCalled();
+    });
+
     it("達成した目標が無い月のサマリーを閉じても、ストアレビューを要求しない", async () => {
       seedEligibleStoreReview();
       setupHistoryAndBadges([buildFinalizedGoal(1, false)]);

@@ -62,17 +62,22 @@ export function AchievementSummaryModal() {
     isDateInMonth(badge.awarded_at, period),
   );
 
-  const handleClose = () => {
+  const close = () => {
     void markPeriodShown(period);
     setPeriod(null);
+  };
+
+  const handleClose = () => {
+    close();
     // モーダルの上に OS のダイアログを重ねないよう、閉じたあとに要求する。
     if (achievedCount > 0) {
       void triggerPositiveEvent({ trigger: "goal_achieved" });
     }
   };
 
+  // 遷移直後のバッジ一覧に OS のダイアログを重ねないため、こちらからは要求しない。
   const handleViewBadges = () => {
-    handleClose();
+    close();
     router.push("/(goal)/badges");
   };
 
