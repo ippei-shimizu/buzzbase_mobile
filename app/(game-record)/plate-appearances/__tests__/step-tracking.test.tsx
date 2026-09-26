@@ -54,7 +54,7 @@ beforeEach(() => {
 describe("打席記録フローのステップ計測", () => {
   it("打席リストを表示すると plate_appearances として計測する", async () => {
     const view = renderWithProviders(<PlateAppearancesListScreen />);
-    await view.findByText("打席一覧");
+    await view.findByLabelText("第1打席 中安");
 
     expect(viewedGameRecordSteps()).toEqual(["plate_appearances"]);
   });
