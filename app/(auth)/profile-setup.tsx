@@ -19,6 +19,7 @@ import {
   trackProfileSetupCompleted,
   trackProfileSetupViewed,
 } from "@utils/analytics";
+import { onboardingPaywallTrigger } from "@utils/onboardingPaywallTrigger";
 
 // 部分一致検索のためサジェスト件数のままだと完全一致が候補から溢れ、既存チームを重複作成しうる。
 // 送信時の引き当てはサーバー上限まで引き上げて取得する（試合記録の送信処理と同じ方針）。
@@ -85,6 +86,21 @@ export default function ProfileSetupScreen() {
     return () => subscription.remove();
   }, []);
 
+  // ポジション名はマスタと復元元プロフィールの両方から引く。マスタが未取得のときでも
+  // 復元したポジションの名前が取れるようにするため。
+  const selectedPositionNames = (): string[] => {
+    const nameById = new Map<number, string>();
+    (positions ?? []).forEach((position) =>
+      nameById.set(position.id, position.name),
+    );
+    (profile?.positions ?? []).forEach((position) =>
+      nameById.set(position.id, position.name),
+    );
+    return selectedPositionIds
+      .map((positionId) => nameById.get(positionId))
+      .filter((name): name is string => name !== undefined);
+  };
+
   const leave = (skipped: boolean) => {
     if (isLeavingRef.current) return;
     isLeavingRef.current = true;
@@ -93,7 +109,12 @@ export default function ProfileSetupScreen() {
       has_team: trimmedTeamName.length > 0,
       position_count: selectedPositionIds.length,
     });
-    router.replace("/(tabs)");
+    // 訴求するスライドをポジションに合わせるため、選択したポジション名から
+    // 擬似トリガーを決めて渡す。加入済み・購入不可なら Paywall 側がそのまま抜ける。
+    router.replace({
+      pathname: "/(auth)/onboarding-paywall",
+      params: { trigger: onboardingPaywallTrigger(selectedPositionNames()) },
+    });
   };
 
   const handleTeamNameChange = (value: string) => {
