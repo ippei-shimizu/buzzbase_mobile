@@ -27,8 +27,6 @@ import {
 import { requestTrackingPermissionOnce } from "@services/trackingTransparencyService";
 import { useAuthStore } from "@stores/authStore";
 import { useSnackbarStore } from "@stores/snackbarStore";
-import { clearAllAuthTokens } from "@utils/authTokenStorage";
-import { isNetworkError } from "@utils/axiosError";
 import { posthog } from "@utils/posthog";
 import { queryClient } from "@utils/queryClient";
 
@@ -104,15 +102,9 @@ function RootLayoutInner() {
       let authResponse;
       try {
         authResponse = await completeEmailConfirmation(queryParams);
-      } catch (error) {
-        // ネットワーク到達不可はトークン失効とは限らないため、保存済みトークンを残して起動時の検証に委ねる。
-        if (isNetworkError(error)) {
-          setIsLoggedIn(true);
-          setIsLoading(false);
-          router.replace("/(tabs)");
-          return;
-        }
-        await clearAllAuthTokens();
+      } catch {
+        // 検証に失敗した場合はトークンを保存していないため、既存セッションを消す必要はない。
+        // 未検証のトークンでログイン状態にはしないので、ネットワーク不通も手動ログインへ倒す。
         fallbackToManualSignIn();
         return;
       }
