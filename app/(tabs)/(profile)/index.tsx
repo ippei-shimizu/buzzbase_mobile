@@ -20,6 +20,7 @@ import { InlineBannerAd } from "@components/ads/InlineBannerAd";
 import { GamePagination } from "@components/game-results/GamePagination";
 import { GameResultListItem } from "@components/game-results/GameResultListItem";
 import { Icon } from "@components/icon/Icon";
+import { FeedbackFooter } from "@components/profile/FeedbackFooter";
 import { ProfileHeader } from "@components/profile/ProfileHeader";
 import { ProfileStatsTab } from "@components/profile/ProfileStatsTab";
 import {
@@ -471,6 +472,7 @@ export default function ProfileScreen() {
               />
             )}
             <InlineBannerAd placement="profile" />
+            <FeedbackFooter />
           </View>
         </ScrollView>
 
@@ -654,6 +656,7 @@ export default function ProfileScreen() {
             )}
           </View>
           <InlineBannerAd placement="profile" />
+          <FeedbackFooter />
         </View>
       </ScrollView>
 
