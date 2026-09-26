@@ -1,3 +1,4 @@
+// 値は PostHog の `onboarding step viewed` の illustration として Web / アプリで共有するため、イラストを差し替えてもキーはリネームしない
 export type OnboardingIllustration = "autoCalc" | "ranking" | "growth";
 
 export interface OnboardingStep {
