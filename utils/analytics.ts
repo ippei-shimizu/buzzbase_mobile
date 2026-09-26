@@ -1,5 +1,6 @@
 import type { OnboardingIllustration } from "../constants/onboarding";
 import type { GoalKind, GoalPeriodType } from "../types/goal";
+import type { PlateAppearanceDetailFlags } from "../types/plateAppearance";
 import type { PlanType, Platform, ProFeature } from "../types/pro";
 import type { EventType } from "../types/schedule";
 import type { BattingTrendGranularity } from "../types/stats";
@@ -81,23 +82,6 @@ export const trackUserFollowed = (followedUserId: number) =>
   capture("user followed", { followed_user_id: followedUserId });
 
 export const trackProfileUpdated = () => capture("profile updated");
-
-/**
- * 打席の任意詳細を項目別に入力したかどうか。
- * `has_detail` は既存データと連続して読むための互換値で、打球方向以外の項目の OR。
- */
-export type PlateAppearanceDetailFlags = {
-  has_detail: boolean;
-  has_pitcher: boolean;
-  has_count: boolean;
-  has_situation: boolean;
-  has_first_pitch_swing: boolean;
-  has_contact_quality: boolean;
-  has_timing: boolean;
-  has_pitch_type: boolean;
-  has_pitch_course: boolean;
-  has_memo: boolean;
-};
 
 /**
  * 打席記録ウィザードの作成 / 更新完了。`is_edit` で新規・編集を区別する。

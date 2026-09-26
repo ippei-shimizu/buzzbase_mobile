@@ -2,6 +2,7 @@ import type {
   HitType,
   HomeRunType,
   OutType,
+  PlateAppearanceDetailFlags,
   PlateAppearanceV2,
   PlateAppearanceV2Input,
   PlateAppearanceV2Payload,
@@ -9,7 +10,6 @@ import type {
   SwingType,
 } from "../types/plateAppearance";
 import type { PitchCoursePoint } from "@constants/pitchCourse";
-import type { PlateAppearanceDetailFlags } from "@utils/analytics";
 import { create } from "zustand";
 import {
   DIRECTION_LABEL_POSITIONS,

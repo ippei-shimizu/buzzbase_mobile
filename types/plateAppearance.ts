@@ -48,6 +48,24 @@ export type RunnersState =
   | "bases_loaded";
 
 /**
+ * 打席の任意詳細を項目別に入力したかどうか。
+ * `has_detail` は既存データと連続して読むための互換値で、打球方向以外の項目の OR。
+ * 計測プロパティ（`Record<string, boolean>`）に代入するため interface ではなく type で定義する。
+ */
+export type PlateAppearanceDetailFlags = {
+  has_detail: boolean;
+  has_pitcher: boolean;
+  has_count: boolean;
+  has_situation: boolean;
+  has_first_pitch_swing: boolean;
+  has_contact_quality: boolean;
+  has_timing: boolean;
+  has_pitch_type: boolean;
+  has_pitch_course: boolean;
+  has_memo: boolean;
+};
+
+/**
  * v2 plate_appearance のレスポンス形。
  * decimal 型 (`hit_location_x` / `hit_location_y`) は文字列で返る。
  */
