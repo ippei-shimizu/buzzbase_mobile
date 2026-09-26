@@ -23,6 +23,11 @@ import {
   saveAuthTokensFromHeaders,
 } from "@utils/authTokenStorage";
 import axiosInstance from "@utils/axiosInstance";
+import {
+  clearPendingConfirmationUid,
+  getPendingConfirmationUid,
+  setPendingConfirmationUid,
+} from "@utils/pendingConfirmation";
 import { posthog } from "@utils/posthog";
 
 // RevenueCat の alias 付け失敗で認証フローが落ちないよう、fire-and-forget で呼ぶ。
@@ -90,6 +95,7 @@ export const signUp = async (data: SignUpData): Promise<void> => {
       process.env.EXPO_PUBLIC_CONFIRM_SUCCESS_URL ||
       "buzzbase://confirmation-success",
   });
+  await setPendingConfirmationUid(data.email);
   trackSignUpCompleted("email");
 };
 
@@ -99,11 +105,15 @@ const singleQueryValue = (
 ): string | undefined => (typeof value === "string" ? value : undefined);
 
 /**
- * メール確認のディープリンクで受け取った認証トークンを保存し、そのまま認証済み状態にする。
+ * メール確認のディープリンクで受け取った認証トークンで認証済み状態にする。
  * back が確認成功時のリダイレクト URL に載せるトークンを使うため、手動での再ログインが不要になる。
  *
+ * この端末でサインアップ / 再送したメールアドレスと uid が一致する場合だけ受け入れる。
+ * `buzzbase://` は誰でも発火できるため、検証しないと第三者のトークンを載せたリンクで
+ * 別アカウントにログインさせられる（ログイン CSRF）。
+ *
  * @param params ディープリンクのクエリパラメータ
- * @return トークンが揃っていて検証できた場合は認証レスポンス。揃っていない場合は null
+ * @return 受け入れて検証できた場合は認証レスポンス。受け入れ条件を満たさない場合は null
  */
 export const completeEmailConfirmation = async (
   params: Record<string, string | string[] | undefined> | null | undefined,
@@ -113,11 +123,16 @@ export const completeEmailConfirmation = async (
   const uid = singleQueryValue(params?.uid);
   if (!accessToken || !client || !uid) return null;
 
+  const pendingUid = await getPendingConfirmationUid();
+  if (!pendingUid || pendingUid.toLowerCase() !== uid.toLowerCase())
+    return null;
+
   await saveAuthTokensFromHeaders({
     "access-token": accessToken,
     client,
     uid,
   });
+  await clearPendingConfirmationUid();
   return await validateToken();
 };
 
@@ -129,6 +144,7 @@ export const resendConfirmation = async (email: string): Promise<void> => {
       process.env.EXPO_PUBLIC_CONFIRM_SUCCESS_URL ||
       "buzzbase://confirmation-success",
   });
+  await setPendingConfirmationUid(email);
 };
 
 /**
