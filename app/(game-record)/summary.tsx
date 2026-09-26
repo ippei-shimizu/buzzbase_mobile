@@ -1,7 +1,8 @@
 import type { BattingBox } from "../../types/gameRecord";
+import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Share, View } from "react-native";
 import { SummaryView } from "@components/game-record/SummaryView";
 import { BottomTabBar } from "@components/ui/BottomTabBar";
@@ -25,6 +26,9 @@ export default function SummaryScreen() {
   const store = useGameRecordStore();
   const { triggerPositiveEvent } = useReviewPrompt();
   const { hasEntitlement } = useEntitlement();
+  const [isCompleting, setIsCompleting] = useState(false);
+  // 同一バッチで処理される二重タップは再描画前の disabled をすり抜けるため、描画に依存しない ref で排他する。
+  const isCompletingRef = useRef(false);
 
   useEffect(() => {
     trackGameRecordStepViewed("summary");
@@ -122,7 +126,26 @@ export default function SummaryScreen() {
     }
   };
 
+  // 完了操作のボタンは実行中に無効化するため、広告の失敗で遷移が止まるとサマリーから出られなくなる。
+  const showInterstitialWithoutBlocking = async (isEditMode: boolean) => {
+    try {
+      await showMatchSaveInterstitial(hasEntitlement("no_ads"), isEditMode);
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { source: "game-record-summary", action: "interstitial" },
+      });
+    }
+  };
+
+  const beginCompletion = () => {
+    if (isCompletingRef.current) return false;
+    isCompletingRef.current = true;
+    setIsCompleting(true);
+    return true;
+  };
+
   const handleComplete = async () => {
+    if (!beginCompletion()) return;
     // 編集保存も summary を経由するため、新規作成のみを完了として計測する。
     // resetFlow() で store がクリアされる前に計測する。
     const isEditMode = store.isEditMode;
@@ -142,7 +165,7 @@ export default function SummaryScreen() {
       trigger: "game_record_completed",
     });
     if (!reviewRequested) {
-      await showMatchSaveInterstitial(hasEntitlement("no_ads"), isEditMode);
+      await showInterstitialWithoutBlocking(isEditMode);
     }
     router.replace({
       pathname: "/(tabs)/(game-results)",
@@ -151,6 +174,7 @@ export default function SummaryScreen() {
   };
 
   const handleRecordNote = async () => {
+    if (!beginCompletion()) return;
     // resetFlow() で store がクリアされる前に gameResultId を退避する。
     const gameResultId = store.gameResultId;
     const isEditMode = store.isEditMode;
@@ -163,7 +187,7 @@ export default function SummaryScreen() {
     }
     resetFlow();
     invalidateGameResultRelated(queryClient);
-    await showMatchSaveInterstitial(hasEntitlement("no_ads"), isEditMode);
+    await showInterstitialWithoutBlocking(isEditMode);
     router.replace({
       pathname: "/(note)/new",
       params: gameResultId ? { gameResultId: String(gameResultId) } : {},
@@ -207,6 +231,7 @@ export default function SummaryScreen() {
         pitchingBaseOnBalls={store.pitchingBaseOnBalls}
         pitchingHitByPitch={store.pitchingHitByPitch}
         onComplete={handleComplete}
+        isCompleting={isCompleting}
         onShare={handleShare}
         onRecordNote={handleRecordNote}
       />

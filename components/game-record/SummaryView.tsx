@@ -1,6 +1,7 @@
 import type { AppearanceType, BattingBox } from "../../types/gameRecord";
 import type { PlateAppearanceV2 } from "../../types/plateAppearance";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Button } from "@components/ui/Button";
 import { getAppearanceTypeBadgeLabel } from "@constants/appearanceType";
 import { formatMatchTypeLabel } from "@utils/matchType";
 import { PlateAppearanceSummaryCard } from "./PlateAppearanceSummaryCard";
@@ -46,8 +47,10 @@ interface Props {
   pitchingBaseOnBalls: number;
   pitchingHitByPitch: number;
   onComplete: () => void;
+  /** 完了処理の実行中。store がリセット済みのため、完了・野球ノート・シェアの各ボタンを無効化する。 */
+  isCompleting?: boolean;
   onShare?: () => void;
-  /** 指定時、試合一覧へのリンクの近くに野球ノート作成への動線を表示する。 */
+  /** 指定時、シェアボタンの近くに野球ノート作成への動線を表示する。 */
   onRecordNote?: () => void;
 }
 
@@ -142,363 +145,375 @@ export function SummaryView(props: Props) {
     : "";
 
   return (
-    <ScrollView style={{ flex: 1, padding: 20 }}>
-      {/* タイトル */}
-      <Text
-        style={{
-          fontSize: 20,
-          fontWeight: "bold",
-          color: "#F4F4F4",
-          textAlign: "center",
-          marginTop: 8,
-        }}
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        style={{ flex: 1, padding: 20 }}
+        contentContainerStyle={{ paddingBottom: 40 }}
       >
-        試合結果まとめ
-      </Text>
-      <Text
-        style={{
-          fontSize: 14,
-          color: "#A1A1AA",
-          textAlign: "center",
-          marginTop: 16,
-        }}
-      >
-        成績を友達にシェアしよう！
-      </Text>
-
-      {/* シェアボタン */}
-      <View style={{ alignItems: "center", marginTop: 12 }}>
-        <TouchableOpacity
-          onPress={props.onShare}
+        {/* タイトル */}
+        <Text
           style={{
-            borderWidth: 1,
-            borderColor: "#d08000",
-            borderRadius: 8,
-            paddingHorizontal: 24,
-            paddingVertical: 10,
-            backgroundColor: "#d08000",
+            fontSize: 20,
+            fontWeight: "bold",
+            color: "#F4F4F4",
+            textAlign: "center",
+            marginTop: 8,
           }}
         >
-          <Text style={{ color: "#F4F4F4", fontSize: 15, fontWeight: "bold" }}>
-            成績をシェア
-          </Text>
-        </TouchableOpacity>
-      </View>
+          試合結果まとめ
+        </Text>
+        <Text
+          style={{
+            fontSize: 14,
+            color: "#A1A1AA",
+            textAlign: "center",
+            marginTop: 16,
+          }}
+        >
+          成績を友達にシェアしよう！
+        </Text>
 
-      {/* 野球ノート作成へ */}
-      {props.onRecordNote ? (
-        <View style={{ alignItems: "center", marginTop: 20 }}>
-          <Text style={{ fontSize: 13, color: "#A1A1AA", marginBottom: 10 }}>
-            この試合の気づきを野球ノートに書き残そう
-          </Text>
+        {/* シェアボタン */}
+        <View style={{ alignItems: "center", marginTop: 12 }}>
           <TouchableOpacity
-            onPress={props.onRecordNote}
+            onPress={props.onShare}
+            disabled={props.isCompleting}
             style={{
               borderWidth: 1,
               borderColor: "#d08000",
               borderRadius: 8,
               paddingHorizontal: 24,
               paddingVertical: 10,
+              opacity: props.isCompleting ? 0.5 : 1,
             }}
           >
             <Text
               style={{ color: "#d08000", fontSize: 15, fontWeight: "bold" }}
             >
-              野球ノートを記録する
+              成績をシェア
             </Text>
           </TouchableOpacity>
         </View>
-      ) : null}
 
-      {/* メインカード */}
-      <View
-        style={{
-          backgroundColor: "#3a3a3a",
-          borderRadius: 12,
-          padding: 16,
-          marginTop: 20,
-        }}
-      >
-        {/* 試合情報 */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-            flexWrap: "wrap",
-          }}
-        >
-          <View
-            style={{
-              borderWidth: 1,
-              borderColor: "#52525B",
-              borderRadius: 16,
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-            }}
-          >
-            <Text style={{ fontSize: 12, color: "#d08000" }}>
-              {matchTypeLabel}
+        {/* 野球ノート作成へ */}
+        {props.onRecordNote ? (
+          <View style={{ alignItems: "center", marginTop: 20 }}>
+            <Text style={{ fontSize: 13, color: "#A1A1AA", marginBottom: 10 }}>
+              この試合の気づきを野球ノートに書き残そう
             </Text>
-          </View>
-          {(() => {
-            const badge = getAppearanceTypeBadgeLabel(props.appearanceType);
-            return badge ? (
-              <View
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#338EF7",
-                  borderRadius: 16,
-                  paddingHorizontal: 10,
-                  paddingVertical: 4,
-                }}
-              >
-                <Text style={{ fontSize: 12, color: "#338EF7" }}>{badge}</Text>
-              </View>
-            ) : null;
-          })()}
-          <Text style={{ fontSize: 14, color: "#F4F4F4" }}>
-            {formattedDate}
-          </Text>
-        </View>
-
-        {props.tournamentName ? (
-          <Text style={{ fontSize: 13, color: "#F4F4F4", marginTop: 8 }}>
-            {props.tournamentName}
-          </Text>
-        ) : null}
-
-        <Text style={{ fontSize: 12, color: "#A1A1AA", marginTop: 10 }}>
-          マイチーム
-        </Text>
-        <Text style={{ fontSize: 15, color: "#F4F4F4", marginTop: 2 }}>
-          {props.myTeamName}
-        </Text>
-
-        {/* スコア */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginTop: 8,
-            gap: 12,
-          }}
-        >
-          <View
-            style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}
-          >
-            <Text style={{ fontSize: 16, color: scoreIcon.color }}>
-              {scoreIcon.text}
-            </Text>
-            <Text
-              style={{ fontSize: 20, fontWeight: "bold", color: "#F4F4F4" }}
-            >
-              {myScoreDisplay} - {opponentScoreDisplay}
-            </Text>
-          </View>
-          <View
-            style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}
-          >
-            <Text style={{ fontSize: 14, color: "#A1A1AA" }}>vs.</Text>
-            <Text
-              style={{ fontSize: 15, fontWeight: "bold", color: "#F4F4F4" }}
-            >
-              {props.opponentTeamName}
-            </Text>
-          </View>
-        </View>
-
-        {/* 打順・守備位置（両方未指定のときは行ごと非表示） */}
-        {props.battingOrder || props.defensivePosition ? (
-          <View style={{ flexDirection: "row", marginTop: 6, gap: 12 }}>
-            {props.battingOrder ? (
-              <Text style={{ fontSize: 13, color: "#A1A1AA" }}>
-                {BATTING_ORDER_LABELS[props.battingOrder] ?? props.battingOrder}
-              </Text>
-            ) : null}
-            {props.defensivePosition ? (
-              <Text style={{ fontSize: 13, color: "#A1A1AA" }}>
-                {props.defensivePosition}
-              </Text>
-            ) : null}
-          </View>
-        ) : null}
-
-        {showStatsSections ? (
-          <>
-            <Divider />
-
-            {/* 打撃セクション */}
-            <Text style={{ fontSize: 12, color: "#A1A1AA" }}>打撃</Text>
-
-            {plateResults.length > 0 && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  flexWrap: "wrap",
-                  gap: 8,
-                  marginTop: 8,
-                }}
-              >
-                {plateResults.map((box, index) => {
-                  const text = box.text.replace("-", "");
-                  const color = isHitResult(text)
-                    ? "#EF4444"
-                    : isWalkResult(text)
-                      ? "#60A5FA"
-                      : "#F4F4F4";
-                  return (
-                    <Text
-                      key={index}
-                      style={{ fontWeight: "bold", color, fontSize: 14 }}
-                    >
-                      {text}
-                    </Text>
-                  );
-                })}
-              </View>
-            )}
-
-            <View
+            <TouchableOpacity
+              onPress={props.onRecordNote}
+              disabled={props.isCompleting}
               style={{
-                flexDirection: "row",
-                flexWrap: "wrap",
-                marginTop: 8,
+                borderWidth: 1,
+                borderColor: "#d08000",
+                borderRadius: 8,
+                paddingHorizontal: 24,
+                paddingVertical: 10,
               }}
             >
-              <StatItem label="打点" value={props.runsBattedIn} />
-              <StatItem label="得点" value={props.run} />
-              <StatItem label="失策" value={props.battingError} />
-              <StatItem label="盗塁" value={props.stealingBase} />
-              <StatItem label="盗塁死" value={props.caughtStealing} />
+              <Text
+                style={{ color: "#d08000", fontSize: 15, fontWeight: "bold" }}
+              >
+                野球ノートを記録する
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {/* メインカード */}
+        <View
+          style={{
+            backgroundColor: "#3a3a3a",
+            borderRadius: 12,
+            padding: 16,
+            marginTop: 20,
+          }}
+        >
+          {/* 試合情報 */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              flexWrap: "wrap",
+            }}
+          >
+            <View
+              style={{
+                borderWidth: 1,
+                borderColor: "#52525B",
+                borderRadius: 16,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+              }}
+            >
+              <Text style={{ fontSize: 12, color: "#d08000" }}>
+                {matchTypeLabel}
+              </Text>
             </View>
-
-            {props.plateAppearances && props.plateAppearances.length > 0 && (
-              <View style={{ marginTop: 16 }}>
-                <Text
-                  style={{ fontSize: 12, color: "#A1A1AA", marginBottom: 8 }}
-                >
-                  打席詳細
-                </Text>
-                {props.plateAppearances
-                  .slice()
-                  .sort((a, b) => a.batter_box_number - b.batter_box_number)
-                  .map((pa) => (
-                    <PlateAppearanceSummaryCard
-                      key={pa.id}
-                      plateAppearance={pa}
-                    />
-                  ))}
-              </View>
-            )}
-
-            <Divider />
-
-            {/* 投手セクション */}
-            <Text style={{ fontSize: 12, color: "#A1A1AA", marginBottom: 8 }}>
-              投手
-            </Text>
-
-            {props.hasPitching ? (
-              <>
+            {(() => {
+              const badge = getAppearanceTypeBadgeLabel(props.appearanceType);
+              return badge ? (
                 <View
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 16,
+                    borderWidth: 1,
+                    borderColor: "#338EF7",
+                    borderRadius: 16,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
                   }}
                 >
-                  {props.win > 0 ? (
-                    <Text
-                      style={{
-                        color: "#EF4444",
-                        fontWeight: "bold",
-                        fontSize: 14,
-                      }}
-                    >
-                      勝利投手
-                    </Text>
-                  ) : props.loss > 0 ? (
-                    <Text
-                      style={{
-                        color: "#3B82F6",
-                        fontWeight: "bold",
-                        fontSize: 14,
-                      }}
-                    >
-                      敗戦投手
-                    </Text>
-                  ) : null}
-                  <Text style={{ fontSize: 15, color: "#F4F4F4" }}>
-                    {inningsDisplay}
-                  </Text>
-                  <Text style={{ fontSize: 15, color: "#F4F4F4" }}>
-                    {props.numberOfPitches}球
+                  <Text style={{ fontSize: 12, color: "#338EF7" }}>
+                    {badge}
                   </Text>
                 </View>
+              ) : null;
+            })()}
+            <Text style={{ fontSize: 14, color: "#F4F4F4" }}>
+              {formattedDate}
+            </Text>
+          </View>
 
+          {props.tournamentName ? (
+            <Text style={{ fontSize: 13, color: "#F4F4F4", marginTop: 8 }}>
+              {props.tournamentName}
+            </Text>
+          ) : null}
+
+          <Text style={{ fontSize: 12, color: "#A1A1AA", marginTop: 10 }}>
+            マイチーム
+          </Text>
+          <Text style={{ fontSize: 15, color: "#F4F4F4", marginTop: 2 }}>
+            {props.myTeamName}
+          </Text>
+
+          {/* スコア */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginTop: 8,
+              gap: 12,
+            }}
+          >
+            <View
+              style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}
+            >
+              <Text style={{ fontSize: 16, color: scoreIcon.color }}>
+                {scoreIcon.text}
+              </Text>
+              <Text
+                style={{ fontSize: 20, fontWeight: "bold", color: "#F4F4F4" }}
+              >
+                {myScoreDisplay} - {opponentScoreDisplay}
+              </Text>
+            </View>
+            <View
+              style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}
+            >
+              <Text style={{ fontSize: 14, color: "#A1A1AA" }}>vs.</Text>
+              <Text
+                style={{ fontSize: 15, fontWeight: "bold", color: "#F4F4F4" }}
+              >
+                {props.opponentTeamName}
+              </Text>
+            </View>
+          </View>
+
+          {/* 打順・守備位置（両方未指定のときは行ごと非表示） */}
+          {props.battingOrder || props.defensivePosition ? (
+            <View style={{ flexDirection: "row", marginTop: 6, gap: 12 }}>
+              {props.battingOrder ? (
+                <Text style={{ fontSize: 13, color: "#A1A1AA" }}>
+                  {BATTING_ORDER_LABELS[props.battingOrder] ??
+                    props.battingOrder}
+                </Text>
+              ) : null}
+              {props.defensivePosition ? (
+                <Text style={{ fontSize: 13, color: "#A1A1AA" }}>
+                  {props.defensivePosition}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+
+          {showStatsSections ? (
+            <>
+              <Divider />
+
+              {/* 打撃セクション */}
+              <Text style={{ fontSize: 12, color: "#A1A1AA" }}>打撃</Text>
+
+              {plateResults.length > 0 && (
                 <View
                   style={{
                     flexDirection: "row",
                     flexWrap: "wrap",
+                    gap: 8,
                     marginTop: 8,
                   }}
                 >
-                  <StatItem label="ホールド" value={props.hold} />
-                  <StatItem label="セーブ" value={props.saves} />
-                  <StatItem label="失点" value={props.runAllowed} />
-                  <StatItem label="自責点" value={props.earnedRun} />
-                  <StatItem label="被安打" value={props.hitsAllowed} />
-                  <StatItem label="被本塁打" value={props.homeRunsHit} />
-                  <StatItem label="奪三振" value={props.strikeouts} />
-                  <StatItem label="四球" value={props.pitchingBaseOnBalls} />
-                  <StatItem label="死球" value={props.pitchingHitByPitch} />
+                  {plateResults.map((box, index) => {
+                    const text = box.text.replace("-", "");
+                    const color = isHitResult(text)
+                      ? "#EF4444"
+                      : isWalkResult(text)
+                        ? "#60A5FA"
+                        : "#F4F4F4";
+                    return (
+                      <Text
+                        key={index}
+                        style={{ fontWeight: "bold", color, fontSize: 14 }}
+                      >
+                        {text}
+                      </Text>
+                    );
+                  })}
                 </View>
-              </>
-            ) : (
-              <Text style={{ fontSize: 13, color: "#71717A" }}>
-                投手成績はありません。
+              )}
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  marginTop: 8,
+                }}
+              >
+                <StatItem label="打点" value={props.runsBattedIn} />
+                <StatItem label="得点" value={props.run} />
+                <StatItem label="失策" value={props.battingError} />
+                <StatItem label="盗塁" value={props.stealingBase} />
+                <StatItem label="盗塁死" value={props.caughtStealing} />
+              </View>
+
+              {props.plateAppearances && props.plateAppearances.length > 0 && (
+                <View style={{ marginTop: 16 }}>
+                  <Text
+                    style={{ fontSize: 12, color: "#A1A1AA", marginBottom: 8 }}
+                  >
+                    打席詳細
+                  </Text>
+                  {props.plateAppearances
+                    .slice()
+                    .sort((a, b) => a.batter_box_number - b.batter_box_number)
+                    .map((pa) => (
+                      <PlateAppearanceSummaryCard
+                        key={pa.id}
+                        plateAppearance={pa}
+                      />
+                    ))}
+                </View>
+              )}
+
+              <Divider />
+
+              {/* 投手セクション */}
+              <Text style={{ fontSize: 12, color: "#A1A1AA", marginBottom: 8 }}>
+                投手
               </Text>
-            )}
-          </>
-        ) : null}
-      </View>
 
-      {/* MEMO */}
-      {props.memo ? (
-        <View style={{ marginTop: 16 }}>
-          <Text style={{ fontSize: 13, color: "#71717A", marginBottom: 8 }}>
-            MEMO
-          </Text>
-          <View
-            style={{
-              borderWidth: 1,
-              borderColor: "#52525B",
-              borderRadius: 8,
-              padding: 12,
-            }}
-          >
-            <Text style={{ fontSize: 14, color: "#D4D4D8" }}>{props.memo}</Text>
-          </View>
+              {props.hasPitching ? (
+                <>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 16,
+                    }}
+                  >
+                    {props.win > 0 ? (
+                      <Text
+                        style={{
+                          color: "#EF4444",
+                          fontWeight: "bold",
+                          fontSize: 14,
+                        }}
+                      >
+                        勝利投手
+                      </Text>
+                    ) : props.loss > 0 ? (
+                      <Text
+                        style={{
+                          color: "#3B82F6",
+                          fontWeight: "bold",
+                          fontSize: 14,
+                        }}
+                      >
+                        敗戦投手
+                      </Text>
+                    ) : null}
+                    <Text style={{ fontSize: 15, color: "#F4F4F4" }}>
+                      {inningsDisplay}
+                    </Text>
+                    <Text style={{ fontSize: 15, color: "#F4F4F4" }}>
+                      {props.numberOfPitches}球
+                    </Text>
+                  </View>
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      flexWrap: "wrap",
+                      marginTop: 8,
+                    }}
+                  >
+                    <StatItem label="ホールド" value={props.hold} />
+                    <StatItem label="セーブ" value={props.saves} />
+                    <StatItem label="失点" value={props.runAllowed} />
+                    <StatItem label="自責点" value={props.earnedRun} />
+                    <StatItem label="被安打" value={props.hitsAllowed} />
+                    <StatItem label="被本塁打" value={props.homeRunsHit} />
+                    <StatItem label="奪三振" value={props.strikeouts} />
+                    <StatItem label="四球" value={props.pitchingBaseOnBalls} />
+                    <StatItem label="死球" value={props.pitchingHitByPitch} />
+                  </View>
+                </>
+              ) : (
+                <Text style={{ fontSize: 13, color: "#71717A" }}>
+                  投手成績はありません。
+                </Text>
+              )}
+            </>
+          ) : null}
         </View>
-      ) : null}
 
-      {/* マイページへ */}
-      <TouchableOpacity
-        onPress={props.onComplete}
-        style={{ alignSelf: "flex-end", marginTop: 24, marginBottom: 40 }}
+        {/* MEMO */}
+        {props.memo ? (
+          <View style={{ marginTop: 16 }}>
+            <Text style={{ fontSize: 13, color: "#71717A", marginBottom: 8 }}>
+              MEMO
+            </Text>
+            <View
+              style={{
+                borderWidth: 1,
+                borderColor: "#52525B",
+                borderRadius: 8,
+                padding: 12,
+              }}
+            >
+              <Text style={{ fontSize: 14, color: "#D4D4D8" }}>
+                {props.memo}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+      </ScrollView>
+      <View
+        style={{
+          paddingHorizontal: 20,
+          paddingVertical: 12,
+          borderTopWidth: 1,
+          borderTopColor: "#52525B",
+        }}
       >
-        <Text
-          style={{
-            color: "#d08000",
-            fontSize: 14,
-            borderBottomWidth: 1,
-            borderBottomColor: "#d08000",
-          }}
-        >
-          試合一覧へ
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <Button
+          title="記録を完了する"
+          accessibilityRole="button"
+          onPress={props.onComplete}
+          disabled={props.isCompleting}
+        />
+      </View>
+    </View>
   );
 }
