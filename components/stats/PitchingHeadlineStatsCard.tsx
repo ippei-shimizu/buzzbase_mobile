@@ -19,7 +19,11 @@ const buildMetrics = (
     { label: "防御率", value: formatEra(data.era) },
     { label: "WHIP", value: formatEra(data.whip) },
     { label: "K/9", value: formatEra(data.k_per_nine) },
-    { label: "K/BB", value: formatEra(data.k_bb) },
+    {
+      label: "K/BB",
+      // back は四球 0 のとき 0.0 を返すため、無四球の投手が最低値に見えないよう未計算として出す
+      value: data.base_on_balls > 0 ? formatEra(data.k_bb) : "-",
+    },
   ],
   secondary: [
     { label: "登板", value: String(data.appearances) },

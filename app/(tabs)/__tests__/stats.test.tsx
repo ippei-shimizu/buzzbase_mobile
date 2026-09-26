@@ -170,6 +170,7 @@ describe("成績画面の投球サマリ", () => {
           innings_pitched: 21.333,
           number_of_pitches: 318,
           strikeouts: 25,
+          base_on_balls: 8,
           era: 2.95,
           whip: 1.172,
           k_per_nine: 10.547,
