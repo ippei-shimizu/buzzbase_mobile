@@ -7,6 +7,11 @@ import type {
 } from "../../types/stats";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import {
+  isStrikeZoneCourse,
+  pitchCourseCol,
+  pitchCourseRow,
+} from "@constants/pitchCourse";
 import { sumPitchCourseCounts } from "@utils/pitchCourseMetrics";
 
 /**
@@ -87,8 +92,6 @@ const DUMMY_PITCH_COURSE_SEEDS: readonly [number, number, number][] = [
   [24, 1, 0],
 ];
 
-const STRIKE_ZONE = new Set([7, 8, 9, 12, 13, 14, 17, 18, 19]);
-
 const buildDummyZones = (
   seeds: readonly [number, number, number][],
 ): PitchCourseZone[] =>
@@ -97,9 +100,9 @@ const buildDummyZones = (
     const seed = seeds.find(([c]) => c === course);
     const atBats = seed?.[1] ?? 0;
     const hits = seed?.[2] ?? 0;
-    const row = Math.floor((course - 1) / 5) + 1;
-    const col = ((course - 1) % 5) + 1;
-    const isStrikeZone = STRIKE_ZONE.has(course);
+    const row = pitchCourseRow(course);
+    const col = pitchCourseCol(course);
+    const isStrikeZone = isStrikeZoneCourse(course);
     const outs = atBats - hits;
     // 外角低めほど三振が増える、という傾向を打率のサンプルと揃えて作る。
     const strikeouts =
