@@ -103,6 +103,16 @@ describe("打席記録フローのステップ計測", () => {
     expect(viewedGameRecordSteps()).toEqual(["plate_appearances"]);
   });
 
+  it("試合情報が無くエラー表示になる場合は打席リストの到達として計測しない", async () => {
+    useGameRecordStore.setState({ gameResultId: null });
+    const view = renderWithProviders(<PlateAppearancesListScreen />);
+    await view.findByText(
+      "試合情報が見つかりません。試合記録を最初からやり直してください。",
+    );
+
+    expect(viewedGameRecordSteps()).toEqual([]);
+  });
+
   it("既存打席の編集ではウィザードのステップを計測しない", async () => {
     const view = renderWithProviders(<EditPlateAppearanceScreen />);
     await view.findByRole("button", { name: "この打席を更新" });

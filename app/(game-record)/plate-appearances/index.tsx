@@ -31,9 +31,11 @@ export default function PlateAppearancesListScreen() {
   const { plateAppearances, isLoading } =
     usePlateAppearancesByGame(gameResultId);
 
+  // エラー表示しか出せないケースを到達として数えると「進めなかった」と「進まなかった」が混ざる。
   useEffect(() => {
+    if (gameResultId === null) return;
     trackGameRecordStepViewed("plate_appearances");
-  }, []);
+  }, [gameResultId]);
 
   if (gameResultId === null) {
     return (
