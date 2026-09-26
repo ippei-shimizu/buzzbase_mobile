@@ -4,6 +4,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import * as SecureStore from "expo-secure-store";
 import * as StoreReview from "expo-store-review";
+import { InterstitialAd } from "react-native-google-mobile-ads";
 import {
   baseUrl,
   http,
@@ -64,14 +65,17 @@ describe("SummaryScreen", () => {
     });
   });
 
-  it("「試合一覧へ」でレビューの条件を満たすと、事前の質問を挟まず OS のレビューを要求して試合一覧へ遷移する", async () => {
+  it("「試合一覧へ」でレビューの条件を満たすと、広告を出さずに OS のレビューを要求して試合一覧へ遷移する", async () => {
+    const thirtyDaysAgo = new Date(
+      Date.now() - 30 * 24 * 60 * 60 * 1000,
+    ).toISOString();
     const storage = new Map<string, string>([
       ["store_review_positive_event_count", "1"],
-      [
-        "store_review_install_date",
-        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      ],
+      ["store_review_install_date", thirtyDaysAgo],
+      ["admob_install_date", thirtyDaysAgo],
+      ["admob_launch_count", "10"],
     ]);
+    (InterstitialAd.createForAdRequest as jest.Mock).mockClear();
     (SecureStore.getItemAsync as jest.Mock).mockImplementation(
       async (key: string) => storage.get(key) ?? null,
     );
@@ -96,6 +100,6 @@ describe("SummaryScreen", () => {
       });
     });
     expect(StoreReview.requestReview).toHaveBeenCalledTimes(1);
-    expect(screen.queryByText("BUZZ BASEは気に入っていますか？")).toBeNull();
+    expect(InterstitialAd.createForAdRequest).not.toHaveBeenCalled();
   });
 });
