@@ -359,4 +359,82 @@ describe("打席ステップ式ウィザードのフロー", () => {
       "plate_appearance_result",
     ]);
   });
+
+  it("打球方向と詳細を入力して完了すると、入力した項目のフラグを true にして計測する", async () => {
+    server.use(
+      http.post(baseUrl("/api/v2/plate_appearances"), () =>
+        HttpResponse.json(buildPlateAppearanceV2(), { status: 201 }),
+      ),
+    );
+
+    const view = renderWithProviders(<NewPlateAppearanceScreen />);
+    const ground = await view.findByLabelText("グラウンド");
+
+    fireEvent(ground, "press", {
+      nativeEvent: { locationX: 420 * 0.5, locationY: 340 * 0.3 },
+    });
+    fireEvent.press(view.getByRole("button", { name: "ヒット" }));
+    fireEvent.press(view.getByRole("button", { name: "単打" }));
+    await view.findByLabelText("詳細を入力する");
+    fireEvent.press(view.getByLabelText("詳細を入力する"));
+
+    fireEvent.press(await view.findByLabelText("一塁"));
+    fireEvent.press(view.getByLabelText("打球の質 真芯"));
+    const courseField = view.getByLabelText("コース図");
+    fireEvent(courseField, "layout", {
+      nativeEvent: { layout: { width: 200, height: 200 } },
+    });
+    fireEvent(courseField, "press", {
+      nativeEvent: { locationX: 100, locationY: 100 },
+    });
+    fireEvent.press(view.getByLabelText("この打席を完了"));
+
+    await waitFor(() =>
+      expect(mockCapture).toHaveBeenCalledWith("plate appearance completed", {
+        is_edit: false,
+        has_hit_direction: true,
+        has_detail: true,
+        has_pitcher: false,
+        has_count: false,
+        has_situation: true,
+        has_first_pitch_swing: false,
+        has_contact_quality: true,
+        has_timing: false,
+        has_pitch_type: false,
+        has_pitch_course: true,
+        has_memo: false,
+      }),
+    );
+  });
+
+  it("打球方向なしの結果を詳細なしで完了すると、すべてのフラグを false で計測する", async () => {
+    server.use(
+      http.post(baseUrl("/api/v2/plate_appearances"), () =>
+        HttpResponse.json(buildPlateAppearanceV2(), { status: 201 }),
+      ),
+    );
+
+    const view = renderWithProviders(<NewPlateAppearanceScreen />);
+    await view.findByLabelText("グラウンド");
+
+    fireEvent.press(view.getByRole("button", { name: "四球" }));
+    fireEvent.press(await view.findByLabelText("詳細入力をスキップして完了"));
+
+    await waitFor(() =>
+      expect(mockCapture).toHaveBeenCalledWith("plate appearance completed", {
+        is_edit: false,
+        has_hit_direction: false,
+        has_detail: false,
+        has_pitcher: false,
+        has_count: false,
+        has_situation: false,
+        has_first_pitch_swing: false,
+        has_contact_quality: false,
+        has_timing: false,
+        has_pitch_type: false,
+        has_pitch_course: false,
+        has_memo: false,
+      }),
+    );
+  });
 });
