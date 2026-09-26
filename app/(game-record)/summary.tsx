@@ -1,7 +1,7 @@
 import type { BattingBox } from "../../types/gameRecord";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Share, View } from "react-native";
 import { SummaryView } from "@components/game-record/SummaryView";
 import { BottomTabBar } from "@components/ui/BottomTabBar";
@@ -25,6 +25,7 @@ export default function SummaryScreen() {
   const store = useGameRecordStore();
   const { triggerPositiveEvent } = useReviewPrompt();
   const { hasEntitlement } = useEntitlement();
+  const [isCompleting, setIsCompleting] = useState(false);
 
   useEffect(() => {
     trackGameRecordStepViewed("summary");
@@ -123,6 +124,7 @@ export default function SummaryScreen() {
   };
 
   const handleComplete = async () => {
+    setIsCompleting(true);
     // 編集保存も summary を経由するため、新規作成のみを完了として計測する。
     // resetFlow() で store がクリアされる前に計測する。
     const isEditMode = store.isEditMode;
@@ -151,6 +153,7 @@ export default function SummaryScreen() {
   };
 
   const handleRecordNote = async () => {
+    setIsCompleting(true);
     // resetFlow() で store がクリアされる前に gameResultId を退避する。
     const gameResultId = store.gameResultId;
     const isEditMode = store.isEditMode;
@@ -207,6 +210,7 @@ export default function SummaryScreen() {
         pitchingBaseOnBalls={store.pitchingBaseOnBalls}
         pitchingHitByPitch={store.pitchingHitByPitch}
         onComplete={handleComplete}
+        isCompleting={isCompleting}
         onShare={handleShare}
         onRecordNote={handleRecordNote}
       />

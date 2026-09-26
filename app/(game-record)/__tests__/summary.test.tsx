@@ -105,6 +105,26 @@ describe("SummaryScreen", () => {
     });
   });
 
+  it("「記録を完了する」を連打しても、完了の計測は1回だけ送られる", async () => {
+    useGameRecordStore.setState({ gameResultId: 123, isEditMode: false });
+
+    renderWithProviders(<SummaryScreen />);
+
+    const completeButton = await screen.findByRole("button", {
+      name: "記録を完了する",
+    });
+    fireEvent.press(completeButton);
+    fireEvent.press(completeButton);
+
+    await waitFor(() => {
+      expect(getRouterSpies().replace).toHaveBeenCalled();
+    });
+    const completedEvents = mockCapture.mock.calls.filter(
+      ([eventName]) => eventName === "game record completed",
+    );
+    expect(completedEvents).toHaveLength(1);
+  });
+
   it("「記録を完了する」でレビューの条件を満たすと、広告を出さずに OS のレビューを要求して試合一覧へ遷移する", async () => {
     const thirtyDaysAgo = new Date(
       Date.now() - 30 * 24 * 60 * 60 * 1000,
