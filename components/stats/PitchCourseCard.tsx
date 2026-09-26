@@ -17,7 +17,11 @@ import {
 } from "react-native";
 import { PitchCourseGrid } from "@components/stats/PitchCourseGrid";
 import { Select } from "@components/ui/Select";
-import { PITCH_COURSE_BAND_TRACK_FRACTIONS } from "@constants/pitchCourse";
+import {
+  PITCH_COURSES,
+  PITCH_COURSE_BAND_TRACK_FRACTIONS,
+  STRIKE_ZONE_COURSES,
+} from "@constants/pitchCourse";
 import {
   usePitchCoursePitchTypes,
   usePitcherFaceoffCourses,
@@ -113,7 +117,7 @@ function MetricCell({
   const value = computePitchCourseMetric(settings.metric, cell, {
     minAtBats: settings.minAtBats,
     totalPlateAppearances,
-    granularity: settings.granularity,
+    courseCount: cell.courseCount,
   });
   const label = cell.label ? (
     <Text style={styles.tileLabel}>{cell.label}</Text>
@@ -352,18 +356,20 @@ const Notes = ({
 function ZoneSummaryBox({
   label,
   summary,
+  courseCount,
   settings,
   totalPlateAppearances,
 }: {
   label: string;
   summary: PitchCourseZoneSummary;
+  courseCount: number;
   settings: AnalysisSettings;
   totalPlateAppearances: number;
 }) {
   const value = computePitchCourseMetric(settings.metric, summary, {
     minAtBats: settings.minAtBats,
     totalPlateAppearances,
-    granularity: "zone",
+    courseCount,
   });
   return (
     <View style={styles.summaryBox}>
@@ -503,12 +509,14 @@ export function PitchCourseCard({
               <ZoneSummaryBox
                 label="ストライクゾーン"
                 summary={data.strike_zone}
+                courseCount={STRIKE_ZONE_COURSES.length}
                 settings={courseSettings}
                 totalPlateAppearances={zoneSummaryTotalPlateAppearances}
               />
               <ZoneSummaryBox
                 label="ボールゾーン"
                 summary={data.ball_zone}
+                courseCount={PITCH_COURSES.length - STRIKE_ZONE_COURSES.length}
                 settings={courseSettings}
                 totalPlateAppearances={zoneSummaryTotalPlateAppearances}
               />

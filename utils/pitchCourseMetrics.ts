@@ -48,6 +48,8 @@ export interface PitchCourseCell extends PitchCourseCounts {
   /** タイル表示（高低・内外 / ゾーン内外）の見出し。グリッド表示では null。 */
   label: string | null;
   isStrikeZone: boolean;
+  /** 畳み込んだ 5x5 のコース数。打席分布の均等配分の基準になる。 */
+  courseCount: number;
 }
 
 export interface PitchCourseMetricValue {
@@ -109,6 +111,7 @@ const buildCell = (
   key,
   label,
   isStrikeZone,
+  courseCount: zones.length,
   ...sumPitchCourseCounts(zones),
 });
 
@@ -191,24 +194,7 @@ export const foldPitchCourseZones = (
   }
 };
 
-/**
- * 打席分布の「均等配分なら 1 セルに入る割合」。高低・内外は各軸が
- * 高め/真ん中/低めの3帯なので、表示は2タイルでも 1/3 を基準にする。
- */
-export const expectedShareFor = (
-  granularity: PitchCourseGranularity,
-): number => {
-  switch (granularity) {
-    case "grid5":
-      return 1 / 25;
-    case "grid3":
-      return 1 / 9;
-    case "split4":
-      return 1 / 3;
-    case "zone":
-      return 1 / 2;
-  }
-};
+const TOTAL_COURSE_COUNT = 25;
 
 // 固定閾値にするのは、フィルタを変えても同じ値のセルが同じ色になって比較できるようにするため。
 const WARM_TO_COLD = ["#d64545", "#d98236", "#c9a227", "#4f9e6b", "#4173b3"];
@@ -254,7 +240,8 @@ export interface PitchCourseMetricContext {
   minAtBats: number;
   /** 打席分布の割合の分母（表示中の zones 全体の打席数）。 */
   totalPlateAppearances: number;
-  granularity: PitchCourseGranularity;
+  /** セル / タイルに含まれる 5x5 のコース数。 */
+  courseCount: number;
 }
 
 /**
@@ -263,7 +250,7 @@ export interface PitchCourseMetricContext {
 export const computePitchCourseMetric = (
   metric: PitchCourseMetric,
   rawCounts: Partial<PitchCourseCounts>,
-  { minAtBats, totalPlateAppearances, granularity }: PitchCourseMetricContext,
+  { minAtBats, totalPlateAppearances, courseCount }: PitchCourseMetricContext,
 ): PitchCourseMetricValue => {
   const counts = normalizePitchCourseCounts(rawCounts);
   switch (metric) {
@@ -272,12 +259,14 @@ export const computePitchCourseMetric = (
         return EMPTY_VALUE;
       }
       const share = counts.plate_appearances / totalPlateAppearances;
+      // 割り算を最後に 1 回だけにして、均等配分でちょうど 1.0 になるケースの丸め誤差を避ける。
+      const evenShareRatio =
+        (counts.plate_appearances * TOTAL_COURSE_COUNT) /
+        (totalPlateAppearances * courseCount);
       return {
         valueText: String(counts.plate_appearances),
         subText: formatPercent(share),
-        color: colorForPlateAppearanceShare(
-          share / expectedShareFor(granularity),
-        ),
+        color: colorForPlateAppearanceShare(evenShareRatio),
         isReliable: true,
       };
     }

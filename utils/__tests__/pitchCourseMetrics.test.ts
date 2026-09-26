@@ -35,7 +35,7 @@ const buildZones = (overrides: Record<number, Partial<PitchCourseZone>>) =>
 const context = {
   minAtBats: 3,
   totalPlateAppearances: 20,
-  granularity: "grid5" as const,
+  courseCount: 1,
 };
 
 describe("foldPitchCourseZones", () => {
@@ -150,15 +150,38 @@ describe("computePitchCourseMetric", () => {
     ).toMatchObject({ valueText: "1", subText: "5%", isReliable: true });
   });
 
-  it("打席分布の濃淡は均等配分比で決まり、粒度を変えても基準が揃う", () => {
-    const colorAt = (plateAppearances: number, granularity: "grid5" | "zone") =>
+  it("打席分布の濃淡は含むコース数を基準にした均等配分比で決まる", () => {
+    const colorAt = (plateAppearances: number, courseCount: number) =>
       computePitchCourseMetric(
         "plate_appearances",
         { ...counts, plate_appearances: plateAppearances },
-        { ...context, totalPlateAppearances: 100, granularity },
+        { ...context, totalPlateAppearances: 100, courseCount },
       ).color;
-    expect(colorAt(8, "grid5")).toBe("#d08000");
-    expect(colorAt(50, "zone")).toBe(colorAt(4, "grid5"));
+    expect(colorAt(8, 1)).toBe("#d08000");
+    expect(colorAt(36, 9)).toBe(colorAt(4, 1));
+  });
+
+  it("25 コースに均等に散らばった打席は、どの粒度でも全セルが同じ濃さになる", () => {
+    const uniformZones = buildZones(
+      Object.fromEntries(
+        Array.from({ length: 25 }, (_, index) => [
+          index + 1,
+          { plate_appearances: 4 },
+        ]),
+      ),
+    );
+    const granularities = ["grid5", "grid3", "split4", "zone"] as const;
+    granularities.forEach((granularity) => {
+      const colors = foldPitchCourseZones(uniformZones, granularity).map(
+        (cell) =>
+          computePitchCourseMetric("plate_appearances", cell, {
+            minAtBats: 3,
+            totalPlateAppearances: 100,
+            courseCount: cell.courseCount,
+          }).color,
+      );
+      expect(new Set(colors)).toEqual(new Set(["#8f5a0a"]));
+    });
   });
 
   it("分母 0 は '-' で色を付けない", () => {
