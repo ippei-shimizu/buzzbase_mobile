@@ -1,13 +1,13 @@
 // utils/analytics は posthog シングルトンを直接呼ぶため、HTTP 層ではなくこのモジュール
 // 境界をモックして capture の引数を検証する（テスト環境では __DEV__ により
 // 本来のシングルトンが null になり、送信内容を観測できないため）。
-jest.mock("@utils/posthog", () => ({
-  posthog: { capture: jest.fn(), screen: jest.fn() },
-}));
-
 import type * as AnalyticsNamespace from "@utils/analytics";
 import * as analytics from "@utils/analytics";
 import { posthog } from "@utils/posthog";
+
+jest.mock("@utils/posthog", () => ({
+  posthog: { capture: jest.fn(), screen: jest.fn() },
+}));
 
 type AnalyticsModule = typeof AnalyticsNamespace;
 
@@ -159,30 +159,59 @@ const SHARED_EVENT_CASES: {
   },
   {
     event: "paywall viewed",
-    properties: { trigger: "unlimited_monthly_goals" },
-    run: (a) => a.trackPaywallViewed("unlimited_monthly_goals"),
+    properties: {
+      trigger: "unlimited_monthly_goals",
+      placement: "feature_gate",
+    },
+    run: (a) =>
+      a.trackPaywallViewed({
+        trigger: "unlimited_monthly_goals",
+        placement: "feature_gate",
+      }),
   },
   {
     event: "upgrade started",
-    properties: { plan_type: "yearly", trigger: "general" },
+    properties: {
+      plan_type: "yearly",
+      trigger: "general",
+      placement: "onboarding",
+    },
     run: (a) =>
-      a.trackUpgradeStarted({ plan_type: "yearly", trigger: "general" }),
+      a.trackUpgradeStarted({
+        plan_type: "yearly",
+        trigger: "general",
+        placement: "onboarding",
+      }),
   },
   {
     event: "purchase completed",
-    properties: { plan_type: "monthly", platform: "ios", is_trial: true },
+    properties: {
+      plan_type: "monthly",
+      platform: "ios",
+      is_trial: true,
+      placement: "onboarding",
+    },
     run: (a) =>
       a.trackPurchaseCompleted({
         plan_type: "monthly",
         platform: "ios",
         is_trial: true,
+        placement: "onboarding",
       }),
   },
   {
     event: "purchase failed",
-    properties: { reason: "user_cancelled", plan_type: "yearly" },
+    properties: {
+      reason: "user_cancelled",
+      plan_type: "yearly",
+      placement: "settings",
+    },
     run: (a) =>
-      a.trackPurchaseFailed({ reason: "user_cancelled", plan_type: "yearly" }),
+      a.trackPurchaseFailed({
+        reason: "user_cancelled",
+        plan_type: "yearly",
+        placement: "settings",
+      }),
   },
   {
     event: "free limit reached",

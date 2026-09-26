@@ -1,4 +1,5 @@
 import type { Feature } from "../../types/pro";
+import type { PaywallPlacement } from "@utils/analytics";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Modal, StyleSheet, View } from "react-native";
@@ -10,6 +11,9 @@ import { PaywallFlow } from "./paywall/PaywallFlow";
 import { PaywallHeader } from "./paywall/PaywallHeader";
 import { usePaywallPurchase } from "./paywall/usePaywallPurchase";
 import { usePaywallSteps } from "./paywall/usePaywallSteps";
+
+// このモーダルは機能ゲート（ロックされた機能のタップ）からのみ開く。
+const PLACEMENT: PaywallPlacement = "feature_gate";
 
 // 訴求コピー・比較表・課金ヘルパーは paywall/paywallContent に集約したが、
 // 既存の呼び出し側（ProUpsellCard / app/pro / 各画面）が参照し続けられるよう再公開する。
@@ -57,14 +61,16 @@ export function PaywallModal({
     usePaywallSteps({
       trigger,
       active: isOpen,
+      placement: PLACEMENT,
     });
 
   useEffect(() => {
-    if (isOpen) trackPaywallViewed(trigger);
+    if (isOpen) trackPaywallViewed({ trigger, placement: PLACEMENT });
   }, [isOpen, trigger]);
 
   const purchase = usePaywallPurchase({
     trigger,
+    placement: PLACEMENT,
     enabled: isOpen,
     onPurchased: () => {
       onClose();
@@ -100,6 +106,7 @@ export function PaywallModal({
           feature={feature}
           contextMessage={contextMessage}
           trigger={trigger}
+          placement={PLACEMENT}
           step={step}
           goToPlan={goToPlan}
           goToFeatures={goToFeatures}

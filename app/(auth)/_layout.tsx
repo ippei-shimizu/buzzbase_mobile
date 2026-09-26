@@ -14,6 +14,10 @@ export default function AuthLayout() {
       <Stack.Screen name="username-registration" />
       {/* 認証は済んでいるため、戻って未完了の登録画面に着地させない */}
       <Stack.Screen name="profile-setup" options={{ gestureEnabled: false }} />
+      <Stack.Screen
+        name="onboarding-paywall"
+        options={{ gestureEnabled: false }}
+      />
       <Stack.Screen name="forgot-password" />
       <Stack.Screen name="reset-password" />
     </Stack>

@@ -1,3 +1,4 @@
+import type { PaywallPlacement } from "@utils/analytics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
@@ -21,6 +22,11 @@ export default function ProScreen() {
     trigger?: string;
   }>();
   const trigger = toProTrigger(triggerParam);
+  // 機能ゲートのロックカードは trigger を付けて遷移し、設定・特商法・サブスク管理は付けない。
+  // 配置別に CVR を比較するため、この差をそのまま placement にする。
+  const placement: PaywallPlacement = triggerParam
+    ? "feature_gate"
+    : "settings";
   // fullScreenModal で表示すると SafeAreaView の top inset が反映されないことがあるため、
   // useSafeAreaInsets で取得して直接 paddingTop に適用する。
   const insets = useSafeAreaInsets();
@@ -39,14 +45,16 @@ export default function ProScreen() {
     usePaywallSteps({
       trigger,
       active: countsAsFunnel,
+      placement,
     });
 
   useEffect(() => {
-    if (countsAsFunnel) trackPaywallViewed(trigger);
-  }, [countsAsFunnel, trigger]);
+    if (countsAsFunnel) trackPaywallViewed({ trigger, placement });
+  }, [countsAsFunnel, trigger, placement]);
 
   const purchase = usePaywallPurchase({
     trigger,
+    placement,
     enabled: true,
     onPurchased: () => router.replace("/pro/success"),
     onRestored: () => router.back(),
@@ -68,6 +76,7 @@ export default function ProScreen() {
 
       <PaywallFlow
         trigger={trigger}
+        placement={placement}
         step={step}
         goToPlan={goToPlan}
         goToFeatures={goToFeatures}

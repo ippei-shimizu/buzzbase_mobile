@@ -1,4 +1,4 @@
-import type { ProTrigger } from "@utils/analytics";
+import type { PaywallPlacement, ProTrigger } from "@utils/analytics";
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -28,6 +28,7 @@ import {
 
 interface UsePaywallPurchaseOptions {
   trigger: ProTrigger;
+  placement: PaywallPlacement;
   /** Offering の取得を開始してよいか。モーダルは開いている間だけ true にする。 */
   enabled: boolean;
   /** 購入完了かつ Pro 状態の同期後に呼ばれる。成功画面への遷移を担当する。 */
@@ -43,6 +44,7 @@ interface UsePaywallPurchaseOptions {
  */
 export function usePaywallPurchase({
   trigger,
+  placement,
   enabled,
   onPurchased,
   onRestored,
@@ -124,20 +126,25 @@ export function usePaywallPurchase({
     if (!selectedPackage || purchasingRef.current) return;
     const planType = toPlanType(selectedPackage.packageType);
     setPurchasing(true);
-    trackUpgradeStarted({ plan_type: planType, trigger });
+    trackUpgradeStarted({ plan_type: planType, trigger, placement });
     let purchasedCustomerInfo;
     try {
       purchasedCustomerInfo = await purchasePackage(selectedPackage);
     } catch (error: unknown) {
       setPurchasing(false);
       if (isUserCancelled(error)) {
-        trackPurchaseFailed({ reason: "user_cancelled", plan_type: planType });
+        trackPurchaseFailed({
+          reason: "user_cancelled",
+          plan_type: planType,
+          placement,
+        });
         return;
       }
       const code = (error as { code?: PURCHASES_ERROR_CODE })?.code;
       trackPurchaseFailed({
         reason: purchaseFailureReason(code),
         plan_type: planType,
+        placement,
       });
       if (code === PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR) {
         showSnackbar({
@@ -181,6 +188,7 @@ export function usePaywallPurchase({
       plan_type: planType,
       platform: Platform.OS === "android" ? "android" : "ios",
       is_trial: isTrialPurchase(purchasedCustomerInfo),
+      placement,
     });
 
     // ここから先は Apple への課金が既に成功している。バックエンドへの同期失敗を

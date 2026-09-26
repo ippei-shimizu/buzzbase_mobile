@@ -174,9 +174,23 @@ export const trackStoreReviewRequested = (props: {
   trigger: StoreReviewTrigger;
 }) => capture("store review requested", props);
 
-/** Paywall（PaywallModal / Pro 画面）の表示。課金ファネルの分母。 */
-export const trackPaywallViewed = (trigger: ProTrigger) =>
-  capture("paywall viewed", { trigger });
+/**
+ * Paywall を出した場所。`trigger`（どの機能が起点か）とは別軸で、配置ごとの CVR を
+ * 比較するために持たせる。同じ trigger でも配置が違えば別の施策として評価する。
+ */
+export type PaywallPlacement = "feature_gate" | "settings" | "onboarding";
+
+/**
+ * Paywall（PaywallModal / Pro 画面 / 登録直後）の表示。課金ファネルの分母。
+ *
+ * `lead_slide` は機能起点でない配置でパーソナライズした先頭スライド。
+ * 訴求の出し分けを `trigger` に混ぜると「どの機能が課金の入口か」の集計が濁るため分けている。
+ */
+export const trackPaywallViewed = (props: {
+  trigger: ProTrigger;
+  placement: PaywallPlacement;
+  lead_slide?: string;
+}) => capture("paywall viewed", props);
 
 /** Paywall のステップ。value = 価値訴求、features = 全機能一覧、plan = 価格とプラン選択。 */
 export type PaywallStepName = "value" | "features" | "plan";
@@ -185,24 +199,28 @@ export type PaywallStepName = "value" | "features" | "plan";
 export const trackPaywallStepViewed = (props: {
   step: PaywallStepName;
   trigger: ProTrigger;
+  placement: PaywallPlacement;
 }) => capture("paywall step viewed", props);
 
 /** プランカードの選択。年額・月額のどちらが選ばれるかを測る。 */
 export const trackPaywallPlanSelected = (props: {
   plan_type: PlanType | null;
   trigger: ProTrigger;
+  placement: PaywallPlacement;
 }) => capture("paywall plan selected", props);
 
 /** 購入に至らず Paywall を閉じた。`step` でどこまで進んで離脱したかを測る。 */
 export const trackPaywallDismissed = (props: {
   step: PaywallStepName;
   trigger: ProTrigger;
+  placement: PaywallPlacement;
 }) => capture("paywall dismissed", props);
 
 /** Paywall の購入ボタン押下。ストアの購入シートを開く直前に送る。 */
 export const trackUpgradeStarted = (props: {
   plan_type: PlanType | null;
   trigger: ProTrigger;
+  placement: PaywallPlacement;
 }) => capture("upgrade started", props);
 
 /**
@@ -213,12 +231,14 @@ export const trackPurchaseCompleted = (props: {
   plan_type: PlanType | null;
   platform: Platform;
   is_trial: boolean;
+  placement: PaywallPlacement;
 }) => capture("purchase completed", props);
 
 /** 購入失敗。`reason` はユーザーキャンセルとストアエラーを区別できる粒度で渡す。 */
 export const trackPurchaseFailed = (props: {
   reason: string;
   plan_type: PlanType | null;
+  placement: PaywallPlacement;
 }) => capture("purchase failed", props);
 
 /**
