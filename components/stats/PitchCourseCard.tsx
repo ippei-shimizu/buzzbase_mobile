@@ -9,13 +9,13 @@ import type {
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { PitchCourseGrid } from "@components/stats/PitchCourseGrid";
+import { Select } from "@components/ui/Select";
 import {
   usePitchCoursePitchTypes,
   usePitcherFaceoffCourses,
@@ -117,6 +117,9 @@ function ZoneHeatmap({
   );
 }
 
+const formatPitcherOption = (row: PitcherFaceoffCourseRow) =>
+  `${row.team_name ? `${row.label}（${row.team_name}）` : row.label} ${row.plate_appearances}打席`;
+
 function PitcherCrossPanel({
   data,
   isLoading,
@@ -160,34 +163,17 @@ function PitcherCrossPanel({
 
   return (
     <>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.pitcherChipScroll}
-        contentContainerStyle={styles.pitcherChipRow}
-      >
-        {data.rows.map((row) => {
-          const selected = row.id === selectedRow.id;
-          return (
-            <TouchableOpacity
-              key={row.id}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              style={[styles.chip, selected && styles.chipSelected]}
-              onPress={() => onSelectPitcher(row.id)}
-            >
-              <Text
-                style={[styles.chipText, selected && styles.chipTextSelected]}
-              >
-                {row.label} ({row.plate_appearances})
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-      {selectedRow.team_name ? (
-        <Text style={styles.pitcherTeam}>{selectedRow.team_name}</Text>
-      ) : null}
+      <Select
+        variant="outlined"
+        accessibilityLabel="対戦投手"
+        options={data.rows.map((row) => ({
+          id: row.id,
+          label: formatPitcherOption(row),
+        }))}
+        selectedId={selectedRow.id}
+        onSelect={onSelectPitcher}
+        style={styles.pitcherSelect}
+      />
       <ZoneHeatmap zones={selectedRow.zones} minAtBats={data.min_at_bats} />
       <Notes>
         <Text style={styles.noteText}>
@@ -541,18 +527,8 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 10,
   },
-  pitcherChipScroll: {
-    flexGrow: 0,
+  pitcherSelect: {
     marginTop: 12,
-  },
-  pitcherChipRow: {
-    gap: 6,
-  },
-  pitcherTeam: {
-    color: "#A1A1AA",
-    fontSize: 11,
-    marginTop: 8,
-    textAlign: "center",
   },
   chipSelected: {
     backgroundColor: "#d08000",

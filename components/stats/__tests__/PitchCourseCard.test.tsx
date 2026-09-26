@@ -6,7 +6,7 @@
  * - 打数が min_at_bats 未満のセルは打率に (N打数) の参考値表記が付く
  * - total_target_pa が 0 のときはヒートマップを出さず空状態を表示する
  * - 「球種別」タブを開いたときにだけクロス集計 API を取得する
- * - 「投手別」タブを開いたときにだけ投手×コース API を取得し、投手を切り替えられる
+ * - 「投手別」タブを開いたときにだけ投手×コース API を取得し、セレクトで投手を切り替えられる
  */
 import type { PitchCourseData, PitchCourseZone } from "../../../types/stats";
 import { act, fireEvent } from "@testing-library/react-native";
@@ -219,19 +219,18 @@ describe("PitchCourseCard", () => {
         is_reliable: true,
       },
     });
-    const { getByText, findByText, queryByText } = renderWithProviders(
-      <PitchCourseCard data={data} crossFilters={{}} />,
-    );
+    const { getByText, getByLabelText, findByText, queryByText } =
+      renderWithProviders(<PitchCourseCard data={data} crossFilters={{}} />);
 
     await flushPendingRequests();
     expect(pitcherCrossRequested).toBe(false);
     fireEvent.press(getByText("投手別"));
-    expect(await findByText("エース投手 (5)")).toBeTruthy();
+    expect(await findByText("エース投手（相手高校） 5打席")).toBeTruthy();
     expect(pitcherCrossRequested).toBe(true);
-    expect(getByText("相手高校")).toBeTruthy();
     expect(getByText(".800")).toBeTruthy();
 
-    fireEvent.press(getByText("控え投手 (3)"));
+    fireEvent.press(getByLabelText("対戦投手"));
+    fireEvent.press(getByText("控え投手 3打席"));
     expect(getByText(".000")).toBeTruthy();
     expect(queryByText(".800")).toBeNull();
 
@@ -303,7 +302,7 @@ describe("PitchCourseCard", () => {
 
     expect(queryByText("球種別")).toBeNull();
     fireEvent.press(getByText("投手別"));
-    expect(getByText("投手 C (3)")).toBeTruthy();
+    expect(getByText("投手 C 3打席")).toBeTruthy();
   });
 
   it("サンプル指定時はフィルタを渡されていても投手別の API を呼ばない", async () => {
@@ -352,7 +351,7 @@ describe("PitchCourseCard", () => {
     fireEvent.press(getByText("投手別"));
     await flushPendingRequests();
 
-    expect(getByText("投手 C (3)")).toBeTruthy();
+    expect(getByText("投手 C 3打席")).toBeTruthy();
     expect(pitcherCrossRequested).toBe(false);
   });
 });
