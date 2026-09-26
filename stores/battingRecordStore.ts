@@ -379,6 +379,7 @@ export const toDetailInputFlags = (
   };
   return {
     ...itemFlags,
+    // 既存の PostHog データと連続して読むため構成要素を変えない。打球方向は任意の詳細ではないので itemFlags に足さない。
     has_detail: Object.values(itemFlags).some(Boolean),
   };
 };
