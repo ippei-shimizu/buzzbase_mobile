@@ -23,6 +23,8 @@ interface Props {
   value: string;
   onSelect: (value: string | number, label: string) => void;
   onCustomInput: (text: string) => void;
+  /** 検索欄の入力を親に伝える。items を入力連動でサーバーから取り直すときに使う。 */
+  onSearchTextChange?: (text: string) => void;
   placeholder?: string;
 }
 
@@ -32,20 +34,25 @@ export function SearchablePicker({
   value,
   onSelect,
   onCustomInput,
+  onSearchTextChange,
   placeholder = "検索または入力",
 }: Props) {
   const [visible, setVisible] = useState(false);
   const [searchText, setSearchText] = useState("");
 
   const filteredItems = useMemo(() => {
-    if (!searchText) return items;
-    return items.filter((item) =>
-      item.label.toLowerCase().includes(searchText.toLowerCase()),
-    );
+    const keyword = searchText.trim().toLowerCase();
+    if (!keyword) return items;
+    return items.filter((item) => item.label.toLowerCase().includes(keyword));
   }, [items, searchText]);
 
+  const handleSearchTextChange = (text: string) => {
+    setSearchText(text);
+    onSearchTextChange?.(text);
+  };
+
   const handleOpen = () => {
-    setSearchText(value);
+    handleSearchTextChange(value);
     setVisible(true);
   };
 
@@ -101,7 +108,7 @@ export function SearchablePicker({
                 <TextInput
                   style={styles.searchInput}
                   value={searchText}
-                  onChangeText={setSearchText}
+                  onChangeText={handleSearchTextChange}
                   placeholder="チーム名を入力"
                   placeholderTextColor="#71717A"
                   autoFocus

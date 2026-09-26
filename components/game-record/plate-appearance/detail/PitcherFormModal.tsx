@@ -3,7 +3,6 @@ import type {
   PitcherInput,
   ThrowHand,
 } from "../../../../types/pitcher";
-import type { TeamDetail } from "../../../../types/profile";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,13 +15,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useTeams } from "@hooks/useMasterData";
 import { useCreatePitcher, useUpdatePitcher } from "@hooks/usePitchers";
 import {
   useArmAngles,
   usePitcherStyles,
   useVelocityZones,
 } from "@hooks/usePlateAppearanceMasters";
+import { useTeamName } from "@hooks/useTeamSearch";
 import {
   type GameRecordState,
   useGameRecordStore,
@@ -79,13 +78,9 @@ export function PitcherFormModal({
   );
   const isProcessing = isCreating || isUpdating;
   const isEditMode = editingPitcher != null;
-  // 編集時に所属チームを参照表示するためのチーム一覧。
-  // 編集モードかつ team_id が紐付いている場合のみ最終的に表示する。
-  const { data: teams } = useTeams();
-  const editingTeam =
-    isEditMode && editingPitcher?.team_id
-      ? teams?.find((team: TeamDetail) => team.id === editingPitcher.team_id)
-      : undefined;
+  const { teamName: editingTeamName } = useTeamName(
+    isEditMode ? editingPitcher.team_id : null,
+  );
 
   // 開閉と編集対象に応じて初期値を入れ直す。
   // visible が立ち上がるたびにフォーム状態をリセットすることで、前回の入力が残らない。
@@ -180,9 +175,9 @@ export function PitcherFormModal({
             {isEditMode ? "投手を編集" : "相手投手を追加"}
           </Text>
           <ScrollView contentContainerStyle={styles.body}>
-            {editingTeam && (
+            {editingTeamName && (
               <Field label="所属チーム">
-                <Text style={styles.readonlyText}>{editingTeam.name}</Text>
+                <Text style={styles.readonlyText}>{editingTeamName}</Text>
               </Field>
             )}
             <Field label="投手名（必須）">

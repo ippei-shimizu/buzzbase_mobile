@@ -13,8 +13,8 @@ import {
 } from "react-native";
 import { Icon } from "@components/icon/Icon";
 import { THROW_HAND_FULL_LABELS } from "@constants/throwHand";
-import { useTeams } from "@hooks/useMasterData";
 import { usePitchers } from "@hooks/usePitchers";
+import { useTeamNames } from "@hooks/useTeamSearch";
 import { PitcherFormModal } from "./PitcherFormModal";
 import { SectionHeader } from "./SectionHeader";
 
@@ -38,11 +38,13 @@ export function PitcherSelector({ value, onChange, description }: Props) {
   const { pitchers, isLoading, isError } = usePitchers({
     q: searchQuery || undefined,
   });
-  const { data: teams } = useTeams();
-  // team_id 解決用の Map。投手数 × チーム数の find ループを避ける。
-  const teamNameById = new Map<number, string>(
-    teams?.map((team: { id: number; name: string }) => [team.id, team.name]) ??
-      [],
+  // チーム名は選択モーダルの一覧にしか出さないため、開いている間だけ解決する。
+  const teamNameById = useTeamNames(
+    pickerVisible
+      ? pitchers.flatMap((pitcher) =>
+          pitcher.team_id ? [pitcher.team_id] : [],
+        )
+      : [],
   );
   const summarize = (pitcher: Pitcher) =>
     formatSummary(

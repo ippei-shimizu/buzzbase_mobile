@@ -8,6 +8,7 @@ import type {
   Team,
   Position,
 } from "../types/gameRecord";
+import type { TeamDetail } from "../types/profile";
 import axiosInstance from "@utils/axiosInstance";
 
 /** POST /game_results — 空のgame_resultを作成 */
@@ -129,17 +130,25 @@ export const updatePitchingResult = async (
 };
 
 /**
+ * back の TeamsController::MAX_LIMIT。
+ * 部分一致検索のためサジェスト件数のままだと完全一致が候補から溢れ、既存チームを重複作成しうる。
+ * 送信時に完全一致を引き当てるときはここまで取り切る。
+ */
+export const TEAM_SEARCH_MAX_LIMIT = 100;
+
+/**
  * GET /teams — チーム名のインクリメンタル検索。
  * teams は全ユーザー共有で単調増加するマスタのため全件取得はせず、
  * 検索語と件数上限を必ず付けて取得する。
  *
  * @param q 部分一致の検索語
  * @param limit 最大件数（サーバー既定 50 / 上限 100）
+ * @returns カテゴリ・都道府県の id を含むチーム一覧
  */
 export const searchTeams = async (
   q: string,
   limit: number = 20,
-): Promise<Team[]> => {
+): Promise<TeamDetail[]> => {
   const response = await axiosInstance.get("/teams", { params: { q, limit } });
   return response.data;
 };

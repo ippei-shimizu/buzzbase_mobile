@@ -55,6 +55,7 @@ interface ProfileEditFormProps {
   prefectureItems: { label: string; value: number }[];
   onSelectTeam: (id: number, name: string) => void;
   onCustomTeamInput: (name: string) => void;
+  onSearchTeam: (query: string) => void;
   onSelectCategory: (value: string | number | null) => void;
   onSelectPrefecture: (value: string | number | null) => void;
   // 受賞歴
@@ -93,6 +94,7 @@ export const ProfileEditForm = ({
   prefectureItems,
   onSelectTeam,
   onCustomTeamInput,
+  onSearchTeam,
   onSelectCategory,
   onSelectPrefecture,
   awards,
@@ -215,6 +217,7 @@ export const ProfileEditForm = ({
         prefectures={prefectureItems}
         onSelectTeam={onSelectTeam}
         onCustomTeamInput={onCustomTeamInput}
+        onSearchTeam={onSearchTeam}
         onSelectCategory={onSelectCategory}
         onSelectPrefecture={onSelectPrefecture}
       />

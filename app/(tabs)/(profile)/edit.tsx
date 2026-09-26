@@ -2,7 +2,7 @@ import type { ThrowHand } from "../../../types/pitcher";
 import type { BattingSide } from "@constants/handedness";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ScrollView,
   Alert,
@@ -14,14 +14,16 @@ import {
 } from "react-native";
 import { ProfileEditForm } from "@components/profile/ProfileEditForm";
 import { useUserAwards, useAwardMutations } from "@hooks/useAwards";
-import {
-  useTeams,
-  usePrefectures,
-  useBaseballCategories,
-} from "@hooks/useMasterData";
+import { usePrefectures, useBaseballCategories } from "@hooks/useMasterData";
+import { useMyTeam } from "@hooks/useMyTeam";
 import { usePositions, useUpdateUserPositions } from "@hooks/usePositions";
 import { useProfile } from "@hooks/useProfile";
 import { useProfileEdit } from "@hooks/useProfileEdit";
+import { useTeamSearch } from "@hooks/useTeamSearch";
+import {
+  searchTeams,
+  TEAM_SEARCH_MAX_LIMIT,
+} from "@services/gameRecordService";
 import { createTeam, updateTeam } from "@services/teamService";
 
 interface AwardItem {
@@ -29,14 +31,40 @@ interface AwardItem {
   title: string;
 }
 
+interface TeamPayload {
+  name: string;
+  category_id: number;
+  prefecture_id: number;
+}
+
+/**
+ * 候補から選ばず打ち切ったチーム名について、完全一致する既存チームの id を返す。
+ *
+ * @returns 既存チームの id。無ければ null（新規作成に回す）
+ */
+const findExistingTeamId = async (
+  teamPayload: TeamPayload,
+): Promise<number | null> => {
+  const candidates = await searchTeams(teamPayload.name, TEAM_SEARCH_MAX_LIMIT);
+  // 同名でもカテゴリ・地域が違えば別チームとして扱い、他ユーザーの作ったチームに紐付けない。
+  const sameTeam = candidates.find(
+    (team) =>
+      team.name === teamPayload.name &&
+      team.category_id === teamPayload.category_id &&
+      team.prefecture_id === teamPayload.prefecture_id,
+  );
+  return sameTeam?.id ?? null;
+};
+
 export default function ProfileEditScreen() {
   const router = useRouter();
   const { profile, isLoading } = useProfile();
   const { updateProfile, isUpdating } = useProfileEdit();
   // マスターデータ
-  const { data: allTeams } = useTeams();
-  const { data: prefectures } = usePrefectures();
-  const { data: categories } = useBaseballCategories();
+  const { data: prefectures, isLoading: isPrefecturesLoading } =
+    usePrefectures();
+  const { data: categories, isLoading: isCategoriesLoading } =
+    useBaseballCategories();
   const { data: allPositions } = usePositions();
   const { data: existingAwards } = useUserAwards(profile?.id);
   const { mutateAsync: updatePositions } = useUpdateUserPositions();
@@ -66,6 +94,20 @@ export default function ProfileEditScreen() {
   const [selectedPrefectureId, setSelectedPrefectureId] = useState<
     number | null
   >(null);
+  const [teamSearchQuery, setTeamSearchQuery] = useState("");
+  const hasRestoredTeamRef = useRef(false);
+  const { teams: teamSuggestions } = useTeamSearch(teamSearchQuery);
+  const {
+    teamName: profileTeamName,
+    categoryName: profileTeamCategoryName,
+    prefectureName: profileTeamPrefectureName,
+    isLoading: isMyTeamLoading,
+  } = useMyTeam(profile?.team_id ? profile.user_id : null);
+  // 復元前に保存すると team_id が空で送られ所属が外れる。取得失敗時に保存できなくならないよう読み込み中だけ止める。
+  const isTeamRestoring =
+    !!profile?.team_id &&
+    !hasRestoredTeamRef.current &&
+    (isMyTeamLoading || isCategoriesLoading || isPrefecturesLoading);
 
   // 受賞歴
   const [awards, setAwards] = useState<AwardItem[]>([]);
@@ -81,18 +123,37 @@ export default function ProfileEditScreen() {
       setSelectedPositionIds(profile.positions?.map((p) => p.id) ?? []);
       setThrowHand(profile.throw_hand ?? null);
       setBattingSide(profile.batting_side ?? null);
-
-      if (profile.team_id && allTeams) {
-        const team = allTeams.find((t) => t.id === profile.team_id);
-        if (team) {
-          setSelectedTeamId(team.id);
-          setTeamName(team.name);
-          setSelectedCategoryId(team.category_id);
-          setSelectedPrefectureId(team.prefecture_id);
-        }
-      }
     }
-  }, [profile, allTeams]);
+  }, [profile]);
+
+  // 所属チームはサーバー側で名前解決済みの値を使い、カテゴリ・地域は名前からマスタの id に引き当てる。
+  // 復元は1度だけ行い、再取得でユーザーの編集を上書きしない。
+  useEffect(() => {
+    if (hasRestoredTeamRef.current || !profile?.team_id || !profileTeamName) {
+      return;
+    }
+    if (profileTeamCategoryName && !categories) return;
+    if (profileTeamPrefectureName && !prefectures) return;
+    hasRestoredTeamRef.current = true;
+    setSelectedTeamId(profile.team_id);
+    setTeamName(profileTeamName);
+    setSelectedCategoryId(
+      categories?.find((category) => category.name === profileTeamCategoryName)
+        ?.id ?? null,
+    );
+    setSelectedPrefectureId(
+      prefectures?.find(
+        (prefecture) => prefecture.name === profileTeamPrefectureName,
+      )?.id ?? null,
+    );
+  }, [
+    profile?.team_id,
+    profileTeamName,
+    profileTeamCategoryName,
+    profileTeamPrefectureName,
+    categories,
+    prefectures,
+  ]);
 
   // 受賞歴初期化
   useEffect(() => {
@@ -117,7 +178,7 @@ export default function ProfileEditScreen() {
 
   // チーム選択ハンドラ
   const handleSelectTeam = (id: number, teamLabel: string) => {
-    const team = allTeams?.find((t) => t.id === id);
+    const team = teamSuggestions.find((suggestion) => suggestion.id === id);
     setSelectedTeamId(id);
     setTeamName(teamLabel);
     if (team) {
@@ -126,9 +187,10 @@ export default function ProfileEditScreen() {
     }
   };
 
+  // 同名チームが存在しうるため、名前が変わらない限り確定済みの id を保つ。
   const handleCustomTeamInput = (text: string) => {
+    if (text.trim() !== teamName.trim()) setSelectedTeamId(null);
     setTeamName(text);
-    setSelectedTeamId(null);
   };
 
   // 受賞歴ハンドラ
@@ -148,6 +210,13 @@ export default function ProfileEditScreen() {
 
   const handleSave = async () => {
     if (!profile) return;
+    if (isTeamRestoring) {
+      Alert.alert(
+        "読み込み中",
+        "所属チームの読み込みが完了してから保存してください",
+      );
+      return;
+    }
 
     // user_idバリデーション
     const userIdPattern = /^[A-Za-z0-9_-]+$/;
@@ -196,17 +265,19 @@ export default function ProfileEditScreen() {
 
       // チーム処理（バリデーション済みなのでカテゴリー・都道府県は必ず選択されている）
       if (trimmedTeamName) {
-        let teamId = selectedTeamId;
-        const teamPayload = {
+        const teamPayload: TeamPayload = {
           name: trimmedTeamName,
           category_id: selectedCategoryId as number,
           prefecture_id: selectedPrefectureId as number,
         };
-        if (!teamId) {
-          const newTeam = await createTeam(teamPayload);
-          teamId = newTeam.id;
-        } else {
+        let teamId = selectedTeamId;
+        if (teamId) {
+          // 自分で選んだ / 復元した所属チームのときだけ、入力されたカテゴリ・地域を反映する。
           await updateTeam(teamId, teamPayload);
+        } else {
+          teamId =
+            (await findExistingTeamId(teamPayload)) ??
+            (await createTeam(teamPayload)).id;
         }
         formData.append("user[team_id]", String(teamId));
       } else {
@@ -289,8 +360,10 @@ export default function ProfileEditScreen() {
   // ピッカー用のアイテム変換
   const positionItems =
     allPositions?.map((p) => ({ label: p.name, value: p.id })) ?? [];
-  const teamItems =
-    allTeams?.map((t) => ({ label: t.name, value: t.id })) ?? [];
+  const teamItems = teamSuggestions.map((team) => ({
+    label: team.name,
+    value: team.id,
+  }));
   const categoryItems =
     categories?.map((c) => ({ label: c.name, value: c.id })) ?? [];
   const prefectureItems =
@@ -335,6 +408,7 @@ export default function ProfileEditScreen() {
           prefectureItems={prefectureItems}
           onSelectTeam={handleSelectTeam}
           onCustomTeamInput={handleCustomTeamInput}
+          onSearchTeam={setTeamSearchQuery}
           onSelectCategory={(v) =>
             setSelectedCategoryId(typeof v === "number" ? v : null)
           }

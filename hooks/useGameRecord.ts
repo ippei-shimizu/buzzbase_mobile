@@ -15,6 +15,7 @@ import {
   updatePitchingResult,
   updatePitchingResultId,
   searchTeams,
+  TEAM_SEARCH_MAX_LIMIT,
   getPositions,
   createTeam,
   getTournaments,
@@ -31,9 +32,6 @@ import { getCurrentUserProfile } from "../services/profileService";
 import { createSeason } from "../services/seasonService";
 import { useGameRecordStore } from "../stores/gameRecordStore";
 import { invalidateGameResultRelated } from "../utils/queryInvalidation";
-
-/** back の TeamsController::MAX_LIMIT。完全一致の引き当てはここまで取り切る。 */
-const TEAM_SEARCH_MAX_LIMIT = 100;
 
 export const useGameRecord = () => {
   const store = useGameRecordStore();
