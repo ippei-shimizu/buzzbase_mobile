@@ -313,11 +313,10 @@ describe("SummaryScreen", () => {
     fireEvent.press(await screen.findByText("成績をシェア"));
 
     await waitFor(() => expect(shareSpy).toHaveBeenCalled());
-    expect(shareSpy.mock.calls[0][0]).toEqual({
-      message: expect.stringContaining(
-        "https://apps.apple.com/app/apple-store/id6761011816?pt=128690561&ct=share_game_summary&mt=8",
-      ),
-    });
+    const { message } = shareSpy.mock.calls[0][0] as { message: string };
+    expect(message).toContain(
+      "https://apps.apple.com/app/apple-store/id6761011816?pt=128690561&ct=share_game_summary&mt=8",
+    );
     shareSpy.mockRestore();
   });
 });
