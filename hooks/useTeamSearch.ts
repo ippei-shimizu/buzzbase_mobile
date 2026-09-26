@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { getTeamName, searchTeams } from "@services/gameRecordService";
 
 /**
@@ -28,4 +28,26 @@ export const useTeamName = (teamId: number | null | undefined) => {
   });
 
   return { teamName: data?.name, isLoading };
+};
+
+/**
+ * 複数のチーム ID をまとめて名前に解決するフック（一覧表示用）。
+ *
+ * @param teamIds 解決したいチーム ID。重複は1回だけ取得する
+ * @returns チーム ID → チーム名。取得済みのものだけ入る
+ */
+export const useTeamNames = (teamIds: number[]) => {
+  const uniqueTeamIds = [...new Set(teamIds)];
+  const results = useQueries({
+    queries: uniqueTeamIds.map((teamId) => ({
+      queryKey: ["teamName", teamId],
+      queryFn: () => getTeamName(teamId),
+    })),
+  });
+
+  const teamNameById = new Map<number, string>();
+  results.forEach((result, index) => {
+    if (result.data) teamNameById.set(uniqueTeamIds[index], result.data.name);
+  });
+  return teamNameById;
 };
