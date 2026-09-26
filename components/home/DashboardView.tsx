@@ -30,18 +30,32 @@ export function DashboardView({ isActive = true }: DashboardViewProps) {
   useEffect(() => {
     // 裏の面から出すと、ユーザーが見ていない面の出来事でレビューダイアログが割り込むため。
     if (!isActive || !data) return;
-    const inTopThree = data.group_rankings.some((group) =>
-      [...group.batting_rankings, ...group.pitching_rankings].some(
-        (entry) =>
-          entry.current_rank !== null &&
-          entry.current_rank >= 1 &&
-          entry.current_rank <= 3,
-      ),
+    const entries = data.group_rankings.flatMap((group) => [
+      ...group.batting_rankings,
+      ...group.pitching_rankings,
+    ]);
+    const inTopThree = entries.some(
+      (entry) =>
+        entry.current_rank !== null &&
+        entry.current_rank >= 1 &&
+        entry.current_rank <= 3,
+    );
+    // 上位層以外にも届くよう、順位の絶対値ではなく前回からの上昇でも発火させる。
+    const hasRankUp = entries.some(
+      (entry) =>
+        entry.current_rank !== null &&
+        entry.previous_rank !== null &&
+        entry.current_rank < entry.previous_rank,
     );
     if (inTopThree) {
       triggerPositiveEvent({
         trigger: "dashboard_ranking",
         sessionKey: "dashboard-ranking-top3",
+      });
+    } else if (hasRankUp) {
+      triggerPositiveEvent({
+        trigger: "dashboard_rank_up",
+        sessionKey: "dashboard-ranking-rank-up",
       });
     }
   }, [isActive, data, triggerPositiveEvent]);

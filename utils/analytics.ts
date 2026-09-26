@@ -146,6 +146,7 @@ export type StoreReviewTrigger =
   | "game_record_completed"
   | "shared"
   | "dashboard_ranking"
+  | "dashboard_rank_up"
   | "profile_stats";
 
 /**
