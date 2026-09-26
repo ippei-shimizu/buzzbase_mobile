@@ -1,7 +1,8 @@
 /**
  * 目標一覧画面の「新しい目標を追加」ボタンの Pro 制限（無料は個人の期間目標2件まで）の振る舞いテスト。
  */
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import * as StoreReview from "expo-store-review";
 import {
   apiUrl,
   baseUrl,
@@ -9,6 +10,10 @@ import {
   HttpResponse,
 } from "../../../__tests__/test-utils/handlers";
 import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
+import {
+  resetStoreReviewStorage,
+  seedEligibleStoreReview,
+} from "../../../__tests__/test-utils/storeReview";
 import { server } from "../../../jest-setup-msw";
 import { DEFAULT_PRO_STATUS, FREE_FEATURES } from "../../../types/pro";
 import GoalListScreen from "../list";
@@ -21,6 +26,11 @@ jest.mock("expo-router", () => {
   return buildExpoRouterMock();
 });
 /* eslint-enable @typescript-eslint/no-require-imports */
+
+jest.mock("expo-store-review", () => ({
+  isAvailableAsync: jest.fn().mockResolvedValue(true),
+  requestReview: jest.fn().mockResolvedValue(undefined),
+}));
 
 const getRouterSpies = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -85,6 +95,8 @@ const setupGoals = (goals: unknown[]) => {
   );
 };
 
+afterEach(resetStoreReviewStorage);
+
 describe("GoalListScreen", () => {
   it("無料ユーザーが個人目標を既に2件持っていると、追加ボタンでPro訴求が出て遷移しない", async () => {
     respondFree();
@@ -127,5 +139,77 @@ describe("GoalListScreen", () => {
     fireEvent.press(screen.getByText("新しい目標を追加"));
 
     expect(getRouterSpies().push).toHaveBeenCalledWith("/(goal)/new");
+  });
+
+  it("定性目標を「達成にする」と、ストアレビューを要求する", async () => {
+    respondFree();
+    seedEligibleStoreReview();
+    const qualitativeGoal = {
+      ...buildGoal(1, "monthly"),
+      kind: "qualitative",
+      metric_key: null,
+      target_value: null,
+    };
+    setupGoals([qualitativeGoal]);
+    server.use(
+      http.post(baseUrl("/api/v2/goals/1/achievement"), () =>
+        HttpResponse.json({ ...qualitativeGoal, is_achieved: true }),
+      ),
+    );
+
+    renderWithProviders(<GoalListScreen />);
+
+    fireEvent.press(await screen.findByRole("button", { name: "達成にする" }));
+
+    await waitFor(() =>
+      expect(StoreReview.requestReview).toHaveBeenCalledTimes(1),
+    );
+  });
+
+  it("同じ目標で達成と取り消しを繰り返しても、ポジティブイベントは1件だけ数える", async () => {
+    respondFree();
+    const storage = seedEligibleStoreReview();
+    const qualitativeGoal = {
+      ...buildGoal(2, "monthly"),
+      kind: "qualitative",
+      metric_key: null,
+      target_value: null,
+    };
+    let isAchieved = false;
+    const currentGoal = () => ({ ...qualitativeGoal, is_achieved: isAchieved });
+    server.use(
+      http.get(baseUrl("/api/v2/goals"), () =>
+        HttpResponse.json([currentGoal()]),
+      ),
+      http.get(baseUrl("/api/v2/goals/history"), () => HttpResponse.json([])),
+      http.post(baseUrl("/api/v2/goals/2/achievement"), () => {
+        isAchieved = true;
+        return HttpResponse.json(currentGoal());
+      }),
+      http.delete(baseUrl("/api/v2/goals/2/achievement"), () => {
+        isAchieved = false;
+        return HttpResponse.json(currentGoal());
+      }),
+    );
+
+    renderWithProviders(<GoalListScreen />);
+
+    fireEvent.press(await screen.findByRole("button", { name: "達成にする" }));
+    await waitFor(() =>
+      expect(storage.get("store_review_positive_event_count")).toBe("2"),
+    );
+
+    fireEvent.press(screen.getByRole("tab", { name: "達成" }));
+    fireEvent.press(
+      await screen.findByRole("button", { name: "達成を取り消す" }),
+    );
+    fireEvent.press(screen.getByRole("tab", { name: "進行中" }));
+    fireEvent.press(await screen.findByRole("button", { name: "達成にする" }));
+    await waitFor(() => expect(isAchieved).toBe(true));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(storage.get("store_review_positive_event_count")).toBe("2");
   });
 });

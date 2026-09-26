@@ -11,6 +11,7 @@ import {
 import { Icon } from "@components/icon/Icon";
 import { useAchievementSummarySeen } from "@hooks/useAchievementSummarySeen";
 import { useGoalBadges, useGoalHistory } from "@hooks/useGoals";
+import { useReviewPrompt } from "@hooks/useReviewPrompt";
 import {
   formatMonthKeyJa,
   isDateInMonth,
@@ -26,6 +27,7 @@ export function AchievementSummaryModal() {
   const { goals: history, isLoading: isHistoryLoading } = useGoalHistory();
   const { badges, isLoading: isBadgesLoading } = useGoalBadges();
   const { getLastShownPeriod, markPeriodShown } = useAchievementSummarySeen();
+  const { triggerPositiveEvent } = useReviewPrompt();
   const [period, setPeriod] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,13 +62,22 @@ export function AchievementSummaryModal() {
     isDateInMonth(badge.awarded_at, period),
   );
 
-  const handleClose = () => {
+  const close = () => {
     void markPeriodShown(period);
     setPeriod(null);
   };
 
+  const handleClose = () => {
+    close();
+    // モーダルの上に OS のダイアログを重ねないよう、閉じたあとに要求する。
+    if (achievedCount > 0) {
+      void triggerPositiveEvent({ trigger: "goal_achieved" });
+    }
+  };
+
+  // 遷移直後のバッジ一覧に OS のダイアログを重ねないため、こちらからは要求しない。
   const handleViewBadges = () => {
-    handleClose();
+    close();
     router.push("/(goal)/badges");
   };
 

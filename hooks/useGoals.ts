@@ -10,6 +10,7 @@ import {
   unachieveGoal,
   updateGoal,
 } from "../services/goalService";
+import { useReviewPrompt } from "@hooks/useReviewPrompt";
 import { trackGoalCreated } from "@utils/analytics";
 
 /** 達成バッジ一覧。FinalizeGoalsJobが目標達成時に付与したバッジを新しい順に返す。 */
@@ -40,6 +41,7 @@ export const useGoalHistory = () => {
 
 export const useGoalMutations = () => {
   const queryClient = useQueryClient();
+  const { triggerPositiveEvent } = useReviewPrompt();
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["goals"] });
     queryClient.invalidateQueries({ queryKey: ["goalHistory"] });
@@ -60,7 +62,14 @@ export const useGoalMutations = () => {
   const remove = useMutation({ mutationFn: deleteGoal, onSuccess: invalidate });
   const achieve = useMutation({
     mutationFn: achieveGoal,
-    onSuccess: invalidate,
+    onSuccess: (_goal, goalId) => {
+      invalidate();
+      // 達成と取り消しの往復で同じ目標を二重に数えないよう、目標ごとにセッション1回へ抑える。
+      void triggerPositiveEvent({
+        trigger: "goal_achieved",
+        sessionKey: `goal-achieved-${goalId}`,
+      });
+    },
   });
   const unachieve = useMutation({
     mutationFn: unachieveGoal,
