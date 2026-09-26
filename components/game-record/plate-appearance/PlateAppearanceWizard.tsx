@@ -245,9 +245,9 @@ export function PlateAppearanceWizard({
       }
       completedRef.current = true;
       trackPlateAppearanceCompleted({
+        ...toDetailInputFlags(state),
         is_edit: isEditMode,
         has_hit_direction: state.hitDirectionId !== null,
-        ...toDetailInputFlags(state),
       });
       resetStore();
       onClose();
