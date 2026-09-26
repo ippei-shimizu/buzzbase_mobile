@@ -18,6 +18,8 @@ const LEGACY_SHOWN_COUNT_KEY = "store_review_shown_count";
 const LEGACY_SHOWN_YEAR_KEY = "store_review_shown_year";
 
 const MILESTONES = [2, 5, 20, 50, 100];
+// 最後のマイルストーン以降も対象から外さないよう、この間隔で繰り返す。
+const REPEAT_MILESTONE_INTERVAL = 100;
 const MIN_DAYS_SINCE_INSTALL = 7;
 // Apple の上限「365日で3回」に窓を揃える。暦年で数えると年末と年明けで最大6回になる。
 const MAX_SHOWS_PER_365_DAYS = 3;
@@ -42,10 +44,19 @@ function findReachedMilestone(
   count: number,
   consumedMilestone: number,
 ): number | null {
-  const reached = MILESTONES.filter(
+  const lastFixedMilestone = Math.max(...MILESTONES);
+  const repeatedMilestones: number[] = [];
+  for (
+    let milestone = lastFixedMilestone + REPEAT_MILESTONE_INTERVAL;
+    milestone <= count;
+    milestone += REPEAT_MILESTONE_INTERVAL
+  ) {
+    repeatedMilestones.push(milestone);
+  }
+  const reached = [...MILESTONES, ...repeatedMilestones].filter(
     (milestone) => milestone > consumedMilestone && milestone <= count,
   );
-  return reached.length > 0 ? reached[reached.length - 1] : null;
+  return reached.length > 0 ? Math.max(...reached) : null;
 }
 
 function parseShownAtList(value: string): string[] {

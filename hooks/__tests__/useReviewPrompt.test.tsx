@@ -95,6 +95,21 @@ describe("useReviewPrompt", () => {
     expect(requestReviewMock).toHaveBeenCalledTimes(1);
   });
 
+  it("最後のマイルストーン(100)を消化した後も、100件ごとに要求の対象になる", async () => {
+    seed({
+      store_review_positive_event_count: "149",
+      store_review_install_date: daysAgo(730),
+    });
+    expect(await triggerShare()).toBe(true);
+
+    seed({
+      store_review_positive_event_count: "199",
+      store_review_last_shown: daysAgo(100),
+    });
+    expect(await triggerShare()).toBe(true);
+    expect(requestReviewMock).toHaveBeenCalledTimes(2);
+  });
+
   it("前回の要求から60日未満は要求せず、60日経過後に要求する", async () => {
     seed({
       store_review_positive_event_count: "4",
