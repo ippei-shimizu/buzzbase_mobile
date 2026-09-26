@@ -44,9 +44,6 @@ const pressRow = (label: string) => {
   fireEvent.press(rowOf(label));
 };
 
-const isExpanded = (label: string) =>
-  rowOf(label).props.accessibilityState?.expanded === true;
-
 describe("PitchTypeCard", () => {
   it("複数の球種の行を同時に展開できる", () => {
     renderCard();
@@ -54,8 +51,8 @@ describe("PitchTypeCard", () => {
     pressRow("ストレート");
     pressRow("カーブ");
 
-    expect(isExpanded("ストレート")).toBe(true);
-    expect(isExpanded("カーブ")).toBe(true);
+    expect(rowOf("ストレート")).toBeExpanded();
+    expect(rowOf("カーブ")).toBeExpanded();
     expect(screen.getAllByText("出塁率")).toHaveLength(2);
   });
 
@@ -66,8 +63,8 @@ describe("PitchTypeCard", () => {
     pressRow("カーブ");
     pressRow("ストレート");
 
-    expect(isExpanded("ストレート")).toBe(false);
-    expect(isExpanded("カーブ")).toBe(true);
+    expect(rowOf("ストレート")).toBeCollapsed();
+    expect(rowOf("カーブ")).toBeExpanded();
     expect(screen.getAllByText("出塁率")).toHaveLength(1);
   });
 
@@ -78,8 +75,8 @@ describe("PitchTypeCard", () => {
     pressRow("ストレート");
     rerender(buildCard([buildRow(1, "ストレート"), buildRow(3, "スライダー")]));
 
-    expect(isExpanded("ストレート")).toBe(true);
-    expect(isExpanded("スライダー")).toBe(false);
+    expect(rowOf("ストレート")).toBeExpanded();
+    expect(rowOf("スライダー")).toBeCollapsed();
     expect(screen.getAllByText("出塁率")).toHaveLength(1);
   });
 
