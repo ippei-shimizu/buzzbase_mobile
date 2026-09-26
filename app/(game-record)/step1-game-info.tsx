@@ -98,7 +98,7 @@ export default function Step1GameInfoScreen() {
       });
       // 新規作成時、直近試合のフォーム初期値を読み込む。
       // - inning_format / match_type / batting_order: 直近試合の値
-      // - defensive_position: プロフィール優先 → 直近試合フォールバック（サーバー側で解決済み）
+      // - defensive_position / my_team_name: プロフィール優先 → 直近試合フォールバック（サーバー側で解決済み）
       // 履歴なし・未設定で nil が返るフィールドは触らず initialState のままにする。
       getMatchResultFormDefaults()
         .then((defaults) => {
@@ -114,6 +114,14 @@ export default function Step1GameInfoScreen() {
           }
           if (defaults.batting_order) {
             s.setField("battingOrder", defaults.batting_order);
+          }
+          // id と名前は組で入れる。名前だけ入れるとチーム作成時に同名の別チームへ
+          // 紐付いたり重複行を作ったりするため、サーバーが確定した id をそのまま使う。
+          // プロフィール由来の自動セット（別 effect）と非同期の完了順が保証されないので、
+          // どちらが先でも解決済みの id を上書きしないようガードする。
+          if (!s.myTeamId && defaults.my_team_id && defaults.my_team_name) {
+            s.setField("myTeamName", defaults.my_team_name);
+            s.setField("myTeamId", defaults.my_team_id);
           }
         })
         .catch(() => {

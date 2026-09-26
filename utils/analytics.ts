@@ -248,3 +248,23 @@ export const trackOnboardingCompleted = (props: {
   skipped: boolean;
   last_step_index: number;
 }) => capture("onboarding completed", props);
+
+/** 登録直後の任意プロフィール入力の表示。 */
+export const trackProfileSetupViewed = () => capture("profile setup viewed");
+
+/**
+ * 登録直後の任意プロフィール入力の終了。スキップと「はじめる」の両方で送り、`skipped` で区別する。
+ * どの項目が埋まったかは、記録フォームの初期値に効く項目に絞って持たせる。
+ */
+export const trackProfileSetupCompleted = (props: {
+  skipped: boolean;
+  has_team: boolean;
+  position_count: number;
+}) => capture("profile setup completed", props);
+
+/**
+ * スキップした人向けのプロフィール設定導線（ダッシュボードのウェルカムカード）のタップ。
+ * `profile updated` はプロフィール編集画面から送られるため、この導線経由かを区別するのに必要。
+ */
+export const trackProfileSetupReentryTapped = () =>
+  capture("profile setup reentry tapped");

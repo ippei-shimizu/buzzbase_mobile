@@ -13,6 +13,7 @@ import { BackToTopButton } from "@components/ui/BackToTopButton";
 import { useBackToTop } from "@hooks/useBackToTop";
 import { useInviteCardDismissal } from "@hooks/useInviteCardDismissal";
 import { useProfile } from "@hooks/useProfile";
+import { trackProfileSetupReentryTapped } from "@utils/analytics";
 import { GroupRankings } from "./GroupRankings";
 import { RecentGameResults } from "./RecentGameResults";
 import { StatsOverview } from "./StatsOverview";
@@ -76,6 +77,22 @@ export const DashboardContent = ({
     );
   };
 
+  // 登録直後のプロフィール入力をスキップした人が後から設定できる導線。
+  // 所属チームとポジションは試合記録フォームの初期値に使われるため、この2つを判定に使う。
+  const needsProfileSetup =
+    profile !== undefined &&
+    !profile.team_id &&
+    (profile.positions ?? []).length === 0;
+  const profileSetupAction = needsProfileSetup
+    ? {
+        label: "所属チームとポジションを設定する",
+        onPress: () => {
+          trackProfileSetupReentryTapped();
+          router.push("/(tabs)/(profile)/edit");
+        },
+      }
+    : undefined;
+
   return (
     <View style={styles.wrapper}>
       <ScrollView
@@ -97,6 +114,7 @@ export const DashboardContent = ({
             variant="record"
             onPress={handleRecordGame}
             style={styles.welcomeCard}
+            secondaryAction={profileSetupAction}
           />
         ) : (
           <>
