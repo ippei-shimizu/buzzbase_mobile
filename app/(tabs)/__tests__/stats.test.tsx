@@ -167,7 +167,7 @@ describe("成績画面の投球サマリ", () => {
           win: 3,
           loss: 1,
           saves: 2,
-          innings_pitched: 21.33,
+          innings_pitched: 21.333,
           number_of_pitches: 318,
           strikeouts: 25,
           era: 2.95,
@@ -183,14 +183,14 @@ describe("成績画面の投球サマリ", () => {
     fireEvent.press(screen.getByText("投球"));
 
     expect(await screen.findByText("21.33 投球回")).toBeOnTheScreen();
-    expect(screen.getByText("2.95")).toBeOnTheScreen();
-    expect(screen.getByText("1.17")).toBeOnTheScreen();
-    expect(screen.getByText("10.55")).toBeOnTheScreen();
-    expect(screen.getByText("3.13")).toBeOnTheScreen();
-    expect(screen.getByText("3勝1敗")).toBeOnTheScreen();
-    expect(screen.getByText("総投球数")).toBeOnTheScreen();
-    expect(screen.getByText("318")).toBeOnTheScreen();
-    expect(screen.getByText("21.33")).toBeOnTheScreen();
+    expect(screen.getByLabelText("防御率 2.95")).toBeOnTheScreen();
+    expect(screen.getByLabelText("WHIP 1.17")).toBeOnTheScreen();
+    expect(screen.getByLabelText("K/9 10.55")).toBeOnTheScreen();
+    expect(screen.getByLabelText("K/BB 3.13")).toBeOnTheScreen();
+    expect(screen.getByLabelText("勝敗 3勝1敗")).toBeOnTheScreen();
+    expect(screen.getAllByLabelText("奪三振 25")).toHaveLength(2);
+    expect(screen.getByLabelText("総投球数 318")).toBeOnTheScreen();
+    expect(screen.getByLabelText("投球回 21.33")).toBeOnTheScreen();
   });
 
   it("投球タブを開くまで投球サマリを取得しない", async () => {

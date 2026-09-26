@@ -41,14 +41,20 @@ export const PitchingAdditionalStatsCard = ({
 }: PitchingAdditionalStatsCardProps) => (
   <View style={styles.container}>
     <View style={styles.grid}>
-      {CELLS.map((cell) => (
-        <View key={cell.key} style={styles.cell}>
-          <Text style={styles.label}>{cell.label}</Text>
-          <Text style={styles.value}>
-            {formatValue(data[cell.key], cell.format)}
-          </Text>
-        </View>
-      ))}
+      {CELLS.map((cell) => {
+        const value = formatValue(data[cell.key], cell.format);
+        return (
+          <View
+            key={cell.key}
+            style={styles.cell}
+            accessible
+            accessibilityLabel={`${cell.label} ${value}`}
+          >
+            <Text style={styles.label}>{cell.label}</Text>
+            <Text style={styles.value}>{value}</Text>
+          </View>
+        );
+      })}
     </View>
   </View>
 );

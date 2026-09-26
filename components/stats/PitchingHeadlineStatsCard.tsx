@@ -50,7 +50,12 @@ export function PitchingHeadlineStatsCard({
 
       <View style={styles.row}>
         {metrics.primary.map((metric) => (
-          <View key={metric.label} style={styles.metricCell}>
+          <View
+            key={metric.label}
+            style={styles.metricCell}
+            accessible
+            accessibilityLabel={`${metric.label} ${metric.value}`}
+          >
             <Text style={styles.metricValue}>{metric.value}</Text>
             <Text style={styles.metricLabel}>{metric.label}</Text>
           </View>
@@ -59,7 +64,12 @@ export function PitchingHeadlineStatsCard({
 
       <View style={[styles.row, styles.secondaryRow]}>
         {metrics.secondary.map((metric) => (
-          <View key={metric.label} style={styles.metricCell}>
+          <View
+            key={metric.label}
+            style={styles.metricCell}
+            accessible
+            accessibilityLabel={`${metric.label} ${metric.value}`}
+          >
             <Text style={styles.secondaryValue}>{metric.value}</Text>
             <Text style={styles.metricLabel}>{metric.label}</Text>
           </View>
