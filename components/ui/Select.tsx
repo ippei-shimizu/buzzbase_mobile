@@ -7,6 +7,7 @@ import {
   FlatList,
   Pressable,
 } from "react-native";
+import { Icon } from "@components/icon/Icon";
 
 interface SelectOption {
   id: number;
@@ -26,7 +27,30 @@ interface Props {
    * 打球方向の Select をユーザーに編集させたくない場合。
    */
   disabled?: boolean;
+  /** 見た目。outlined は角丸の枠とシェブロン付きで、Web 版の select に合わせたもの */
+  variant?: "underline" | "outlined";
+  accessibilityLabel?: string;
 }
+
+const triggerStyles = {
+  underline: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#71717A",
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  outlined: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+    borderWidth: 1,
+    borderColor: "#71717A",
+    borderRadius: 8,
+    backgroundColor: "#27272A",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+};
 
 export function Select({
   options,
@@ -35,6 +59,8 @@ export function Select({
   placeholder = "選択",
   style,
   disabled = false,
+  variant = "underline",
+  accessibilityLabel,
 }: Props) {
   const [visible, setVisible] = useState(false);
 
@@ -44,18 +70,11 @@ export function Select({
   return (
     <>
       <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
         accessibilityState={{ disabled }}
         disabled={disabled}
-        style={[
-          {
-            borderBottomWidth: 1,
-            borderBottomColor: "#71717A",
-            paddingVertical: 8,
-            paddingHorizontal: 4,
-            opacity: disabled ? 0.4 : 1,
-          },
-          style,
-        ]}
+        style={[triggerStyles[variant], { opacity: disabled ? 0.4 : 1 }, style]}
         onPress={() => setVisible(true)}
       >
         <Text
@@ -67,6 +86,9 @@ export function Select({
         >
           {selectedLabel}
         </Text>
+        {variant === "outlined" ? (
+          <Icon name="chevron-down" size={16} color="#A1A1AA" />
+        ) : null}
       </TouchableOpacity>
 
       <Modal

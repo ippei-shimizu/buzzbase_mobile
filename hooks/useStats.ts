@@ -13,6 +13,7 @@ import {
   getHitDirections,
   getHitLocations,
   getPitchCoursePitchTypes,
+  getPitcherFaceoffCourses,
   getPitchCourses,
   getPitchTypes,
   getPitcherAttributeSummary,
@@ -243,6 +244,22 @@ export const usePitchCoursePitchTypes = (
   useQuery({
     queryKey: ["pitchCoursePitchTypes", filters],
     queryFn: () => getPitchCoursePitchTypes(filters),
+    enabled,
+    staleTime: STATS_STALE_TIME,
+    placeholderData: keepPreviousData,
+  });
+
+/**
+ * 対戦投手×コースのクロス集計。投手数×25 セルと大きいため、
+ * 「投手別」タブを開いたときにだけ enabled で取得する。
+ */
+export const usePitcherFaceoffCourses = (
+  filters: StatsFilters,
+  enabled = false,
+) =>
+  useQuery({
+    queryKey: ["pitcherFaceoffCourses", filters],
+    queryFn: () => getPitcherFaceoffCourses(filters),
     enabled,
     staleTime: STATS_STALE_TIME,
     placeholderData: keepPreviousData,

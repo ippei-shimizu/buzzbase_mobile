@@ -3,6 +3,8 @@ import type {
   PitchCourseData,
   PitchCoursePitchTypeData,
   PitchCourseZone,
+  PitcherFaceoffCourseData,
+  PitcherFaceoffCourseRow,
 } from "../../types/stats";
 import React, { useState } from "react";
 import {
@@ -13,7 +15,11 @@ import {
   View,
 } from "react-native";
 import { PitchCourseGrid } from "@components/stats/PitchCourseGrid";
-import { usePitchCoursePitchTypes } from "@hooks/useStats";
+import { Select } from "@components/ui/Select";
+import {
+  usePitchCoursePitchTypes,
+  usePitcherFaceoffCourses,
+} from "@hooks/useStats";
 import { formatBattingAverage } from "@utils/formatBattingAverage";
 
 interface Props {
@@ -23,9 +29,19 @@ interface Props {
    * （最大 250 セル）を取得する。ダミー表示（Paywall 用）では未指定にする。
    */
   crossFilters?: StatsFilters;
+  /**
+   * Paywall 用のダミー表示で「球種別」タブを体験させるためのサンプル。
+   * 指定時は API を呼ばずにこのデータで球種別タブを表示する。
+   */
+  samplePitchTypeCross?: PitchCoursePitchTypeData;
+  /**
+   * Paywall 用のダミー表示で「投手別」タブを体験させるためのサンプル。
+   * 指定時は API を呼ばずにこのデータで投手別タブを表示する。
+   */
+  samplePitcherCross?: PitcherFaceoffCourseData;
 }
 
-type PitchCourseTab = "course" | "pitch_type";
+type PitchCourseTab = "course" | "pitch_type" | "pitcher";
 
 /**
  * 固定閾値の色スケール。データ内 min/max の相対スケールにすると、フィルタを
@@ -106,26 +122,109 @@ function ZoneHeatmap({
   );
 }
 
-const Notes = () => (
+const formatPitcherOption = (row: PitcherFaceoffCourseRow) =>
+  `${row.team_name ? `${row.label}（${row.team_name}）` : row.label} ${row.plate_appearances}打席`;
+
+function PitcherCrossPanel({
+  data,
+  isLoading,
+  selectedPitcherId,
+  onSelectPitcher,
+}: {
+  data: PitcherFaceoffCourseData | undefined;
+  isLoading: boolean;
+  selectedPitcherId: number | null;
+  onSelectPitcher: (pitcherId: number) => void;
+}) {
+  if (isLoading) {
+    return (
+      <View style={styles.crossLoading}>
+        <ActivityIndicator color="#d08000" />
+      </View>
+    );
+  }
+  if (!data) {
+    return (
+      <View style={styles.crossLoading}>
+        <Text style={styles.emptyHint}>
+          投手別のデータを取得できませんでした
+        </Text>
+      </View>
+    );
+  }
+  if (data.rows.length === 0) {
+    return (
+      <View style={styles.crossLoading}>
+        <Text style={styles.emptyHint}>
+          コースを記録した対戦が{data.min_plate_appearances}
+          打席以上の投手がいません
+        </Text>
+      </View>
+    );
+  }
+
+  const selectedRow: PitcherFaceoffCourseRow =
+    data.rows.find((row) => row.id === selectedPitcherId) ?? data.rows[0];
+
+  return (
+    <>
+      <Select
+        variant="outlined"
+        accessibilityLabel="対戦投手"
+        options={data.rows.map((row) => ({
+          id: row.id,
+          label: formatPitcherOption(row),
+        }))}
+        selectedId={selectedRow.id}
+        onSelect={onSelectPitcher}
+        style={styles.pitcherSelect}
+      />
+      <ZoneHeatmap zones={selectedRow.zones} minAtBats={data.min_at_bats} />
+      <Notes>
+        <Text style={styles.noteText}>
+          コースを記録した対戦が{data.min_plate_appearances}
+          打席以上の投手のみ表示しています
+        </Text>
+      </Notes>
+    </>
+  );
+}
+
+const Notes = ({ children }: { children?: React.ReactNode }) => (
   <View style={styles.notes}>
     <Text style={styles.noteText}>打数が3未満のコースは参考値です</Text>
     <Text style={styles.noteText}>捕手目線で表示しています</Text>
+    {children}
   </View>
 );
 
 /**
- * コース別の打率カード（Pro）。コース別 / 球種別の2タブ構成で、
- * 球種別のクロス集計はタブを開いたときにだけ取得する。
+ * コース別の打率カード（Pro）。コース別 / 球種別 / 投手別の3タブ構成で、
+ * 球種別・投手別のクロス集計はタブを開いたときにだけ取得する。
  */
-export function PitchCourseCard({ data, crossFilters }: Props) {
+export function PitchCourseCard({
+  data,
+  crossFilters,
+  samplePitchTypeCross,
+  samplePitcherCross,
+}: Props) {
   const [tab, setTab] = useState<PitchCourseTab>("course");
   const [selectedPitchTypeId, setSelectedPitchTypeId] = useState<number | null>(
     null,
   );
+  const [selectedPitcherId, setSelectedPitcherId] = useState<number | null>(
+    null,
+  );
   const showCrossTab = crossFilters !== undefined;
+  const showPitchTypeTab = showCrossTab || samplePitchTypeCross !== undefined;
+  const showPitcherTab = showCrossTab || samplePitcherCross !== undefined;
   const cross = usePitchCoursePitchTypes(
     crossFilters ?? {},
-    showCrossTab && tab === "pitch_type",
+    showCrossTab && samplePitchTypeCross === undefined && tab === "pitch_type",
+  );
+  const pitcherCross = usePitcherFaceoffCourses(
+    crossFilters ?? {},
+    showCrossTab && samplePitcherCross === undefined && tab === "pitcher",
   );
 
   if (data.total_target_pa === 0) {
@@ -144,7 +243,9 @@ export function PitchCourseCard({ data, crossFilters }: Props) {
     );
   }
 
-  const crossData: PitchCoursePitchTypeData | undefined = cross.data;
+  const crossData: PitchCoursePitchTypeData | undefined =
+    samplePitchTypeCross ?? cross.data;
+  const isCrossLoading = samplePitchTypeCross ? false : cross.isLoading;
   const selectedRow =
     crossData?.rows.find((row) => row.id === selectedPitchTypeId) ??
     crossData?.rows.find((row) => row.plate_appearances > 0) ??
@@ -157,28 +258,41 @@ export function PitchCourseCard({ data, crossFilters }: Props) {
         <Text style={styles.targetPa}>対象 {data.total_target_pa} 打席</Text>
       </View>
 
-      {showCrossTab ? (
+      {showPitchTypeTab || showPitcherTab ? (
         <View style={styles.tabRow}>
           {(
             [
-              { key: "course", label: "コース別" },
-              { key: "pitch_type", label: "球種別" },
+              { key: "course", label: "コース別", isAvailable: true },
+              {
+                key: "pitch_type",
+                label: "球種別",
+                isAvailable: showPitchTypeTab,
+              },
+              { key: "pitcher", label: "投手別", isAvailable: showPitcherTab },
             ] as const
-          ).map(({ key, label }) => (
-            <TouchableOpacity
-              key={key}
-              accessibilityRole="button"
-              accessibilityState={{ selected: tab === key }}
-              style={[styles.tabButton, tab === key && styles.tabButtonActive]}
-              onPress={() => setTab(key)}
-            >
-              <Text
-                style={[styles.tabLabel, tab === key && styles.tabLabelActive]}
+          )
+            .filter(({ isAvailable }) => isAvailable)
+            .map(({ key, label }) => (
+              <TouchableOpacity
+                key={key}
+                accessibilityRole="button"
+                accessibilityState={{ selected: tab === key }}
+                style={[
+                  styles.tabButton,
+                  tab === key && styles.tabButtonActive,
+                ]}
+                onPress={() => setTab(key)}
               >
-                {label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    tab === key && styles.tabLabelActive,
+                  ]}
+                >
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            ))}
         </View>
       ) : null}
 
@@ -213,7 +327,14 @@ export function PitchCourseCard({ data, crossFilters }: Props) {
           </View>
           <Notes />
         </>
-      ) : cross.isLoading ? (
+      ) : tab === "pitcher" ? (
+        <PitcherCrossPanel
+          data={samplePitcherCross ?? pitcherCross.data}
+          isLoading={samplePitcherCross ? false : pitcherCross.isLoading}
+          selectedPitcherId={selectedPitcherId}
+          onSelectPitcher={setSelectedPitcherId}
+        />
+      ) : isCrossLoading ? (
         <View style={styles.crossLoading}>
           <ActivityIndicator color="#d08000" />
         </View>
@@ -418,6 +539,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 5,
     paddingHorizontal: 10,
+  },
+  pitcherSelect: {
+    marginTop: 12,
   },
   chipSelected: {
     backgroundColor: "#d08000",

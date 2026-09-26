@@ -321,6 +321,17 @@ export interface PitchCoursePitchTypeData {
   min_at_bats: number;
 }
 
+export interface PitcherFaceoffCourseRow extends PitchCoursePitchTypeRow {
+  team_name: string | null;
+}
+
+export interface PitcherFaceoffCourseData {
+  rows: PitcherFaceoffCourseRow[];
+  total_target_pa: number;
+  min_at_bats: number;
+  min_plate_appearances: number;
+}
+
 /**
  * stats 打撃の追加スタッツ（主要スタッツ以外）。
  * マイページ / ダッシュボードの SummaryStatsTable と同じ 16 項目。
