@@ -279,6 +279,18 @@ describe("UserProfileScreen ([userId].tsx)", () => {
     });
   });
 
+  describe("フィードバック導線", () => {
+    it("他ユーザーのプロフィールには、成績タブ・試合タブともにご意見・ご要望の導線を出さない", () => {
+      render(<UserProfileScreen />);
+      expect(screen.getByText("年度: 全て")).toBeTruthy();
+      expect(screen.queryByText("ご意見・ご要望を送る")).toBeNull();
+
+      fireEvent.press(screen.getByText("試合"));
+      expect(screen.getByText(/日付（新しい順）/)).toBeTruthy();
+      expect(screen.queryByText("ご意見・ご要望を送る")).toBeNull();
+    });
+  });
+
   describe("非公開アカウント時のフィルタ非表示", () => {
     it("非公開かつフォロー前の場合、フィルタも成績/試合タブも表示されない", () => {
       mockUseUserProfileDetail.mockReturnValue(
