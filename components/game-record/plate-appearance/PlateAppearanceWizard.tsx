@@ -26,6 +26,7 @@ import {
 } from "@hooks/usePlateAppearances";
 import {
   isBattingRecordReadyToSubmit,
+  toDetailInputFlags,
   useBattingRecordStore,
 } from "@stores/battingRecordStore";
 import { useSnackbarStore } from "@stores/snackbarStore";
@@ -105,19 +106,7 @@ export function PlateAppearanceWizard({
   const plateResultIdValue = useBattingRecordStore((s) => s.plateResultId);
   const swingTypeValue = useBattingRecordStore((s) => s.swingType);
   const hasDetailInputFromStore = useBattingRecordStore(
-    (s) =>
-      s.finalBalls !== null ||
-      s.finalStrikes !== null ||
-      s.finalOuts !== null ||
-      s.firstPitchSwing !== null ||
-      s.runnersState !== null ||
-      s.inning !== null ||
-      s.contactQualityId !== null ||
-      s.timingId !== null ||
-      s.pitchTypeId !== null ||
-      s.pitcherId !== null ||
-      s.appearanceSituationId !== null ||
-      (s.selfAnalysisMemo !== null && s.selfAnalysisMemo !== ""),
+    (s) => toDetailInputFlags(s).has_detail,
   );
 
   const isEditMode = editingPlateAppearance !== undefined;
@@ -256,9 +245,9 @@ export function PlateAppearanceWizard({
       }
       completedRef.current = true;
       trackPlateAppearanceCompleted({
+        ...toDetailInputFlags(state),
         is_edit: isEditMode,
-        has_pitcher: state.pitcherId !== null,
-        has_detail: hasDetailInputFromStore,
+        has_hit_direction: state.hitDirectionId !== null,
       });
       resetStore();
       onClose();

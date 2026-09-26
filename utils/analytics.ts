@@ -1,5 +1,6 @@
 import type { OnboardingIllustration } from "../constants/onboarding";
 import type { GoalKind, GoalPeriodType } from "../types/goal";
+import type { PlateAppearanceDetailFlags } from "../types/plateAppearance";
 import type { PlanType, Platform, ProFeature } from "../types/pro";
 import type { EventType } from "../types/schedule";
 import type { BattingTrendGranularity } from "../types/stats";
@@ -84,13 +85,14 @@ export const trackProfileUpdated = () => capture("profile updated");
 
 /**
  * 打席記録ウィザードの作成 / 更新完了。`is_edit` で新規・編集を区別する。
- * `has_pitcher` / `has_detail` は任意の詳細入力がどれだけ使われたかの計測用。
+ * 詳細フラグは任意の詳細入力がどの項目でどれだけ使われたかの計測用。
  */
-export const trackPlateAppearanceCompleted = (props: {
-  is_edit: boolean;
-  has_pitcher: boolean;
-  has_detail: boolean;
-}) => capture("plate appearance completed", props);
+export const trackPlateAppearanceCompleted = (
+  props: PlateAppearanceDetailFlags & {
+    is_edit: boolean;
+    has_hit_direction: boolean;
+  },
+) => capture("plate appearance completed", props);
 
 /** 打席記録ウィザードの途中離脱（完了せずに画面を離れた）。 */
 export const trackPlateAppearanceCanceled = (props: { is_edit: boolean }) =>

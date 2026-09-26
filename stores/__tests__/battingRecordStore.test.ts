@@ -5,7 +5,10 @@
  * 詳細項目（#334）追加に伴うリグレッション防止が主目的。
  */
 import type { PlateAppearanceV2 } from "../../types/plateAppearance";
-import { useBattingRecordStore } from "../battingRecordStore";
+import {
+  toDetailInputFlags,
+  useBattingRecordStore,
+} from "../battingRecordStore";
 
 const buildPlateAppearance = (
   overrides: Partial<PlateAppearanceV2> = {},
@@ -274,5 +277,55 @@ describe("useBattingRecordStore - swing_type", () => {
 
     store.setPlateResult(15);
     expect(useBattingRecordStore.getState().swingType).toBeNull();
+  });
+});
+
+describe("toDetailInputFlags", () => {
+  it("初期状態ではすべてのフラグが false になる", () => {
+    const flags = toDetailInputFlags(useBattingRecordStore.getState());
+
+    expect(Object.values(flags).every((flag) => flag === false)).toBe(true);
+  });
+
+  it("コースだけ入力した打席も詳細ありとして数える", () => {
+    useBattingRecordStore
+      .getState()
+      .setPitchCourse({ course: 5, location: { x: 0.5, y: 0.5 } });
+
+    expect(toDetailInputFlags(useBattingRecordStore.getState())).toMatchObject({
+      has_detail: true,
+      has_pitch_course: true,
+    });
+  });
+
+  it("入力した項目のフラグだけが true になる", () => {
+    useBattingRecordStore.getState().initializeFromExisting(
+      buildPlateAppearance({
+        final_balls: null,
+        final_strikes: 1,
+        final_outs: null,
+        first_pitch_swing: null,
+        runners_state: null,
+        inning: null,
+        pitch_course: null,
+        pitch_course_x: null,
+        pitch_course_y: null,
+        self_analysis_memo: "",
+        timing: null,
+      }),
+    );
+
+    expect(toDetailInputFlags(useBattingRecordStore.getState())).toEqual({
+      has_detail: true,
+      has_pitcher: false,
+      has_count: true,
+      has_situation: false,
+      has_first_pitch_swing: false,
+      has_contact_quality: true,
+      has_timing: false,
+      has_pitch_type: true,
+      has_pitch_course: false,
+      has_memo: false,
+    });
   });
 });

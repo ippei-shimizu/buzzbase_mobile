@@ -2,6 +2,7 @@ import type {
   HitType,
   HomeRunType,
   OutType,
+  PlateAppearanceDetailFlags,
   PlateAppearanceV2,
   PlateAppearanceV2Input,
   PlateAppearanceV2Payload,
@@ -336,3 +337,53 @@ export const useBattingRecordStore = create<BattingRecordState>((set, get) => ({
 export const isBattingRecordReadyToSubmit = (
   state: Pick<BattingRecordState, "batterBoxNumber" | "plateResultId">,
 ): boolean => state.batterBoxNumber !== null && state.plateResultId !== null;
+
+type DetailInputSource = Pick<
+  BattingRecordState,
+  | "finalBalls"
+  | "finalStrikes"
+  | "finalOuts"
+  | "firstPitchSwing"
+  | "runnersState"
+  | "inning"
+  | "contactQualityId"
+  | "timingId"
+  | "pitchTypeId"
+  | "pitchCourse"
+  | "selfAnalysisMemo"
+  | "pitcherId"
+  | "appearanceSituationId"
+>;
+
+/**
+ * 任意項目である打席詳細の入力有無を項目別に判定する（メモは空文字を未入力として扱う）。
+ * front（`buzzbase_front/.../detail/detailState.ts`）と同じ構成要素で判定する。
+ * @param state 打席ウィザードの状態
+ * @return 項目別フラグと、そのいずれかが立っているかを表す `has_detail`
+ */
+export const toDetailInputFlags = (
+  state: DetailInputSource,
+): PlateAppearanceDetailFlags => {
+  const itemFlags = {
+    has_pitcher: state.pitcherId !== null,
+    has_count:
+      state.finalBalls !== null ||
+      state.finalStrikes !== null ||
+      state.finalOuts !== null,
+    has_situation:
+      state.runnersState !== null ||
+      state.inning !== null ||
+      state.appearanceSituationId !== null,
+    has_first_pitch_swing: state.firstPitchSwing !== null,
+    has_contact_quality: state.contactQualityId !== null,
+    has_timing: state.timingId !== null,
+    has_pitch_type: state.pitchTypeId !== null,
+    has_pitch_course: state.pitchCourse !== null,
+    has_memo: state.selfAnalysisMemo !== null && state.selfAnalysisMemo !== "",
+  };
+  return {
+    ...itemFlags,
+    // 既存の PostHog データと連続して読むため構成要素を変えない。打球方向は任意の詳細ではないので itemFlags に足さない。
+    has_detail: Object.values(itemFlags).some(Boolean),
+  };
+};
