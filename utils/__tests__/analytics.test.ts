@@ -163,7 +163,11 @@ const SHARED_EVENT_CASES: {
       trigger: "unlimited_monthly_goals",
       placement: "feature_gate",
     },
-    run: (a) => a.trackPaywallViewed("unlimited_monthly_goals", "feature_gate"),
+    run: (a) =>
+      a.trackPaywallViewed({
+        trigger: "unlimited_monthly_goals",
+        placement: "feature_gate",
+      }),
   },
   {
     event: "upgrade started",

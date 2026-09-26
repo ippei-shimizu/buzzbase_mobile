@@ -1,3 +1,4 @@
+import type { PaywallSlideKey } from "./PaywallSlides";
 import type { usePaywallPurchase } from "./usePaywallPurchase";
 import type { PaywallStep } from "./usePaywallSteps";
 import type { Feature } from "../../../types/pro";
@@ -40,6 +41,11 @@ interface PaywallFlowProps {
   contextMessage?: string;
   trigger: ProTrigger;
   placement: PaywallPlacement;
+  /**
+   * 先頭に固定したいスライド。機能起点でない配置（登録直後など）で、
+   * `trigger` を機能キーで汚さずに訴求を出し分けるために使う。
+   */
+  leadSlide?: PaywallSlideKey;
   step: PaywallStep;
   goToPlan: () => void;
   goToFeatures: () => void;
@@ -62,6 +68,7 @@ export function PaywallFlow({
   contextMessage,
   trigger,
   placement,
+  leadSlide,
   step,
   goToPlan,
   goToFeatures,
@@ -129,10 +136,11 @@ export function PaywallFlow({
         </View>
       ) : null}
 
-      {/* 単年ユーザーにはシーズン跨ぎの図が作れないため、代わりにいま効果が出る方向別を先頭にする。 */}
+      {/* 単年ユーザーにはシーズン跨ぎの図が作れないため、代わりにいま効果が出る方向別を先頭にする。
+          外から指定された先頭スライドより、この救済を優先する。 */}
       <PaywallSlides
         trigger={trigger}
-        leadSlide={isSingleSeason ? "hit_direction" : undefined}
+        leadSlide={isSingleSeason ? "hit_direction" : leadSlide}
       />
 
       {/* 先頭スライドが同じことを言う場合は重複するため、スライドを持たないトリガーだけ補足する。 */}

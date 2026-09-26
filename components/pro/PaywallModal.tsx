@@ -65,7 +65,7 @@ export function PaywallModal({
     });
 
   useEffect(() => {
-    if (isOpen) trackPaywallViewed(trigger, PLACEMENT);
+    if (isOpen) trackPaywallViewed({ trigger, placement: PLACEMENT });
   }, [isOpen, trigger]);
 
   const purchase = usePaywallPurchase({

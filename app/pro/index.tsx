@@ -49,7 +49,7 @@ export default function ProScreen() {
     });
 
   useEffect(() => {
-    if (countsAsFunnel) trackPaywallViewed(trigger, placement);
+    if (countsAsFunnel) trackPaywallViewed({ trigger, placement });
   }, [countsAsFunnel, trigger, placement]);
 
   const purchase = usePaywallPurchase({

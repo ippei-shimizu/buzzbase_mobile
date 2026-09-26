@@ -180,11 +180,17 @@ export const trackStoreReviewRequested = (props: {
  */
 export type PaywallPlacement = "feature_gate" | "settings" | "onboarding";
 
-/** Paywall（PaywallModal / Pro 画面 / 登録直後）の表示。課金ファネルの分母。 */
-export const trackPaywallViewed = (
-  trigger: ProTrigger,
-  placement: PaywallPlacement,
-) => capture("paywall viewed", { trigger, placement });
+/**
+ * Paywall（PaywallModal / Pro 画面 / 登録直後）の表示。課金ファネルの分母。
+ *
+ * `lead_slide` は機能起点でない配置でパーソナライズした先頭スライド。
+ * 訴求の出し分けを `trigger` に混ぜると「どの機能が課金の入口か」の集計が濁るため分けている。
+ */
+export const trackPaywallViewed = (props: {
+  trigger: ProTrigger;
+  placement: PaywallPlacement;
+  lead_slide?: string;
+}) => capture("paywall viewed", props);
 
 /** Paywall のステップ。value = 価値訴求、features = 全機能一覧、plan = 価格とプラン選択。 */
 export type PaywallStepName = "value" | "features" | "plan";
