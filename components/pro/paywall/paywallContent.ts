@@ -255,7 +255,31 @@ interface FeatureGroup {
 // （例: ImprovementToolsSection の各ツール名）。ただし「練習ツール」だけは
 // 中身が素振りカウントタイマーの機能に限られるため、何が使えるようになるかが
 // 伝わるようツール名そのものを見出しにしている。
+// 並び順は Pro 機能のタップ数・各領域の利用者数が多い順。需要が実証されている成績を先頭に置く。
 export const FEATURE_GROUPS: FeatureGroup[] = [
+  {
+    title: "成績",
+    icon: "stats-chart-outline",
+    keys: [
+      "season_transition_graph",
+      "practice_menu_trend_detail",
+      "hit_direction_average",
+      "count_situation_average",
+      "pitch_type_average",
+      "pitch_course_average",
+      "pitcher_faceoff_average",
+    ],
+  },
+  {
+    title: "広告非表示",
+    icon: "megaphone",
+    keys: ["no_ads"],
+  },
+  {
+    title: "グループ",
+    icon: "people-outline",
+    keys: ["unlimited_groups"],
+  },
   {
     title: "練習を記録",
     icon: "barbell-outline",
@@ -298,19 +322,6 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     keys: ["unlimited_improvement_themes"],
   },
   {
-    title: "成績",
-    icon: "stats-chart-outline",
-    keys: [
-      "season_transition_graph",
-      "practice_menu_trend_detail",
-      "hit_direction_average",
-      "count_situation_average",
-      "pitch_type_average",
-      "pitch_course_average",
-      "pitcher_faceoff_average",
-    ],
-  },
-  {
     title: "振り返りレポート",
     icon: "sparkles-outline",
     keys: ["advanced_periodic_review"],
@@ -335,14 +346,9 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     keys: ["grass_full_history"],
   },
   {
-    title: "グループ",
-    icon: "people-outline",
-    keys: ["unlimited_groups"],
-  },
-  {
     title: "その他",
     icon: "ellipsis-horizontal-circle-outline",
-    keys: ["custom_notification_messages", "no_ads"],
+    keys: ["custom_notification_messages"],
   },
 ];
 

@@ -820,6 +820,27 @@ describe("PaywallModal", () => {
     expect(getByText("複数件")).toBeOnTheScreen();
   });
 
+  it("全機能画面は成績・広告非表示・グループの順に並ぶ", () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+
+    const { getAllByText, getByLabelText } = renderWithProviders(
+      <PaywallModal isOpen onClose={mockOnClose} feature="note_tags" />,
+    );
+
+    fireEvent.press(getByLabelText("Pro の全機能を見る"));
+
+    const groupTitles = getAllByText(
+      /^(成績|広告非表示|グループ|練習を記録|その他)$/,
+    ).map((element) => element.props.children);
+    expect(groupTitles).toEqual([
+      "成績",
+      "広告非表示",
+      "グループ",
+      "練習を記録",
+      "その他",
+    ]);
+  });
+
   it("全機能画面からは戻るで価値画面へ戻れる", () => {
     getOfferingsMock.mockResolvedValueOnce(null);
 
