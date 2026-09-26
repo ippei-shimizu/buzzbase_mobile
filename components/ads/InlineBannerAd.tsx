@@ -14,7 +14,10 @@ interface InlineBannerAdProps {
   placement: BannerPlacement;
   /** 直前のコンテンツとの間隔。直前に余白を持つ画面は小さい値を渡す。 */
   topSpacing?: number;
-  /** 直後のコンテンツとの間隔。直後の要素が上余白を持たない画面は大きい値を渡す。 */
+  /**
+   * 直後のコンテンツとの間隔。デフォルト8は既存画面の見た目を保つための値で`topSpacing`と
+   * 対称ではないため、上下を揃える画面では直後の要素の上余白と合わせた実効値を渡す。
+   */
   bottomSpacing?: number;
 }
 
