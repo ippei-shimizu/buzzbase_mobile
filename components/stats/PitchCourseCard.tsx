@@ -3,6 +3,7 @@ import type {
   PitchCourseData,
   PitchCoursePitchTypeData,
   PitchCourseZone,
+  PitchCourseZoneSummary,
   PitcherFaceoffCourseData,
   PitcherFaceoffCourseRow,
 } from "../../types/stats";
@@ -16,11 +17,23 @@ import {
 } from "react-native";
 import { PitchCourseGrid } from "@components/stats/PitchCourseGrid";
 import { Select } from "@components/ui/Select";
+import { PITCH_COURSE_BAND_TRACK_FRACTIONS } from "@constants/pitchCourse";
 import {
   usePitchCoursePitchTypes,
   usePitcherFaceoffCourses,
 } from "@hooks/useStats";
-import { formatBattingAverage } from "@utils/formatBattingAverage";
+import {
+  PITCH_COURSE_GRANULARITY_OPTIONS,
+  PITCH_COURSE_METRIC_OPTIONS,
+  STRIKEOUT_RATE_MIN_PLATE_APPEARANCES,
+  computePitchCourseMetric,
+  foldPitchCourseZones,
+  strikeoutBreakdown,
+  sumPitchCourseCounts,
+  type PitchCourseCell,
+  type PitchCourseGranularity,
+  type PitchCourseMetric,
+} from "@utils/pitchCourseMetrics";
 
 interface Props {
   data: PitchCourseData;
@@ -43,81 +56,189 @@ interface Props {
 
 type PitchCourseTab = "course" | "pitch_type" | "pitcher";
 
-/**
- * 固定閾値の色スケール。データ内 min/max の相対スケールにすると、フィルタを
- * 変えるたびに同じ打率のセルの色が変わって比較できなくなるため固定にする。
- */
-const colorForAverage = (average: number): string => {
-  if (average >= 0.45) return "#d64545";
-  if (average >= 0.35) return "#d98236";
-  if (average >= 0.25) return "#c9a227";
-  if (average >= 0.15) return "#4f9e6b";
-  return "#4173b3";
-};
-
-function ZoneCell({
-  zone,
-  minAtBats,
-}: {
-  zone: PitchCourseZone;
+interface AnalysisSettings {
+  metric: PitchCourseMetric;
+  granularity: PitchCourseGranularity;
   minAtBats: number;
+}
+
+function SegmentedSelector<Key extends string>({
+  options,
+  selectedKey,
+  onSelect,
+}: {
+  options: readonly { key: Key; label: string }[];
+  selectedKey: Key;
+  onSelect: (key: Key) => void;
 }) {
-  if (zone.at_bats === 0) {
-    // 打数 0 は色スケールの対象外（無彩色 + "-"）。
+  return (
+    <View style={styles.selectorRow}>
+      {options.map(({ key, label }) => {
+        const selected = key === selectedKey;
+        return (
+          <TouchableOpacity
+            key={key}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+            style={[
+              styles.selectorButton,
+              selected && styles.selectorButtonActive,
+            ]}
+            onPress={() => onSelect(key)}
+          >
+            <Text
+              style={[
+                styles.selectorLabel,
+                selected && styles.selectorLabelActive,
+              ]}
+            >
+              {label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+function MetricCell({
+  cell,
+  settings,
+  totalPlateAppearances,
+}: {
+  cell: PitchCourseCell;
+  settings: AnalysisSettings;
+  totalPlateAppearances: number;
+}) {
+  const value = computePitchCourseMetric(settings.metric, cell, {
+    minAtBats: settings.minAtBats,
+    totalPlateAppearances,
+    granularity: settings.granularity,
+  });
+  const label = cell.label ? (
+    <Text style={styles.tileLabel}>{cell.label}</Text>
+  ) : null;
+  if (value.color === null) {
     return (
       <View
         style={[
           styles.cell,
-          zone.is_strike_zone ? styles.cellStrikeEmpty : styles.cellBallEmpty,
+          cell.isStrikeZone ? styles.cellStrikeEmpty : styles.cellBallEmpty,
         ]}
       >
-        <Text style={styles.cellEmptyText}>-</Text>
+        {label}
+        <Text style={styles.cellEmptyText}>{value.valueText}</Text>
       </View>
     );
   }
-  const isReliable = zone.at_bats >= minAtBats;
   return (
     <View
       style={[
         styles.cell,
         {
-          backgroundColor: colorForAverage(zone.batting_average),
-          opacity: isReliable ? 1 : 0.5,
+          backgroundColor: value.color,
+          opacity: value.isReliable ? 1 : 0.5,
         },
       ]}
     >
-      <Text style={styles.cellAverage}>
-        {formatBattingAverage(zone.batting_average, zone.at_bats)}
-      </Text>
-      {isReliable ? null : (
-        <Text style={styles.cellAtBats}>({zone.at_bats}打数)</Text>
-      )}
+      {label}
+      <Text style={styles.cellValue}>{value.valueText}</Text>
+      {value.subText ? (
+        <Text style={styles.cellDenominator}>{value.subText}</Text>
+      ) : null}
     </View>
+  );
+}
+
+function BandGrid({
+  renderCell,
+}: {
+  renderCell: (index: number) => React.ReactNode;
+}) {
+  return (
+    <View style={[styles.bandGrid, styles.grid]}>
+      {PITCH_COURSE_BAND_TRACK_FRACTIONS.map((rowFlex, rowIndex) => (
+        <View key={rowIndex} style={[styles.bandRow, { flex: rowFlex }]}>
+          {PITCH_COURSE_BAND_TRACK_FRACTIONS.map((colFlex, colIndex) => (
+            <View key={colIndex} style={{ flex: colFlex }}>
+              {renderCell(rowIndex * 3 + colIndex)}
+            </View>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function StrikeoutBreakdownLine({ zones }: { zones: PitchCourseZone[] }) {
+  const breakdown = strikeoutBreakdown(zones);
+  return (
+    <Text style={styles.breakdownText}>
+      三振 {breakdown.strikeouts}（空振り {breakdown.swinging}・見逃し{" "}
+      {breakdown.looking}・未入力 {breakdown.unspecified}）
+    </Text>
   );
 }
 
 function ZoneHeatmap({
   zones,
-  minAtBats,
+  settings,
 }: {
   zones: PitchCourseZone[];
-  minAtBats: number;
+  settings: AnalysisSettings;
 }) {
-  const zoneByCourse = new Map(zones.map((zone) => [zone.course, zone]));
+  const cells = foldPitchCourseZones(zones, settings.granularity);
+  const totalPlateAppearances = sumPitchCourseCounts(zones).plate_appearances;
+  const renderCell = (cell: PitchCourseCell | undefined) =>
+    cell ? (
+      <MetricCell
+        key={cell.key}
+        cell={cell}
+        settings={settings}
+        totalPlateAppearances={totalPlateAppearances}
+      />
+    ) : null;
+  const cellByKey = new Map(cells.map((cell) => [cell.key, cell]));
+  const axis = (
+    <View style={styles.horizontalAxis}>
+      <Text style={styles.axisLabel}>三塁側</Text>
+      <Text style={styles.axisLabel}>真ん中</Text>
+      <Text style={styles.axisLabel}>一塁側</Text>
+    </View>
+  );
+
   return (
     <View style={styles.heatmapContainer}>
-      <PitchCourseGrid
-        style={styles.grid}
-        renderCell={(course) => {
-          const zone = zoneByCourse.get(course);
-          return zone ? <ZoneCell zone={zone} minAtBats={minAtBats} /> : null;
-        }}
-      />
-      <View style={styles.horizontalAxis}>
-        <Text style={styles.axisLabel}>三塁側</Text>
-        <Text style={styles.axisLabel}>真ん中</Text>
-        <Text style={styles.axisLabel}>一塁側</Text>
-      </View>
+      {settings.granularity === "grid5" ? (
+        <>
+          <PitchCourseGrid
+            style={styles.grid}
+            renderCell={(course) => renderCell(cellByKey.get(String(course)))}
+          />
+          {axis}
+        </>
+      ) : settings.granularity === "grid3" ? (
+        <>
+          <BandGrid renderCell={(index) => renderCell(cells[index])} />
+          {axis}
+        </>
+      ) : settings.granularity === "split4" ? (
+        <View style={styles.tileGroups}>
+          <View style={styles.tileRow}>
+            {renderCell(cellByKey.get("high"))}
+            {renderCell(cellByKey.get("low"))}
+          </View>
+          <View style={styles.tileRow}>
+            {renderCell(cellByKey.get("third_base"))}
+            {renderCell(cellByKey.get("first_base"))}
+          </View>
+        </View>
+      ) : (
+        <View style={styles.tileRow}>{cells.map(renderCell)}</View>
+      )}
+      {settings.metric === "strikeout_rate" ? (
+        <StrikeoutBreakdownLine zones={zones} />
+      ) : null}
     </View>
   );
 }
@@ -130,9 +251,13 @@ function PitcherCrossPanel({
   isLoading,
   selectedPitcherId,
   onSelectPitcher,
+  metric,
+  granularity,
 }: {
   data: PitcherFaceoffCourseData | undefined;
   isLoading: boolean;
+  metric: PitchCourseMetric;
+  granularity: PitchCourseGranularity;
   selectedPitcherId: number | null;
   onSelectPitcher: (pitcherId: number) => void;
 }) {
@@ -179,8 +304,11 @@ function PitcherCrossPanel({
         onSelect={onSelectPitcher}
         style={styles.pitcherSelect}
       />
-      <ZoneHeatmap zones={selectedRow.zones} minAtBats={data.min_at_bats} />
-      <Notes>
+      <ZoneHeatmap
+        zones={selectedRow.zones}
+        settings={{ metric, granularity, minAtBats: data.min_at_bats }}
+      />
+      <Notes metric={metric} minAtBats={data.min_at_bats}>
         <Text style={styles.noteText}>
           コースを記録した対戦が{data.min_plate_appearances}
           打席以上の投手のみ表示しています
@@ -190,17 +318,67 @@ function PitcherCrossPanel({
   );
 }
 
-const Notes = ({ children }: { children?: React.ReactNode }) => (
-  <View style={styles.notes}>
-    <Text style={styles.noteText}>打数が3未満のコースは参考値です</Text>
-    <Text style={styles.noteText}>捕手目線で表示しています</Text>
-    {children}
-  </View>
-);
+const minimumNoteFor = (metric: PitchCourseMetric, minAtBats: number) => {
+  switch (metric) {
+    case "plate_appearances":
+      return null;
+    case "batting_average":
+    case "slugging":
+      return `打数が${minAtBats}未満のコースは参考値です`;
+    case "strikeout_rate":
+      return `打席が${STRIKEOUT_RATE_MIN_PLATE_APPEARANCES}未満のコースは参考値です`;
+  }
+};
+
+const Notes = ({
+  metric,
+  minAtBats,
+  children,
+}: {
+  metric: PitchCourseMetric;
+  minAtBats: number;
+  children?: React.ReactNode;
+}) => {
+  const minimumNote = minimumNoteFor(metric, minAtBats);
+  return (
+    <View style={styles.notes}>
+      {minimumNote ? <Text style={styles.noteText}>{minimumNote}</Text> : null}
+      <Text style={styles.noteText}>捕手目線で表示しています</Text>
+      {children}
+    </View>
+  );
+};
+
+function ZoneSummaryBox({
+  label,
+  summary,
+  settings,
+  totalPlateAppearances,
+}: {
+  label: string;
+  summary: PitchCourseZoneSummary;
+  settings: AnalysisSettings;
+  totalPlateAppearances: number;
+}) {
+  const value = computePitchCourseMetric(settings.metric, summary, {
+    minAtBats: settings.minAtBats,
+    totalPlateAppearances,
+    granularity: "zone",
+  });
+  return (
+    <View style={styles.summaryBox}>
+      <Text style={styles.summaryLabel}>{label}</Text>
+      <Text style={styles.summaryAverage}>{value.valueText}</Text>
+      {value.subText ? (
+        <Text style={styles.summaryDetail}>{value.subText}</Text>
+      ) : null}
+    </View>
+  );
+}
 
 /**
- * コース別の打率カード（Pro）。コース別 / 球種別 / 投手別の3タブ構成で、
- * 球種別・投手別のクロス集計はタブを開いたときにだけ取得する。
+ * コース別分析カード（Pro）。コース別 / 球種別 / 投手別の3タブ構成で、
+ * 指標と粒度の切替は全タブ共通。球種別・投手別のクロス集計はタブを開いたときにだけ取得する。
  */
 export function PitchCourseCard({
   data,
@@ -215,6 +393,9 @@ export function PitchCourseCard({
   const [selectedPitcherId, setSelectedPitcherId] = useState<number | null>(
     null,
   );
+  const [metric, setMetric] = useState<PitchCourseMetric>("batting_average");
+  const [granularity, setGranularity] =
+    useState<PitchCourseGranularity>("grid5");
   const showCrossTab = crossFilters !== undefined;
   const showPitchTypeTab = showCrossTab || samplePitchTypeCross !== undefined;
   const showPitcherTab = showCrossTab || samplePitcherCross !== undefined;
@@ -230,7 +411,7 @@ export function PitchCourseCard({
   if (data.total_target_pa === 0) {
     return (
       <View style={styles.card}>
-        <Text style={styles.title}>コース別の打率</Text>
+        <Text style={styles.title}>コース別分析</Text>
         <View style={styles.emptyBox}>
           <Text style={styles.emptyTitle}>
             詳細記録でコースを入力すると分析が表示されます
@@ -250,11 +431,18 @@ export function PitchCourseCard({
     crossData?.rows.find((row) => row.id === selectedPitchTypeId) ??
     crossData?.rows.find((row) => row.plate_appearances > 0) ??
     crossData?.rows[0];
+  const courseSettings: AnalysisSettings = {
+    metric,
+    granularity,
+    minAtBats: data.min_at_bats,
+  };
+  const zoneSummaryTotalPlateAppearances =
+    data.strike_zone.plate_appearances + data.ball_zone.plate_appearances;
 
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>コース別の打率</Text>
+        <Text style={styles.title}>コース別分析</Text>
         <Text style={styles.targetPa}>対象 {data.total_target_pa} 打席</Text>
       </View>
 
@@ -296,36 +484,37 @@ export function PitchCourseCard({
         </View>
       ) : null}
 
+      <SegmentedSelector
+        options={PITCH_COURSE_METRIC_OPTIONS}
+        selectedKey={metric}
+        onSelect={setMetric}
+      />
+      <SegmentedSelector
+        options={PITCH_COURSE_GRANULARITY_OPTIONS}
+        selectedKey={granularity}
+        onSelect={setGranularity}
+      />
+
       {tab === "course" ? (
         <>
-          <ZoneHeatmap zones={data.zones} minAtBats={data.min_at_bats} />
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryBox}>
-              <Text style={styles.summaryLabel}>ストライクゾーン</Text>
-              <Text style={styles.summaryAverage}>
-                {formatBattingAverage(
-                  data.strike_zone.batting_average,
-                  data.strike_zone.at_bats,
-                )}
-              </Text>
-              <Text style={styles.summaryDetail}>
-                ({data.strike_zone.at_bats}-{data.strike_zone.hits})
-              </Text>
+          <ZoneHeatmap zones={data.zones} settings={courseSettings} />
+          {granularity === "zone" ? null : (
+            <View style={styles.summaryRow}>
+              <ZoneSummaryBox
+                label="ストライクゾーン"
+                summary={data.strike_zone}
+                settings={courseSettings}
+                totalPlateAppearances={zoneSummaryTotalPlateAppearances}
+              />
+              <ZoneSummaryBox
+                label="ボールゾーン"
+                summary={data.ball_zone}
+                settings={courseSettings}
+                totalPlateAppearances={zoneSummaryTotalPlateAppearances}
+              />
             </View>
-            <View style={styles.summaryBox}>
-              <Text style={styles.summaryLabel}>ボールゾーン</Text>
-              <Text style={styles.summaryAverage}>
-                {formatBattingAverage(
-                  data.ball_zone.batting_average,
-                  data.ball_zone.at_bats,
-                )}
-              </Text>
-              <Text style={styles.summaryDetail}>
-                ({data.ball_zone.at_bats}-{data.ball_zone.hits})
-              </Text>
-            </View>
-          </View>
-          <Notes />
+          )}
+          <Notes metric={metric} minAtBats={data.min_at_bats} />
         </>
       ) : tab === "pitcher" ? (
         <PitcherCrossPanel
@@ -333,6 +522,8 @@ export function PitchCourseCard({
           isLoading={samplePitcherCross ? false : pitcherCross.isLoading}
           selectedPitcherId={selectedPitcherId}
           onSelectPitcher={setSelectedPitcherId}
+          metric={metric}
+          granularity={granularity}
         />
       ) : isCrossLoading ? (
         <View style={styles.crossLoading}>
@@ -375,10 +566,14 @@ export function PitchCourseCard({
           {selectedRow ? (
             <ZoneHeatmap
               zones={selectedRow.zones}
-              minAtBats={crossData.min_at_bats}
+              settings={{
+                metric,
+                granularity,
+                minAtBats: crossData.min_at_bats,
+              }}
             />
           ) : null}
-          <Notes />
+          <Notes metric={metric} minAtBats={crossData.min_at_bats} />
         </>
       )}
     </View>
@@ -431,6 +626,57 @@ const styles = StyleSheet.create({
   tabLabelActive: {
     color: "#FFFFFF",
   },
+  selectorRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 4,
+    marginTop: 8,
+  },
+  selectorButton: {
+    borderWidth: 1,
+    borderColor: "#52525B",
+    borderRadius: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
+  selectorButtonActive: {
+    backgroundColor: "#52525B",
+  },
+  selectorLabel: {
+    color: "#A1A1AA",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  selectorLabelActive: {
+    color: "#FFFFFF",
+  },
+  bandGrid: {
+    width: "100%",
+    gap: 1,
+  },
+  bandRow: {
+    flexDirection: "row",
+    gap: 1,
+  },
+  tileGroups: {
+    gap: 8,
+  },
+  tileRow: {
+    flexDirection: "row",
+    gap: 8,
+    height: 84,
+  },
+  tileLabel: {
+    color: "rgba(255,255,255,0.9)",
+    fontSize: 11,
+    marginBottom: 2,
+  },
+  breakdownText: {
+    color: "#A1A1AA",
+    fontSize: 11,
+    textAlign: "center",
+    marginTop: 8,
+  },
   heatmapContainer: {
     marginTop: 16,
     alignSelf: "center",
@@ -456,12 +702,12 @@ const styles = StyleSheet.create({
     color: "#71717A",
     fontSize: 10,
   },
-  cellAverage: {
+  cellValue: {
     color: "#FFFFFF",
     fontSize: 11,
     fontWeight: "bold",
   },
-  cellAtBats: {
+  cellDenominator: {
     color: "rgba(255,255,255,0.9)",
     fontSize: 9,
   },

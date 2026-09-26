@@ -988,7 +988,7 @@ export default function StatsScreen() {
               </View>
             </View>
           )}
-          {/* PitchCourseCard（コース別の打率） */}
+          {/* PitchCourseCard（コース別分析） */}
           {isProLoading ? (
             <ProSectionLoadingPlaceholder />
           ) : hasEntitlement("pitch_course_average") ? (

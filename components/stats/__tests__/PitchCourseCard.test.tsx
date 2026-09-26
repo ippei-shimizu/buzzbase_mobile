@@ -1,9 +1,11 @@
 /**
- * コース別の打率カードの振る舞いテスト。
+ * コース別分析カードの振る舞いテスト。
  *
  * 検証対象:
  * - 打数 0 のセルは "-" 表示（色スケールの対象外）
- * - 打数が min_at_bats 未満のセルは打率に (N打数) の参考値表記が付く
+ * - 各セルに打率と分母（N打数）を併記し、min_at_bats 未満は参考値の注記を出す
+ * - 指標（打席分布 / 打率 / 長打率 / 三振率）と粒度（5x5 / 3x3 / 高低・内外 / ゾーン内外）を切り替えられ、
+ *   タブを切り替えても選択が保持される
  * - total_target_pa が 0 のときはヒートマップを出さず空状態を表示する
  * - 「球種別」タブを開いたときにだけクロス集計 API を取得する（サンプル指定時は API を呼ばない）
  * - 「投手別」タブを開いたときにだけ投手×コース API を取得し、セレクトで投手を切り替えられる
@@ -31,10 +33,25 @@ const buildZone = (
   plate_appearances: 0,
   at_bats: 0,
   hits: 0,
+  total_bases: 0,
+  strikeouts: 0,
+  swinging_strikeouts: 0,
+  looking_strikeouts: 0,
   batting_average: 0,
   is_reliable: false,
   ...overrides,
 });
+
+const EMPTY_SUMMARY = {
+  plate_appearances: 0,
+  at_bats: 0,
+  hits: 0,
+  total_bases: 0,
+  strikeouts: 0,
+  swinging_strikeouts: 0,
+  looking_strikeouts: 0,
+  batting_average: 0,
+};
 
 const buildData = (
   zoneOverrides: Record<number, Partial<PitchCourseZone>> = {},
@@ -46,18 +63,8 @@ const buildData = (
   const totalPa = zones.reduce((sum, z) => sum + z.plate_appearances, 0);
   return {
     zones,
-    strike_zone: {
-      plate_appearances: 0,
-      at_bats: 0,
-      hits: 0,
-      batting_average: 0,
-    },
-    ball_zone: {
-      plate_appearances: 0,
-      at_bats: 0,
-      hits: 0,
-      batting_average: 0,
-    },
+    strike_zone: EMPTY_SUMMARY,
+    ball_zone: EMPTY_SUMMARY,
     total_target_pa: totalPa,
     min_at_bats: 3,
     ...overrides,
@@ -84,12 +91,12 @@ describe("PitchCourseCard", () => {
     const { getAllByText, getByText } = renderWithProviders(
       <PitchCourseCard data={data} />,
     );
-    // 25 マス中 24 マスが打数 0
-    expect(getAllByText("-")).toHaveLength(24);
+    // 25 マス中 24 マスと、ストライク / ボールゾーンの集計（fixture では 0 打数）
+    expect(getAllByText("-")).toHaveLength(26);
     expect(getByText(".400")).toBeTruthy();
   });
 
-  it("打数が 3 未満のセルは (N打数) の参考値表記が付く", () => {
+  it("セルに打数を併記し、打数が 3 未満なら参考値の注記を出す", () => {
     const data = buildData({
       13: {
         plate_appearances: 2,
@@ -101,7 +108,7 @@ describe("PitchCourseCard", () => {
     });
     const { getByText } = renderWithProviders(<PitchCourseCard data={data} />);
     expect(getByText(".500")).toBeTruthy();
-    expect(getByText("(2打数)")).toBeTruthy();
+    expect(getByText("2打数")).toBeTruthy();
     expect(getByText("打数が3未満のコースは参考値です")).toBeTruthy();
     expect(getByText("捕手目線で表示しています")).toBeTruthy();
   });
@@ -426,5 +433,132 @@ describe("PitchCourseCard", () => {
 
     await flushPendingRequests();
     expect(crossRequested).toBe(false);
+  });
+
+  it("指標を切り替えるとセルの値と分母が変わり、三振率では三振の内訳を出す", () => {
+    const data = buildData({
+      13: {
+        plate_appearances: 6,
+        at_bats: 5,
+        hits: 2,
+        total_bases: 5,
+        strikeouts: 3,
+        swinging_strikeouts: 1,
+        looking_strikeouts: 1,
+        batting_average: 0.4,
+        is_reliable: true,
+      },
+    });
+    const { getByRole, getByText, queryByText } = renderWithProviders(
+      <PitchCourseCard data={data} />,
+    );
+    expect(getByRole("button", { name: "打率", selected: true })).toBeTruthy();
+    expect(getByText(".400")).toBeTruthy();
+
+    fireEvent.press(getByRole("button", { name: "長打率" }));
+    expect(getByText("1.000")).toBeTruthy();
+    expect(getByText("5打数")).toBeTruthy();
+    expect(queryByText(".400")).toBeNull();
+
+    fireEvent.press(getByRole("button", { name: "三振率" }));
+    expect(getByText("50%")).toBeTruthy();
+    expect(getByText("6打席")).toBeTruthy();
+    expect(getByText("三振 3（空振り 1・見逃し 1・未入力 1）")).toBeTruthy();
+    expect(getByText("打席が5未満のコースは参考値です")).toBeTruthy();
+
+    fireEvent.press(getByRole("button", { name: "打席分布" }));
+    expect(getByText("6")).toBeTruthy();
+    expect(getByText("100%")).toBeTruthy();
+    expect(queryByText("打数が3未満のコースは参考値です")).toBeNull();
+    expect(queryByText("三振 3（空振り 1・見逃し 1・未入力 1）")).toBeNull();
+  });
+
+  it("3x3 では外周と内側の1列を合算した打率を表示する", () => {
+    const data = buildData({
+      1: { plate_appearances: 2, at_bats: 2, hits: 1, batting_average: 0.5 },
+      2: { plate_appearances: 1, at_bats: 1, hits: 0, batting_average: 0 },
+      7: { plate_appearances: 2, at_bats: 2, hits: 1, batting_average: 0.5 },
+    });
+    const { getByRole, getByText, getAllByText, queryByText } =
+      renderWithProviders(<PitchCourseCard data={data} />);
+    expect(getAllByText(".500")).toHaveLength(2);
+
+    fireEvent.press(getByRole("button", { name: "3x3" }));
+    expect(getByText(".400")).toBeTruthy();
+    expect(getByText("5打数")).toBeTruthy();
+    expect(queryByText(".500")).toBeNull();
+  });
+
+  it("高低・内外とゾーン内外では帯ごとの合算をタイルで表示する", () => {
+    const data = buildData({
+      7: { plate_appearances: 2, at_bats: 2, hits: 1, batting_average: 0.5 },
+      13: { plate_appearances: 3, at_bats: 3, hits: 1, batting_average: 0.333 },
+      25: { plate_appearances: 4, at_bats: 4, hits: 0, batting_average: 0 },
+    });
+    const { getByRole, getByText, getAllByText } = renderWithProviders(
+      <PitchCourseCard data={data} />,
+    );
+
+    fireEvent.press(getByRole("button", { name: "高低・内外" }));
+    expect(getByText("高め")).toBeTruthy();
+    expect(getByText("低め")).toBeTruthy();
+    expect(getByText("三塁側")).toBeTruthy();
+    expect(getByText("一塁側")).toBeTruthy();
+    expect(getAllByText(".500")).toHaveLength(2);
+    expect(getAllByText(".000")).toHaveLength(2);
+
+    fireEvent.press(getByRole("button", { name: "ゾーン内外" }));
+    expect(getAllByText("ストライクゾーン")).toHaveLength(1);
+    expect(getByText(".400")).toBeTruthy();
+    expect(getByText(".000")).toBeTruthy();
+  });
+
+  it("選んだ指標と粒度はタブを切り替えても保持される", () => {
+    const data = buildData({
+      13: { plate_appearances: 5, at_bats: 5, hits: 2, total_bases: 2 },
+    });
+    const { getByRole, getByText } = renderWithProviders(
+      <PitchCourseCard
+        data={data}
+        samplePitcherCross={{
+          rows: [
+            {
+              id: 1,
+              label: "投手 C",
+              team_name: null,
+              plate_appearances: 4,
+              zones: buildData({
+                1: {
+                  plate_appearances: 2,
+                  at_bats: 2,
+                  hits: 1,
+                  total_bases: 4,
+                },
+                7: {
+                  plate_appearances: 2,
+                  at_bats: 2,
+                  hits: 1,
+                  total_bases: 2,
+                },
+              }).zones,
+            },
+          ],
+          total_target_pa: 4,
+          min_at_bats: 3,
+          min_plate_appearances: 3,
+        }}
+      />,
+    );
+
+    fireEvent.press(getByRole("button", { name: "長打率" }));
+    fireEvent.press(getByRole("button", { name: "3x3" }));
+    fireEvent.press(getByText("投手別"));
+
+    expect(
+      getByRole("button", { name: "長打率", selected: true }),
+    ).toBeTruthy();
+    expect(getByRole("button", { name: "3x3", selected: true })).toBeTruthy();
+    expect(getByText("1.500")).toBeTruthy();
+    expect(getByText("4打数")).toBeTruthy();
   });
 });
