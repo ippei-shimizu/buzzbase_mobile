@@ -650,7 +650,6 @@ export default function StatsScreen() {
   const headlineStats = useHeadlineStats(filters);
   const additionalStats = useAdditionalStats(filters);
   const runnersSituation = useRunnersSituation(filters);
-  const pitchingSummary = usePitchingSummary(filters);
   const [sprayChartMode, setSprayChartMode] =
     useState<SprayChartMode>("scatter");
   const battingTable = useBattingStatsTable(
@@ -669,6 +668,7 @@ export default function StatsScreen() {
     tableStartMonth,
     tableEndMonth,
   );
+  const pitchingSummary = usePitchingSummary(filters, activeTab === "pitching");
   const eraTrend = useEraTrend(
     filters.year,
     filters.seasonId,

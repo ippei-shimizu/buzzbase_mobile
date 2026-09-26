@@ -4,7 +4,7 @@
  * この画面はタブ本文が広く、横スワイプ対応で構造を変えるため回帰の網として置く。
  */
 import type { JsonBodyType } from "msw";
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import {
   apiUrl,
   baseUrl,
@@ -191,6 +191,27 @@ describe("成績画面の投球サマリ", () => {
     expect(screen.getByText("総投球数")).toBeOnTheScreen();
     expect(screen.getByText("318")).toBeOnTheScreen();
     expect(screen.getByText("21.33")).toBeOnTheScreen();
+  });
+
+  it("投球タブを開くまで投球サマリを取得しない", async () => {
+    respondWithEmptyStats();
+    let requested = false;
+    server.use(
+      http.get(baseUrl("/api/v2/stats/pitching_summary"), () => {
+        requested = true;
+        return HttpResponse.json(EMPTY_PITCHING_SUMMARY);
+      }),
+    );
+    renderWithProviders(<StatsScreen />);
+
+    await waitFor(() => expect(screen.getByText("打撃成績")).toBeOnTheScreen());
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+    expect(requested).toBe(false);
+
+    fireEvent.press(screen.getByText("投球"));
+    await waitFor(() => expect(requested).toBe(true));
   });
 
   it("種別フィルタを切り替えると絞り込んだ投球サマリを表示する", async () => {

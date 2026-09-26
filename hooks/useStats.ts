@@ -302,10 +302,11 @@ export const useAdditionalStats = (filters: StatsFilters) =>
     placeholderData: keepPreviousData,
   });
 
-export const usePitchingSummary = (filters: StatsFilters) =>
+export const usePitchingSummary = (filters: StatsFilters, enabled = true) =>
   useQuery({
     queryKey: ["pitchingSummary", filters],
     queryFn: () => getPitchingSummary(filters),
+    enabled,
     staleTime: STATS_STALE_TIME,
     placeholderData: keepPreviousData,
   });
