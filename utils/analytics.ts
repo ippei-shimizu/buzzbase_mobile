@@ -83,14 +83,32 @@ export const trackUserFollowed = (followedUserId: number) =>
 export const trackProfileUpdated = () => capture("profile updated");
 
 /**
- * 打席記録ウィザードの作成 / 更新完了。`is_edit` で新規・編集を区別する。
- * `has_pitcher` / `has_detail` は任意の詳細入力がどれだけ使われたかの計測用。
+ * 打席の任意詳細を項目別に入力したかどうか。
+ * `has_detail` は既存データと連続して読むための互換値で、打球方向以外の項目の OR。
  */
-export const trackPlateAppearanceCompleted = (props: {
-  is_edit: boolean;
-  has_pitcher: boolean;
+export type PlateAppearanceDetailFlags = {
   has_detail: boolean;
-}) => capture("plate appearance completed", props);
+  has_pitcher: boolean;
+  has_count: boolean;
+  has_situation: boolean;
+  has_first_pitch_swing: boolean;
+  has_contact_quality: boolean;
+  has_timing: boolean;
+  has_pitch_type: boolean;
+  has_pitch_course: boolean;
+  has_memo: boolean;
+};
+
+/**
+ * 打席記録ウィザードの作成 / 更新完了。`is_edit` で新規・編集を区別する。
+ * 詳細フラグは任意の詳細入力がどの項目でどれだけ使われたかの計測用。
+ */
+export const trackPlateAppearanceCompleted = (
+  props: PlateAppearanceDetailFlags & {
+    is_edit: boolean;
+    has_hit_direction: boolean;
+  },
+) => capture("plate appearance completed", props);
 
 /** 打席記録ウィザードの途中離脱（完了せずに画面を離れた）。 */
 export const trackPlateAppearanceCanceled = (props: { is_edit: boolean }) =>
