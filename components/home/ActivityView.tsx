@@ -82,8 +82,10 @@ export function ActivityView({ isActive = true }: ActivityViewProps) {
         <RecordButtonsSection />
         <TodayTasksSection />
         {/* 末尾では到達率が1割程度のため、「今日やること」の直後に置く。
-            直前がタップ可能なリンク行なので、誤タップを避けて間隔を広く取る。 */}
-        {isActive ? <InlineBannerAd placement="home" topSpacing={48} /> : null}
+            直前のリンク行とはカード padding 16 + marginBottom 12 を含め 48px 空き誤タップを避けられるので、上下の実効余白を 32px に揃える。 */}
+        {isActive ? (
+          <InlineBannerAd placement="home" topSpacing={20} bottomSpacing={32} />
+        ) : null}
         <CurrentThemeSection />
         <TodayGoalSection />
         <StreakHeaderSection />
