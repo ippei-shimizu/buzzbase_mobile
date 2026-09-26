@@ -1,7 +1,7 @@
 /**
  * 試合記録サマリー画面の「野球ノートを記録する」「記録を完了する」動線の振る舞いテスト。
  */
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import * as SecureStore from "expo-secure-store";
 import * as StoreReview from "expo-store-review";
 import { InterstitialAd } from "react-native-google-mobile-ads";
@@ -141,6 +141,29 @@ describe("SummaryScreen", () => {
     });
     fireEvent.press(completeButton);
     fireEvent.press(completeButton);
+
+    await waitFor(() => {
+      expect(getRouterSpies().replace).toHaveBeenCalled();
+    });
+    const completedEvents = mockCapture.mock.calls.filter(
+      ([eventName]) => eventName === "game record completed",
+    );
+    expect(completedEvents).toHaveLength(1);
+  });
+
+  it("「記録を完了する」と「野球ノートを記録する」が同じフレームで押されても、完了の計測は1回だけ送られる", async () => {
+    useGameRecordStore.setState({ gameResultId: 123, isEditMode: false });
+
+    renderWithProviders(<SummaryScreen />);
+
+    const completeButton = await screen.findByRole("button", {
+      name: "記録を完了する",
+    });
+    const recordNoteButton = screen.getByText("野球ノートを記録する");
+    act(() => {
+      fireEvent.press(completeButton);
+      fireEvent.press(recordNoteButton);
+    });
 
     await waitFor(() => {
       expect(getRouterSpies().replace).toHaveBeenCalled();
