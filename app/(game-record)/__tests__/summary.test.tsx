@@ -48,6 +48,32 @@ const pressCompleteButton = async () => {
   fireEvent.press(completeButton);
 };
 
+const seedStorageWhereInterstitialIsShown = () => {
+  const thirtyDaysAgo = new Date(
+    Date.now() - 30 * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const storage = new Map<string, string>([
+    ["admob_install_date", thirtyDaysAgo],
+    ["admob_launch_count", "10"],
+  ]);
+  (SecureStore.getItemAsync as jest.Mock).mockImplementation(
+    async (key: string) => storage.get(key) ?? null,
+  );
+  (SecureStore.setItemAsync as jest.Mock).mockImplementation(
+    async (key: string, value: string) => {
+      storage.set(key, value);
+    },
+  );
+};
+
+const failInterstitialCreationOnce = () => {
+  (InterstitialAd.createForAdRequest as jest.Mock).mockImplementationOnce(
+    () => {
+      throw new Error("ad creation failed");
+    },
+  );
+};
+
 beforeEach(() => {
   mockCapture.mockClear();
   (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(null);
@@ -158,5 +184,40 @@ describe("SummaryScreen", () => {
     });
     expect(StoreReview.requestReview).toHaveBeenCalledTimes(1);
     expect(InterstitialAd.createForAdRequest).not.toHaveBeenCalled();
+  });
+
+  it("「記録を完了する」の後に広告の表示で失敗しても、試合一覧へ遷移する", async () => {
+    seedStorageWhereInterstitialIsShown();
+    (StoreReview.isAvailableAsync as jest.Mock).mockResolvedValueOnce(false);
+    failInterstitialCreationOnce();
+    useGameRecordStore.setState({ gameResultId: 123, isEditMode: false });
+
+    renderWithProviders(<SummaryScreen />);
+
+    await pressCompleteButton();
+
+    await waitFor(() => {
+      expect(getRouterSpies().replace).toHaveBeenCalledWith({
+        pathname: "/(tabs)/(game-results)",
+        params: { tab: "list" },
+      });
+    });
+  });
+
+  it("「野球ノートを記録する」の後に広告の表示で失敗しても、野球ノート作成画面へ遷移する", async () => {
+    seedStorageWhereInterstitialIsShown();
+    failInterstitialCreationOnce();
+    useGameRecordStore.setState({ gameResultId: 123, isEditMode: false });
+
+    renderWithProviders(<SummaryScreen />);
+
+    fireEvent.press(await screen.findByText("野球ノートを記録する"));
+
+    await waitFor(() => {
+      expect(getRouterSpies().replace).toHaveBeenCalledWith({
+        pathname: "/(note)/new",
+        params: { gameResultId: "123" },
+      });
+    });
   });
 });

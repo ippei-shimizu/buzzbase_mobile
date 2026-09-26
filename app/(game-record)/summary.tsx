@@ -1,4 +1,5 @@
 import type { BattingBox } from "../../types/gameRecord";
+import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -123,6 +124,17 @@ export default function SummaryScreen() {
     }
   };
 
+  // 完了操作のボタンは実行中に無効化するため、広告の失敗で遷移が止まるとサマリーから出られなくなる。
+  const showInterstitialWithoutBlocking = async (isEditMode: boolean) => {
+    try {
+      await showMatchSaveInterstitial(hasEntitlement("no_ads"), isEditMode);
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { source: "game-record-summary", action: "interstitial" },
+      });
+    }
+  };
+
   const handleComplete = async () => {
     setIsCompleting(true);
     // 編集保存も summary を経由するため、新規作成のみを完了として計測する。
@@ -144,7 +156,7 @@ export default function SummaryScreen() {
       trigger: "game_record_completed",
     });
     if (!reviewRequested) {
-      await showMatchSaveInterstitial(hasEntitlement("no_ads"), isEditMode);
+      await showInterstitialWithoutBlocking(isEditMode);
     }
     router.replace({
       pathname: "/(tabs)/(game-results)",
@@ -166,7 +178,7 @@ export default function SummaryScreen() {
     }
     resetFlow();
     invalidateGameResultRelated(queryClient);
-    await showMatchSaveInterstitial(hasEntitlement("no_ads"), isEditMode);
+    await showInterstitialWithoutBlocking(isEditMode);
     router.replace({
       pathname: "/(note)/new",
       params: gameResultId ? { gameResultId: String(gameResultId) } : {},
