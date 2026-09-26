@@ -98,6 +98,19 @@ const captureSave = (): SavedRequest => {
   return saved;
 };
 
+/**
+ * 完了・スキップのどちらでも登録直後 Paywall へ送る。訴求スライドを選ぶ擬似トリガーは
+ * ポジションから決まるため、期待値を引数で受ける。
+ */
+const expectLeftToPaywall = async (trigger: string) => {
+  await waitFor(() => {
+    expect(getRouterSpies().replace).toHaveBeenCalledWith({
+      pathname: "/(auth)/onboarding-paywall",
+      params: { trigger },
+    });
+  });
+};
+
 /** プロフィール取得が終わるまで「はじめる」は disabled なので、押せるようになるまで待つ。 */
 const renderAndWaitReady = async () => {
   const screen = renderWithProviders(<ProfileSetupScreen />);
@@ -118,9 +131,7 @@ describe("profile-setup 画面", () => {
     const screen = await renderAndWaitReady();
     fireEvent.press(screen.getByText("スキップ"));
 
-    await waitFor(() => {
-      expect(getRouterSpies().replace).toHaveBeenCalledWith("/(tabs)");
-    });
+    await expectLeftToPaywall("hit_direction_average");
     expect(saved.teamId).toBeNull();
     expect(saved.positionIds).toBeNull();
   });
@@ -135,9 +146,7 @@ describe("profile-setup 画面", () => {
     );
     fireEvent.press(screen.getByText("はじめる"));
 
-    await waitFor(() => {
-      expect(getRouterSpies().replace).toHaveBeenCalledWith("/(tabs)");
-    });
+    await expectLeftToPaywall("hit_direction_average");
     expect(saved.createdTeamName).toBe("BUZZ学園");
     expect(saved.teamId).toBe("42");
     // 送信時の引き当て検索が走っている（候補表示の検索と合わせて1回以上）
@@ -150,9 +159,7 @@ describe("profile-setup 画面", () => {
     const screen = await renderAndWaitReady();
     fireEvent.press(screen.getByText("はじめる"));
 
-    await waitFor(() => {
-      expect(getRouterSpies().replace).toHaveBeenCalledWith("/(tabs)");
-    });
+    await expectLeftToPaywall("hit_direction_average");
     expect(saved.createdTeamName).toBeNull();
     expect(saved.teamId).toBe("");
     expect(saved.positionsUserId).toBe(PROFILE.id);
@@ -218,9 +225,8 @@ describe("profile-setup 画面", () => {
     });
     fireEvent.press(screen.getByText("はじめる"));
 
-    await waitFor(() => {
-      expect(getRouterSpies().replace).toHaveBeenCalledWith("/(tabs)");
-    });
+    // 復元したポジションがピッチャーなので、球種別のスライドを先頭にするトリガーになる
+    await expectLeftToPaywall("pitch_type_average");
     expect(saved.teamId).toBe("99");
     expect(saved.positionIds).toEqual([3]);
   });
