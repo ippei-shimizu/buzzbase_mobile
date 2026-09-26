@@ -506,6 +506,11 @@ describe("PitchCourseCard", () => {
     expect(getByText("一塁側")).toBeTruthy();
     expect(getAllByText(".500")).toHaveLength(2);
     expect(getAllByText(".000")).toHaveLength(2);
+    expect(
+      getByText(
+        "高低と内外は別々の見方のため、同じ打席が両方に入ります（真ん中の帯は含みません）",
+      ),
+    ).toBeTruthy();
 
     fireEvent.press(getByRole("button", { name: "ゾーン内外" }));
     expect(getAllByText("ストライクゾーン")).toHaveLength(1);

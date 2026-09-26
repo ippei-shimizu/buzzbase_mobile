@@ -236,6 +236,9 @@ function ZoneHeatmap({
             {renderCell(cellByKey.get("third_base"))}
             {renderCell(cellByKey.get("first_base"))}
           </View>
+          <Text style={styles.tileNote}>
+            高低と内外は別々の見方のため、同じ打席が両方に入ります（真ん中の帯は含みません）
+          </Text>
         </View>
       ) : (
         <View style={styles.tileRow}>{cells.map(renderCell)}</View>
@@ -678,6 +681,10 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.9)",
     fontSize: 11,
     marginBottom: 2,
+  },
+  tileNote: {
+    color: "#71717A",
+    fontSize: 11,
   },
   breakdownText: {
     color: "#A1A1AA",
