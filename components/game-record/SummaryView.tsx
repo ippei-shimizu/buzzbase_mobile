@@ -146,7 +146,10 @@ export function SummaryView(props: Props) {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView style={{ flex: 1, padding: 20 }}>
+      <ScrollView
+        style={{ flex: 1, padding: 20 }}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
         {/* タイトル */}
         <Text
           style={{
@@ -495,8 +498,6 @@ export function SummaryView(props: Props) {
             </View>
           </View>
         ) : null}
-
-        <View style={{ height: 40 }} />
       </ScrollView>
       <View
         style={{
