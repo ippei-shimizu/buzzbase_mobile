@@ -157,6 +157,7 @@ describe("PitchCourseCard", () => {
       <PitchCourseCard data={data} crossFilters={{}} />,
     );
 
+    await flushPendingRequests();
     expect(crossRequested).toBe(false);
     fireEvent.press(getByText("球種別"));
     expect(await findByText("ストレート系 (5)")).toBeTruthy();
@@ -222,6 +223,7 @@ describe("PitchCourseCard", () => {
       <PitchCourseCard data={data} crossFilters={{}} />,
     );
 
+    await flushPendingRequests();
     expect(pitcherCrossRequested).toBe(false);
     fireEvent.press(getByText("投手別"));
     expect(await findByText("エース投手 (5)")).toBeTruthy();
