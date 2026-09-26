@@ -72,8 +72,12 @@ export function PaywallFlow({
   const router = useRouter();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const { seasons } = useMySeasons();
+  // シーズン推移グラフは試合の紐付いたシーズンだけを集計するため、空のシーズンは数えない。
+  const recordedSeasonCount = seasons.filter(
+    (season) => season.game_results_count > 0,
+  ).length;
   const isSingleSeason =
-    trigger === "season_transition_graph" && seasons.length < 2;
+    trigger === "season_transition_graph" && recordedSeasonCount < 2;
 
   const copy = feature
     ? ((PRO_PAYWALL_COPY as Record<string, typeof DEFAULT_COPY>)[feature] ??

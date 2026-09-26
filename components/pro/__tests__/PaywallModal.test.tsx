@@ -8,7 +8,7 @@
  * - 購入成功時の syncProStatus は /pro/sync への実リクエストを MSW で観測する。
  */
 import * as Sentry from "@sentry/react-native";
-import { fireEvent, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, waitFor } from "@testing-library/react-native";
 import { delay } from "msw";
 import { PURCHASES_ERROR_CODE } from "react-native-purchases";
 import {
@@ -17,6 +17,7 @@ import {
   restorePurchases,
 } from "@services/revenueCatService";
 import { useSnackbarStore } from "@stores/snackbarStore";
+import { buildSeason } from "../../../__tests__/test-utils/factories/season";
 import {
   apiUrl,
   http,
@@ -216,6 +217,54 @@ describe("PaywallModal", () => {
     expect(
       queryByText(PRO_PAYWALL_COPY.season_transition_graph.description),
     ).not.toBeOnTheScreen();
+  });
+
+  it("シーズンが複数あっても試合を記録したシーズンが1つなら、来季からの案内を出す", async () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+    server.use(
+      http.get(apiUrl("/seasons"), () =>
+        HttpResponse.json([
+          buildSeason({ id: 2, name: "2026年", game_results_count: 0 }),
+          buildSeason({ id: 1, name: "2025年", game_results_count: 12 }),
+        ]),
+      ),
+    );
+
+    const { findByText } = renderWithProviders(
+      <PaywallModal
+        isOpen
+        onClose={mockOnClose}
+        feature="season_transition_graph"
+      />,
+    );
+
+    expect(await findByText(/来シーズンの記録が増えると/)).toBeOnTheScreen();
+  });
+
+  it("試合を記録したシーズンが2つ以上あれば、来季からの案内は出さない", async () => {
+    getOfferingsMock.mockResolvedValueOnce(null);
+    server.use(
+      http.get(apiUrl("/seasons"), () =>
+        HttpResponse.json([
+          buildSeason({ id: 2, name: "2026年", game_results_count: 8 }),
+          buildSeason({ id: 1, name: "2025年", game_results_count: 12 }),
+        ]),
+      ),
+    );
+
+    const { queryByText } = renderWithProviders(
+      <PaywallModal
+        isOpen
+        onClose={mockOnClose}
+        feature="season_transition_graph"
+      />,
+    );
+
+    // シーズン取得前は単年扱いで案内が出るため、取得を待ってから確認する。
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(queryByText(/来シーズンの記録が増えると/)).toBeNull();
   });
 
   it("価値画面に Pro でできることの紹介スライドが並ぶ", () => {
