@@ -197,6 +197,31 @@ describe("プロフィール編集画面の所属チーム", () => {
     expect(recorder.createdTeamNames).toEqual([]);
   });
 
+  it("候補から選ばずに確定した名前の既存チームがカテゴリ・地域違いなら、そのチームを更新せず新規作成する", async () => {
+    const recorder = setUpServer(PROFILE, (query) =>
+      query === "BUZZ学園"
+        ? [{ id: 55, name: "BUZZ学園", category_id: 1, prefecture_id: 27 }]
+        : [],
+    );
+    const screen = render();
+
+    fireEvent.press(await screen.findByText("チーム名を検索・入力"));
+    fireEvent.changeText(
+      screen.getByPlaceholderText("チーム名を入力"),
+      "BUZZ学園",
+    );
+    fireEvent.press(screen.getByText("「BUZZ学園」で決定"));
+    fireEvent.press(screen.getByText("カテゴリを選択"));
+    fireEvent.press(await screen.findByText("高校"));
+    fireEvent.press(screen.getByText("都道府県を選択"));
+    fireEvent.press(await screen.findByText("東京都"));
+
+    await saveAndWaitForBack(screen);
+    expect(recorder.updatedTeamIds).toEqual([]);
+    expect(recorder.createdTeamNames).toEqual(["BUZZ学園"]);
+    expect(recorder.teamId).toBe("42");
+  });
+
   it("復元したチーム名のまま確定し直しても、同名の別チームに差し替えず元の id を送る", async () => {
     const recorder = setUpServer({ ...PROFILE, team_id: 99 }, () => [
       { id: 1, name: "既存チーム", category_id: 3, prefecture_id: 13 },

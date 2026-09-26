@@ -46,16 +46,14 @@ const findExistingTeamId = async (
   teamPayload: TeamPayload,
 ): Promise<number | null> => {
   const candidates = await searchTeams(teamPayload.name, TEAM_SEARCH_MAX_LIMIT);
-  const sameNameTeams = candidates.filter(
-    (team) => team.name === teamPayload.name,
-  );
-  // 同名チームが複数あるときは、カテゴリ・地域まで一致するものを優先して別チームの属性を上書きしない。
-  const sameAttributesTeam = sameNameTeams.find(
+  // 同名でもカテゴリ・地域が違えば別チームとして扱い、他ユーザーの作ったチームに紐付けない。
+  const sameTeam = candidates.find(
     (team) =>
+      team.name === teamPayload.name &&
       team.category_id === teamPayload.category_id &&
       team.prefecture_id === teamPayload.prefecture_id,
   );
-  return (sameAttributesTeam ?? sameNameTeams[0])?.id ?? null;
+  return sameTeam?.id ?? null;
 };
 
 export default function ProfileEditScreen() {
