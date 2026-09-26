@@ -41,10 +41,9 @@ export function SearchablePicker({
   const [searchText, setSearchText] = useState("");
 
   const filteredItems = useMemo(() => {
-    if (!searchText) return items;
-    return items.filter((item) =>
-      item.label.toLowerCase().includes(searchText.toLowerCase()),
-    );
+    const keyword = searchText.trim().toLowerCase();
+    if (!keyword) return items;
+    return items.filter((item) => item.label.toLowerCase().includes(keyword));
   }, [items, searchText]);
 
   const handleSearchTextChange = (text: string) => {

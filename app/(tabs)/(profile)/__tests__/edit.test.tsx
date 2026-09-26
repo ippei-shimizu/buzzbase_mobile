@@ -211,6 +211,23 @@ describe("プロフィール編集画面の所属チーム", () => {
     expect(recorder.createdTeamNames).toEqual([]);
   });
 
+  it("末尾に空白を付けて入力しても、検索で見つかった候補を表示する", async () => {
+    setUpServer(PROFILE, (query) =>
+      query === "BUZZ"
+        ? [{ id: 55, name: "BUZZ学園", category_id: 3, prefecture_id: 13 }]
+        : [],
+    );
+    const screen = render();
+
+    fireEvent.press(await screen.findByText("チーム名を検索・入力"));
+    fireEvent.changeText(
+      screen.getByPlaceholderText("チーム名を入力"),
+      "BUZZ ",
+    );
+
+    expect(await screen.findByText("BUZZ学園")).toBeTruthy();
+  });
+
   it("候補から選ばずに確定した名前が既存チームと完全一致すれば、新規作成せずその id を送る", async () => {
     // サジェスト件数では完全一致が溢れ、上限件数で引いたときだけ見つかる状況
     const recorder = setUpServer(PROFILE, (query, limit) =>
