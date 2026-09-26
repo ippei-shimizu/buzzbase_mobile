@@ -101,7 +101,7 @@ export default function SettingsScreen() {
         {
           icon: "mail-outline",
           title: "お問い合わせ",
-          description: "ご意見・不具合の報告など",
+          description: "不具合の報告・その他のお問い合わせ",
           onPress: () => router.push("/(profile)/contact"),
         },
         {
