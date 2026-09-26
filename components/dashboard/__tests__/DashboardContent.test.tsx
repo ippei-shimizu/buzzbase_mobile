@@ -380,3 +380,39 @@ describe("DashboardContent: ウェルカムカード（段階的オンボーデ�
     expect(getRouterSpies().push).toHaveBeenCalledWith("/(groups)/join");
   });
 });
+
+describe("DashboardContent: 打撃成績表の得点圏打率", () => {
+  const withScoringPosition = (
+    scoringPositionBattingAverage: number | null,
+  ): DashboardData => ({
+    ...existingUserData,
+    batting_stats: {
+      ...existingUserData.batting_stats,
+      calculated: {
+        ...existingUserData.batting_stats.calculated!,
+        scoring_position_batting_average: scoringPositionBattingAverage,
+      },
+    },
+  });
+
+  it("得点圏打率を OPS と並べて表示する", async () => {
+    const { getByText } = renderDashboard(withScoringPosition(0.312));
+
+    await waitFor(() => {
+      expect(getByText("得点圏打率")).toBeTruthy();
+    });
+    expect(getByText(".312")).toBeTruthy();
+  });
+
+  it("得点圏の打数が無いときは値セルに「-」を表示する", async () => {
+    const { getByText, getAllByText } = renderDashboard(
+      withScoringPosition(null),
+    );
+
+    await waitFor(() => {
+      expect(getByText("得点圏打率")).toBeTruthy();
+    });
+    // 集計値を全て埋めたフィクスチャなので、「-」は得点圏打率の値セルにしか出ない。
+    expect(getAllByText("-")).toHaveLength(1);
+  });
+});

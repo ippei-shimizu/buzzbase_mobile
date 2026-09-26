@@ -90,6 +90,11 @@ export interface BattingStatsRow {
   iso: number;
   bb_per_k: number;
   babip: number;
+  /**
+   * 得点圏打率。得点圏の打数が 0 の行は null。
+   * 古いバックエンドを向いているときはキー自体が返らない。
+   */
+  scoring_position_batting_average?: number | null;
 }
 
 export interface PitchingStatsRow {
