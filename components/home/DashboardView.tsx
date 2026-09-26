@@ -47,15 +47,16 @@ export function DashboardView({ isActive = true }: DashboardViewProps) {
         entry.previous_rank !== null &&
         entry.current_rank < entry.previous_rank,
     );
+    // 計測は trigger で区別する。同じランキング起因で2件数えないよう、キーは共有する。
     if (inTopThree) {
       triggerPositiveEvent({
         trigger: "dashboard_ranking",
-        sessionKey: "dashboard-ranking-top3",
+        sessionKey: "dashboard-ranking",
       });
     } else if (hasRankUp) {
       triggerPositiveEvent({
         trigger: "dashboard_rank_up",
-        sessionKey: "dashboard-ranking-rank-up",
+        sessionKey: "dashboard-ranking",
       });
     }
   }, [isActive, data, triggerPositiveEvent]);

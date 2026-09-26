@@ -11,7 +11,10 @@ import {
   http,
   HttpResponse,
 } from "../../../__tests__/test-utils/handlers";
-import { renderWithProviders } from "../../../__tests__/test-utils/renderWithProviders";
+import {
+  createTestQueryClient,
+  renderWithProviders,
+} from "../../../__tests__/test-utils/renderWithProviders";
 import { seedEligibleStoreReview } from "../../../__tests__/test-utils/storeReview";
 import { server } from "../../../jest-setup-msw";
 import { DashboardView } from "../DashboardView";
@@ -112,10 +115,12 @@ describe("DashboardView", () => {
     expect(StoreReview.requestReview).not.toHaveBeenCalled();
   });
 
-  it("上位3位に入っていなくても、前回より順位が上がっていればレビューを要求する", async () => {
+  it("上位3位に入っていなくても順位が上がればレビューを要求し、同セッション中に上位3位に入っても二重に数えない", async () => {
+    const storage = seedEligibleStoreReview();
+    const queryClient = createTestQueryClient();
     respondDashboard(buildRanking(5, 7));
 
-    renderWithProviders(<DashboardView />);
+    renderWithProviders(<DashboardView />, { queryClient });
 
     await waitFor(() =>
       expect(StoreReview.requestReview).toHaveBeenCalledTimes(1),
@@ -123,5 +128,15 @@ describe("DashboardView", () => {
     expect(mockCapture).toHaveBeenCalledWith("store review requested", {
       trigger: "dashboard_rank_up",
     });
+    expect(storage.get("store_review_positive_event_count")).toBe("2");
+
+    respondDashboard(buildRanking(2, 5));
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(storage.get("store_review_positive_event_count")).toBe("2");
   });
 });
