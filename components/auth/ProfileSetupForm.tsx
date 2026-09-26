@@ -1,5 +1,5 @@
+import type { Team } from "../../types/gameRecord";
 import type { ThrowHand } from "../../types/pitcher";
-import type { TeamDetail } from "../../types/profile";
 import type { BattingSide } from "@constants/handedness";
 import {
   View,
@@ -27,15 +27,17 @@ interface Position {
 
 interface Props {
   teamName: string;
-  teamSuggestions: TeamDetail[];
+  teamSuggestions: Team[];
   positions: Position[];
   selectedPositionIds: number[];
   throwHand: ThrowHand | null;
   battingSide: BattingSide | null;
   errors: string[];
   isSubmitting: boolean;
+  /** プロフィール取得前は保存できない（ポジションの保存に user id が必要）。 */
+  isSubmitDisabled: boolean;
   onTeamNameChange: (value: string) => void;
-  onTeamSuggestionSelect: (team: TeamDetail) => void;
+  onTeamSuggestionSelect: (team: Team) => void;
   onPositionsChange: (positionIds: number[]) => void;
   onThrowHandChange: (value: ThrowHand | null) => void;
   onBattingSideChange: (value: BattingSide | null) => void;
@@ -52,6 +54,7 @@ export function ProfileSetupForm({
   battingSide,
   errors,
   isSubmitting,
+  isSubmitDisabled,
   onTeamNameChange,
   onTeamSuggestionSelect,
   onPositionsChange,
@@ -67,6 +70,7 @@ export function ProfileSetupForm({
           onPress={onSkip}
           hitSlop={8}
           accessibilityRole="button"
+          disabled={isSubmitting}
         >
           <Text style={styles.skipText}>スキップ</Text>
         </TouchableOpacity>
@@ -151,7 +155,12 @@ export function ProfileSetupForm({
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button title="はじめる" onPress={onSubmit} loading={isSubmitting} />
+        <Button
+          title="はじめる"
+          onPress={onSubmit}
+          loading={isSubmitting}
+          disabled={isSubmitDisabled}
+        />
       </View>
     </View>
   );

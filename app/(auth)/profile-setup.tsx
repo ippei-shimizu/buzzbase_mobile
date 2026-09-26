@@ -1,23 +1,28 @@
+import type { Team } from "../../types/gameRecord";
 import type { ThrowHand } from "../../types/pitcher";
-import type { TeamDetail } from "../../types/profile";
 import type { BattingSide } from "@constants/handedness";
 import * as Sentry from "@sentry/react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform } from "react-native";
+import { BackHandler, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ProfileSetupForm } from "@components/auth/ProfileSetupForm";
 import { usePositions } from "@hooks/usePositions";
 import { useProfile } from "@hooks/useProfile";
+import { useTeamName, useTeamSearch } from "@hooks/useTeamSearch";
+import { createTeam, searchTeams } from "@services/gameRecordService";
 import { updateUserPositions } from "@services/positionService";
 import { updateUserProfile } from "@services/profileService";
-import { createTeam, searchTeams } from "@services/teamService";
 import { useSnackbarStore } from "@stores/snackbarStore";
 import {
   trackProfileSetupCompleted,
   trackProfileSetupViewed,
 } from "@utils/analytics";
+
+// 部分一致検索のためサジェスト件数のままだと完全一致が候補から溢れ、既存チームを重複作成しうる。
+// 送信時の引き当てはサーバー上限まで引き上げて取得する（試合記録の送信処理と同じ方針）。
+const TEAM_SEARCH_MAX_LIMIT = 100;
 
 /**
  * ユーザー名登録の直後に挟む任意のプロフィール入力。
@@ -26,7 +31,8 @@ import {
  */
 export default function ProfileSetupScreen() {
   const router = useRouter();
-  const { profile } = useProfile();
+  const queryClient = useQueryClient();
+  const { profile, isLoading: isProfileLoading } = useProfile();
   const { data: positions } = usePositions();
 
   const [teamName, setTeamName] = useState("");
@@ -37,23 +43,46 @@ export default function ProfileSetupScreen() {
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isLeavingRef = useRef(false);
+  const hasRestoredRef = useRef(false);
+  const hasRestoredTeamNameRef = useRef(false);
 
   const trimmedTeamName = teamName.trim();
-
-  const { data: teamSuggestions } = useQuery({
-    queryKey: ["teams", "search", trimmedTeamName],
-    queryFn: () => searchTeams(trimmedTeamName),
-    enabled: trimmedTeamName.length > 0,
-  });
-
-  // 候補と完全一致している間は選択済みの id を維持する。名前だけで引き直すと
-  // 同名チームが複数あるときに別のチームの id を掴む。
-  const visibleSuggestions = (teamSuggestions ?? []).filter(
-    (team) => team.name !== trimmedTeamName,
-  );
+  const { teams: teamSuggestions } = useTeamSearch(teamName);
+  const { teamName: profileTeamName, isLoading: isProfileTeamNameLoading } =
+    useTeamName(profile?.team_id);
 
   useEffect(() => {
     trackProfileSetupViewed();
+  }, []);
+
+  // 既に値を持つユーザーがこの画面に来た場合に、未入力のまま保存して既存値を消さないよう復元する。
+  // 復元は1度だけ行い、ユーザーの編集を上書きしない。
+  useEffect(() => {
+    if (hasRestoredRef.current || profile === undefined) return;
+    hasRestoredRef.current = true;
+    setSelectedTeamId(profile.team_id);
+    setSelectedPositionIds(
+      profile.positions?.map((position) => position.id) ?? [],
+    );
+    setThrowHand(profile.throw_hand);
+    setBattingSide(profile.batting_side);
+  }, [profile]);
+
+  // チーム名は id とは別クエリで解決するため、届いた時点で入力欄へ反映する。
+  // 名前が空のままだと送信時に「未入力」と判定され、既存の所属チームを消してしまう。
+  useEffect(() => {
+    if (hasRestoredTeamNameRef.current || !profileTeamName) return;
+    hasRestoredTeamNameRef.current = true;
+    setTeamName(profileTeamName);
+  }, [profileTeamName]);
+
+  // 認証は済んでいるので、戻って未完了の登録画面に着地させない。
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => true,
+    );
+    return () => subscription.remove();
   }, []);
 
   const leave = (skipped: boolean) => {
@@ -72,24 +101,29 @@ export default function ProfileSetupScreen() {
     if (value.trim() !== trimmedTeamName) setSelectedTeamId(null);
   };
 
-  const handleTeamSuggestionSelect = (team: TeamDetail) => {
+  const handleTeamSuggestionSelect = (team: Team) => {
     setTeamName(team.name);
     setSelectedTeamId(team.id);
   };
 
   /**
-   * 候補から選んでいればその id を使う。選ばず打ち切った場合は同名チームを
-   * サーバー側で引き当てさせ、無ければ新規作成する（試合記録の球場欄と同じ方針）。
+   * 候補から選んでいればその id を使う。選ばず打ち切った場合は完全一致の既存チームを
+   * 探してから新規作成に回す（試合記録の送信処理と同じ方針）。
    */
   const resolveTeamId = async (): Promise<number | null> => {
     if (!trimmedTeamName) return null;
     if (selectedTeamId !== null) return selectedTeamId;
-    const team = await createTeam({ name: trimmedTeamName });
+    const candidates = await searchTeams(
+      trimmedTeamName,
+      TEAM_SEARCH_MAX_LIMIT,
+    );
+    const existing = candidates.find((team) => team.name === trimmedTeamName);
+    const team = existing ?? (await createTeam(trimmedTeamName));
     return team.id;
   };
 
   const handleSubmit = async () => {
-    if (isSubmitting) return;
+    if (isSubmitting || profile === undefined) return;
     setErrors([]);
     setIsSubmitting(true);
 
@@ -102,10 +136,10 @@ export default function ProfileSetupScreen() {
       formData.append("user[batting_side]", battingSide ?? "");
       formData.append("user[team_id]", teamId === null ? "" : String(teamId));
       await updateUserProfile(formData);
+      await updateUserPositions(profile.id, selectedPositionIds);
 
-      if (profile?.id) {
-        await updateUserPositions(profile.id, selectedPositionIds);
-      }
+      // ダッシュボードが staleTime 内のキャッシュを読んで「未設定」のまま表示するのを防ぐ。
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
 
       leave(false);
       useSnackbarStore.getState().show({
@@ -133,13 +167,18 @@ export default function ProfileSetupScreen() {
       >
         <ProfileSetupForm
           teamName={teamName}
-          teamSuggestions={visibleSuggestions}
+          teamSuggestions={teamSuggestions}
           positions={positions ?? []}
           selectedPositionIds={selectedPositionIds}
           throwHand={throwHand}
           battingSide={battingSide}
           errors={errors}
           isSubmitting={isSubmitting}
+          isSubmitDisabled={
+            isProfileLoading ||
+            profile === undefined ||
+            isProfileTeamNameLoading
+          }
           onTeamNameChange={handleTeamNameChange}
           onTeamSuggestionSelect={handleTeamSuggestionSelect}
           onPositionsChange={setSelectedPositionIds}
