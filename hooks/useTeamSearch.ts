@@ -17,6 +17,10 @@ export const useTeamSearch = (q: string) => {
   return { teams: data ?? [], isLoading };
 };
 
+// チーム名はほぼ変わらず、変更時はプロフィール保存が ["teamName"] を失効させるため、
+// 投手選択モーダルを開くたびの再取得を抑える。
+const TEAM_NAME_STALE_TIME = 5 * 60_000;
+
 /**
  * チーム ID からチーム名を解決するフック（プロフィール既定チームの自動セット用）。
  */
@@ -25,6 +29,7 @@ export const useTeamName = (teamId: number | null | undefined) => {
     queryKey: ["teamName", teamId],
     queryFn: () => getTeamName(teamId!),
     enabled: teamId != null,
+    staleTime: TEAM_NAME_STALE_TIME,
   });
 
   return { teamName: data?.name, isLoading };
@@ -42,6 +47,7 @@ export const useTeamNames = (teamIds: number[]) => {
     queries: uniqueTeamIds.map((teamId) => ({
       queryKey: ["teamName", teamId],
       queryFn: () => getTeamName(teamId),
+      staleTime: TEAM_NAME_STALE_TIME,
     })),
   });
 

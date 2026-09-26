@@ -81,6 +81,30 @@ describe("PitcherSelector", () => {
     expect(tracker.requested).toBe(false);
   });
 
+  it("選択モーダルを開き直しても、解決済みのチーム名を取り直さない", async () => {
+    let teamNameRequestCount = 0;
+    server.use(
+      http.get(apiUrl("/teams/5/team_name"), () => {
+        teamNameRequestCount += 1;
+        return HttpResponse.json({ name: "東高校" });
+      }),
+    );
+    const screen = renderWithProviders(
+      <PitcherSelector value={null} onChange={jest.fn()} />,
+    );
+
+    fireEvent.press(screen.getByLabelText("投手を選択"));
+    expect(await screen.findByText("東高校 / 右投げ")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("投手選択を閉じる"));
+    fireEvent.press(screen.getByLabelText("投手を選択"));
+    expect(await screen.findByText("東高校 / 右投げ")).toBeTruthy();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(teamNameRequestCount).toBe(1);
+  });
+
   it("投手の編集フォームに所属チーム名を表示する", async () => {
     const screen = renderWithProviders(
       <PitcherSelector value={null} onChange={jest.fn()} />,
