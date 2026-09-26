@@ -16,6 +16,8 @@ interface WelcomeCardProps {
   style?: ViewStyle;
   disabled?: boolean;
   onDismiss?: () => void;
+  /** 主 CTA の下に置く補助導線。主 CTA を押し下げないようテキストリンクで出す。 */
+  secondaryAction?: { label: string; onPress: () => void };
 }
 
 const CONTENT: Record<
@@ -87,6 +89,7 @@ export const WelcomeCard = ({
   style,
   disabled,
   onDismiss,
+  secondaryAction,
 }: WelcomeCardProps) => {
   const content = CONTENT[variant];
 
@@ -114,6 +117,18 @@ export const WelcomeCard = ({
         style={styles.cta}
         disabled={disabled}
       />
+
+      {secondaryAction ? (
+        <TouchableOpacity
+          onPress={secondaryAction.onPress}
+          style={styles.secondaryAction}
+          accessibilityRole="button"
+        >
+          <Text style={styles.secondaryActionText}>
+            {secondaryAction.label}
+          </Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 };
@@ -231,5 +246,15 @@ const styles = StyleSheet.create({
   cta: {
     marginTop: 20,
     alignSelf: "stretch",
+  },
+  secondaryAction: {
+    marginTop: 14,
+    alignSelf: "center",
+    paddingVertical: 4,
+  },
+  secondaryActionText: {
+    color: "#A1A1AA",
+    fontSize: 13,
+    textDecorationLine: "underline",
   },
 });
