@@ -115,8 +115,13 @@ export default function Step1GameInfoScreen() {
           if (defaults.batting_order) {
             s.setField("battingOrder", defaults.batting_order);
           }
-          if (defaults.my_team_name) {
+          // id と名前は組で入れる。名前だけ入れるとチーム作成時に同名の別チームへ
+          // 紐付いたり重複行を作ったりするため、サーバーが確定した id をそのまま使う。
+          // プロフィール由来の自動セット（別 effect）と非同期の完了順が保証されないので、
+          // どちらが先でも解決済みの id を上書きしないようガードする。
+          if (!s.myTeamId && defaults.my_team_id && defaults.my_team_name) {
             s.setField("myTeamName", defaults.my_team_name);
+            s.setField("myTeamId", defaults.my_team_id);
           }
         })
         .catch(() => {

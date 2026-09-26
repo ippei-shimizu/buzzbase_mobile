@@ -31,13 +31,15 @@ export const getAvailableMonths = async (
  * - match_type: 直近試合の試合種類（"公式戦" / "オープン戦" / その他）。履歴なしは null
  * - defensive_position: プロフィール最初のポジション。未設定なら直近試合の defensive_position。両方なしで null
  * - batting_order: 直近試合の打順（"1"〜"9" / "DH"）。履歴なしは null
- * - my_team_name: プロフィールの所属チーム名。未設定なら直近試合の自チーム名。両方なしで null
+ * - my_team_id: プロフィールの所属チーム。未設定なら直近試合の自チーム。両方なしで null
+ * - my_team_name: my_team_id と同じチームの名前
  */
 export interface MatchResultFormDefaults {
   inning_format: number;
   match_type: string | null;
   defensive_position: string | null;
   batting_order: string | null;
+  my_team_id: number | null;
   my_team_name: string | null;
 }
 
@@ -55,6 +57,7 @@ export const getMatchResultFormDefaults =
       match_type: response.data.match_type ?? null,
       defensive_position: response.data.defensive_position ?? null,
       batting_order: response.data.batting_order ?? null,
+      my_team_id: response.data.my_team_id ?? null,
       my_team_name: response.data.my_team_name ?? null,
     };
   };
